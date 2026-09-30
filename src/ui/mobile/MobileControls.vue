@@ -12,7 +12,11 @@ let last = { x: 0, y: 0 }
 function lookDown(e: PointerEvent) {
   lookId = e.pointerId
   last = { x: e.clientX, y: e.clientY }
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  try {
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  } catch {
+    // synthetic or already-released pointer
+  }
 }
 function lookMove(e: PointerEvent) {
   if (e.pointerId !== lookId) return

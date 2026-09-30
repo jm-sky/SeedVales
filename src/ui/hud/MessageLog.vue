@@ -3,10 +3,11 @@ import { computed } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
 import { formatClock } from '@/game/sim/time'
 
+const props = withDefaults(defineProps<{ limit?: number }>(), { limit: 6 })
 const { game, version } = useGameStrict()
 const msgs = computed(() => {
   void version.value
-  return game.value.sim.state.messages.slice(-6)
+  return game.value.sim.state.messages.slice(-props.limit)
 })
 const color = (k?: string) => (k === 'good' ? 'text-good' : k === 'bad' ? 'text-bad' : k === 'quest' ? 'text-quest' : 'text-white/90')
 </script>

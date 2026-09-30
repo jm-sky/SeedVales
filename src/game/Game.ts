@@ -282,7 +282,9 @@ export class Game {
     if (w?.kind === 'ranged') return // bow uses hold/release
     if (!p.combat) this.toggleCombat()
     p.rot = this.renderer.rig.yaw
-    meleeAttack(this.sim, p, this.isTouch ? 140 : 80)
+    // Mobile aid (vision §27): wide auto-target cone and auto-facing the chosen target.
+    const hit = meleeAttack(this.sim, p, this.isTouch ? 220 : 80)
+    if (hit && this.isTouch) p.rot = Math.atan2(hit.x - p.x, hit.z - p.z)
   }
 
   toggleCombat() {

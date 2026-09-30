@@ -9,7 +9,11 @@ let origin = { x: 0, y: 0 }
 
 function down(e: PointerEvent) {
   pid = e.pointerId
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  try {
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  } catch {
+    // synthetic or already-released pointer
+  }
   const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
   origin = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
   move(e)
