@@ -23,7 +23,9 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - Uwaga dla e2e: nie edytuj `src/` ani nie uruchamiaj vitest w trakcie `pnpm e2e` — HMR Vite przeładowuje stronę („Execution context was destroyed”); worktree subagenta w katalogu repo też to wywołuje.
 - Krok 3 (UI-04 verified): mapa z celem/odwiedzonymi osadami/znacznikami zadań + minimapa ze strzałką do celu (`sim/navigation.ts`, `hud/Minimap.vue`). e2e acceptance 21/21, mobile 9/9.
 - Kroki 4–5 (UI-05 verified): ustawienia jakości/głośności bez restartu, zapisy pod nazwą, nowa gra z menu gry. **Fala 2 `ui--001` done** — UI-03/04/05/06 verified. Weryfikacja: `pnpm check` (type-check, lint, vitest 119/119), check-layers OK, e2e acceptance 24/24, mobile 10/10, smoke 3/3, 0 błędów konsoli.
-- Następny krok: review fali 2 (subagent w izolowanym worktree: `git diff 4fa9118~2..HEAD -- src` — od `8cc8df6^`), potem fala 3: `economy--001` i `npc--001`.
+- Review fali 2: `docs/reviews/2026-09-30--004--wave2-ui-review.md` — 7 ustaleń, 6 poprawionych (szczegóły przedmiotu, jakość po nowej grze, mapa cieni, broń dwuręczna vs pochodnia, NaN celu, kontekst WebGL), 1 info.
+- **Fala 3 `economy--001` w toku:** krok 1 RES-07 verified (głaz → odłamki → kamienie, pień). e2e acceptance 26/26.
+- Następny krok: `economy--001` krok 2 (FOOD-03 gotowanie przy ognisku/patelni/ruszcie z parametrami produktu), potem krok 3 (TRANS-01 taczka), potem `npc--001`.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

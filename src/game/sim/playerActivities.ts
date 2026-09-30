@@ -7,7 +7,7 @@ import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { PlayerActivity } from './types'
 import { recipeById } from '../data/recipes'
-import { burnDen, buryCorpse, butcher, dig, drinkFromWater, fellTree, fillContainers, gatherNode, levelTerrain, mineRock, raiseTerrain, repairBuilding } from './actions'
+import { breakChunk, burnDen, buryCorpse, butcher, dig, drinkFromWater, fellTree, fillContainers, gatherNode, levelTerrain, mineRock, raiseTerrain, repairBuilding } from './actions'
 import { applyBuildProgress } from './build'
 import { completeCraft } from './craft'
 
@@ -24,6 +24,10 @@ export const ACTIVITY_DONE: Record<string, Done> = {
   mine: (sim, a) => {
     const n = node(sim, a)
     return n ? mineRock(sim, sim.player, n) : null
+  },
+  break_chunk: (sim, a) => {
+    const g = sim.state.ground.find((gg) => gg.id === Number(a.ref))
+    return g ? breakChunk(sim, sim.player, g) : { ok: false, msg: 'Odłamek zniknął.' }
   },
   gather: (sim, a) => {
     const n = node(sim, a)

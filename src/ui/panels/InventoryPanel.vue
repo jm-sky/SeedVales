@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
@@ -13,7 +13,8 @@ import type { ItemStack } from '@/game/sim/types'
 
 const filter = ref<ItemFilter>('all')
 const sort = ref<ItemSort>('name')
-const selected = ref<ItemStack | null>(null)
+// shallowRef: a deep ref would wrap the sim stack in a Proxy and identity checks below would fail.
+const selected = shallowRef<ItemStack | null>(null)
 const { game, version } = useGameStrict()
 const v = computed(() => {
   void version.value
@@ -28,7 +29,7 @@ const v = computed(() => {
     ],
     weight: carriedWeight(p),
     cap: carryCapacity(p),
-    selected: selected.value && (p.inv.items.includes(selected.value) || Object.values(p.eq).includes(selected.value)) ? selected.value : null,
+    selected: selected.value && [p.eq.main, p.eq.off, ...Object.values(p.eq.armor), ...p.inv.items].includes(selected.value) ? selected.value : null,
   }
 })
 const useLabel = (id: string) => {

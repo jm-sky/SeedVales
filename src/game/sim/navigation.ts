@@ -19,6 +19,7 @@ export interface NavGoal {
 const DISCOVER_M = 60
 
 export function setWaypoint(sim: Sim, x: number, z: number, label = 'Znacznik'): string {
+  if (!Number.isFinite(x) || !Number.isFinite(z)) return ''
   const size = sim.world.size
   sim.state.px.waypoint = { x: Math.max(0, Math.min(size, x)), z: Math.max(0, Math.min(size, z)), label }
   return `Wyznaczono cel: ${label}`
@@ -40,7 +41,10 @@ export function questGoal(sim: Sim, q: Quest): NavGoal | null {
 export function navGoal(sim: Sim): NavGoal | null {
   const w = sim.state.px.waypoint
   if (w) return { ...w, kind: 'waypoint' }
-  for (const q of sim.state.quests) if (q.status === 'active') return questGoal(sim, q)
+  for (const q of sim.state.quests) {
+    const g = q.status === 'active' ? questGoal(sim, q) : null
+    if (g) return g
+  }
   return null
 }
 

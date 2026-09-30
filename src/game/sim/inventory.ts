@@ -143,6 +143,11 @@ export function equipToMain(h: Human, stack: ItemStack): ItemStack {
     h.inv.items.splice(i, 1)
     if (h.eq.main) h.inv.items.push(h.eq.main)
     h.eq.main = stack
+    // A two-handed weapon needs the off hand free (a lit torch goes back to the pack).
+    if (itemDef(stack.id).weapon?.twoHanded && h.eq.off) {
+      addItem(h.inv, h.eq.off)
+      h.eq.off = undefined
+    }
   }
   return stack
 }

@@ -366,6 +366,10 @@ try {
   await key('KeyI')
   await clickTest('filter-weapon')
   const rows = await page.$$eval('[data-testid="inventory-list"] [data-testid^="item-"]', (els) => els.map((e) => e.getAttribute('data-testid')))
+  await page.click('[data-testid="inventory-list"] [data-testid^="item-"]')
+  await page.waitForTimeout(300)
+  const details = await page.$eval('[data-testid="item-details"]', (e) => e.textContent).catch(() => '')
+  check(results, '10. ekwipunek: kliknięcie pokazuje parametry przedmiotu', (details ?? '').length > 5, (details ?? '').slice(0, 80))
   await shot(page, 'acc-10-inventory-filter')
   await clickTest('panel-close')
   check(results, '10. ekwipunek: filtr „Broń” pokazuje tylko broń', rows.length > 0 && !rows.includes('item-log') && !rows.includes('item-bandage'), rows.join(','))
@@ -403,6 +407,43 @@ try {
   const cleared = await S(() => window.__sv.game.sim.state.px.waypoint === undefined)
   await clickTest('panel-close')
   check(results, '12. mapa: usunięcie celu', cleared)
+
+  // 14. RES-07: the felled tree left a stump; a boulder splits into a chunk (UI: mine) that breaks into stones (UI: break).
+  const stump = await S((treeId) => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const n = sim.nodes.byId(treeId)
+    sv.pause(true)
+    sv.approach(n.x, n.z, 3)
+    return sim.state.nodes[treeId]?.kind
+  }, ids.tree)
+  await page.waitForTimeout(1500)
+  await shot(page, 'acc-14-stump')
+  const boulder = await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const p = sim.player
+    sv.give('pickaxe')
+    let b = null
+    for (let r = 200; r < 3000 && !b; r += 200) b = sim.nodes.query(p.x, p.z, r).find((n) => n.kind === 'rock' && n.scale >= 2 && !sim.state.nodes[n.id])
+    sv.approach(b.x, b.z, b.radius + 0.9)
+    window.__boulder = b.id
+    return { id: b.id, stones: sv.count('stone') }
+  })
+  await waitTarget((t) => t.opts.includes('mine'))
+  await key('KeyE')
+  if (await page.$('[data-testid="opt-mine"]')) await clickTest('opt-mine')
+  await S(() => window.__sv.pause(false))
+  await finishActivity()
+  await S(() => window.__sv.pause(true))
+  const chunkT = await waitTarget((t) => t.opts.includes('break_chunk'))
+  await shot(page, 'acc-14-chunk')
+  await key('KeyE')
+  if (await page.$('[data-testid="opt-break_chunk"]')) await clickTest('opt-break_chunk')
+  await S(() => window.__sv.pause(false))
+  await finishActivity()
+  const stonesAfter = await S(() => window.__sv.count('stone'))
+  check(results, '14. pień po ścięciu; głaz → odłamek → kamienie (kilof, przez UI)', stump === 'felled' && !!chunkT && stonesAfter === boulder.stones + 4, { stump, chunk: chunkT?.label, stones: [boulder.stones, stonesAfter] })
 
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {

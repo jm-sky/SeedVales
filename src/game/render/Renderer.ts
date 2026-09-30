@@ -90,6 +90,12 @@ export class Renderer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.pixelRatio))
     this.renderer.shadowMap.enabled = q.shadows
     this.sun.castShadow = q.shadows
+    const ms = quality === 'high' ? 2048 : 1024
+    if (this.sun.shadow.mapSize.x !== ms) {
+      this.sun.shadow.mapSize.set(ms, ms)
+      this.sun.shadow.map?.dispose()
+      this.sun.shadow.map = null
+    }
     this.fogFar = q.fogFar
     this.terrain.setQuality(q)
     this.vegetation.setQuality(q)

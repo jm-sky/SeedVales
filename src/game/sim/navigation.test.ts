@@ -32,6 +32,9 @@ describe('UI-04 navigation', () => {
     expect(sim.state.px.waypoint).toMatchObject({ x: 0, z: sim.world.size })
     clearWaypoint(sim)
     expect(sim.state.px.waypoint).toBeUndefined()
+    // Review 004 #5: NaN is rejected.
+    setWaypoint(sim, Number.NaN, 5)
+    expect(sim.state.px.waypoint).toBeUndefined()
   })
 
   it('marks a settlement visited when the player reaches it', () => {

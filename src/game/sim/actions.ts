@@ -6,7 +6,8 @@
  */
 import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
-import type { Building, Corpse, DenState, Human, ItemStack } from './types'
+import type { Building, Corpse, DenState, GroundItem, Human, ItemStack } from './types'
+import { ROCK } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { skillGain } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
@@ -83,15 +84,29 @@ export function fellTree(sim: Sim, h: Human, n: ResNode, efficiency = 1): Action
   return ok(`Ścięto drzewo: +${logs} belki, gałęzie.`)
 }
 
+/** Strikes a rock can take before it is gone (RES-02/RES-07). */
+export const rockPieces = (n: ResNode) => Math.round(4 + n.scale * 2)
+export const isBoulder = (n: ResNode) => n.kind === 'rock' && n.scale >= ROCK.boulderScale
+
+/**
+ * One pickaxe strike. Smaller rocks give stones directly; boulders (RES-07) split off a heavy chunk that
+ * lands next to the rock and is broken into stones separately (`breakChunk`).
+ */
 export function mineRock(sim: Sim, h: Human, n: ResNode): ActionResult {
   if (n.kind !== 'rock') return fail('To nie skała.')
   const tool = findTool(h, 'mine')
   if (!tool) return fail('Potrzebujesz kilofa.')
-  const st = (sim.state.nodes[n.id] ??= { kind: 'harvested', at: sim.state.time.cal, left: Math.round(4 + n.scale * 2) })
+  const st = (sim.state.nodes[n.id] ??= { kind: 'harvested', at: sim.state.time.cal, left: rockPieces(n) })
   if ((st.left ?? 0) <= 0) return fail('Skała wyczerpana.')
   st.left = (st.left ?? 1) - 1
   if (st.left <= 0) st.kind = 'depleted'
-  giveOrDrop(sim, h, newStack('stone', 2))
+  let what = 'kamień'
+  if (isBoulder(n)) {
+    const a = Math.atan2(h.x - n.x, h.z - n.z)
+    const r = n.radius + 0.4
+    dropItem(sim, n.x + Math.sin(a) * r, n.z + Math.cos(a) * r, newStack('rock_chunk', 1))
+    what = 'odłamek skały'
+  } else giveOrDrop(sim, h, newStack('stone', 2))
   let extra = ''
   for (const d of sim.world.deposits) {
     if (Math.hypot(d.x - n.x, d.z - n.z) < d.radius + 40 && sim.rng.chance(0.35 * d.richness)) {
@@ -103,7 +118,19 @@ export function mineRock(sim: Sim, h: Human, n: ResNode): ActionResult {
   }
   wearTool(tool, 2)
   sim.markNodeChunk(n.id)
-  return ok(`Wydobyto kamień${extra}`)
+  return ok(`Wydobyto ${what}${extra}`)
+}
+
+/** Breaks one rock chunk lying on the ground into stones (pickaxe, RES-07). */
+export function breakChunk(sim: Sim, h: Human, g: GroundItem): ActionResult {
+  if (g.stack.id !== 'rock_chunk') return fail('To nie odłamek skały.')
+  const tool = findTool(h, 'mine')
+  if (!tool) return fail('Potrzebujesz kilofa.')
+  g.stack.qty -= 1
+  if (g.stack.qty <= 0) sim.removeGround(g)
+  giveOrDrop(sim, h, newStack('stone', ROCK.chunkStones))
+  wearTool(tool, 1)
+  return ok(`Rozbito odłamek: +${ROCK.chunkStones} kamienie.`)
 }
 
 const REGROW_DAYS: Partial<Record<ResNode['kind'], number>> = { bush_berry: 4, herb: 5, mushroom: 3, tree_apple: 8 }

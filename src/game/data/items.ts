@@ -111,6 +111,7 @@ const LIST: ItemDef[] = [
   res('log', 'Belka', 18, 'LG', 12),
   res('branch', 'Gałąź', 1.2, 'MD', 1),
   res('stone', 'Kamień', 3, 'SM', 1),
+  res('rock_chunk', 'Odłamek skały', 12, 'LG', 2),
   res('coal', 'Węgiel', 2, 'SM', 4),
   res('iron_ore', 'Ruda żelaza', 3, 'SM', 8),
   res('copper_ore', 'Ruda miedzi', 3, 'SM', 7),

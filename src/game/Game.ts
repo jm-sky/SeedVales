@@ -154,6 +154,8 @@ export class Game {
     this.audio.dispose()
     document.exitPointerLock?.()
     this.renderer.renderer.dispose()
+    // Release the WebGL context now (in-game "new game" remounts; browsers cap live contexts).
+    this.renderer.renderer.forceContextLoss()
   }
 
   /** One frame: input → sim → render → UI sync. Exposed for tests/benchmarks. */
@@ -382,6 +384,7 @@ export class Game {
     }
     const t = p.inv.items.find((s) => s.id === 'torch')
     if (!t) return this.showToast('Nie masz pochodni.')
+    if (p.eq.main && itemDef(p.eq.main.id).weapon?.twoHanded) return this.showToast('Obie ręce zajęte (broń dwuręczna).')
     p.eq.off = removeStack(p.inv, t, 1) ?? undefined
     this.showToast('Pochodnia w lewej ręce.')
   }

@@ -6,7 +6,7 @@
 import type { Capability } from '../data/items'
 import type { Sim } from './sim'
 import type { Animal, Building, Human } from './types'
-import { COMBAT } from '../config/calibration'
+import { COMBAT, ROCK } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
@@ -192,8 +192,11 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
       return [toolOpt(sim, 'butcher', 'Oprawić', 'cut', 'nóż'), toolOpt(sim, 'bury', 'Zakopać', 'dig', 'łopata')]
     case 'den':
       return [opt('burn_den', 'Spal legowisko (5 gałęzi + ogień)', countItem(p.inv, 'branch') >= 5 && !!findTool(p, 'fire_start'), 'Potrzeba 5 gałęzi i krzesiwa/pochodni')]
-    case 'ground':
+    case 'ground': {
+      const g = sim.state.ground.find((gg) => gg.id === t.id)
+      if (g?.stack.id === 'rock_chunk') return [toolOpt(sim, 'break_chunk', 'Rozbij kilofem na kamienie', 'mine', 'kilof'), opt('pickup', 'Podnieś (ciężki)')]
       return [opt('pickup', 'Podnieś')]
+    }
     case 'node': {
       const n = sim.nodes.byId(t.id)
       if (!n) return []
@@ -249,6 +252,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       const comfort = optionId === 'inn_sleep' ? 0.85 : optionId === 'bed_sleep' ? 0.8 : sleepComfort(sim, null)
       return startSleep(sim, comfort)
     }
+    case 'break_chunk':
+      equip('mine')
+      startActivity(sim, { kind: 'break_chunk', ref: String((t as { id: number }).id), label: 'Rozbijanie odłamka', total: ROCK.breakS })
+      return ''
     case 'burn_den':
       startActivity(sim, { kind: 'burn_den', ref: (t as { id: string }).id, label: 'Podpalanie legowiska', total: 5 })
       return ''
@@ -336,7 +343,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     }
     case 'mine':
       equip('mine')
-      startActivity(sim, { kind: 'mine', ref: (t as { id: string }).id, label: 'Wydobywanie', total: 6 })
+      startActivity(sim, { kind: 'mine', ref: (t as { id: string }).id, label: 'Wydobywanie', total: ROCK.strikeS })
       return ''
     case 'pet': {
       addStat(sim, 'petted')

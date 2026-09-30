@@ -55,6 +55,17 @@ describe('UI-03 loadout', () => {
     expect(sim.player.eq.main?.id).toBe('sword')
   })
 
+  it('review 004 #4: a two-handed weapon puts the off-hand torch back in the pack', () => {
+    const sim = armed()
+    const p = sim.player
+    switchWeapon(sim, 'melee')
+    p.eq.off = { id: 'torch', qty: 1 }
+    switchWeapon(sim, 'ranged')
+    expect(p.eq.main?.id).toMatch(/bow/)
+    expect(p.eq.off).toBeUndefined()
+    expect(p.inv.items.some((s) => s.id === 'torch')).toBe(true)
+  })
+
   it('persists the primary choice in the save snapshot', () => {
     const sim = armed()
     setPrimary(sim, 'ranged', 'long_bow')

@@ -10,6 +10,7 @@ import type { Sim } from '../sim/sim'
 import type { ResNode } from '../world/nodes'
 import type { QualitySettings } from './quality'
 import { perf } from '../diag/perf'
+import { rockPieces } from '../sim/actions'
 import { seasonOf } from '../sim/time'
 import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
@@ -130,14 +131,16 @@ export class Vegetation {
       if (n.kind === 'rock' && st?.kind === 'depleted') continue
       if (winter && n.kind === 'herb') continue
       const def = MODEL[n.kind]!
+      // A mined rock shrinks with the pieces taken (RES-07).
+      const sc = n.kind === 'rock' && st?.kind === 'harvested' ? n.scale * (0.45 + 0.55 * (st.left ?? 0) / rockPieces(n)) : n.scale
       const nearR = tree ? treeNear : n.kind === 'rock' ? this.nearM : this.nearM * 1.4
       if (d < nearR) {
         const vi = n.variant % def.models.length
         const key = this.near.has(`${n.kind}#${vi}`) ? `${n.kind}#${vi}` : `${n.kind}#0`
-        push(`near:${key}`, n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, tree ? n.scale / def.baseH : n.scale)
+        push(`near:${key}`, n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, tree ? n.scale / def.baseH : sc)
         count++
       } else if (tree || n.kind === 'rock') {
-        push(`far:${n.kind}`, n.x, n.y - 0.2, n.z, n.rot, n.scale)
+        push(`far:${n.kind}`, n.x, n.y - 0.2, n.z, n.rot, sc)
         count++
       }
     }

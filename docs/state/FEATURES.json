@@ -961,8 +961,8 @@
    "scope": "v2",
    "behavior": "Ścięte drzewo zostawia widoczny, trwały pień; większe skały rozbijane kilofem na mniejsze kawałki → kamienie",
    "verify": "vitest + screenshot",
-   "status": "planned",
-   "evidence": "plan: docs/plans/economy--001--gathering-cooking-transport.md"
+   "status": "verified",
+   "evidence": "actions.ts mineRock/breakChunk/isBoulder/rockPieces, ROCK in calibration.ts; appendix-economy.test.ts RES-07 (stump persists through save/load and is no tree target; boulder → chunks next to it, no direct stones; chunk + pickaxe → 4 stones; smaller rock → stones directly); render: stump (vegetation far:stump), mined rock shrinks with pieces left, grey ground chunks; e2e acceptance step 14 (stump screenshot, mine boulder → break chunk through the interaction menu); screenshots acc-14-stump, acc-14-chunk. Stump regrows after 20 days (D-WORLD-5)"
   },
   {
    "id": "TRANS-01",

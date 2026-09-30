@@ -15,6 +15,9 @@ import { sharedColorMat } from './assets'
 
 const MAX_LIGHTS = 6
 
+const ITEM_COL = new THREE.Color(0xc8a060)
+const STONE_COL = new THREE.Color(0x8c8a84)
+
 export class Dynamics {
   group = new THREE.Group()
   private crops: THREE.InstancedMesh
@@ -37,7 +40,7 @@ export class Dynamics {
       new THREE.MeshBasicMaterial({ color: 0xffa030, transparent: true, opacity: 0.9 }),
       200,
     )
-    this.items = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 0.15, 0.3).translate(0, 0.08, 0), sharedColorMat(0xc8a060), 400)
+    this.items = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 0.15, 0.3).translate(0, 0.08, 0), sharedColorMat(0xffffff), 400)
     this.arrows = new THREE.InstancedMesh(new THREE.BoxGeometry(0.03, 0.03, 0.7), sharedColorMat(0x3a2a1a), 64)
     for (const m of [this.crops, this.flames, this.items, this.arrows]) {
       m.count = 0
@@ -121,10 +124,12 @@ export class Dynamics {
       if (n >= 400 || Math.abs(g.x - p.x) > 150 || Math.abs(g.z - p.z) > 150) continue
       const s = itemDef(g.stack.id).weight > 5 ? 2.5 : 1
       m.compose(new THREE.Vector3(g.x, groundHeight(sim, g.x, g.z), g.z), new THREE.Quaternion(), new THREE.Vector3(s, s, s))
+      this.items.setColorAt(n, g.stack.id === 'stone' || g.stack.id === 'rock_chunk' ? STONE_COL : ITEM_COL)
       this.items.setMatrixAt(n++, m)
     }
     this.items.count = n
     this.items.instanceMatrix.needsUpdate = true
+    if (this.items.instanceColor) this.items.instanceColor.needsUpdate = true
     // Projectiles.
     n = 0
     for (const pr of sim.projectiles) {

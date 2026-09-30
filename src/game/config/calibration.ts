@@ -89,6 +89,9 @@ export const DECISION = { baseS: 1, tiredMul: 1.5, alertHitM: 30, alertShotM: 30
 /** Wild animals' fear (FAUNA-07), distances in m; exceptions: young nearby, own den, starving predator. */
 export const FEAR = { humanM: 16, aggressiveAttackM: 6, fireM: 14, penM: 10, desperateHungerH: 40, protectYoungM: 25, protectDenM: 30, preyDefendM: 6, suppressS: 45 }
 
+/** Rocks (RES-07): boulders (scale ≥ boulderScale) break into chunks; a chunk breaks into `chunkStones` stones. */
+export const ROCK = { boulderScale: 2, chunkStones: 4, strikeS: 6, breakS: 4 }
+
 /** Eating carrion takes time (FAUNA-08): gameplay seconds per portion of meat, hunger hours satisfied per portion. */
 export const CARRION = { eatS: 25, hungerPerMeat: 15, lureEatS: 6 }
 

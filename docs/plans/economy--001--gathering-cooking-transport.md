@@ -1,6 +1,6 @@
 # Pozyskiwanie, gotowanie przy ognisku, transport ciężkich surowców
 
-**Status:** planned  
+**Status:** in_progress  
 **Domain:** economy  
 **Sub domains:** resources, crafting, food, items, build  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 3)  
@@ -28,3 +28,7 @@ FEATURES: `RES-07`, `FOOD-03`, `TRANS-01`.
 ## Weryfikacja
 
 vitest reguł (pojemność ogniska, dziedziczenie meta, udźwig z taczką), save/load nowych pól, e2e: pieczenie przez UI (desktop + mobile).
+
+## Wynik
+
+- **Krok 1 (RES-07) — done (2026-09-30):** pień istniał (stan `felled` w zapisie, render `far:stump`) — dodany test trwałości. Nowe: głazy (`scale ≥ ROCK.boulderScale`) przy każdym uderzeniu kilofem odłupują „Odłamek skały” (12 kg) obok skały; odłamek rozbija się kilofem na 4 kamienie (opcja w menu interakcji, aktywność 4 s). Mniejsze skały dają kamienie bezpośrednio. Wydobywana skała maleje w renderze. Test `appendix-economy.test.ts`, e2e acceptance krok 14.
