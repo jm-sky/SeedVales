@@ -5,9 +5,10 @@ import { killAnimal } from '../sim/combat'
 import { addItem, countItem, newStack } from '../sim/inventory'
 import { Sim } from '../sim/sim'
 import { run, testSim } from '../sim/testWorld'
+import { SAVE_VERSION } from '../sim/types'
 import { installSystems } from '../sim/worldSystems'
 import { isTree } from '../world/nodes'
-import { readSave, writeSave } from './db'
+import { checkWorldCompat, listSaves, migrate, newSlotId, readSave, SaveError, writeSave } from './db'
 import { snapshot } from './snapshot'
 
 describe('save / load', () => {
@@ -35,5 +36,57 @@ describe('save / load', () => {
     expect(sim2.state.time.cal).toBe(sim.state.time.cal)
     // Continues to run after load.
     run(sim2, 5)
+  })
+
+  it('SAVE-01: save from a different generator version is rejected with a message (no silent mount)', () => {
+    const sim = testSim()
+    const st = JSON.parse(JSON.stringify(snapshot(sim)))
+    expect(() => checkWorldCompat(st, sim.world)).not.toThrow()
+    st.genVersion = sim.world.version - 1
+    expect(() => checkWorldCompat(st, sim.world)).toThrow(SaveError)
+    expect(() => checkWorldCompat(st, sim.world)).toThrow(/generatora/)
+    expect(() => checkWorldCompat({ ...st, genVersion: sim.world.version, seed: 7 }, sim.world)).toThrow(/innego świata/)
+  })
+
+  it('SAVE-01: migrate backfills v1 saves and rejects newer/unknown versions', () => {
+    const sim = testSim()
+    const st = JSON.parse(JSON.stringify(snapshot(sim)))
+    st.saveVersion = 1
+    st.px.orders = [{ id: 'o1', npcId: 1, recipe: 'knife', paid: 5, price: 10, readyAt: 0, status: 'ready' }]
+    st.npcs[0].ai.cooldowns.caravan_back = 123
+    const m = migrate(st)
+    expect(m.saveVersion).toBe(SAVE_VERSION)
+    expect(m.px.orders[0]!.status).toBe('waiting')
+    expect(m.npcs[0]!.ai.cooldowns.caravan_back).toBeUndefined()
+    expect(() => migrate({ ...st, saveVersion: SAVE_VERSION + 1 })).toThrow(SaveError)
+    expect(() => migrate({ ...st, saveVersion: 0 })).toThrow(SaveError)
+  })
+
+  it('SAVE-01: missing or corrupt slot → SaveError, not a silent new game', async () => {
+    await expect(readSave('does-not-exist')).rejects.toThrow(SaveError)
+    const db = await new Promise<IDBDatabase>((res) => {
+      const r = indexedDB.open('seedvales', 1)
+      r.onsuccess = () => res(r.result)
+    })
+    await new Promise<void>((res) => {
+      const t = db.transaction('saves', 'readwrite')
+      t.objectStore('saves').put({ meta: { slot: 'bad', seed: 1, savedAt: 0, cal: 0, bytes: 3 }, json: '{x' }, 'bad')
+      t.oncomplete = () => res()
+    })
+    db.close()
+    await expect(readSave('bad')).rejects.toThrow(/uszkodzony/)
+  })
+
+  it('SAVE-01: a new game with the same seed gets a new slot and keeps the existing save', async () => {
+    const sim = testSim()
+    const a = newSlotId(1337, 1000)
+    const b = newSlotId(1337, 2000)
+    expect(a).not.toBe(b)
+    await writeSave(a, snapshot(sim))
+    await writeSave(b, snapshot(testSim()))
+    const slots = (await listSaves()).map((m) => m.slot)
+    expect(slots).toContain(a)
+    expect(slots).toContain(b)
+    expect((await listSaves()).find((m) => m.slot === a)!.genVersion).toBe(sim.world.version)
   })
 })

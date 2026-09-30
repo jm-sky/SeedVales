@@ -718,8 +718,8 @@
    "scope": "v1",
    "behavior": "Pełny zapis/odczyt zmiennego stanu w IndexedDB (wersjonowany format); brak odtworzenia zużytych zasobów/pokonanych wrogów",
    "verify": "vitest round-trip + e2e reload",
-   "status": "in_progress",
-   "evidence": "save.test.ts round-trip; acceptance step 9 reload | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #4/#14: genVersion nie walidowane przy load, migrate = no-op; #5 nowa gra nadpisuje slot-seed — plan game--002 A4/A5"
+   "status": "verified",
+   "evidence": "save.test.ts: round-trip (felled tree, killed animal, terrain edit, inventory) + SAVE-01 genVersion/seed mismatch → SaveError, migrate v1→v2 backfill + reject newer/unknown, missing/corrupt slot → SaveError, new game = new unique slot (review #4/#5/#14/#15 fixed, game--002 A4/A5); acceptance step 9 reload"
   },
   {
    "id": "SAVE-02",

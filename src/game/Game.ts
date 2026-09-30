@@ -14,7 +14,7 @@ import { blueprintById, recipeById } from './data/recipes'
 import { perf } from './diag/perf'
 import { attachControls, input, type KeyAction, moveAxes, wantsRun } from './input/controls'
 import { Renderer } from './render/Renderer'
-import { loadWorldCache, readSave, storeWorldCache, writeSave } from './save/db'
+import { checkWorldCompat, loadWorldCache, newSlotId, readSave, storeWorldCache, writeSave } from './save/db'
 import { snapshot } from './save/snapshot'
 import { consume, dropItem } from './sim/actions'
 import { placeSite, startBuildWork } from './sim/build'
@@ -97,12 +97,13 @@ export class Game {
     }
     const seed = state?.seed ?? o.seed
     const world = await loadWorld(seed, o.onProgress)
+    if (state) checkWorldCompat(state, world)
     o.onProgress?.('Zasiedlam osady…')
     state ??= createNewGame(world)
     const sim = new Sim(world, state)
     installSystems(sim)
     const renderer = new Renderer(canvas, sim, o.quality ?? 'medium')
-    const game = new Game(canvas, sim, renderer, o.slot ?? `slot-${seed}`)
+    const game = new Game(canvas, sim, renderer, o.slot ?? newSlotId(seed))
     renderer.resize(canvas.clientWidth, canvas.clientHeight)
     o.onProgress?.('Wczytuję modele…')
     await renderer.loadAssets(o.onProgress)

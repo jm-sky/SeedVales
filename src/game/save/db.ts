@@ -66,6 +66,8 @@ export interface SaveMeta {
   savedAt: number
   cal: number
   bytes: number
+  /** Generator version the save belongs to (absent in saves before SAVE_VERSION 2). */
+  genVersion?: number
 }
 
 export interface SaveRecord {
@@ -73,21 +75,37 @@ export interface SaveRecord {
   json: string
 }
 
+/** Load/save failure with a player-facing message (never silently replaced by a new game). */
+export class SaveError extends Error {
+  override name = 'SaveError'
+}
+
+/** Unique slot id for a new playthrough (a new game never overwrites an existing save). */
+export const newSlotId = (seed: number, now = Date.now()) => `slot-${seed}-${now.toString(36)}`
+
 export async function writeSave(slot: string, state: GameState): Promise<SaveMeta> {
   const t0 = performance.now()
   const json = JSON.stringify(state)
-  const meta: SaveMeta = { slot, seed: state.seed, savedAt: Date.now(), cal: state.time.cal, bytes: json.length }
+  const meta: SaveMeta = { slot, seed: state.seed, savedAt: Date.now(), cal: state.time.cal, bytes: json.length, genVersion: state.genVersion }
   await tx('saves', 'readwrite', (s) => s.put({ meta, json } satisfies SaveRecord, slot))
   perf.record('save.write', performance.now() - t0)
   perf.gauge('save.bytes', json.length)
   return meta
 }
 
-export async function readSave(slot: string): Promise<GameState | null> {
+/** Reads and migrates a save. Missing or corrupt slot → SaveError (UI shows it). */
+export async function readSave(slot: string): Promise<GameState> {
   const t0 = performance.now()
   const rec = await tx<SaveRecord | undefined>('saves', 'readonly', (s) => s.get(slot))
-  if (!rec) return null
-  const st = migrate(JSON.parse(rec.json) as GameState)
+  if (!rec) throw new SaveError(`Nie znaleziono zapisu „${slot}”.`)
+  let raw: GameState
+  try {
+    raw = JSON.parse(rec.json) as GameState
+  } catch {
+    throw new SaveError('Zapis jest uszkodzony (nieczytelne dane).')
+  }
+  if (!raw || typeof raw !== 'object' || typeof raw.saveVersion !== 'number' || !raw.player) throw new SaveError('Zapis jest uszkodzony (brak wymaganych pól).')
+  const st = migrate(raw)
   perf.record('save.read', performance.now() - t0)
   return st
 }
@@ -101,10 +119,35 @@ export async function deleteSave(slot: string) {
   await tx('saves', 'readwrite', (s) => s.delete(slot))
 }
 
-/** Save format migrations (SAVE_VERSION). */
+/**
+ * The save only stores changes against the generated world; it is valid only for the exact
+ * generator version it was created with. Mismatch → explicit rejection (no silent mount).
+ */
+export function checkWorldCompat(st: GameState, world: Pick<WorldData, 'version' | 'seed'>): void {
+  if (st.seed !== world.seed) throw new SaveError(`Zapis dotyczy innego świata (seed ${st.seed}, wczytany ${world.seed}).`)
+  if (st.genVersion !== world.version) {
+    throw new SaveError(`Zapis powstał dla innej wersji generatora świata (v${st.genVersion}, gra: v${world.version}). Świata nie da się wiernie odtworzyć — zapis odrzucony.`)
+  }
+}
+
+type Migration = (st: GameState) => void
+
+/** Save format migrations: MIGRATIONS[n] upgrades saveVersion n → n+1. */
+const MIGRATIONS: Record<number, Migration> = {
+  // v1 → v2: orders buffer the forged item (materials consumed at forging); caravan uses h.trip.
+  1: (st) => {
+    for (const o of st.px.orders ?? []) if (o.status === 'ready' && !o.item) o.status = 'waiting'
+    for (const n of st.npcs) delete n.ai.cooldowns.caravan_back
+  },
+}
+
 export function migrate(st: GameState): GameState {
-  if (st.saveVersion > SAVE_VERSION) throw new Error('Zapis z nowszej wersji gry.')
-  // v1 is current — future migrations go here.
+  if (st.saveVersion > SAVE_VERSION) throw new SaveError('Zapis pochodzi z nowszej wersji gry.')
+  for (let v = st.saveVersion; v < SAVE_VERSION; v++) {
+    const m = MIGRATIONS[v]
+    if (!m) throw new SaveError(`Nieobsługiwana wersja zapisu (v${st.saveVersion}).`)
+    m(st)
+  }
   st.saveVersion = SAVE_VERSION
   return st
 }

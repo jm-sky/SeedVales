@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { parseSeed } from '@/game/core/rng'
 import { deleteSave, listSaves, type SaveMeta } from '@/game/save/db'
 import { formatClock, formatDate } from '@/game/sim/time'
+import { GEN_VERSION } from '@/game/world/types'
 import type { StartRequest } from './types'
 import type { QualityProfile } from '@/game/render/Renderer'
 
@@ -12,6 +13,8 @@ const emit = defineEmits<{ start: [StartRequest] }>()
 const seedText = ref(new URLSearchParams(location.search).get('seed') ?? '1337')
 const quality = ref<QualityProfile>((localStorage.getItem('sv-quality') as QualityProfile) || (matchMedia('(pointer: coarse)').matches ? 'low' : 'medium'))
 const saves = ref<SaveMeta[]>([])
+/** Known generator mismatch → the save cannot be loaded (checked again on load). */
+const incompatible = (s: SaveMeta) => s.genVersion !== undefined && s.genVersion !== GEN_VERSION
 
 onMounted(async () => {
   try {
@@ -89,11 +92,18 @@ async function remove(slot: string) {
               <div class="text-xs text-muted-foreground">
                 {{ new Date(s.savedAt).toLocaleString() }} · {{ Math.round(s.bytes / 1024) }} KB
               </div>
+              <div
+                v-if="incompatible(s)"
+                class="text-xs text-destructive"
+              >
+                Niezgodna wersja świata (v{{ s.genVersion }}) — nie można wczytać
+              </div>
             </div>
             <div class="flex gap-1">
               <Button
                 size="sm"
                 data-testid="load-save"
+                :disabled="incompatible(s)"
                 @click="begin(s.slot, s.seed)"
               >
                 Wczytaj

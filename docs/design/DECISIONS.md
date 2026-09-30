@@ -25,6 +25,11 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-SIM-7 — Handel: NPC sprzedaje ze skrzyni domu; pieniądze zachowane (transfer 1:1).** Waluta: miedziak (100 m = 1 sr, 100 sr = 1 zł).
 - **D-SIM-8 — Kalibracja potrzeb:** pragnienie pełne→0 w 20 h, głód 30 h, wigor ~19 h marszu (NEEDS). Posiłek 25–40 sytości. Wartości do strojenia.
 
+## Zapis
+
+- **D-SAVE-1 — Zapis = zmiany względem wygenerowanego świata, więc jest ważny tylko dla tego samego `seed` i `GEN_VERSION`.** Niezgodność → jawny odrzut z komunikatem (bez migracji świata — generatora nie da się „przemigrować”). Każda zmiana generatora (bump `GEN_VERSION`) unieważnia stare zapisy; menu je oznacza.
+- **D-SAVE-2 — Format zapisu: `SAVE_VERSION` + łańcuch migracji `MIGRATIONS[n]` (n→n+1) w `save/db.ts`.** Nowszy lub nieobsługiwany format → odrzut. Nowa gra zawsze tworzy nowy slot (`slot-<seed>-<ts>`).
+
 ## Rendering i assety
 
 - **D-REN-1 — Assety Quaternius (CC0):** drzewa/krzewy/skały (Stylized Nature), moduły domów (Medieval Village), rekwizyty (Fantasy Props — tylko neutralne: kowadło, beczki, stragan), zwierzęta (Animated Animal Pack), postacie = głowa z Universal Base Characters (wycięta nad szyją w skrypcie) + stroje Peasant/Ranger + animacje UAL1. Szczegóły: `docs/assets/README.md`.

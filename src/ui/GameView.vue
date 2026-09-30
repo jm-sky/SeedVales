@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { Button } from '@/components/ui/button'
 import { provideGame } from '@/composables/useGame'
 import { installDebugApi } from '@/game/debug/api'
 import { Game } from '@/game/Game'
@@ -30,7 +31,7 @@ onMounted(async () => {
     loading.value = ''
   } catch (e) {
     console.error(e)
-    error.value = String(e)
+    error.value = e instanceof Error ? e.message : String(e)
   }
 })
 
@@ -67,6 +68,14 @@ onBeforeUnmount(() => {
         >
           {{ error || loading }}
         </div>
+        <Button
+          v-if="error"
+          class="mt-4"
+          data-testid="back-to-menu"
+          @click="emit('quit')"
+        >
+          Wróć do menu
+        </Button>
       </div>
     </div>
   </div>
