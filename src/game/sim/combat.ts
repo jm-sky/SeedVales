@@ -15,7 +15,7 @@ import { train } from './actions'
 import { qualityMult, removeItem, wearTool } from './inventory'
 import { questOnKill } from './quests'
 import { addRep, addStat, settlementAt } from './reputation'
-import { applyPartDamage, heal, hp, penalty } from './vitals'
+import { applyPartDamage, heal, hp, makeIll, penalty } from './vitals'
 
 const FISTS: WeaponStats = { kind: 'melee', reach: 0.7, damage: 4, dmgType: 'blunt', cooldown: 0.7, sharpness: 0, stamina: 6 }
 
@@ -73,6 +73,14 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
   if (isHuman(target)) dmg *= 1 - armorResist(target, part, type)
   applyPartDamage(target.vitals, part, dmg, type !== 'blunt')
   sim.emit({ type: 'hit', x: target.x, y: target.y + 1, z: target.z, targetId: target.id, dmg })
+  // Rabies spreads by bites (vision §17.1).
+  if (attacker?.kind === 'animal' && (attacker as Animal).rabid && type !== 'blunt') {
+    if (target.kind === 'animal' && sim.rng.chance(0.2)) (target as Animal).rabid = true
+    else if (target.kind !== 'animal' && sim.rng.chance(0.12)) {
+      makeIll(target.vitals, 'rabies', 60)
+      if (target.kind === 'player') sim.message('Ugryzienie wściekłego zwierzęcia… Potrzebny zielarz!', 'bad')
+    }
+  }
   const h = hp(target.vitals)
   // Reactions.
   if (target.kind === 'animal' && attacker) onAnimalHurt(sim, target as Animal, attacker)

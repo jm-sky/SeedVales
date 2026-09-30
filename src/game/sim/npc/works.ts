@@ -7,6 +7,7 @@
 import type { Sim } from '../sim'
 import type { Animal, Human } from '../types'
 import { itemDef } from '../../data/items'
+import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
 import { applyDamage, weaponOf } from '../combat'
 import { addItem, countItem, findFood, newStack, removeItem } from '../inventory'
@@ -15,6 +16,9 @@ import { drink, eat, heal, hp } from '../vitals'
 import { household, houseOf } from './queries'
 
 type Act = (sim: Sim, h: Human, ref: string | undefined, eff: number) => boolean
+
+/** A cooked household meal is worth more than eating the raw ingredient (calibration, see DECISIONS D-SIM-8). */
+const HOME_MEAL = 2.2
 
 const storeOf = (sim: Sim, h: Human) => houseOf(sim, h)?.inv
 
@@ -35,7 +39,7 @@ export const WORK_ACTS: Record<string, Act> = {
     if (!inv || !f) return false
     const d = itemDef(f.id)
     removeItem(inv, f.id, 1)
-    eat(h.vitals, d.food!.nutrition * 1.3, d.food!.water ?? 0)
+    eat(h.vitals, d.food!.nutrition * HOME_MEAL, d.food!.water ?? 0)
     return true
   },
   eat_inv: (sim, h) => {
@@ -47,7 +51,7 @@ export const WORK_ACTS: Record<string, Act> = {
     const f = b?.inv ? findFood(b.inv) : undefined
     if (!b?.inv || !f) return false
     removeItem(b.inv, f.id, 1)
-    eat(h.vitals, itemDef(f.id).food!.nutrition * 1.3)
+    eat(h.vitals, itemDef(f.id).food!.nutrition * HOME_MEAL)
     return true
   },
   buy_food: (sim, h, ref) => {
@@ -60,10 +64,22 @@ export const WORK_ACTS: Record<string, Act> = {
     h.money -= price
     seller.money += price
     removeItem(inv, f.id, 1)
-    eat(h.vitals, itemDef(f.id).food!.nutrition * 1.3)
+    eat(h.vitals, itemDef(f.id).food!.nutrition * HOME_MEAL)
     return true
   },
   sleep: () => true,
+  camp: () => true,
+  /** Takes provisions for a journey from the household store. */
+  pack_food: (sim, h) => {
+    const inv = storeOf(sim, h)
+    if (!inv) return true
+    for (let i = 0; i < 4; i++) {
+      const f = findFood(inv)
+      if (!f) break
+      for (const s of removeItem(inv, f.id, 1)) addItem(h.inv, s)
+    }
+    return true
+  },
   rest: () => true,
   shelter: () => true,
   socialize: (_sim, h) => {
@@ -144,7 +160,7 @@ export const WORK_ACTS: Record<string, Act> = {
   harvest_field: (sim, h, ref, eff) => {
     const b = sim.building(ref)
     if (!b?.field || b.field.growth < 1) return false
-    const qty = Math.round((8 + h.skills.farming / 8) * eff)
+    const qty = Math.round((20 + h.skills.farming / 5) * eff)
     giveOrDrop(sim, h, newStack(b.field.crop, qty))
     b.field.growth = 0
     train(h, 'farming', 0.6, 3)
@@ -263,6 +279,26 @@ export const WORK_ACTS: Record<string, Act> = {
     return !!c && butcher(sim, h, c).ok
   },
   idle: () => true,
+  /** Exchange surplus between the trader's home warehouse and the visited one (goods carried by the caravan). */
+  caravan_trade: (sim, h, ref) => {
+    const there = sim.building(ref)
+    const here = sim.building(sim.state.settlements[h.settlementId]?.warehouseId)
+    if (!there?.inv || !here?.inv) return false
+    const move = (from: typeof here, to: typeof here, id: string, keep: number, max: number) => {
+      const n = Math.min(max, countItem(from.inv!, id) - keep)
+      if (n > 0) for (const s of removeItem(from.inv!, id, n)) addItem(to.inv!, s)
+      return Math.max(0, n)
+    }
+    let moved = 0
+    for (const id of ['log', 'stone', 'iron_ingot', 'grain', 'bread', 'wool', 'hide', 'dried_meat']) {
+      moved += move(here, there, id, 10, 6)
+      moved += move(there, here, id, 10, 6)
+    }
+    h.money += 5 + moved
+    h.ai.cooldowns.caravan_back = sim.state.time.play + 3 * 3600
+    perf.count('economy.caravanTrades')
+    return true
+  },
 }
 
 export function householdFoodCount(sim: Sim, h: Human): number {

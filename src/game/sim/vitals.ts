@@ -4,7 +4,7 @@
  * @domain character
  * @subdomain vitals
  */
-import type { BodyPart, Vitals } from './types'
+import type { BodyPart, IllnessKind, Vitals } from './types'
 import { CALENDAR_SPEED, COMBAT, NEEDS, STAMINA } from '../config/calibration'
 import { BODY_PARTS } from './types'
 
@@ -124,7 +124,8 @@ export function eat(v: Vitals, nutrition: number, water = 0) {
   v.thirst = Math.min(100, v.thirst + water)
 }
 
-export function makeIll(v: Vitals, kind: 'stomach' | 'poison', severity: number) {
+export function makeIll(v: Vitals, kind: IllnessKind, severity: number) {
   if (v.illness && v.illness.severity >= severity) return
-  v.illness = { kind, severity, hoursLeft: kind === 'poison' ? 6 + severity / 5 : 12 + severity / 3 }
+  const hours = kind === 'poison' ? 6 + severity / 5 : kind === 'rabies' ? 96 : 12 + severity / 3
+  v.illness = { kind, severity, hoursLeft: hours }
 }

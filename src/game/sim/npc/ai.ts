@@ -102,8 +102,8 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   const step = ai.steps[ai.stepIdx]
   let ex: Exertion = 'idle'
   if (step?.op === 'goto') ex = step.run ? 'run' : 'walk'
-  else if (step?.op === 'work') ex = step.act === 'sleep' ? 'sleep' : step.act === 'rest' || step.act === 'socialize' || step.act === 'shelter' ? 'rest' : 'work'
-  const pen = updateVitals(h.vitals, dt, ex, step?.op === 'work' && step.act === 'sleep' ? 0.8 : 0.5)
+  else if (step?.op === 'work') ex = step.act === 'sleep' || step.act === 'camp' ? 'sleep' : step.act === 'rest' || step.act === 'socialize' || step.act === 'shelter' ? 'rest' : 'work'
+  const pen = updateVitals(h.vitals, dt, ex, step?.op === 'work' && step.act === 'sleep' ? 0.8 : step?.op === 'work' && step.act === 'camp' ? 0.45 : 0.5)
 
   // Interrupt sleep/work for threats (checked at update frequency).
   if (ai.goal !== 'fight' && ai.goal !== 'flee' && threatNear(sim, h, h.profession === 'guard' ? 45 : 22)) {
@@ -138,7 +138,7 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   ai.stepT += dt
   if (cur.anim) h.action = { kind: cur.anim, at: now - ai.stepT }
   // Sleep ends early when rested in the morning.
-  if (cur.act === 'sleep' && h.vitals.vigor >= 99 && ai.stepT > 60) ai.stepT = cur.dur
+  if ((cur.act === 'sleep' || cur.act === 'camp') && h.vitals.vigor >= 99 && ai.stepT > 60) ai.stepT = cur.dur
   if (ai.stepT >= cur.dur) {
     const fn = WORK_ACTS[cur.act]
     const ok = fn ? fn(sim, h, cur.ref, h.age === 'adult' ? 1 : 0.3) : false

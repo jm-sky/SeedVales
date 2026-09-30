@@ -195,6 +195,8 @@ export interface Building {
   field?: { crop: FieldCrop; growth: number; moisture: number }
   ratNest?: { strength: number; since: number }
   playerBuilt?: boolean
+  /** Fractional daily household food production accumulator. */
+  foodAcc?: number
 }
 
 export interface ConstructionSite {

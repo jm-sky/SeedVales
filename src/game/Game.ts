@@ -5,8 +5,10 @@
  */
 import type { QualityProfile } from './render/Renderer'
 import type { InteractOption, Target, TargetRef } from './sim/interact'
+import type { SimEvent } from './sim/sim'
 import type { GameState, ItemStack } from './sim/types'
 import type { WorldData } from './world/types'
+import { Ambience } from './audio/ambience'
 import { itemDef } from './data/items'
 import { blueprintById, recipeById } from './data/recipes'
 import { perf } from './diag/perf'
@@ -68,6 +70,8 @@ export class Game {
   showDiag = false
   toast = ''
   toastUntil = 0
+  audio = new Ambience()
+  private audioEvents: SimEvent[] = []
   isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   private constructor(canvas: HTMLCanvasElement, sim: Sim, renderer: Renderer, slot: string) {
@@ -75,6 +79,9 @@ export class Game {
     this.sim = sim
     this.renderer = renderer
     this.slot = slot
+    const unlockAudio = () => this.audio.start()
+    window.addEventListener('pointerdown', unlockAudio, { once: true })
+    window.addEventListener('keydown', unlockAudio, { once: true })
     this.detach = attachControls(canvas, {
       onAction: (a) => this.onKey(a),
       onAttack: () => this.attack(),
@@ -160,6 +167,7 @@ export class Game {
     if (this.panel !== 'menu') sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
     this.renderer.render(dt)
+    if (this.audioEvents.length < 200) this.audioEvents.push(...sim.events)
     sim.events.length = 0
     // Target & UI (5 Hz).
     this.uiTimer -= dt
@@ -167,6 +175,8 @@ export class Game {
       this.uiTimer = 0.2
       this.target = sim.player.vitals.ko && sim.player.vitals.ko.until > sim.state.time.play ? null : findTarget(sim, sim.player.rot)
       this.options = this.target ? targetOptions(sim, this.target.ref) : []
+      perf.measure('audio.update', () => this.audio.update(0.2, sim, this.audioEvents))
+      this.audioEvents.length = 0
       perf.gauge('ui.listeners', this.uiListeners.size)
       perf.measure('ui.sync', () => this.notify())
     }

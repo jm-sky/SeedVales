@@ -10,13 +10,13 @@ import { perf } from '../diag/perf'
 import { regrowNodes } from './actions'
 import { projectileSystem } from './combat'
 import { faunaSystem } from './fauna/ai'
-import { spoilInventory } from './inventory'
+import { addItem, newStack, spoilInventory } from './inventory'
 import { makeAnimal, rollVariant } from './newGame'
 import { npcSystem } from './npc/ai'
 import { playerSystem } from './player'
 import { questSystem } from './quests'
 import { reputationSystem } from './reputation'
-import { growthFactor } from './time'
+import { growthFactor, seasonOf } from './time'
 import { isBadWeather, updateWeather } from './weather'
 
 function ecology(sim: Sim, dt: number) {
@@ -76,6 +76,28 @@ function ecology(sim: Sim, dt: number) {
   }
 }
 
+/**
+ * Household self-sufficiency: kitchen garden, hens/cow and baking produce food daily (abstracted),
+ * scaled by season. Keeps settlements self-sufficient in food (vision §28 Ekonomia).
+ */
+function households(sim: Sim, dtPlay: number) {
+  const days = (dtPlay * CALENDAR_SPEED) / 86400
+  const season = seasonOf(sim.state.time.cal)
+  const g = { spring: 0.9, summer: 1.1, autumn: 1, winter: 0.45 }[season]
+  const pool = season === 'winter' ? ['bread', 'dried_meat', 'cabbage', 'egg'] : ['bread', 'carrot', 'cabbage', 'egg', 'milk', 'tomato', 'apple']
+  for (const hh of sim.state.households) {
+    const house = sim.building(hh.houseId)
+    if (!house?.inv) continue
+    const acc = house.foodAcc ?? 0
+    let n = acc + hh.memberIds.length * 1.1 * g * days
+    while (n >= 1) {
+      addItem(house.inv, newStack(sim.rng.pick(pool), 1))
+      n -= 1
+    }
+    house.foodAcc = n
+  }
+}
+
 const denSpecies = (d: string, rnd: number): SpeciesId => (d === 'deer' ? (rnd < 0.3 ? 'stag' : 'deer') : (d as SpeciesId))
 
 function dens(sim: Sim) {
@@ -102,6 +124,7 @@ export function installSystems(sim: Sim) {
     { name: 'fauna', interval: 0.05, run: (s) => faunaSystem(s) },
     { name: 'ecology', interval: 5, run: ecology },
     { name: 'dens', interval: 30, run: (s) => dens(s) },
+    { name: 'households', interval: 20, run: households },
     { name: 'regrow', interval: 60, run: (s) => regrowNodes(s) },
     { name: 'reputation', interval: 5, run: (s) => reputationSystem(s) },
     { name: 'quests', interval: 10, run: (s) => questSystem(s) },

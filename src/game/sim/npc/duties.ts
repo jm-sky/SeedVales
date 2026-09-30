@@ -10,6 +10,7 @@ import { itemDef } from '../../data/items'
 import { SPECIES } from '../../data/species'
 import { isTree } from '../../world/nodes'
 import { countItem } from '../inventory'
+import { routeVia } from '../movement'
 import { daylight, hourOf, isNight, seasonOf } from '../time'
 import { doorOf, household, householdBuilding, houseOf, nearestAvailableNode, settlementBuildings } from './queries'
 
@@ -112,7 +113,38 @@ function herbalist(sim: Sim, h: Human, eff: number): DutyPlan {
   return { label: 'Zbiera zioła', steps: [go(herb.x, herb.z, 1), work('gather', 6, 'Zbiera zioła', herb.id, 'kneel'), ...homeReturn(sim, h)] }
 }
 
+/** Traveling trade between road-connected settlements (MD/LG traders), every 2nd day. */
+function caravan(sim: Sim, h: Human): DutyPlan {
+  const home = sim.world.settlements[h.settlementId]!
+  if (home.size === 'SM') return null
+  const road = sim.world.roads.find((r) => r.from === home.id || r.to === home.id)
+  if (!road) return null
+  const other = sim.world.settlements[road.from === home.id ? road.to : road.from]!
+  const now = sim.state.time.play
+  const day = Math.floor(sim.state.time.cal / 86400)
+  const hr = hourOf(sim.state.time.cal)
+  const far = Math.hypot(h.x - home.x, h.z - home.z) > home.radius + 200
+  const returning = (h.ai.cooldowns.caravan_back ?? 0) > now
+  const wh = sim.building(sim.state.settlements[other.id]?.warehouseId)
+  if (returning) {
+    if (!far) {
+      h.ai.cooldowns.caravan_back = 0
+      return null
+    }
+    const pts = routeVia(sim, h.x, h.z, home.x, home.z)
+    return { label: `Wraca z ${other.name}`, steps: pts.map((p) => go(p.x, p.z, 4)) }
+  }
+  if (!far && !(day % 2 === 0 && hr >= 7 && hr < 10)) return null
+  if (!wh) return null
+  const d = doorOf(wh)
+  const pts = routeVia(sim, h.x, h.z, d.x, d.z)
+  const pack = far ? [] : [work('pack_food', 3, 'Pakuje prowiant', undefined, 'interact')]
+  return { label: `Karawana do ${other.name}`, steps: [...pack, ...pts.map((p) => go(p.x, p.z, 4)), go(d.x, d.z, 2), work('caravan_trade', 30, 'Handluje w magazynie', wh.id, 'interact')] }
+}
+
 function trader(sim: Sim, h: Human): DutyPlan {
+  const trip = caravan(sim, h)
+  if (trip) return trip
   const market = settlementBuildings(sim, h.settlementId, 'market')[0]
   const spot = market ? doorOf(market) : houseOf(sim, h) ? doorOf(houseOf(sim, h)!) : null
   if (!spot) return null

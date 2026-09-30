@@ -33,6 +33,9 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const door = house ? doorOf(house) : { x: h.x, z: h.z }
   const opts: GoalOption[] = []
   const isGuard = h.profession === 'guard'
+  const homeS = sim.world.settlements[h.settlementId]!
+  // Caravan on the road: keeps travelling across the day, sleeps where it is (camp).
+  const onTrip = h.profession === 'trader' && Math.hypot(h.x - homeS.x, h.z - homeS.z) > homeS.radius + 200
 
   // --- Safety ---
   const threat = threatNear(sim, h, isGuard ? 45 : 22)
@@ -106,7 +109,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   // Sleep: guards sleep by day (night duty).
   const sleepTime = isGuard ? hr >= 9 && hr < 16 : night || hr >= 22 || hr < 5
   const sleepU = sleepTime ? (v.vigor < 90 ? 0.55 + (1 - v.vigor / 100) * 0.4 : 0.25) : v.vigor < 10 ? 0.85 : 0
-  if (sleepU > 0 && house) {
+  if (sleepU > 0 && house && (!onTrip || v.vigor < (night ? 75 : 12))) {
     opts.push({
       id: 'sleep',
       score: sleepU,
@@ -114,13 +117,14 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
         const wake = isGuard ? 16 : 6
         const hrsLeft = ((wake - hr + 24) % 24) || 8
         const dur = Math.min(8, Math.max(1, hrsLeft)) * 150 // calendar h → gameplay s (150 s/h)
+        if (onTrip) return { label: 'Nocuje przy drodze', steps: [work('camp', dur, 'Nocuje przy drodze')] }
         return { label: 'Śpi', steps: [go(door.x, door.z, 1.2), work('sleep', dur, 'Śpi', house.id, 'sleep')] }
       },
     })
   }
 
   // --- Social (extraversion) ---
-  if ((hr >= 18 && hr < 22) || v.social < 25) {
+  if (!onTrip && ((hr >= 17 && hr < 23) || (v.social < 25 && !night))) {
     const s = 0.2 + b5.e * 0.3 + need(v.social) * 0.4
     const fire = settlementBuildings(sim, h.settlementId, 'campfire')[0]
     const inn = settlementBuildings(sim, h.settlementId, 'inn')[0]
@@ -138,7 +142,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   }
 
   // --- Weather shelter (neuroticism raises it) ---
-  if (isBadWeather(sim.weather) && house) {
+  if (isBadWeather(sim.weather) && house && !onTrip) {
     const inside = Math.hypot(h.x - door.x, h.z - door.z) < 3
     if (!inside) {
       const s = 0.4 + b5.n * 0.25 + (sim.weather.kind === 'storm' ? 0.2 : 0) - (isGuard ? 0.25 : 0)
@@ -147,7 +151,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   }
 
   // --- Duties (conscientiousness) ---
-  const inWork = isGuard || (hr >= 6 && hr < 19 && !night)
+  const inWork = isGuard || onTrip || (hr >= 6 && hr < 19 && !night)
   if (inWork && h.age !== 'child' || (h.age === 'child' && hr >= 9 && hr < 16)) {
     const s = (0.32 + b5.c * 0.3) * (v.vigor > 10 ? 1 : 0.3) * (h.age === 'adult' ? 1 : 0.7)
     opts.push({ id: 'work', score: s, plan: () => dutyPlan(sim, h) })
