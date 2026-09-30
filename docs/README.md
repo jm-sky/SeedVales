@@ -1,38 +1,42 @@
 # Docs
 
-To jest miejsce na główny indeks dokumentacji.
+Główny indeks dokumentacji.
 
-Plik `VISION.md` zawiera główną wizję w rodzaju product requirements.
+## Najważniejsze pliki
+
+| Plik | Rola |
+|---|---|
+| [VISION.md](VISION.md) | główna wizja (product requirements) — źródło prawdy dla designu gry |
+| [VISION-APPENDIX.md](VISION-APPENDIX.md) | nowsze uzupełnienia wizji (wymagania `scope: "v2"`) |
+| [IMPLEMENTATION-PROMPT.md](IMPLEMENTATION-PROMPT.md) | stały brief dla autonomicznych sesji implementacyjnych |
+| [../NEXT-SESSION-KICK-OFF-PROMPT.md](../NEXT-SESSION-KICK-OFF-PROMPT.md) | brief na najbliższą sesję (długa pętla) |
+| [state/PROGRESS.md](state/PROGRESS.md) | handoff między sesjami — czytaj najpierw |
+| [state/FEATURES.json](state/FEATURES.json) | wymagania, kryteria odbioru, statusy |
+| [design/DECISIONS.md](design/DECISIONS.md) | decyzje i uproszczenia |
+| [roadmap/v1-closure-and-appendix.md](roadmap/v1-closure-and-appendix.md) | kolejność: domknięcie v1 → fale dodatku |
+| [reviews/2026-09-30--001--v1-review.md](reviews/2026-09-30--001--v1-review.md) | niezależne review v1 (Grok / Scribe) |
+| [DEVELOPER-CALIBRATION-TOOLS.md](DEVELOPER-CALIBRATION-TOOLS.md) | propozycja narzędzi kalibracyjnych (plan `tools--001`, draft) |
+| [assets/README.md](assets/README.md) | katalog assetów Quaternius i konwersji |
+
+## Struktura
 
 ```
 docs/
 ├── README.md  <-- indeks dokumentacji
 ├── VISION.md  <-- główna wizja
-├── design     <-- szczegółowy design konkretnych obszarów
-│   └── README.md
-├── plans      <-- plany implementacji konkretnych tematów na 1-2 sesje
-│   └── README.md
+├── VISION-APPENDIX.md  <-- uzupełnienia wizji
+├── assets     <-- katalog assetów
+├── design     <-- szczegółowy design konkretnych obszarów + DECISIONS.md
+├── plans      <-- plany implementacji (domain--ID--slug.md)
 ├── research   <-- wyniki research
-│   └── README.md
 ├── reviews    <-- wyniki review
-│   └── README.md
-├── roadmap    <-- pliki roadmap różnych obszarów/domen, wiele etapów -> wiele planów
-│   └── README.md
-├── state      <-- aktualny stan, zależności
-│   └── README.md
-└── vision     <-- szczegóły wizji w rozbiciu na konkretne domeny
-    └── README.md
+├── roadmap    <-- roadmapy obejmujące wiele planów
+├── state      <-- aktualny stan (PROGRESS.md, FEATURES.json, PERF.md)
+└── vision     <-- szczegóły wizji w rozbiciu na domeny
 ```
 
 ## Domains
 
-Warto podzielić system na dedykowane domeny, np.
-
-- npc
-- combat
-- fauna
-- world
-
-To trzeba ustalić i uzupełnić.
+Domeny używane w planach i FEATURES (robocze): `game` (przekrojowe), `world`, `sim`, `npc`, `fauna`, `economy`, `settlement`, `ui`, `render`, `diag`, `tools`.
 
 Możemy mieć konfigurację domen w pliku `.ts` w `scripts/docs/domains.ts` aby mieć jedno źródło prawdy dla walidatorów i skryptów automatycznych.

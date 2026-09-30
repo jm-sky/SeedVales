@@ -1,5 +1,5 @@
 {
- "$comment": "Wymagania z docs/VISION.md. status: planned|in_progress|implemented_unverified|verified|blocked|deferred. scope: v1|later. Nie osłabiać kryteriów bez wpisu w docs/design/DECISIONS.md.",
+ "$comment": "Wymagania z docs/VISION.md i docs/VISION-APPENDIX.md (vision: \"APPX: <sekcja>\"). status: planned|in_progress|implemented_unverified|verified|blocked|deferred. scope: v1 | v2 (dodatek do wizji, po domknięciu v1; kolejność: docs/roadmap/v1-closure-and-appendix.md) | later. Nie osłabiać kryteriów bez wpisu w docs/design/DECISIONS.md.",
  "features": [
   {
    "id": "ARCH-01",
@@ -26,7 +26,7 @@
    "behavior": "Deterministyczny świat z seeda cache'owany osobno (wersja generatora) od zapisu gry",
    "verify": "vitest determinizm + e2e cache hit",
    "status": "verified",
-   "evidence": "generate.test.ts determinism; IndexedDB worlds store keyed seed+GEN_VERSION (save/db.ts); acceptance step 9 reload"
+   "evidence": "generate.test.ts determinism; IndexedDB worlds store keyed seed+GEN_VERSION (save/db.ts); acceptance step 9 reload | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md): determinizm OK; parowanie save↔genVersion niekompletne (game--002 A4)"
   },
   {
    "id": "DIAG-01",
@@ -43,8 +43,8 @@
    "scope": "v1",
    "behavior": "Benchmarki scen (mała/zatłoczona osada, las, walka, podróż przez chunki, przyspieszenie, długa gra) z raportem JSON + MD",
    "verify": "pnpm bench",
-   "status": "verified",
-   "evidence": "pnpm bench:sim (7 scenes incl. long run + memory) and pnpm bench:render; JSON+MD in test-results/bench, baseline scripts/bench/baseline.json; summary docs/state/PERF.md"
+   "status": "implemented_unverified",
+   "evidence": "pnpm bench:sim (7 scenes incl. long run + memory) and pnpm bench:render; JSON+MD in test-results/bench, baseline scripts/bench/baseline.json; summary docs/state/PERF.md | docs/state/PERF.md jeszcze NIE istnieje (zweryfikowane 2026-09-30) — plan diag--001"
   },
   {
    "id": "WORLD-01",
@@ -79,8 +79,8 @@
    "scope": "v1",
    "behavior": "≥3 osady (SM dom, SM/MD ~1 dzień trasy, LG dalej) połączone drogami A* po terenie; drogi spłaszczają teren; brody/mosty na rzekach",
    "verify": "vitest: długość trasy dom→sąsiad 3.0–4.5 km, trasa istnieje",
-   "status": "verified",
-   "evidence": "generate.test.ts: 3 settlements SM/MD/LG, route 0→1 within 0.8–1.3 day march; bridges/fords"
+   "status": "in_progress",
+   "evidence": "generate.test.ts: 3 settlements SM/MD/LG, route 0→1 within 0.8–1.3 day march; bridges/fords | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #6: tylko seed 1337 w testach; 4/19 seedów (0, 2020, 9999, 88888) poniżej 0.8× DAY_MARCH_M — plan game--002 A6"
   },
   {
    "id": "WORLD-05",
@@ -601,8 +601,8 @@
    "scope": "v1",
    "behavior": "Zamówienia u NPC (kowal) z zaliczką",
    "verify": "vitest + e2e",
-   "status": "verified",
-   "evidence": "src/game/sim/features.test.ts CRAFT-02; orders panel"
+   "status": "in_progress",
+   "evidence": "src/game/sim/features.test.ts CRAFT-02; orders panel | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #1: zamówienie kowala nie zużywa materiałów (works.ts smith → ready; collectOrder newStack) — plan game--002 A1"
   },
   {
    "id": "TRADE-01",
@@ -718,8 +718,8 @@
    "scope": "v1",
    "behavior": "Pełny zapis/odczyt zmiennego stanu w IndexedDB (wersjonowany format); brak odtworzenia zużytych zasobów/pokonanych wrogów",
    "verify": "vitest round-trip + e2e reload",
-   "status": "verified",
-   "evidence": "save.test.ts round-trip; acceptance step 9 reload"
+   "status": "in_progress",
+   "evidence": "save.test.ts round-trip; acceptance step 9 reload | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #4/#14: genVersion nie walidowane przy load, migrate = no-op; #5 nowa gra nadpisuje slot-seed — plan game--002 A4/A5"
   },
   {
    "id": "SAVE-02",
@@ -772,8 +772,8 @@
    "scope": "v1",
    "behavior": "Osady samowystarczalne w żywności; wymiana surowców (handlarz wędrowny między osadami)",
    "verify": "vitest długiej symulacji",
-   "status": "verified",
-   "evidence": "economy.test.ts (3 days: fed, caravan trades between settlements)"
+   "status": "in_progress",
+   "evidence": "economy.test.ts (3 days: fed, caravan trades between settlements) | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #10: mint/vanish pieniędzy (inn_sleep, collectOrder, completeQuest, caravan_trade); #2 pętla karawany — plan game--002 A2/B4"
   },
   {
    "id": "VOICE-01",
@@ -783,6 +783,240 @@
    "verify": "—",
    "status": "deferred",
    "evidence": ""
+  },
+  {
+   "id": "PERF-01",
+   "vision": "APPX: Spatial grid i częstotliwość decyzji",
+   "scope": "v1",
+   "behavior": "Systemy per-tick nie skanują wszystkich obiektów świata; zapytania przestrzenne (sim.actors.query / nodes.query) w zasięgu",
+   "verify": "audyt w PERF.md + bench:sim przed/po",
+   "status": "planned",
+   "evidence": "plan: docs/plans/diag--001--sim-hotspots-and-perf-report.md"
+  },
+  {
+   "id": "AI-01",
+   "vision": "APPX: Spatial grid i częstotliwość decyzji",
+   "scope": "v2",
+   "behavior": "NPC i zwierzęta podejmują decyzje ~1×/s (nie co klatkę); częstotliwość zależy od gatunku i stanu (zmęczenie); zdarzenia krytyczne wymuszają natychmiastową decyzję",
+   "verify": "vitest: liczba decyzji/min; atak wymusza decyzję w ≤1 tick; bench",
+   "status": "planned",
+   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+  },
+  {
+   "id": "FAUNA-06",
+   "vision": "APPX: Zachowanie zwierząt przy zagrożeniu",
+   "scope": "v2",
+   "behavior": "Zwierzęta domowe przy zagrożeniu/ataku uciekają do pasterza albo swojej zagrody",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+  },
+  {
+   "id": "FAUNA-07",
+   "vision": "APPX: Zachowanie zwierząt przy zagrożeniu",
+   "scope": "v2",
+   "behavior": "Dzikie zwierzęta boją się ludzi, ognia i zagród; bardziej agresywne przy młodych lub gdy człowiek jest blisko legowiska",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+  },
+  {
+   "id": "FAUNA-08",
+   "vision": "APPX: Zwierzęta",
+   "scope": "v2",
+   "behavior": "Zjadanie zwłok trwa w czasie; gracz może przerwać konsumpcję i przegonić drapieżnika",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+  },
+  {
+   "id": "FAUNA-09",
+   "vision": "APPX: Zwierzęta",
+   "scope": "v2",
+   "behavior": "Młode pomniejszone; prime/alfa powiększone i przyciemnione ~10%",
+   "verify": "screenshot tour + test danych wariantu",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "TRACE-01",
+   "vision": "APPX: Ślady",
+   "scope": "v2",
+   "behavior": "Trafienia zadające obrażenia zostawiają ślad krwi; zanika z czasem i szybciej w deszczu; wabi drapieżniki",
+   "verify": "vitest (sim) + screenshot (dekale)",
+   "status": "planned",
+   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md, render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "WEATHER-01",
+   "vision": "APPX: Pogoda",
+   "scope": "v2",
+   "behavior": "Chmury na niebie; widoczny padający deszcz i śnieg",
+   "verify": "screenshot tour + bench:render",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "WEATHER-02",
+   "vision": "APPX: Pogoda",
+   "scope": "v2",
+   "behavior": "Teren mokry po opadzie (zmiana wyglądu); biały pod śniegiem (opcjonalnie warstwa śniegu)",
+   "verify": "screenshot tour",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "CHAR-01",
+   "vision": "APPX: Modele postaci",
+   "scope": "v2",
+   "behavior": "Różnorodność postaci: kolory włosów, brody, fryzury, skala (X/Z ±5%, Y ±10%), tint ubrań, łączenie części modeli, fallback dziecka = pomniejszony dorosły; deterministycznie z id",
+   "verify": "screenshot/plansza wariantów + bench:render (draw calls nie rosną)",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "RENDER-03",
+   "vision": "APPX: Kierunek graficzny",
+   "scope": "v2",
+   "behavior": "Low-poly nie ogranicza jakości tam, gdzie nie kosztuje dużo FPS; ogień z cząsteczkami i iskrami (za profilem jakości)",
+   "verify": "screenshot + bench:render",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "WORLD-11",
+   "vision": "APPX: Landmarki i skarby",
+   "scope": "v2",
+   "behavior": "Landmarki w losowych lokalizacjach: kamienny krąg, ruiny domu, ruiny posiadłości, wrak statku, wrak łodzi (deterministyczne z seeda)",
+   "verify": "vitest determinizm + reguły na ≥8 seedach; screenshot",
+   "status": "planned",
+   "evidence": "plan: docs/plans/world--001--landmarks-and-treasure.md"
+  },
+  {
+   "id": "LOOT-01",
+   "vision": "APPX: Landmarki i skarby",
+   "scope": "v2",
+   "behavior": "Skarby: zakopane przy landmarkach, skrzynie z losowym lootem, rzadko w brzuchu drapieżnika (jaskinie po WORLD-05); kosztowności i broń wysokiej jakości; nie odradzają się po load",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/world--001--landmarks-and-treasure.md"
+  },
+  {
+   "id": "TRADE-02",
+   "vision": "APPX: Handel, prezenty i relacje",
+   "scope": "v2",
+   "behavior": "Handel możliwy z każdym NPC (nadwyżki); mechanizm handlu służy też do przekazywania przedmiotów",
+   "verify": "vitest + e2e",
+   "status": "planned",
+   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+  },
+  {
+   "id": "SOC-01",
+   "vision": "APPX: Handel, prezenty i relacje",
+   "scope": "v2",
+   "behavior": "Osobny system prezentów podnoszący relację (npc.opinion); NPC wyrażają preferencje przedmiotów",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+  },
+  {
+   "id": "UI-03",
+   "vision": "APPX: Interfejs i ekrany",
+   "scope": "v2",
+   "behavior": "Ekrany: podgląd postaci, atrybuty, reputacja, umiejętności, choroby, ekwipunek, wybór podstawowej broni wręcz i dystansowej, filtrowanie/sortowanie, parametry przedmiotów, zadania",
+   "verify": "e2e desktop + mobile, screenshoty",
+   "status": "planned",
+   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+  },
+  {
+   "id": "UI-04",
+   "vision": "APPX: Interfejs i ekrany",
+   "scope": "v2",
+   "behavior": "Duża mapa z lokalizacjami; minimapa ze strzałką do wyznaczonego celu",
+   "verify": "e2e + screenshoty",
+   "status": "planned",
+   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+  },
+  {
+   "id": "UI-05",
+   "vision": "APPX: Interfejs i ekrany",
+   "scope": "v2",
+   "behavior": "Menu konfiguracji (jakość grafiki, głośność); nowa gra; zapis pod nazwą",
+   "verify": "e2e",
+   "status": "planned",
+   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+  },
+  {
+   "id": "UI-06",
+   "vision": "APPX: Wybór celu interakcji",
+   "scope": "v2",
+   "behavior": "Wspomaganie wyboru celu; Tab przełącza cyklicznie cele w zasięgu (mobile: przycisk)",
+   "verify": "e2e",
+   "status": "planned",
+   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+  },
+  {
+   "id": "RES-07",
+   "vision": "APPX: Pozyskiwanie surowców i transport",
+   "scope": "v2",
+   "behavior": "Ścięte drzewo zostawia widoczny, trwały pień; większe skały rozbijane kilofem na mniejsze kawałki → kamienie",
+   "verify": "vitest + screenshot",
+   "status": "planned",
+   "evidence": "plan: docs/plans/economy--001--gathering-cooking-transport.md"
+  },
+  {
+   "id": "TRANS-01",
+   "vision": "APPX: Pozyskiwanie surowców i transport",
+   "scope": "v2",
+   "behavior": "Taczka i wózek ręczny zwiększają udźwig ciężkich surowców (wózek pod osła/konia → later, zależny od WORLD-09)",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/economy--001--gathering-cooking-transport.md"
+  },
+  {
+   "id": "FOOD-03",
+   "vision": "APPX: Gotowanie przy ognisku",
+   "scope": "v2",
+   "behavior": "Ognisko: 1 kawałek mięsa; z naczyniem/patelnią 2; z rusztem więcej. Pieczone mięso zachowuje gatunek i świeżość",
+   "verify": "vitest + e2e",
+   "status": "planned",
+   "evidence": "plan: docs/plans/economy--001--gathering-cooking-transport.md"
+  },
+  {
+   "id": "COMP-01",
+   "vision": "APPX: Towarzysze",
+   "scope": "v2",
+   "behavior": "Najem towarzysza na czas, za kwotę, z zadaniem i poziomem ryzyka; wspólna podróż buduje relację",
+   "verify": "vitest + e2e",
+   "status": "planned",
+   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+  },
+  {
+   "id": "COMP-02",
+   "vision": "APPX: Towarzysze",
+   "scope": "v2",
+   "behavior": "Darmowe dołączenie: szansa z reputacji i relacji, modyfikowana charakterem, sytuacją i obowiązkami; chętniej młodzi mężczyźni bez rodziny; w każdej osadzie ≥1 starszy syn bez własnej rodziny",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+  },
+  {
+   "id": "COMP-03",
+   "vision": "APPX: Towarzysze",
+   "scope": "v2",
+   "behavior": "Przekazanie broni/pancerza towarzyszowi (prezent/handel); NPC faktycznie ich używa i wybiera lepszą broń",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+  },
+  {
+   "id": "SET-05",
+   "vision": "APPX: Burmistrz i zarządzanie osadą",
+   "scope": "v2",
+   "behavior": "Przy wysokiej reputacji i relacjach gracz może zostać burmistrzem; dotychczasowy zostaje zastępcą; wpływ na rozbudowę (zależy od SET-04)",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan: docs/plans/settlement--001--mayor.md"
   }
  ]
 }

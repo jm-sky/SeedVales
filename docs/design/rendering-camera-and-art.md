@@ -12,6 +12,10 @@
 | Teren, roślinność, budynki | Proceduralne, low-poly, paleta kolorów | Brak zależności od assetów, szybka iteracja, pasuje do generatora świata |
 | Postacie, zwierzęta | Importowane glTF (docelowo) | Animacje i czytelność postaci; placeholdery proceduralne do czasu doboru |
 
+## Doprecyzowanie (VISION-APPENDIX, 2026-09-30)
+
+„Low-poly” opisuje styl geometrii, a **nie** ogranicza jakości: tam, gdzie nie kosztuje to dużo FPS, stosujemy ładniejsze efekty (np. ogień z cząsteczkami i iskrami, chmury, opady, mokry/ośnieżony teren), sterowane profilem jakości (`render/quality.ts`). Patrz D-REN-5 w `DECISIONS.md` i plan `docs/plans/render--001--weather-variety-effects.md`.
+
 ## Konsekwencje
 
 - **Sterowanie:** desktop — WASD + mysz; mobile — joystick + drag kamery, przyciski akcji.

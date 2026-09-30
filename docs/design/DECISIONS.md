@@ -30,6 +30,7 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-REN-1 — Assety Quaternius (CC0):** drzewa/krzewy/skały (Stylized Nature), moduły domów (Medieval Village), rekwizyty (Fantasy Props — tylko neutralne: kowadło, beczki, stragan), zwierzęta (Animated Animal Pack), postacie = głowa z Universal Base Characters (wycięta nad szyją w skrypcie) + stroje Peasant/Ranger + animacje UAL1. Szczegóły: `docs/assets/README.md`.
 - **D-REN-2 — Szablony scalane per materiał + InstancedMesh** (budynki, roślinność). Draw calls ~ szablony × materiały.
 - **D-REN-3 — Brak modeli: szczur, zając, dzik, niedźwiedź, owca, kura, łoś → proceduralne placeholdery.**
+- **D-REN-5 — Low-poly to styl, nie limit jakości (VISION-APPENDIX).** Efekty (cząsteczki ognia/iskry, chmury, opady, mokry/ośnieżony teren, dekale krwi) dozwolone, jeśli mieszczą się w budżecie D-PERF; każdy efekt za profilem jakości i mierzony `bench:render`.
 - **D-REN-4 — Profile jakości** (`render/quality.ts`): zasięg widzenia, LOD terenu, promienie modeli roślin/postaci, cienie, pixel ratio.
 
 ## Wydajność (D-PERF)
@@ -43,3 +44,10 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-UI-1 — Vue HUD czyta stan przez licznik `version` (5 Hz), nie przez głęboką reaktywność.** Brak kosztu proxy na stanie symulacji.
 - **D-UI-2 — Esc przy pointer-lock najpierw zwalnia kursor (zachowanie przeglądarki); drugi Esc otwiera menu/przerywa czynność.** Menu pauzuje świat.
 - **D-UI-3 — Mobile:** joystick L, drag kamery prawą połową, przyciski Akcja/Atak/Bieg/Walka/Skradanie, pasek menu u góry; auto-cel 220° i obrót do celu.
+
+## Planowanie (2026-09-30)
+
+- **D-PLAN-1 — Najpierw domknięcie v1, potem VISION-APPENDIX falami** (decyzja użytkownika 2026-09-30). Kolejność: `docs/roadmap/v1-closure-and-appendix.md`. Wymagania dodatku w FEATURES.json mają `scope: "v2"`.
+- **D-PLAN-2 — Pozycje review v1 oznaczone jako potwierdzone obniżają status powiązanych FEATURES** (`verified` → `in_progress`: CRAFT-02, SAVE-01, ECON-01, WORLD-04; DIAG-02 → `implemented_unverified`, bo PERF.md nie istnieje). Kryteria nie zostały osłabione; status wraca do `verified` po poprawce z testem regresji (plan `game--002`).
+- **D-PLAN-3 — „Relacja” z dodatku = istniejące `npc.opinion`** (−100..100). Prezenty, towarzysze i burmistrz używają tego pola zamiast nowego systemu relacji.
+- **D-PLAN-4 — Spatial grid już istnieje** (`sim.actors.query`, `sim.nodes.query`); wymaganie dodatku realizowane jako audyt i usunięcie pełnych skanów (PERF-01, plan `diag--001`). Kadencja decyzji (AI-01) jest osobna od LOD aktualizacji (D-SIM-1).

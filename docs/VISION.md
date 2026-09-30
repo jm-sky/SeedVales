@@ -1,5 +1,7 @@
 # Wizja i założenia projektu
 
+> **Uzupełnienia:** [VISION-APPENDIX.md](VISION-APPENDIX.md) — nowsze doprecyzowania i nowe wymagania (postacie, zwierzęta, ślady, pogoda, landmarki/skarby, handel/prezenty, UI, pozyskiwanie i transport, spatial grid/kadencja decyzji, burmistrz, kierunek graficzny, gotowanie, towarzysze). Przy sprzeczności dodatek jest nowszy; rozstrzygnięcia w `docs/design/DECISIONS.md`. Status wymagań z dodatku: `docs/state/FEATURES.json` (`scope: "v2"`), kolejność: `docs/roadmap/v1-closure-and-appendix.md`.
+
 ## Spis treści
 
 1. [Ogólna wizja gry](#1-ogólna-wizja-gry)

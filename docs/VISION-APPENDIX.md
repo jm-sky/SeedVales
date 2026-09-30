@@ -1,5 +1,7 @@
 # Dodatek do wizji projektu — VISION-APPENDIX
 
+> Rozszerza [VISION.md](VISION.md). Wymagania z tego pliku mają w `docs/state/FEATURES.json` `vision: "APPX: <sekcja>"` i `scope: "v2"` (realizacja po domknięciu v1). Plany i kolejność fal: [roadmap/v1-closure-and-appendix.md](roadmap/v1-closure-and-appendix.md).
+
 ## Modele postaci
 
 Chcemy osiągnąć różnorodność przez:
