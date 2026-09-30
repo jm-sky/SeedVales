@@ -2,10 +2,10 @@
  * More rule-level checks for FEATURES.json (IDs in names).
  */
 import { describe, expect, it } from 'vitest'
-import { WOOL_REGROW_DAYS } from '../config/calibration'
+import { DAYS_PER_SEASON, DAYS_PER_YEAR, WOOL_REGROW_DAYS } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { isTree, NodeCache } from '../world/nodes'
-import { consume, mineRock } from './actions'
+import { consume, gatherNode, mineRock } from './actions'
 import { placeSite } from './build'
 import { applyDamage } from './combat'
 import { addItem, countItem, newStack } from './inventory'
@@ -15,6 +15,7 @@ import { WORK_ACTS } from './npc/works'
 import { playerInput, startActivity } from './player'
 import { questSystem } from './quests'
 import { playerFarAway, run, testSim } from './testWorld'
+import { type Season, seasonOf } from './time'
 import { buyPrice, tradeInventory } from './trade'
 import { hp } from './vitals'
 
@@ -253,4 +254,48 @@ describe('more features', () => {
     questSystem(sim)
     expect(sim.state.quests.filter((q) => q.kind === 'rats' && q.buildingId === wh.id).length).toBe(2)
   })
+
+  it('RES-04: season drives yields — field growth, wild berries/apples/mushrooms, household food', () => {
+    const sim = testSim()
+    const year0 = Math.floor(sim.state.time.cal / (DAYS_PER_YEAR * 86400)) * DAYS_PER_YEAR * 86400
+    const calOf = (season: Season) => year0 + (['spring', 'summer', 'autumn', 'winter'].indexOf(season) * DAYS_PER_SEASON + 5) * 86400 + 12 * 3600
+    const field = sim.state.buildings.find((b) => b.field)!
+    const houses = sim.state.households.map((hh) => sim.building(hh.houseId)!)
+    const foodCount = () => houses.reduce((n, b) => n + b.inv!.items.reduce((m, s) => m + (s.fresh !== undefined ? s.qty : 0), 0), 0)
+    const growth: Record<string, number> = {}
+    const food: Record<string, number> = {}
+    playerFarAway(sim)
+    // Natural growth and household production only (farmers tending fields would add noise).
+    sim.systems = sim.systems.filter((x) => x.name !== 'npc')
+    for (const season of ['spring', 'summer', 'autumn', 'winter'] as const) {
+      sim.state.time.cal = calOf(season)
+      expect(seasonOf(sim.state.time.cal)).toBe(season)
+      field.field!.growth = 0
+      field.field!.moisture = 0.8
+      sim.state.weather.wetness = 0.8
+      const f0 = foodCount()
+      for (const h of houses) h.foodAcc = 0
+      run(sim, 3600, 2) // 1 calendar day
+      growth[season] = field.field!.growth
+      food[season] = foodCount() - f0
+    }
+    expect(growth.summer!).toBeGreaterThan(growth.spring!)
+    expect(growth.spring!).toBeGreaterThan(growth.autumn!)
+    expect(growth.winter).toBe(0)
+    // Household production is scaled down in winter (spoilage/eating also run, so compare production-dominated deltas).
+    expect(food.summer!).toBeGreaterThan(food.winter!)
+    // Wild food only in its season.
+    const p = sim.player
+    const node = (kind: string) => sim.nodes.query(sim.world.settlements[0]!.x, sim.world.settlements[0]!.z, 1500).find((n) => n.kind === kind && !sim.state.nodes[n.id])!
+    const tryGather = (kind: string, season: Season) => {
+      sim.state.time.cal = calOf(season)
+      const n = node(kind)
+      return gatherNode(sim, p, n).ok
+    }
+    expect(tryGather('bush_berry', 'spring')).toBe(false)
+    expect(tryGather('bush_berry', 'summer')).toBe(true)
+    expect(tryGather('mushroom', 'winter')).toBe(false)
+    expect(tryGather('mushroom', 'autumn')).toBe(true)
+    expect(tryGather('tree_apple', 'winter')).toBe(false)
+  }, 60_000)
 })

@@ -134,7 +134,7 @@
    "behavior": "Dźwięki otoczenia (ptaki/wiatr/fale/sowa nocą) z cooldownem i limitem równoczesnych vocalization",
    "verify": "vitest menedżera dźwięków",
    "status": "implemented_unverified",
-   "evidence": "audio/voices.test.ts (cooldown + concurrency cap) verified; procedural synthesis not verified by ear (headless)"
+   "evidence": "Logika zweryfikowana: audio/voices.test.ts (cooldown + limit równoczesnych głosów), Ambience.dispose zamyka AudioContext (game--002 C3). Dźwięk proceduralny NIE został odsłuchany (headless, brak człowieka) — wymaga odsłuchu przez użytkownika; nie blokuje v1 (D-PLAN-5)"
   },
   {
    "id": "TIME-01",
@@ -448,8 +448,8 @@
    "scope": "v1",
    "behavior": "Jagody, jabłka, grzyby dziko; marchew/kapusta/pomidory z pól; wpływ sezonu na plony",
    "verify": "vitest",
-   "status": "implemented_unverified",
-   "evidence": "berries/apples/mushrooms seasonal gathering and crop fields implemented; seasonal yield not separately tested"
+   "status": "verified",
+   "evidence": "features2.test.ts RES-04: field growth summer > spring > autumn > winter (=0), household food production summer > winter, berries not in spring, mushrooms not in winter/in autumn, apples not in winter"
   },
   {
    "id": "RES-05",
