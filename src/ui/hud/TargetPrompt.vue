@@ -8,7 +8,7 @@ const t = computed(() => {
   const g = game.value
   if (!g.target || g.panel || g.sim.state.px.activity) return null
   const first = g.options.find((o) => o.enabled) ?? g.options[0]
-  return { label: g.target.label, hint: g.options.length > 1 ? `${g.options.length} opcje` : first?.label ?? '', reason: first && !first.enabled ? first.reason : '' }
+  return { label: g.target.label, hint: g.options.length > 1 ? `${g.options.length} opcje` : first?.label ?? '', reason: first && !first.enabled ? first.reason : '', more: g.targetCount > 1 }
 })
 </script>
 
@@ -26,6 +26,10 @@ const t = computed(() => {
       >E</kbd>
       {{ t.hint }}
     </span>
+    <kbd
+      v-if="!game.isTouch && t.more"
+      class="ml-2 rounded border border-white/30 px-1 text-[10px] text-white/70"
+    >Tab</kbd>
     <div
       v-if="t.reason"
       class="text-xs text-bad"

@@ -243,18 +243,19 @@ try {
     const sim = sv.game.sim
     for (let i = 0; i < 400 && !sim.state.quests.some((q) => q.kind === 'rats'); i++) sv.simStep(20)
     const q = sim.state.quests.find((qq) => qq.kind === 'rats')
-    return q ? { id: q.id, status: q.status, b: q.buildingId, cal: sim.state.time.cal } : null
+    return q ? { id: q.id, status: q.status, b: q.buildingId, sid: q.settlementId, cal: sim.state.time.cal } : null
   })
   check(results, '8a. problem w symulacji: gniazdo szczurów → ogłoszenie', !!questInfo, questInfo)
   if (questInfo) {
-    await S(() => {
+    // The nest can appear in any settlement (depends on the simulation); go to that settlement's noticeboard.
+    await S((sid) => {
       const sv = window.__sv
       const sim = sv.game.sim
-      const nb = sim.state.buildings.find((b) => b.kind === 'noticeboard' && b.settlementId === 0)
+      const nb = sim.state.buildings.find((b) => b.kind === 'noticeboard' && b.settlementId === sid)
       sv.pause(true)
       sv.approach(nb.x, nb.z, 1.6)
       sv.setHour(12)
-    })
+    }, questInfo.sid)
     await waitTarget((t) => t.opts.includes('quests'))
     await key('KeyE')
     if (await page.$('[data-testid="opt-quests"]')) await clickTest('opt-quests')
@@ -340,6 +341,49 @@ try {
   await page.waitForTimeout(2000)
   await shot(page, 'acc-09-loaded')
   check(results, '9. zapis → odświeżenie → odczyt zachowuje zmiany', loaded.tree === 'felled' && !loaded.wolf && loaded.campfires === before.campfires && loaded.logs === before.logs && loaded.cal >= before.cal && loaded.cal - before.cal < 120 && loaded.quests === before.quests, { before, loaded })
+
+  // 10. UI-03: character screen (K), primary ranged weapon, quick switch (X); inventory filter (I).
+  await S(() => {
+    const sv = window.__sv
+    sv.give('short_bow')
+    sv.give('sword')
+    sv.pause(true)
+  })
+  await key('KeyK')
+  const overview = !!(await page.$('[data-testid="character-overview"]'))
+  await clickTest('char-tab-weapons')
+  await clickTest('primary-ranged-short_bow')
+  await shot(page, 'acc-10-character')
+  await clickTest('panel-close')
+  const mainBefore = await S(() => window.__sv.game.sim.player.eq.main?.id)
+  await key('KeyX')
+  const mainAfterX = await S(() => window.__sv.game.sim.player.eq.main?.id)
+  await key('KeyX')
+  const mainAfterX2 = await S(() => window.__sv.game.sim.player.eq.main?.id)
+  const primary = await S(() => window.__sv.game.sim.state.px.primary)
+  const xs = [mainAfterX, mainAfterX2]
+  check(results, '10. ekran postaci (K) + broń podstawowa + przełączenie (X)', overview && primary?.ranged === 'short_bow' && xs.includes('short_bow') && xs[0] !== xs[1], { overview, mainBefore, xs, primary })
+  await key('KeyI')
+  await clickTest('filter-weapon')
+  const rows = await page.$$eval('[data-testid="inventory-list"] [data-testid^="item-"]', (els) => els.map((e) => e.getAttribute('data-testid')))
+  await shot(page, 'acc-10-inventory-filter')
+  await clickTest('panel-close')
+  check(results, '10. ekwipunek: filtr „Broń” pokazuje tylko broń', rows.length > 0 && !rows.includes('item-log') && !rows.includes('item-bandage'), rows.join(','))
+
+  // 11. UI-06: Tab cycles between objects in range; the prompt follows the chosen target.
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const p = sim.player
+    for (const [id, dx, dz] of [['stone', 0, 1.2], ['branch', 0.6, 2.2]]) sim.addGround({ id: sim.nextId(), x: p.x + dx, z: p.z + dz, stack: { id, qty: 1 }, droppedAt: sim.state.time.cal, lit: false })
+    p.rot = 0
+    sv.game.renderer.rig.yaw = 0
+  })
+  const t0 = await waitTarget()
+  await key('Tab', 500)
+  const t1 = await waitTarget((t) => t.label !== t0?.label)
+  check(results, '11. Tab przełącza cel interakcji', !!t0 && !!t1 && t1.label !== t0.label, `${t0?.label} → ${t1?.label}`)
+  await S(() => window.__sv.pause(false))
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 400))
   await shot(page, 'acc-error')

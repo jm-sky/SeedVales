@@ -114,6 +114,40 @@ try {
   await page.tap('[data-testid=touch-sneak]')
   const sn2 = await S(() => window.__sv.game.sim.state.px.sneaking)
   check(results, 'M6. przycisk Skradanie przełącza tryb', sn1 === !sn0 && sn2 === sn0, `${sn0} → ${sn1} → ${sn2}`)
+
+  // M7. Character screen and weapon switch button (UI-03), next-target button (UI-06).
+  await tap('touch-menu-character')
+  const charOpen = !!(await page.$('[data-testid="character-overview"]'))
+  await shot(page, 'mob-07-character')
+  await tap('panel-close')
+  await S(() => {
+    const sv = window.__sv
+    sv.give('short_bow')
+    sv.give('sword')
+  })
+  const w0 = await S(() => window.__sv.game.sim.player.eq.main?.id)
+  await tap('touch-weapon')
+  const w1 = await S(() => window.__sv.game.sim.player.eq.main?.id)
+  await tap('touch-weapon')
+  const w2 = await S(() => window.__sv.game.sim.player.eq.main?.id)
+  check(results, 'M7. ekran postaci i przycisk Broń (przełącza wręcz/dystans)', charOpen && w1 !== w2 && [w1, w2].includes('short_bow'), { charOpen, w0, w1, w2 })
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const p = sim.player
+    sv.pause(true)
+    const yaw = sv.game.renderer.rig.yaw
+    p.rot = yaw
+    for (const [id, d] of [['stone', 1.2], ['branch', 2.2]]) sim.addGround({ id: sim.nextId(), x: p.x + Math.sin(yaw) * d, z: p.z + Math.cos(yaw) * d, stack: { id, qty: 1 }, droppedAt: sim.state.time.cal, lit: false })
+  })
+  await page.waitForTimeout(800)
+  const tg0 = await S(() => window.__sv.game.target?.label)
+  await tap('touch-next-target')
+  await page.waitForTimeout(500)
+  const tg1 = await S(() => window.__sv.game.target?.label)
+  check(results, 'M8. przycisk Cel przełącza cel interakcji', !!tg0 && !!tg1 && tg0 !== tg1, `${tg0} → ${tg1}`)
+  await S(() => window.__sv.pause(false))
+  await shot(page, 'mob-08-target')
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 300))
   await shot(page, 'mob-error')

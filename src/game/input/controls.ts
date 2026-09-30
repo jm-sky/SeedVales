@@ -31,6 +31,7 @@ const KEYMAP: Record<string, KeyAction> = {
   KeyI: 'inventory',
   KeyK: 'character',
   KeyX: 'switchWeapon',
+  Tab: 'cycleTarget',
   KeyC: 'craft',
   KeyJ: 'quests',
   KeyM: 'map',
@@ -55,8 +56,8 @@ export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): (
     if (typing(e)) return
     const a = KEYMAP[e.code]
     if (a) {
-      if (e.code === 'F3' || e.code === 'F5') e.preventDefault()
-      if (!e.repeat) h.onAction(a)
+      if (e.code === 'F3' || e.code === 'F5' || (e.code === 'Tab' && !h.isUiOpen())) e.preventDefault()
+      if (!e.repeat && !(a === 'cycleTarget' && h.isUiOpen())) h.onAction(a)
     }
     input.keys.add(e.code)
   }

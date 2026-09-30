@@ -20,7 +20,7 @@ import { consume, dropItem } from './sim/actions'
 import { placeSite, startBuildWork } from './sim/build'
 import { meleeAttack } from './sim/combat'
 import { canCraft, craftTime } from './sim/craft'
-import { findTarget, runOption, startSleep, targetOptions } from './sim/interact'
+import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
 import { createNewGame } from './sim/newGame'
@@ -61,6 +61,10 @@ export class Game {
   options: InteractOption[] = []
   panel: Panel = null
   panelRef: TargetRef | null = null
+  /** Target chosen with Tab (UI-06); kept while it stays in range. */
+  pinnedTarget: string | null = null
+  /** Interactive objects currently in range (for the Tab hint). */
+  targetCount = 0
   slot: string
   running = false
   private raf = 0
@@ -169,6 +173,7 @@ export class Game {
     // Game menu pauses the world (single-player).
     if (this.panel !== 'menu') sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
+    this.renderer.markerAt = this.panel || sim.state.px.activity ? null : this.target
     this.renderer.render(dt)
     if (this.audioEvents.length < 200) this.audioEvents.push(...sim.events)
     sim.events.length = 0
@@ -176,8 +181,7 @@ export class Game {
     this.uiTimer -= dt
     if (this.uiTimer <= 0) {
       this.uiTimer = 0.2
-      this.target = sim.player.vitals.ko && sim.player.vitals.ko.until > sim.state.time.play ? null : findTarget(sim, sim.player.rot)
-      this.options = this.target ? targetOptions(sim, this.target.ref) : []
+      this.refreshTarget()
       perf.measure('audio.update', () => this.audio.update(0.2, sim, this.audioEvents))
       this.audioEvents.length = 0
       perf.gauge('ui.listeners', this.uiListeners.size)
@@ -212,6 +216,9 @@ export class Game {
         break
       case 'craft':
         this.togglePanel('craft')
+        break
+      case 'cycleTarget':
+        this.cycleTarget()
         break
       case 'diag':
         this.showDiag = !this.showDiag
@@ -309,6 +316,32 @@ export class Game {
     // Mobile aid (vision §27): wide auto-target cone and auto-facing the chosen target.
     const hit = meleeAttack(this.sim, p, this.isTouch ? 220 : 80)
     if (hit && this.isTouch) p.rot = Math.atan2(hit.x - p.x, hit.z - p.z)
+  }
+
+  private refreshTarget() {
+    const sim = this.sim
+    if (sim.player.vitals.ko && sim.player.vitals.ko.until > sim.state.time.play) {
+      this.target = null
+      this.pinnedTarget = null
+      this.targetCount = 0
+    } else {
+      const list = findTargets(sim, sim.player.rot)
+      this.targetCount = list.length
+      const pinned = this.pinnedTarget ? list.find((t) => targetKey(t.ref) === this.pinnedTarget) : undefined
+      if (!pinned) this.pinnedTarget = null
+      this.target = pinned ?? list[0] ?? waterTarget(sim, sim.player.rot)
+    }
+    this.options = this.target ? targetOptions(sim, this.target.ref) : []
+  }
+
+  /** Tab / mobile "Cel": next interactive object in range (distance + facing order), pinned until out of range. */
+  cycleTarget() {
+    const list = findTargets(this.sim, this.sim.player.rot)
+    const next = nextTarget(list, this.target ? targetKey(this.target.ref) : null)
+    if (!next) return this.showToast('Brak celów w zasięgu.')
+    this.pinnedTarget = targetKey(next.ref)
+    this.refreshTarget()
+    this.notify()
   }
 
   /** Quick switch between the primary melee and ranged weapon (X / mobile button). */

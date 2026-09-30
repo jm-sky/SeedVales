@@ -18,9 +18,10 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 ### Fale dodatku
 
 - **Fala 1 `sim--001` done** — AI-01, FAUNA-06/07/08 verified, TRACE-01 (część sim; dekale w render--001). `SAVE_VERSION` 5.
-- Review fali 1 (subagent) został PRZERWANY (limit użycia) — uruchomić ponownie: `git diff d3a31e2..40d243b -- src`, wynik do `docs/reviews/`.
-- **Fala 2 `ui--001` w toku:** zrobione krok 1–2 częściowo: ekran postaci (`CharacterPanel` + `ui/panels/character/*`: podgląd ciała/zdrowie/choroby, atrybuty/skille, reputacja/odznaki, wybór broni podstawowej), `sim/loadout.ts` (`px.primary`, `switchWeapon`, klawisz X, K = postać), ekwipunek z filtrami/sortowaniem/parametrami (`src/lib/inventoryView.ts` + test). NIE zrobione: przycisk „Broń” na mobile, e2e dla nowych paneli, test vitest `loadout`, mapa+minimapa (UI-04), ustawienia (UI-05), nazwane zapisy / nowa gra z menu, Tab-cykl celów (UI-06); FEATURES UI-03 jeszcze `planned`.
-- Następny krok: dokończyć `ui--001` od e2e/testów kroku 1–2, potem kroki 3–6.
+- Review fali 1: `docs/reviews/2026-09-30--003--wave1-sim-review.md` — 9 ustaleń; 7 poprawionych z testami regresji (sarna przy legowisku nie szarżuje — D-SIM-13, lis jako zagrożenie dla drobiu, cooldown po spłoszeniu, ślad krwi nie odwiedzany ponownie, sezonowa noc w detekcji, migracja 4→5 przypina szczury do gniazda, szansa ataku wściekłego zwierzęcia), 2 informacyjne.
+- **Fala 2 `ui--001` w toku:** zrobione kroki 1–2 (UI-03 verified: ekran postaci, broń podstawowa + X/„Broń”, ekwipunek filtr/sort/szczegóły) i krok 6 (UI-06 verified: Tab/„Cel” cyklicznie przez cele w zasięgu, pierścień celu). e2e: acceptance 19/19 (nowe kroki 10–11; krok 8 idzie do tablicy osady, w której pojawiło się gniazdo), mobile 9/9 (M7–M8), smoke 3/3; `pnpm check` 112/112.
+- Uwaga dla e2e: nie edytuj `src/` ani nie uruchamiaj vitest w trakcie `pnpm e2e` — HMR Vite przeładowuje stronę („Execution context was destroyed”); worktree subagenta w katalogu repo też to wywołuje.
+- Następny krok: `ui--001` krok 3 (mapa + minimapa, UI-04), potem krok 4 (ustawienia, UI-05) i 5 (zapisy nazwane / nowa gra z menu).
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

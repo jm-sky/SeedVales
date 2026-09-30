@@ -49,7 +49,7 @@ function toggleRun() {
   version.value++
 }
 const MENU = [
-  ['inventory', 'Ekw.'], ['craft', 'Wytw.'], ['build', 'Budowa'], ['quick', 'Akcje'], ['quests', 'Zadania'], ['map', 'Mapa'], ['menu', 'Menu'],
+  ['inventory', 'Ekw.'], ['character', 'Postać'], ['craft', 'Wytw.'], ['build', 'Budowa'], ['quick', 'Akcje'], ['quests', 'Zadania'], ['map', 'Mapa'], ['menu', 'Menu'],
 ] as const
 </script>
 
@@ -93,6 +93,21 @@ const MENU = [
         Bieg
       </button>
       <button
+        class="h-12 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
+        data-testid="touch-weapon"
+        @click="game.switchWeapon(); version++"
+      >
+        Broń
+      </button>
+      <button
+        class="h-12 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
+        data-testid="touch-next-target"
+        @click="game.cycleTarget()"
+      >
+        Cel
+      </button>
+      <div />
+      <button
         class="col-span-2 h-16 rounded-full bg-primary/85 text-sm font-bold text-primary-foreground disabled:opacity-40"
         :disabled="!state.hasTarget"
         data-testid="touch-interact"
@@ -110,11 +125,11 @@ const MENU = [
         {{ ranged ? 'Naciąg' : 'Atak' }}
       </button>
     </div>
-    <div class="pointer-events-auto absolute left-1/2 top-2 flex max-w-[70vw] -translate-x-1/2 flex-wrap justify-center gap-1">
+    <div class="pointer-events-auto absolute left-1/2 top-2 flex max-w-[56vw] -translate-x-1/2 flex-wrap justify-center gap-0.5">
       <button
         v-for="[p, l] in MENU"
         :key="p"
-        class="rounded bg-black/45 px-2 py-1 text-[11px] text-white"
+        class="rounded bg-black/45 px-1.5 py-1 text-[10px] text-white"
         :data-testid="`touch-menu-${p}`"
         @click="game.togglePanel(p)"
       >

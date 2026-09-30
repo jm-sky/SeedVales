@@ -1,6 +1,6 @@
 # UI: ekrany postaci, mapa/minimapa, ustawienia, zapisy nazwane, cykl celów
 
-**Status:** planned  
+**Status:** in_progress  
 **Domain:** ui  
 **Sub domains:** hud, panels, save, input, audio, render-quality  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 2)  
@@ -30,3 +30,9 @@ Panele w `src/ui/panels/`: Inventory, Quests, Map (MapPanel), Trade, Craft, Buil
 - e2e: rozszerzyć `scripts/e2e/acceptance.mjs` i `mobile.mjs` o nowe panele (otwarcie przez UI, a nie debug API); screenshoty przez `tour.mjs` i ręczna ocena czytelności na desktop + telefon.
 - vitest: logika sortowania/filtrowania i wyboru broni głównej (czyste funkcje poza komponentami).
 - Warstwy: UI nie mutuje `sim.state` bezpośrednio (game--002 C5).
+
+## Wynik
+
+- **Krok 1–2 (UI-03) — done (2026-09-30):** `CharacterPanel` + `ui/panels/character/*`, `sim/loadout.ts` (`px.primary`, `switchWeapon`, X / mobile „Broń”), ekwipunek: filtry/sortowanie/szczegóły (`src/lib/inventoryView.ts`). Testy: `loadout.test.ts`, `inventoryView.test.ts`; e2e acceptance krok 10, mobile M7.
+- **Krok 6 (UI-06) — done (2026-09-30):** `findTargets` (lista w zasięgu, sort odległość + kąt), `nextTarget`, `Game.cycleTarget` (cel przypięty, dopóki w zasięgu), pierścień na ziemi (`render/targetMarker.ts`), podpowiedź „Tab” w `TargetPrompt`, mobile „Cel”. Test `targetCycle.test.ts`; e2e acceptance krok 11, mobile M8.
+- Pozostało: krok 3 (mapa + minimapa, UI-04), krok 4 (ustawienia, UI-05), krok 5 (nazwane zapisy / nowa gra z menu).

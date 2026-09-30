@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { itemDef } from '@/game/data/items'
+import { type AmmoKind, itemDef } from '@/game/data/items'
 import { weaponChoices } from '@/game/sim/loadout'
 import type { WeaponKind } from '@/game/sim/types'
 
@@ -10,6 +10,7 @@ const KINDS: { kind: WeaponKind; label: string }[] = [
   { kind: 'melee', label: 'Broń do walki wręcz' },
   { kind: 'ranged', label: 'Broń dystansowa' },
 ]
+const AMMO_NAMES: Record<AmmoKind, string> = { arrow: 'strzały', bolt: 'bełty', stone: 'kamienie' }
 const { game, version } = useGameStrict()
 const v = computed(() => {
   void version.value
@@ -18,7 +19,7 @@ const v = computed(() => {
 })
 const stats = (id: string) => {
   const w = itemDef(id).weapon!
-  return w.kind === 'melee' ? `obr. ${w.damage}, zasięg ${w.reach} m` : `obr. ${w.damage}, amunicja: ${w.ammo ?? '—'}`
+  return w.kind === 'melee' ? `obr. ${w.damage}, zasięg ${w.reach} m` : `obr. ${w.damage}, amunicja: ${w.ammo ? AMMO_NAMES[w.ammo] : '—'}`
 }
 </script>
 

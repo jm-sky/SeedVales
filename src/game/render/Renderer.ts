@@ -13,6 +13,7 @@ import { CameraRig } from './cameraRig'
 import { Dynamics } from './dynamics'
 import { QUALITY, type QualityProfile } from './quality'
 import { Structures } from './structures'
+import { TargetMarker } from './targetMarker'
 import { TerrainChunks } from './terrainChunks'
 import { Vegetation } from './vegetation'
 
@@ -32,6 +33,9 @@ export class Renderer {
   structures: Structures
   actors: Actors
   dynamics: Dynamics
+  marker: TargetMarker
+  /** Where to draw the interaction-target ring (set by Game), or null. */
+  markerAt: { x: number; z: number } | null = null
   sun = new THREE.DirectionalLight(0xfff2dd, 2)
   hemi = new THREE.HemisphereLight(0xbfd8ff, 0x5a4a30, 1)
   quality: QualityProfile
@@ -64,7 +68,8 @@ export class Renderer {
     this.structures = new Structures(sim)
     this.actors = new Actors(sim, q)
     this.dynamics = new Dynamics(sim)
-    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.actors.group, this.dynamics.group)
+    this.marker = new TargetMarker(sim.terrain)
+    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.actors.group, this.dynamics.group, this.marker.mesh)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
@@ -130,6 +135,7 @@ export class Renderer {
     perf.measure('render.vegetation', () => this.vegetation.update(p.x, p.z))
     perf.measure('render.actors', () => this.actors.update(dt, this.rig.camera))
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
+    this.marker.update(dt, this.markerAt)
     perf.measure('render.draw', () => this.renderer.render(this.scene, this.rig.camera))
     perf.end('render.cpu')
     const info = this.renderer.info

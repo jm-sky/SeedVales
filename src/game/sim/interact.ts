@@ -64,8 +64,25 @@ const NODE_NAMES: Record<string, string> = {
   bush_berry: 'Krzew jagodowy', rock: 'Skała', stone: 'Kamień', herb: 'Zioło', mushroom: 'Grzyb', reed: 'Trzcina',
 }
 
+/** Stable identity of a target (for Tab cycling / pinning, UI-06). */
+export const targetKey = (r: TargetRef): string => ('id' in r ? `${r.type}:${r.id}` : r.type)
+
+/** Next target after `current` in the sorted candidate list (wraps around; first when none). */
+export function nextTarget(list: Target[], current: string | null): Target | null {
+  if (!list.length) return null
+  const i = current ? list.findIndex((t) => targetKey(t.ref) === current) : -1
+  return list[(i + 1) % list.length]!
+}
+
 /** Finds the best interaction target in front of the player (within ~3 m, facing cone). */
 export function findTarget(sim: Sim, facing: number, maxDist = 3.2): Target | null {
+  const cands = findTargets(sim, facing, maxDist)
+  if (cands[0]) return cands[0]
+  return waterTarget(sim, facing)
+}
+
+/** All interactive objects in range, best first (distance + angle from facing). */
+export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   const p = sim.player
   const cands: Target[] = []
   const score = (x: number, z: number) => {
@@ -98,8 +115,11 @@ export function findTarget(sim: Sim, facing: number, maxDist = 3.2): Target | nu
     push({ type: 'node', id: n.id }, label, n.x, n.z, n.radius)
   }
   cands.sort((a, b) => a.dist - b.dist)
-  if (cands[0]) return cands[0]
-  // Water in front.
+  return cands
+}
+
+export function waterTarget(sim: Sim, facing: number): Target | null {
+  const p = sim.player
   const fx = p.x + Math.sin(facing) * 1.5
   const fz = p.z + Math.cos(facing) * 1.5
   if (sim.terrain.waterDepthAt(fx, fz) > 0.05 || sim.terrain.waterDepthAt(p.x, p.z) > 0.05) {

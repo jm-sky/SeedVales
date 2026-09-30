@@ -925,8 +925,8 @@
    "scope": "v2",
    "behavior": "Ekrany: podgląd postaci, atrybuty, reputacja, umiejętności, choroby, ekwipunek, wybór podstawowej broni wręcz i dystansowej, filtrowanie/sortowanie, parametry przedmiotów, zadania",
    "verify": "e2e desktop + mobile, screenshoty",
-   "status": "planned",
-   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+   "status": "verified",
+   "evidence": "CharacterPanel (K / mobile „Postać”): overview+health+illness, attributes/skills, reputation/badges, primary melee/ranged weapon; sim/loadout.ts + loadout.test.ts (UI-03, 5 tests: choices, wrong kind rejected, switch/fallback, no duplication, saved); inventory filter/sort/details (src/lib/inventoryView.test.ts); e2e acceptance step 10 (K → weapons tab → primary bow → X switches; I → filter „Broń”) and mobile M7 (Postać + „Broń” button); screenshots acc-10-*, mob-07-character"
   },
   {
    "id": "UI-04",
@@ -952,8 +952,8 @@
    "scope": "v2",
    "behavior": "Wspomaganie wyboru celu; Tab przełącza cyklicznie cele w zasięgu (mobile: przycisk)",
    "verify": "e2e",
-   "status": "planned",
-   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+   "status": "verified",
+   "evidence": "interact.ts findTargets/nextTarget/targetKey + Game.cycleTarget (pinned while in range) + ground ring marker (render/targetMarker.ts); targetCycle.test.ts (UI-06); e2e acceptance step 11 (Tab switches target), mobile M8 („Cel” button); Tab preventDefault only while no panel is open"
   },
   {
    "id": "RES-07",
