@@ -4,7 +4,7 @@
  * @subdomain world-gen
  */
 
-export const GEN_VERSION = 5
+export const GEN_VERSION = 6
 export const WORLD_SIZE_M = 8192
 export const CELL_M = 8
 export const GRID_N = WORLD_SIZE_M / CELL_M + 1 // vertices per side

@@ -89,7 +89,9 @@ try {
       .sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0]
     window.__tree = tree.id
     sv.approach(tree.x, tree.z, 1.0)
-    window.__felled0 = Object.values(sim.state.nodes).filter((x) => x.kind === 'felled').length
+    // Count only trees next to the player (NPC woodcutters fell trees elsewhere meanwhile).
+    window.__nearFelled = () => sim.nodes.query(sim.player.x, sim.player.z, 6).filter((n) => sim.state.nodes[n.id]?.kind === 'felled').length
+    window.__felled0 = window.__nearFelled()
   })
   const treeT = await waitTarget((t) => t.opts.includes('chop'))
   check(results, '3. cel: drzewo z opcją ścinania', !!treeT, treeT?.label)
@@ -106,7 +108,7 @@ try {
     const felled = Object.entries(st.nodes).filter(([, x]) => x.kind === 'felled')
     // Remember which tree was felled (target chosen by facing — may differ from the one we walked to).
     window.__tree = felled.sort((a, b) => b[1].at - a[1].at)[0]?.[0]
-    return { logs: window.__sv.count('log'), branch: window.__sv.count('branch'), main: window.__sv.state().main, felledDelta: felled.length - window.__felled0 }
+    return { logs: window.__sv.count('log'), branch: window.__sv.count('branch'), main: window.__sv.state().main, felledDelta: window.__nearFelled() - window.__felled0 }
   })
   check(results, '3. ścięcie drzewa siekierą (auto-wzięta do ręki)', actKind === 'chop' && after.logs > logs0 && after.main === 'axe' && after.felledDelta === 1, after)
 
@@ -154,8 +156,8 @@ try {
   // 5. Start and finish a simple construction (campfire) through the build panel.
   await S(() => {
     const sv = window.__sv
-    const s = sv.game.sim.world.settlements[0]
-    sv.teleport(s.x + 30, s.z - 25)
+    const o = sv.openSpot(30)
+    sv.teleport(o.x, o.z)
     sv.give('stone', 4)
     sv.pause(false)
   })
@@ -173,8 +175,8 @@ try {
   // 6. Travel outside, meet an animal and fight (melee via mouse clicks).
   await S(() => {
     const sv = window.__sv
-    const s = sv.game.sim.world.settlements[0]
-    sv.teleport(s.x + 260, s.z + 40)
+    const o = sv.openSpot(220)
+    sv.teleport(o.x, o.z)
     const p = sv.game.sim.player
     p.eq.main = { id: 'axe', qty: 1, dur: 250 }
     window.__wolf = sv.spawn('wolf', 0, 3)

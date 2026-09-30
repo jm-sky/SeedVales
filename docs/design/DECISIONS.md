@@ -13,6 +13,7 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-WORLD-4 — Jaskinie odłożone** (WORLD-05): wymagają osobnej geometrii (wizja §6.1), nie blokują pętli gry.
 - **D-WORLD-5 — Zasoby (drzewa, krzewy, skały, zioła) generowane deterministycznie per chunk 128 m; zmiany (ścięte/zebrane/wyczerpane) trzymane w `GameState.nodes`.** Odrost: krzewy/zioła dni, drzewo z pnia po 20 dniach (uproszczenie „rozsiewania”).
 - **D-WORLD-6 — Edycje terenu łopatą zapisywane rzadko per chunk (siatka 2 m).**
+- **D-WORLD-7 — Łańcuch osad: trasa dom→sąsiad w paśmie [0.8, 1.3]× DAY_MARCH_M mierzona po zbudowanej drodze** (`world/gen/centres.ts`), z ponawianiem alternatywnych lokalizacji domu; test na 8 seedach. Odcinek do LG: cel 1.25× z pasmem [0.7, 1.3]× celu.
 
 ## Symulacja
 
@@ -29,6 +30,10 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 
 - **D-SAVE-1 — Zapis = zmiany względem wygenerowanego świata, więc jest ważny tylko dla tego samego `seed` i `GEN_VERSION`.** Niezgodność → jawny odrzut z komunikatem (bez migracji świata — generatora nie da się „przemigrować”). Każda zmiana generatora (bump `GEN_VERSION`) unieważnia stare zapisy; menu je oznacza.
 - **D-SAVE-2 — Format zapisu: `SAVE_VERSION` + łańcuch migracji `MIGRATIONS[n]` (n→n+1) w `save/db.ts`.** Nowszy lub nieobsługiwany format → odrzut. Nowa gra zawsze tworzy nowy slot (`slot-<seed>-<ts>`).
+
+- **D-SIM-9 — Myśliwy (łuk) poluje tylko na zwierzynę niegroźną: sarna, jeleń, zając.** Dziki (agresywne) atakują w zwarciu i samotny łucznik ginął w testach długiej symulacji. Dziki nadal bronią się, a wilki są zwalczane jako drapieżniki. W zwarciu (≤ 6 m) NPC dobywa najlepszej broni białej z ekwipunku.
+- **D-SIM-10 — NPC powalony (HP ≤ 0) pozostaje nietykalny, dopóki HP nie wróci > 0; śmierć przy HP ≤ −20 z dowolnej przyczyny** (trafienie, krwawienie, głód). Bez pomocy krwawienie może zabić — zgodnie z wizją (ochrona do −20 HP).
+- **D-SIM-11 — Nawigacja lokalna: objazd budynku przez narożnik powiększonego obrysu** (`sim/detour.ts`, tylko bliski LOD), zamiast samego ślizgu po ścianie. Znane ograniczenie: stojący aktor na wąskim przejściu może blokować (tylko miękka separacja).
 
 ## Rendering i assety
 

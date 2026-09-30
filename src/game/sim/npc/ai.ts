@@ -5,11 +5,13 @@
  * @subdomain ai
  */
 import type { Sim } from '../sim'
-import type { Human } from '../types'
-import { RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
+import type { Human, ItemStack } from '../types'
+import { COMBAT, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
+import { itemDef } from '../../data/items'
 import { SPECIES } from '../../data/species'
 import { perf } from '../../diag/perf'
-import { isDown, meleeAttack, weaponOf } from '../combat'
+import { isDown, killNpc, meleeAttack, weaponOf } from '../combat'
+import { equipToMain } from '../inventory'
 import { steerTo } from '../movement'
 import { type Exertion, hp, penalty, updateVitals } from '../vitals'
 import { goalOptions } from './goals'
@@ -65,17 +67,31 @@ function failGoal(sim: Sim, h: Human, mult = 1) {
   ai.replanAt = 0
 }
 
+/** Swaps the best carried weapon of a kind into the main hand (no-op if already wielding one). */
+function wieldBest(h: Human, kind: 'melee' | 'ranged') {
+  if (weaponOf(h).kind === kind && h.eq.main) return
+  let best: ItemStack | undefined
+  for (const s of h.inv.items) {
+    const w = itemDef(s.id).weapon
+    if (w?.kind === kind && (s.dur ?? 1) > 0 && (!best || w.damage > itemDef(best.id).weapon!.damage)) best = s
+  }
+  if (best) equipToMain(h, best)
+}
+
 function fight(sim: Sim, h: Human, dt: number, full: boolean) {
   const t = threatNear(sim, h, 60)
   if (!t) {
     h.ai.goal = null
     h.ai.steps = []
     h.combat = false
+    wieldBest(h, 'ranged')
     return
   }
   h.combat = true
-  const w = weaponOf(h)
   const d = Math.hypot(t.x - h.x, t.z - h.z)
+  // Close quarters: draw the best melee weapon (e.g. hunter's knife) instead of swinging a bow.
+  if (d <= 6) wieldBest(h, 'melee')
+  const w = weaponOf(h)
   if (w.kind === 'ranged' && d > 6) {
     h.rot = Math.atan2(t.x - h.x, t.z - h.z)
     if (sim.state.time.play >= h.attackReadyAt) {
@@ -99,7 +115,15 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   // Downed: lie until someone helps or timer passes with HP recovered.
   if (h.vitals.ko) {
     updateVitals(h.vitals, dt, 'rest', 0.3)
-    if (now > h.vitals.ko.until && hp(h.vitals) > 0) h.vitals.ko = undefined
+    if (hp(h.vitals) <= COMBAT.npcDeathHp) {
+      killNpc(sim, h)
+      return
+    }
+    // Stays down (and ignored by enemies) until HP recovers above 0 — protection must not lapse while downed.
+    if (now > h.vitals.ko.until) {
+      if (hp(h.vitals) > 0) h.vitals.ko = undefined
+      else h.vitals.ko.until = h.vitals.ko.protectUntil = now + 30
+    }
     h.moving = 'idle'
     return
   }
@@ -108,6 +132,14 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   if (step?.op === 'goto') ex = step.run ? 'run' : 'walk'
   else if (step?.op === 'work') ex = step.act === 'sleep' || step.act === 'camp' ? 'sleep' : step.act === 'rest' || step.act === 'socialize' || step.act === 'shelter' ? 'rest' : 'work'
   const pen = updateVitals(h.vitals, dt, ex, step?.op === 'work' && step.act === 'sleep' ? 0.8 : step?.op === 'work' && step.act === 'camp' ? 0.45 : 0.5)
+  // Bleeding/illness/starvation can also bring an NPC down (same rules as hits).
+  const cur0 = hp(h.vitals)
+  if (cur0 <= COMBAT.npcDeathHp) return killNpc(sim, h)
+  if (cur0 <= 0) {
+    h.vitals.ko = { until: now + 60, protectUntil: now + 60 }
+    h.callForHelpAt = now
+    return
+  }
 
   // Interrupt sleep/work for threats (checked at update frequency).
   if (ai.goal !== 'fight' && ai.goal !== 'flee' && threatNear(sim, h, h.profession === 'guard' ? 45 : 22)) {

@@ -79,8 +79,8 @@
    "scope": "v1",
    "behavior": "≥3 osady (SM dom, SM/MD ~1 dzień trasy, LG dalej) połączone drogami A* po terenie; drogi spłaszczają teren; brody/mosty na rzekach",
    "verify": "vitest: długość trasy dom→sąsiad 3.0–4.5 km, trasa istnieje",
-   "status": "in_progress",
-   "evidence": "generate.test.ts: 3 settlements SM/MD/LG, route 0→1 within 0.8–1.3 day march; bridges/fords | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #6: tylko seed 1337 w testach; 4/19 seedów (0, 2020, 9999, 88888) poniżej 0.8× DAY_MARCH_M — plan game--002 A6"
+   "status": "verified",
+   "evidence": "generate.test.ts (seed 1337: 3 settlements SM/MD/LG, route 0→1 in band; bridges/fords) + generate.seeds.test.ts WORLD-04 for 8 seeds (0, 1, 2, 19, 42, 2020, 9999, 88888): ≥3 settlements, ≥2 roads, home route in ROUTE_BAND [0.8,1.3]×DAY_MARCH_M (review #6 fixed: world/gen/centres.ts measures built road length, diverse shortlist, relaxed pass, retry of alternative home sites; GEN_VERSION 6, game--002 A6)"
   },
   {
    "id": "WORLD-05",
@@ -224,7 +224,7 @@
    "behavior": "Utility AI: siła potrzeby vs obowiązek vs kontekst vs koszt/odległość; wybór najbliższego źródła; NPC zaspokaja potrzebę i wraca do pracy; brak nieskończonych pętli przy braku zasobu",
    "verify": "vitest scenariusze AI",
    "status": "verified",
-   "evidence": "npc/ai.test.ts (drink→work, no endless loop), economy 3-day test"
+   "evidence": "npc/ai.test.ts (drink→work, no endless loop), economy 3-day test | npc/ai.test.ts NPC-02 detour: NPC behind its house walks around it to the door (sim/detour.ts corner waypoint instead of wall-sliding)"
   },
   {
    "id": "NPC-03",
@@ -269,7 +269,7 @@
    "behavior": "NPC ma ochronę do -20 HP, woła o pomoc; strażnicy reagują",
    "verify": "vitest",
    "status": "verified",
-   "evidence": "src/game/sim/features.test.ts NPC-07"
+   "evidence": "src/game/sim/features.test.ts NPC-07 | npc/ai.test.ts NPC-07: downed NPC stays protected while HP ≤ 0 (protection no longer lapses after 60 s) and dies below −20 HP from bleeding/starvation too; HP ≤ 0 without a hit → downed + call for help (2026-09-30, found via economy test on GEN_VERSION 6)"
   },
   {
    "id": "NPC-08",

@@ -7,7 +7,7 @@
 import type { Sim } from '../sim'
 import type { AiStep, Animal, Human } from '../types'
 import { itemDef } from '../../data/items'
-import { SPECIES } from '../../data/species'
+import { SPECIES, type SpeciesId } from '../../data/species'
 import { isTree } from '../../world/nodes'
 import { countItem } from '../inventory'
 import { routeVia } from '../movement'
@@ -63,6 +63,8 @@ function deliverSurplus(sim: Sim, h: Human): DutyPlan {
   return { label: 'Oddaje nadwyżki do magazynu', steps: [go(d.x, d.z), work('pickup_surplus', 3, 'Pakuje nadwyżki', undefined, 'interact'), go(wd.x, wd.z, 2), work('deposit_warehouse', 4, 'Oddaje do magazynu', wh.id, 'interact')] }
 }
 
+const HUNTED_GAME: SpeciesId[] = ['deer', 'stag', 'hare']
+
 function hunter(sim: Sim, h: Human): DutyPlan {
   const s = sim.world.settlements[h.settlementId]!
   // Butcher an existing fresh corpse nearby first.
@@ -76,7 +78,8 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   const wolves = cands.filter((a) => a.species === 'wolf' && Math.hypot(a.x - s.x, a.z - s.z) < s.radius + 400)
   let target: Animal | undefined = wolves[0]
   if (!target) {
-    const game = cands.filter((a) => (a.species === 'deer' || a.species === 'stag' || a.species === 'boar' || a.species === 'hare') && a.variant !== 'young')
+    // Bow hunting: non-aggressive game only (a lone archer does not provoke boars — D-SIM-9).
+    const game = cands.filter((a) => HUNTED_GAME.includes(a.species) && a.variant !== 'young')
     const bySp = (sp: string) => cands.filter((a) => a.species === sp).length
     const ok = game.filter((a) => bySp(a.species) >= 3)
     ok.sort((a, b) => Math.hypot(a.x - h.x, a.z - h.z) - Math.hypot(b.x - h.x, b.z - h.z))

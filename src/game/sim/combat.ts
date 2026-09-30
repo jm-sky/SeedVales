@@ -46,6 +46,14 @@ export function isProtected(sim: Sim, a: Actor) {
   return !!a.vitals.ko && a.vitals.ko.protectUntil > sim.state.time.play
 }
 
+/** NPC death (HP ≤ COMBAT.npcDeathHp from any cause: hits, bleeding, starvation). */
+export function killNpc(sim: Sim, h: Human) {
+  if (h.vitals.dead) return
+  h.vitals.dead = true
+  sim.emit({ type: 'death', id: h.id })
+  sim.message(`${h.name} nie żyje.`, 'bad')
+}
+
 export function isDown(sim: Sim, a: Actor) {
   return !!a.vitals.dead || (!!a.vitals.ko && a.vitals.ko.until > sim.state.time.play)
 }
@@ -103,9 +111,7 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
   }
   if (target.kind === 'npc') {
     if (h <= COMBAT.npcDeathHp) {
-      target.vitals.dead = true
-      sim.emit({ type: 'death', id: target.id })
-      sim.message(`${target.name} nie żyje.`, 'bad')
+      killNpc(sim, target)
       if (attacker?.kind === 'player') addRep(sim, target.settlementId, { honesty: -40, helpfulness: -20 }, 'Zabójstwo mieszkańca')
       return true
     }

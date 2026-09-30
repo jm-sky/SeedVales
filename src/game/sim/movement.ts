@@ -10,6 +10,7 @@ import { SWIM_DEPTH_M } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { perf } from '../diag/perf'
 import { moveWithCollision } from './collision'
+import { detourPoint } from './detour'
 
 /**
  * Moves actor towards (tx,tz). Returns 'arrived' | 'moving' | 'stuck'.
@@ -43,6 +44,14 @@ export function steerTo(
   const oz = a.z
   let dirx = dx / d
   let dirz = dz / d
+  // Near LOD: go around a building in the way (corner waypoint) instead of pressing into the wall.
+  const via = full ? detourPoint(sim, a.x, a.z, tx, tz, radius) : null
+  if (via) {
+    const vd = Math.hypot(via.x - a.x, via.z - a.z) || 1
+    dirx = (via.x - a.x) / vd
+    dirz = (via.z - a.z) / vd
+    perf.count('ai.detours')
+  }
   // Blocked: slide along the obstacle on a consistent side (chosen towards the target around the
   // nearest building), switching sides only if that also fails for long.
   if (a.ai.stuckT > 0.35) {

@@ -8,6 +8,8 @@ import { createNewGame } from './newGame'
 import { Sim } from './sim'
 import { installSystems } from './worldSystems'
 
+export { openSpot } from '../debug/openSpot'
+
 const worlds = new Map<number, WorldData>()
 
 export function testSim(seed = 1337): Sim {
@@ -38,3 +40,4 @@ export function playerFarAway(sim: Sim) {
     return
   }
 }
+

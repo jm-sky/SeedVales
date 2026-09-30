@@ -10,11 +10,14 @@ import { perf } from '../diag/perf'
 import { addItem, countItem, newStack } from '../sim/inventory'
 import { makeAnimal } from '../sim/newGame'
 import { hp } from '../sim/vitals'
+import { openSpot } from './openSpot'
 
 export interface DebugApi {
   game: Game
   perf: typeof perf
   teleport(x: number, z: number): void
+  /** Open flat spot ≥ minR m from a settlement centre (layout-independent test setup). */
+  openSpot(minR?: number, settlementId?: number): { x: number; z: number }
   teleportToSettlement(id: number, dx?: number, dz?: number): void
   setHour(h: number): void
   give(id: string, qty?: number): void
@@ -37,6 +40,7 @@ export function installDebugApi(game: Game) {
     game,
     perf,
     teleport: (x, z) => game.debugTeleport(x, z),
+    openSpot: (minR, sid) => openSpot(sim(), minR, sid),
     teleportToSettlement: (id, dx = 0, dz = 20) => {
       const s = sim().world.settlements[id]!
       game.debugTeleport(s.x + dx, s.z + dz)

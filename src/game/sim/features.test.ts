@@ -20,15 +20,12 @@ import { collectOrder, placeOrder } from './orders'
 import { cancelActivity, playerInput, startActivity } from './player'
 import { questSystem } from './quests'
 import { addRep, BADGES } from './reputation'
-import { playerFarAway, run, testSim } from './testWorld'
+import { openSpot, playerFarAway, run, testSim } from './testWorld'
 import { dayIndex, seasonOf } from './time'
 import { buyFromNpc, sellToNpc, tradeInventory } from './trade'
 import { hp, newVitals, updateVitals } from './vitals'
 
-const flatSpot = (sim: ReturnType<typeof testSim>) => {
-  const s = sim.world.settlements[0]!
-  return { x: s.x + 40, z: s.z - 30 }
-}
+const flatSpot = openSpot
 
 describe('time & calibration', () => {
   it('TIME-01: 1 day = 3600 s gameplay, year 60 days, season 15; walking is 1.5 m/s (not ×24)', () => {
@@ -459,6 +456,11 @@ describe('combat, water, weather, skills', () => {
   it('COMBAT-02: a drawn bow shot hits a deer with a physical projectile', () => {
     const sim = testSim()
     const p = sim.player
+    const spot = openSpot(sim)
+    p.x = spot.x
+    p.z = spot.z
+    p.y = sim.terrain.heightAt(p.x, p.z)
+    sim.actors.update(p)
     p.eq.main = newStack('long_bow')
     addItem(p.inv, newStack('arrow', 5))
     p.skills.ranged = 100
