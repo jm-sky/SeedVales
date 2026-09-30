@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # Design: Starting Quests (English pack)
@@ -25,6 +31,8 @@ Eight authored multi-stage narrative quests for SeedVales-2, set between **Domow
 Existing code quests (rats / wolves board posts in `quests.ts`) are separate sim-driven content. These documents describe authored multi-stage narrative quests for later implementation.
 
 ASCII file slugs: `grok-quest-NN-english-slug.md`.
+
+**Dialog coverage (DIALOG rounds):** Each quest now has an explicit **Opening (giver)** ask (who wants what, why it matters) before deeper briefing, plus spoken NPC dialog blocks with `→` effects for mid-stage and return/closing beats. Environmental actions may stay table-ish with a short discovery line.
 
 ---
 

@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # 01 — Lost Lamb
@@ -74,14 +80,22 @@ Ways to get a lead:
 2. Talk to **Wojciech** → `hasLead=witness`. Public accusation of a named neighbor: Wojciech relation −5. Calm, factual talk: Wojciech +5.
 3. Survival check at the pen → `hasLead=track`. Low Survival also sets `misreadWolf=true`.
 
-**Dialog — Mira (shepherd), at the pen**
+**Opening (giver) — Mira (shepherd), at the pen**
 
-> Mira: "I know that pen latch by feel. Someone eased it open — they didn't smash it. My lamb Miki wears a little brass bell. If you hear that bell on the road, it's her — not wind in your ears."
+> Mira: "Miki's gone — my lamb. Brass bell on her collar. Someone took her before dawn. I need her back before the trail goes cold."
 
-Player options:
+Player options (accept / start):
+
+- A: "I'll look for her. Tell me what you know." → Mira+5; continue to briefing below (briefing sets `hasLead` / `stage=2`).
+- B: "Ten copper coins up front; the rest when I bring Miki home." → `from: mira_purse` 10 copper (`if_empty: treasury_home`, max 10); Mira+0; `q01.advance=10`; continue to briefing; quest starts.
+- C: "Could be a wolf." → Mira: "A wolf doesn't ease latches. Come look."; continue to briefing.
+
+**Briefing — Mira (stage-1 latch lead)**
+
+> Mira: "I know that latch by feel. Someone eased it open — didn't smash it. Hear a brass bell on the road, it's Miki — not the wind."
 
 - A: "Don't shout at people until I'm back with facts." → Mira+5; `hasLead=latch`; `stage=2`.
-- B: "Ten copper coins up front; the rest when I bring Miki home." → `from: mira_purse` 10 copper (`if_empty: treasury_home`, max 10); Mira+0; `q01.advance=10`; `hasLead=latch`; `stage=2`.
+- B: *(if advance not yet taken)* "I'll take the ten now and find her." → same advance rule as Opening B; `hasLead=latch`; `stage=2`.
 - C: "A wolf doesn't ease latches — I'll still check the trail carefully." → Set `misreadWolf=false` (clears a prior weak Survival misread); `hasLead=latch`; `stage=2`.
 
 **Dialog — Wojciech (guard), optional witness**
@@ -90,6 +104,13 @@ Player options:
 
 - A: "Thanks. I'll ask around without naming names yet." → Wojciech+5; `hasLead=witness`; `stage=2`.
 - B: *(point at a neighbor)* "It was one of ours — say so on the square." → Wojciech−5; `hasLead=witness`; `stage=2`; Domowice honesty−5.
+
+**Discovery — Survival check at the pen** (environmental)
+
+> *(self)* Scuffs in the mud look like claws at first glance — but the scrap is hare carrion, and the latch sits smooth, not broken.
+
+- A: *(strong Survival)* "Not a wolf. Someone walked her out." → `hasLead=track`; `stage=2`.
+- B: *(weak Survival)* "Looks like a wolf drag to me." → `hasLead=track`; `misreadWolf=true`; `stage=2`.
 
 ### Stage 2 — Confront Piotr (Miki must be resolved)
 
@@ -104,7 +125,7 @@ Find Piotr on the local road. He has Miki (bell audible on success / inspect).
 
 **Dialog — Piotr (wanderer)**
 
-> Piotr: "Pretty brass bell for a road animal — sounds like a shepherd's pet, not a wild stray. Maybe I found Mira's lamb Miki. Maybe she followed me. Either way, twenty-two copper and she's yours without a fuss."
+> Piotr: "Pretty brass bell — sounds like a shepherd's pet. Maybe Mira's lamb Miki followed me. Twenty-two copper and she's yours without a fuss."
 
 - A: "Twenty-two copper. Hand over Mira's lamb — Miki." → pay 22; `resolved=bought`; `stage=3`.
 - B: "Mira knows that latch. Wojciech saw you at dawn. Give her back and walk on." → if talk gate passes: `resolved=talked`; `stage=3`; else Piotr refuses (stay stage 2).
@@ -114,6 +135,9 @@ Find Piotr on the local road. He has Miki (bell audible on success / inspect).
 If D was chosen, next talk with Mira:
 
 > Mira: "I don't believe a wolf eased my latch. Go back to the road. Miki's bell is still out there."
+
+- A: "I'll go back to the cart road." → stay `stage=2`; `reopenTrack` stays true until Piotr A/B/C.
+- B: "Then I'm done." → abandon available; no stage-3 pay; Mira−10 if abandoned with Miki still gone.
 
 (Do not pay stage-3 rewards. Clear `reopenTrack` when the player returns to Piotr and resolves A/B/C.)
 
@@ -129,13 +153,21 @@ This branch **takes the `roadActive` mutex**.
    - No inspect / wrong animal → set `givenWanda=true`; Mira−35; Domowice honesty−10; **no** two-settlement mediation in v1 (stub / cut); close dirty at Mira (see rewards).
 5. Always **clear `roadActive`** when leaving this branch (return home, dirty close, or abandon on the road).
 
+**Dialog — Wanda (Brzeżyna), optional hand-off**
+
+> Wanda: "You brought a lamb all this way? If it's Mira's Miki, the brass bell will say so. If you didn't look, that's on you — not on me."
+
+- A: *(inspect bell first; matches)* "Bell matches. Keep her safe till I tell Mira — or I'll walk her home myself." → deliver real `lamb_miki`; do not set `givenWanda`; clear `roadActive` on leave; proceed to Mira stage 3.
+- B: *(hand over without inspect)* "Take her. I'm done walking." → `givenWanda=true`; Mira−35; honesty−10; clear `roadActive`; dirty close at Mira.
+- C: "Road's wrong. I'm turning back with the lamb." → clear `roadActive`; keep `lamb_miki`; return toward Mira.
+
 ### Stage 3 — Return to Mira (`done`)
 
 Player returns with `lamb_miki` (or with the Wanda failure state).
 
 **Dialog — Mira (successful return with `lamb_miki`)**
 
-> Mira: "That's her bell — that's my lamb Miki. You brought her home. Come, take what I promised, and don't let me catch you telling wolf stories about an open latch."
+> Mira: "That's her bell — that's my lamb Miki. Take what I promised. And no wolf stories about an open latch."
 
 - A: "She's safe. Glad the bell carried." → apply reward row for `resolved` (`bought` / `talked` / `forced`); `done`.
 - B: *(if advance was taken)* "Count the rest after the ten I already took." → same row with advance already subtracted.

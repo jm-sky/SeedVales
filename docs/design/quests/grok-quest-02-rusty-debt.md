@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # 02 — Rusty Debt
@@ -64,13 +70,21 @@ Grain gate: deal **S** requires the player to supply **grain×6** (`from: player
 
 Set `heardHome=true`. Optionally `annaHint=true`.
 
-**Dialog — Bogdan (blacksmith)**
+**Opening (giver) — Bogdan (blacksmith)**
+
+> Bogdan: "I forged a plowshare for a Brzeżyna farmer. He paid their chest — their sołtys won't release my pay over 'quality.' I want what's owed, or the share back."
+
+- A: "I'll go to Brzeżyna and sort the debt." → Bogdan+5; continue to briefing; quest starts; set `roadActive` when stage 2 begins.
+- B: "Tell me the numbers first." → continue to briefing.
+- C: "I'm busy." → refuse; quest stays available if gates still hold.
+
+**Briefing — Bogdan (stage-1 home)**
 
 > Bogdan: "Forty copper. Said out loud over the anvil. Either I get paid, or that plowshare comes back to my rack."
 
 - A: "I'll go with a scale, not a hammer." → Bogdan+5; `heardHome=true`; `stage=2`; set `roadActive`.
 - B: "Give me a mark so I know the plowshare is yours." → grant item `plowshare_mark`; `heardHome=true`; `stage=2`; set `roadActive`.
-- C: "Anna says you padded the price." → `annaHint=true`; Bogdan admits "maybe by ten"; `heardHome=true`; `stage=2`; set `roadActive`.
+- C: "Anna says you padded the price." → `annaHint=true`; Bogdan: "Maybe by ten. Still forty was the word."; `heardHome=true`; `stage=2`; set `roadActive`.
 
 **Dialog — Anna (optional, before or after Bogdan)**
 
@@ -82,22 +96,31 @@ Set `heardHome=true`. Optionally `annaHint=true`.
 
 Evidence the player can gather (any order): farmer confirms 35 went to the treasury; sołtys shows a ledger line (dialog stub); dirty pressure on the sołtys costs honesty.
 
+**Dialog — Sołtys of Brzeżyna (ledger / evidence stub)**
+
+> Sołtys: "Here's the ledger line — thirty-five copper from the farmer, held for Bogdan of Domowice. Ink doesn't lie. Whether the iron earns that ink is another talk."
+
+- A: "Show me the line again. I need it straight." → evidence: ledger confirmed; unlock deal dialog.
+- B: *(dirty pressure)* "Open the chest or the square hears you sit on a man's pay." → Domowice honesty−10; Brzeżyna honesty−5; sołtys−10; unlock deal dialog.
+- C: "I'll bring the farmer's word too." → go to farmer dialog (no deal yet).
 
 **Dialog — Farmer (Brzeżyna), evidence beat**
 
-> Farmer: "I paid thirty-five copper into the village chest for that plowshare. The sołtys — our village head — holds it. I won't pay twice. If Bogdan wants the rest, he can argue quality with the chest, not with my empty purse."
+> Farmer: "I paid thirty-five copper into the village chest. The sołtys — our village head — holds it. I won't pay twice. Bogdan can argue quality with the chest, not my purse."
 
-- A: "Show me who took the coin into the treasury." → evidence: farmer deposit confirmed; progress deal options.
-- B: "I'll talk to your sołtys." → continue to sołtys dialog.
+- A: "Show me who took the coin into the treasury." → evidence: farmer deposit confirmed; unlock deal dialog with sołtys.
+- B: "I'll talk to your sołtys." → go to sołtys ledger or deal dialog.
 
-**Dialog — Sołtys of Brzeżyna**
+**Dialog — Sołtys of Brzeżyna (deal)**
 
-> Sołtys: "Thirty-five copper sits in our chest. It stays there until I'm sure that iron won't crack on the first stone."
+> Sołtys: "Thirty-five copper sits in our chest. Speak a deal I can write — settlement, full forty, return the iron, or your grain bargain."
 
-- A: "Split the difference — thirty to Bogdan, and we call the quality settled." → attempt deal `U`.
-- B: "Pay the forty he was promised. Find the last five if you must." → attempt deal `B`.
-- C: "Then give the plowshare back. Bogdan will take his iron home." → deal `R`.
-- D: "Twenty-five from your chest, and I'll cover six measures of grain myself." → deal `S` if player has grain×6; else sołtys: "Without the grain, that bargain is empty."
+- A: "Split the difference — thirty to Bogdan, and we call the quality settled." → `deal=U`; pay Bogdan per U table now; `stage=3`.
+- B: "Pay the forty he was promised. Find the last five if you must." → `deal=B`; pay Bogdan per B table now; `stage=3`.
+- C: "Then give the plowshare back. Bogdan will take his iron home." → `deal=R`; item to Bogdan; `stage=3`.
+- D: "Twenty-five from your chest, and I'll cover six measures of grain myself." → if player has grain×6: `deal=S`; pay/grain per S table now; `stage=3`; else sołtys: "Without the grain, that bargain is empty." (stay stage 2).
+
+Player tip from `bogdan_purse` is paid on **return** (stage 3), not here.
 
 | ID | Verdict | Money / items | Fallbacks |
 |----|---------|---------------|-----------|
@@ -114,9 +137,12 @@ Set `deal=U|B|R|S`; `stage=3`. Keep `roadActive` until return completes.
 
 > Bogdan: "Well? Did Brzeżyna remember how to count, or do I heat the forge for a different kind of talk?"
 
-- A: *(if deal set)* "Here's the deal I closed." → apply reward row for `q02.deal`; clear `roadActive`; `done`.
+- A: *(deal=U)* "Thirty copper from their chest. Quality settled." → apply U rewards; clear `roadActive`; `done`.
+- B: *(deal=B)* "Forty — chest and sołtys purse covered it." → apply B rewards; clear `roadActive`; `done`.
+- C: *(deal=R)* "Here's your plowshare back. No coin from them." → apply R rewards; clear `roadActive`; `done`.
+- D: *(deal=S)* "Twenty-five from the chest, and six measures of grain from me." → apply S rewards; clear `roadActive`; `done`.
+- E: "Not finished yet." → leave; stay stage 3.
 - *(On fail/abandon at any stage ≥2)* clear `roadActive`.
-- B: "Not finished yet." → leave; stay stage 3.
 
 | deal | Player reward | Reputation | Relations |
 |------|---------------|------------|-----------|

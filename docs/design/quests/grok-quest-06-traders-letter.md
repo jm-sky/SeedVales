@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # 06 — Trader's Letter
@@ -60,15 +66,22 @@ The sealed letter proposes a quiet agreement to keep grain prices high for a sea
 
 ### Stage 1 → 2 (`intent`)
 
-Grant item `letter_stanislaw` in state `sealed`. Set `roadActive`.
+Opening → Intent. Intent grants `letter_stanislaw` (`sealed`) and sets `roadActive`.
 
-**Dialog — Stanisław (trader)**
+**Opening (giver) — Stanisław (trader)**
+
+> Stanisław: "I need a sealed letter carried to Janko in Brzeżyna. Quiet grain-price work — nothing for the square. Forty copper from my purse when it lands. Will you run it?"
+
+- A: "I'll carry it. Tell me the terms." → continue to intent choices; quest starts; set `roadActive` on accept path.
+- B: "What's in it?" → Stanisław: "Wax answers that for the loyal. Choose on the road."; continue to intent.
+- C: "I'm not a runner for price-fixing." → refuse; quest locked until Stanisław relation rises by +10 from current.
+
+**Intent — Stanisław (accept)**
 
 > Stanisław: "The seal is for fools and for the loyal. You decide on the road — just don't come back wearing a face you can't afford."
 
-- A: "It arrives closed. I won't crack the wax." → `intent=loyal`; `stage=2`.
-- B: "It arrives. I reserve the right to open it if the road smells like a cheat." → `intent=open`; `stage=2`.
-- C: "I'm not a runner for price-fixing." → refuse; quest locked until Stanisław relation rises by +10 from current.
+- A: "It arrives closed. I won't crack the wax." → `intent=loyal`; grant `letter_stanislaw` sealed; `stage=2`; set `roadActive`.
+- B: "It arrives. I reserve the right to open it if the road smells like a cheat." → `intent=open`; grant letter sealed; `stage=2`; set `roadActive`.
 
 *(Intent matters: on `opened_silent` vs loyal sealed, Janko's and Stanisław's reactions differ — see stage 3.)*
 
@@ -87,17 +100,17 @@ On the road or at delivery, choose one path:
 
 > *(letter contents, plain)* "Hold grain asking-price for one season. Split the cream. Burn this after reading."
 
-- A: "Seal it again as best I can and say nothing." → path `O` at delivery.
-- B: "Janko should hear what this really is." → path `W`.
-- C: "The sołtys should hear it." → path `N`.
+- A: "Seal it again as best I can and say nothing." → letter state `opened`; intend path `O` at delivery.
+- B: "Janko should hear what this really is." → letter `opened`; go to Janko with path `W`.
+- C: "The sołtys should hear it." → letter `opened`; go to sołtys denounce (path `N`).
 
 **Dialog — Janko (on delivery)**
 
 > Janko: "Stanisław's hand. Speak — sealed trust, or did curiosity itch?"
 
-- A: *(sealed)* "Wax intact. I'm only the feet." → path `S`.
-- B: *(opened, silent)* "Wax had a hard road. Here's the letter." → path `O`.
-- C: *(warn)* "He wants a grain squeeze. I'm telling you so you can refuse clean." → path `W`.
+- A: *(sealed)* "Wax intact. I'm only the feet." → `path=S`; `stage=3`.
+- B: *(opened, silent)* "Wax had a hard road. Here's the letter." → `path=O`; `stage=3`.
+- C: *(warn)* "He wants a grain squeeze. I'm telling you so you can refuse clean." → `path=W`; `stage=3`.
 
 Rumor: if path `O` (or sealed delivery later exposed as opened), after **1 day** set rumor tick even if the player never chats about it.
 
@@ -110,13 +123,29 @@ Rumor: if path `O` (or sealed delivery later exposed as opened), after **1 day**
 | **W** | No cartel | `from: janko_purse` 15 (`if_empty: 0`) + optional `from: treasury_brzezyna` 20 for keeping the peace | Janko+20; Stanisław−30 |
 | **N** | Cartel killed publicly | `from: treasury_home` 10 + `from: treasury_brzezyna` 10 (`if_empty: partial`) | honesty+15 both; renown+8; traders cool toward player |
 
+**Dialog — Sołtys (path N denounce)**
+
+Either Domowice's sołtys (**Radosław**) or Brzeżyna's sołtys — whichever the player reaches with the opened letter. Not Janko.
+
+> Sołtys: "A trader's seal and a grain squeeze? Speak plain — do you hand me the letter, or only a rumor?"
+
+- A: "Here's the opened letter. Kill the deal in public." → `path=N`; `stage=3`; sołtys takes letter.
+- B: "I spoke too soon. I need another day." → leave; path unset; letter stays with player; stay stage 2.
+
+**Return dialog — Stanisław (paths S / O — pay the courier)**
+
+> Stanisław: "Janko has the letter. Forty copper from my purse — as promised. Don't brag on the square."
+
+- A: "Pay me. I'm done talking." → apply S or O payout (`from: stanislaw_purse` 40); clear `roadActive`; `done`.
+- B: "Keep your coin. I already know what it bought." → refuse pay; still clear `roadActive`; `done` (no purse debit).
+
 **Return dialog — Stanisław (paths W / N only)** — each line has an effect:
 
 > Stanisław: "I thought you understood business. Business isn't theft — it's breathing in the same rhythm."
 
-- A: "Breathing on the backs of plowmen is a tax with no law." → Stanisław−5; Domowice honesty+5 (public stance).
-- B: "Don't hand out seals you don't respect yourself." → Stanisław−10; unlock future refusal of his letters.
-- C: "Next time silence costs more." → `greyHook=true`; Stanisław+5 (grey respect); honesty−5.
+- A: "Breathing on the backs of plowmen is a tax with no law." → Stanisław−5; Domowice honesty+5 (public stance); apply W/N world effects already set; clear `roadActive`; `done`.
+- B: "Don't hand out seals you don't respect yourself." → Stanisław−10; unlock future refusal of his letters; clear `roadActive`; `done`.
+- C: "Next time silence costs more." → `greyHook=true`; Stanisław+5 (grey respect); honesty−5; clear `roadActive`; `done`.
 
 Clear `roadActive` when the quest closes successfully, fails, or is abandoned.
 

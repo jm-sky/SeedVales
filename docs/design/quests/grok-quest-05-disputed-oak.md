@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # 05 — Disputed Oak
@@ -61,17 +67,18 @@ The oak sits on a fuzzy boundary. Enough physical evidence exists for a fair pea
 
 ### Stage 1 → 2 (evidence ≥2)
 
-**Dialog — Mirosław (woodcutter), quest offer**
+**Opening (giver) — Mirosław (woodcutter)**
 
-> Mirosław: "That oak drinks from our ditch as much as theirs. Kazimierz talks like the tree filed a deed. Bring me marks on wood and stone — not tavern noise — and we'll settle it."
+> Mirosław: "Kazimierz of Brzeżyna claims our boundary oak. I say it drinks from Domowice's ditch too. Walk the line, gather proof, help settle it before axes. Will you?"
 
-- A: "I'll walk the boundary and collect proof." → `stage=2`; set `roadActive`.
+- A: "I'll walk the boundary and collect proof." → Mirosław+5; `stage=2`; set `roadActive`.
 - B: "If proof fails, we still talk before axes." → Mirosław+5; `stage=2`; set `roadActive`.
+- C: "Not my fight." → refuse; quest stays available after first Brzeżyna visit.
 
 
 **Dialog — Wanda or Brzeżyna farmer (pasture witness)**
 
-> Witness: "I watched flocks along that ditch since spring. The oak stands where our sheep turn back — Brzeżyna side if you ask me, but Domowice notches are in the bark too. I'll swear to what I saw, not to whose axe is right."
+> Witness: "I watched flocks on that ditch since spring. Oak sits where our sheep turn back — Brzeżyna side to me, but Domowice notches are in the bark. I swear to what I saw, not whose axe is right."
 
 - A: "That counts as a witness mark. Thank you." → evidence +1 (pasture witness).
 
@@ -81,6 +88,26 @@ Gather evidence (any two):
 2. Find the **boundary stone** in the grass / ditch.
 3. Hear pasture witness (Wanda or farmer).
 4. Survival read of the oak's age vs both villages' claims.
+
+**Discovery — Bark mark** (environmental)
+
+> *(self)* Old Domowice notches cut deep in the bark — and fresher Brzeżyna scratches over them. Both sides left a mark.
+
+- A: "Take that as evidence." → evidence +1 (bark).
+
+**Discovery — Boundary stone** (environmental)
+
+> *(self)* A half-buried stone in the ditch grass. Carved line runs closer to Brzeżyna's claim than Kazimierz likes to admit — or the other way, if you squint. Either way, it's a boundary mark.
+
+- A: "This stone counts." → evidence +1 (boundary stone); can press Kazimierz with `askedStone`.
+
+**Discovery — Oak age** (Survival)
+
+> *(self)* The trunk's rings and lean say the oak stood here before either man's story was finished. Age alone won't crown a winner — but it undercuts "always ours" talk.
+
+- A: "Note the age against both claims." → evidence +1 (oak age).
+
+When evidence ≥2 → ready for stage 2 deal talks.
 
 ### Stage 2 → 3 (choose `deal`)
 
@@ -99,24 +126,38 @@ Gather evidence (any two):
 
 - A: "Show me the mark on the stone, not on your temper." → `askedStone=true`; Kazimierz+5 if player already found the stone.
 - B: "There's a Domowice notch in the bark too. This is a dispute, not a shrine." → `framedAsDispute=true`; unlocks peace option in sołtys dialog.
-- C: "Leave the oak. Take beams from trees that don't guard the ditch." → if evidence ≥2: `deal=peace`; else Kazimierz: "Bring proof first."
+- C: "Leave the oak. Take beams from trees that don't guard the ditch." → if evidence ≥2: `deal=peace`; `stage=3`; else Kazimierz: "Bring proof first."
 
 **Dialog — Sołtys (mediation beat, after evidence ≥2)**
 
-> Sołtys: "Two villages, one trunk. Speak a verdict I can write without starting a feud."
+Role-tag: either Domowice's sołtys (**Radosław**) or Brzeżyna's sołtys — whoever hosts the boundary talk. Not Janko. Introduce on first speak: "sołtys — village head."
 
-- A: "Peace — oak stands; each side takes two trees elsewhere." → `deal=peace` (requires evidence ≥2 and preferably `framedAsDispute`).
-- B: "The marks favor Domowice." → `deal=home`.
-- C: "The marks favor Brzeżyna." → `deal=brz`.
-- D: *(decline mediation; later theft)* leave without deal — theft remains available as a night action.
+> Sołtys: "Two villages, one trunk. I'm sołtys here — village head — and I can write a verdict without starting a feud. Speak."
+
+- A: "Peace — oak stands; each side takes two trees elsewhere." → if evidence ≥2: `deal=peace`; `stage=3` (prefer `framedAsDispute`); else sołtys: "Bring two marks first."
+- B: "The marks favor Domowice." → `deal=home`; `stage=3`.
+- C: "The marks favor Brzeżyna." → `deal=brz`; `stage=3`.
+- D: *(decline mediation; later theft)* "No verdict today." → leave without deal; theft remains available as a night action; stay stage 2.
 
 Set `deal`; `stage=3`.
+
+**Discovery — Night theft** *(if player chooses theft)*
+
+> *(self)* Axes in the dark. The boundary oak falls. Wood for the taking — and two villages will smell the sap at dawn.
+
+- A: "Fell it and haul the logs." → `deal=theft`; `stage=3`; honesty risk already in reward row.
+- B: "Leave the oak. Find another way." → cancel theft; return to deal options.
 
 ### Stage 3 — Rewards
 
 **Dialog — Mirosław (closing)**
 
 > Mirosław: "Say it plain. Does the oak stand, fall for us, fall for them — or did someone already swing in the dark?"
+
+- A: *(deal=peace)* "Oak stands. Each side takes two trees elsewhere." → apply peace rewards; clear `roadActive`; `done`.
+- B: *(deal=home)* "The marks favor Domowice." → apply home rewards; clear `roadActive`; `done`.
+- C: *(deal=brz)* "The marks favor Brzeżyna." → apply brz rewards; clear `roadActive`; `done`.
+- D: *(deal=theft)* "The oak's already down. Here's the wood." → apply theft rewards; clear `roadActive`; `done` dirty.
 
 | deal | Payout | Reputation | Relations |
 |------|--------|------------|-----------|
