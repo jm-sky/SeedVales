@@ -14,6 +14,8 @@ export type Capability =
   | 'hammer'
   | 'sew'
   | 'fire_start'
+  /** Pan or pot: roast two pieces at once (FOOD-03). */
+  | 'cook_vessel'
 
 export type ItemCategory = 'weapon' | 'armor' | 'tool' | 'food' | 'resource' | 'herb' | 'medical' | 'misc' | 'ammo'
 export type SizeClass = 'XXS' | 'XS' | 'SM' | 'MD' | 'LG' | 'XL'
@@ -155,6 +157,8 @@ const LIST: ItemDef[] = [
   tool('axe', 'Siekiera', 1.8, 'MD', 45, ['chop'], { weapon: { kind: 'melee', reach: 1.1, damage: 16, dmgType: 'cut', cooldown: 1.1, sharpness: 0.6, stamina: 14 } }),
   tool('shovel', 'Łopata', 2.2, 'LG', 30, ['dig']),
   tool('pickaxe', 'Kilof', 3, 'LG', 55, ['mine']),
+  tool('pan', 'Patelnia', 1.5, 'MD', 30, ['cook_vessel']),
+  tool('pot', 'Kociołek', 2.5, 'MD', 40, ['cook_vessel']),
   tool('hammer', 'Młotek', 1, 'SM', 20, ['hammer']),
   tool('torch', 'Pochodnia', 0.6, 'MD', 3, ['light', 'fire_start'], { light: 14, stack: true, durability: 60 }),
   tool('flint', 'Krzesiwo', 0.1, 'XS', 8, ['fire_start']),

@@ -13,6 +13,7 @@ import { SPECIES } from '../data/species'
 import { isTree } from '../world/nodes'
 import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { isDown } from './combat'
+import { roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { sleepComfort, startActivity } from './player'
 import { acceptQuest } from './quests'
@@ -55,7 +56,7 @@ const BUILDING_NAMES: Partial<Record<Building['kind'], string>> = {
   house: 'Dom', well: 'Studnia', campfire: 'Ognisko', noticeboard: 'Tablica ogłoszeń', warehouse: 'Magazyn osady',
   market: 'Stragan', inn: 'Gospoda', field: 'Pole', pen: 'Zagroda', anvil: 'Kowadło', woodpile: 'Stos drewna',
   dryrack: 'Suszarnia', herbgarden: 'Ogródek ziołowy', torchpost: 'Pochodnia', trough: 'Koryto', palisade: 'Palisada',
-  shed: 'Szopa', bridge: 'Most',
+  shed: 'Szopa', bridge: 'Most', spit: 'Ruszt',
 }
 export const buildingName = (b: Building) => BUILDING_NAMES[b.kind] ?? b.kind
 
@@ -128,6 +129,9 @@ export function waterTarget(sim: Sim, facing: number): Target | null {
   return null
 }
 
+/** Roasting runs with the calendar sped up (like resting) so the player does not wait the full time. */
+const ROAST_ACCEL = 5
+
 const opt = (id: string, label: string, enabled = true, reason?: string, panel?: UiPanel): InteractOption => ({ id, label, enabled, reason, panel })
 
 function toolOpt(sim: Sim, id: string, label: string, cap: Capability, capName: string): InteractOption {
@@ -150,6 +154,11 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
           o.push(opt('craft', b.kind === 'anvil' ? 'Kowadło — wytwarzanie' : 'Suszarnia — wytwarzanie', true, undefined, 'craft'))
           break
         case 'campfire':
+          if (b.lit !== false) {
+            const cap = roastCapacity(sim, p)
+            const n = roastBatch(sim, p)
+            o.push(opt('roast', `Piecz mięso (${n}/${cap} szt.)`, n > 0, cap ? 'Brak surowego mięsa' : 'Podejdź bliżej ognia'))
+          }
           o.push(opt('craft', 'Gotuj / wytwarzaj', true, undefined, 'craft'), opt('rest', 'Odpocznij przy ogniu (przyspiesz)'), opt('camp_sleep', 'Śpij przy ognisku'))
           if (!b.lit) o.unshift(toolOpt(sim, 'light', 'Rozpal', 'fire_start', 'krzesiwo'))
           break
@@ -366,6 +375,12 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'rest':
       startActivity(sim, { kind: 'rest', label: 'Odpoczynek przy ogniu', total: 150, accel: 20 })
       return 'Odpoczywasz (czas przyspieszony, Esc przerywa).'
+    case 'roast': {
+      const n = roastBatch(sim, p)
+      if (!n) return 'Nie masz surowego mięsa.'
+      startActivity(sim, { kind: 'roast', label: `Pieczenie mięsa (${n} szt.)`, total: roastSeconds(), accel: ROAST_ACCEL, data: String(n) })
+      return ''
+    }
     default:
       return ''
   }

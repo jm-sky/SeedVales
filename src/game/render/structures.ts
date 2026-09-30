@@ -43,6 +43,7 @@ function proceduralTemplates(): Record<string, Item[]> {
   t.herbsoil = [part(box(2, 0.14, 2), 0x4a3a24, mat4(0, -0.06, 0))]
   t.woodpile = [0, 1, 2].flatMap((row) => [0, 1, 2, 3].map((c) => part(cyl(0.18, 2.6).rotateZ(Math.PI / 2).translate(1.3, 0, 0), 0x8a6a45, mat4(-1.3, 0.18 + row * 0.33, -0.5 + c * 0.36 + (row % 2) * 0.18))))
   t.dryrack = [part(box(0.1, 1.8, 0.1), wood, mat4(-1.4, 0, 0)), part(box(0.1, 1.8, 0.1), wood, mat4(1.4, 0, 0)), part(box(3, 0.08, 0.08), wood, mat4(0, 1.6, 0)), part(box(0.4, 0.6, 0.05), 0x8a3a2a, mat4(-0.6, 0.95, 0)), part(box(0.4, 0.6, 0.05), 0x8a3a2a, mat4(0.5, 0.95, 0))]
+  t.spit = [part(new THREE.CylinderGeometry(0.04, 0.04, 1.3, 5).rotateZ(0.35).translate(-0.9, 0.55, 0), darkWood), part(new THREE.CylinderGeometry(0.04, 0.04, 1.3, 5).rotateZ(-0.35).translate(0.9, 0.55, 0), darkWood), part(cyl(0.03, 2.2).rotateZ(Math.PI / 2).translate(1.1, 0, 0), wood, mat4(0, 1.05, 0)), part(box(1.4, 0.04, 0.5), 0x4a4a48, mat4(0, 0.6, 0))]
   t.torchpost = [part(cyl(0.07, 2.4), darkWood), part(cyl(0.12, 0.25), 0x3a3a3a, mat4(0, 2.35, 0))]
   t.trough = [part(box(2.4, 0.5, 0.8), 0x6a4a2e), part(box(2.2, 0.05, 0.6), 0x2f4a5e, mat4(0, 0.42, 0))]
   t.palisade = [-1.6, -0.8, 0, 0.8, 1.6].map((x, i) => part(new THREE.CylinderGeometry(0.2, 0.22, 3 + (i % 2) * 0.3, 6).translate(0, 1.5, 0), 0x6a4a2e, mat4(x * 1.2, 0, 0)))

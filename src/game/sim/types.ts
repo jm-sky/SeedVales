@@ -49,6 +49,8 @@ export interface ItemStack {
   fresh?: number
   /** Drinks held (waterskins). */
   water?: number
+  /** Animal species the meat comes from (FOOD-03); stacks of different species never merge. */
+  sp?: string
 }
 
 export interface Inventory {

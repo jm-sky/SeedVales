@@ -979,8 +979,8 @@
    "scope": "v2",
    "behavior": "Ognisko: 1 kawałek mięsa; z naczyniem/patelnią 2; z rusztem więcej. Pieczone mięso zachowuje gatunek i świeżość",
    "verify": "vitest + e2e",
-   "status": "planned",
-   "evidence": "plan: docs/plans/economy--001--gathering-cooking-transport.md"
+   "status": "verified",
+   "evidence": "sim/cooking.ts (roastCapacity 1/2/5: fire, pan|pot, spit ≤ 3 m; roastSeconds from calendar minutes; completeRoast least-fresh first, inherits sp + relative freshness), ItemStack.sp (butcher tags species, stacks of different species never merge), items pan/pot, blueprint „Ruszt”, trader stocks a pan, anvil recipe; appendix-economy.test.ts FOOD-03 (3 tests incl. save round-trip); item label/details show species; e2e acceptance step 15 (campfire → „Piecz mięso” with a pan → 2 pieces, deer + boar kept); D-FOOD-3"
   },
   {
    "id": "COMP-01",

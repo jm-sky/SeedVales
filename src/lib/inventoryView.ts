@@ -1,4 +1,5 @@
 import { itemDef } from '@/game/data/items'
+import { SPECIES } from '@/game/data/species'
 import { qualityMult } from '@/game/sim/inventory'
 /**
  * Pure helpers for the inventory screen (UI-03): category filter, sorting and item parameters.
@@ -83,6 +84,7 @@ export function itemParams(s: ItemStack): ItemParam[] {
   if (d.food) {
     out.push({ label: 'Odżywczość', value: String(d.food.nutrition) })
     if (s.fresh !== undefined) out.push({ label: 'Świeżość', value: `${Math.round(s.fresh)} / ${d.food.spoilH} h` })
+    if (s.sp) out.push({ label: 'Gatunek', value: (SPECIES as Record<string, { name: string }>)[s.sp]?.name ?? s.sp })
     if (d.food.raw) out.push({ label: 'Uwaga', value: 'surowe — lepiej ugotować' })
   }
   if (d.durability && s.dur !== undefined) out.push({ label: 'Wytrzymałość', value: `${Math.round((s.dur / d.durability) * 100)}%` })

@@ -32,3 +32,5 @@ vitest reguł (pojemność ogniska, dziedziczenie meta, udźwig z taczką), save
 ## Wynik
 
 - **Krok 1 (RES-07) — done (2026-09-30):** pień istniał (stan `felled` w zapisie, render `far:stump`) — dodany test trwałości. Nowe: głazy (`scale ≥ ROCK.boulderScale`) przy każdym uderzeniu kilofem odłupują „Odłamek skały” (12 kg) obok skały; odłamek rozbija się kilofem na 4 kamienie (opcja w menu interakcji, aktywność 4 s). Mniejsze skały dają kamienie bezpośrednio. Wydobywana skała maleje w renderze. Test `appendix-economy.test.ts`, e2e acceptance krok 14.
+- **Krok 2 (FOOD-03) — done (2026-09-30):** `sim/cooking.ts`, opcja „Piecz mięso (n/N)” przy ognisku; pojemność 1 / 2 (patelnia, kociołek) / 5 (ruszt — nowa budowla); czas w kalendarzu (D-FOOD-3); produkt dziedziczy gatunek i względną świeżość (`ItemStack.sp`). Receptura `cook_meat` usunięta z wytwarzania. Test + e2e acceptance krok 15.
+- Pozostało: krok 3 (TRANS-01 taczka/wózek ręczny), krok 4 (opcjonalnie NPC z taczką).

@@ -47,6 +47,8 @@ export type StructureKind =
   | 'palisade'
   | 'shed'
   | 'bridge'
+  /** Roasting spit over a campfire (FOOD-03). */
+  | 'spit'
 
 export type ProfessionId =
   | 'farmer'

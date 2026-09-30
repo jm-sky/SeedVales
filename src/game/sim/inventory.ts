@@ -5,6 +5,7 @@
 import type { Capability } from '../data/items'
 import type { Human, Inventory, ItemStack } from './types'
 import { itemDef, MATERIAL_MULT, QUALITY_MULT } from '../data/items'
+import { SPECIES } from '../data/species'
 
 export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): ItemStack {
   const d = itemDef(id)
@@ -16,7 +17,7 @@ export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): I
 }
 
 const canMerge = (a: ItemStack, b: ItemStack) =>
-  a.id === b.id && itemDef(a.id).stack && (a.q ?? -1) === (b.q ?? -1) && (a.m ?? -1) === (b.m ?? -1)
+  a.id === b.id && itemDef(a.id).stack && (a.q ?? -1) === (b.q ?? -1) && (a.m ?? -1) === (b.m ?? -1) && a.sp === b.sp
 
 export function addItem(inv: Inventory, stack: ItemStack): void {
   if (stack.qty <= 0) return
@@ -163,6 +164,7 @@ export function qualityMult(s: ItemStack): number {
 export function stackLabel(s: ItemStack): string {
   const d = itemDef(s.id)
   let label = d.name
+  if (s.sp) label += ` (${(SPECIES as Record<string, { name: string }>)[s.sp]?.name.toLowerCase() ?? s.sp})`
   if (s.q !== undefined && s.q !== 1) label += ` (${['niska', 'śr.', 'wysoka', 'wyjątkowa'][s.q]})`
   if (s.qty > 1) label += ` ×${s.qty}`
   return label

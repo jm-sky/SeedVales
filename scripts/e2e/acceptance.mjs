@@ -445,6 +445,29 @@ try {
   const stonesAfter = await S(() => window.__sv.count('stone'))
   check(results, '14. pień po ścięciu; głaz → odłamek → kamienie (kilof, przez UI)', stump === 'felled' && !!chunkT && stonesAfter === boulder.stones + 4, { stump, chunk: chunkT?.label, stones: [boulder.stones, stonesAfter] })
 
+  // 15. FOOD-03: roast two pieces at once with a pan; cooked meat keeps the species.
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const p = sim.player
+    const f = sim.state.buildings.filter((b) => b.kind === 'campfire').sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0]
+    f.lit = true
+    p.inv.items = p.inv.items.filter((x) => x.id !== 'raw_meat' && x.id !== 'cooked_meat')
+    sim.player.inv.items.push({ id: 'raw_meat', qty: 1, fresh: 48, sp: 'deer' }, { id: 'raw_meat', qty: 2, fresh: 48, sp: 'boar' })
+    sv.give('pan')
+    sv.pause(true)
+    sv.approach(f.x, f.z, 1.8)
+  })
+  const fireT = await waitTarget((t) => t.opts.includes('roast'))
+  await key('KeyE')
+  if (await page.$('[data-testid="opt-roast"]')) await clickTest('opt-roast')
+  await S(() => window.__sv.pause(false))
+  await page.waitForTimeout(800)
+  await shot(page, 'acc-15-roasting')
+  await finishActivity()
+  const roast = await S(() => ({ cooked: window.__sv.game.sim.player.inv.items.filter((x) => x.id === 'cooked_meat').map((x) => `${x.sp}×${x.qty}`), raw: window.__sv.count('raw_meat') }))
+  check(results, '15. pieczenie 2 kawałków na raz (patelnia), mięso zachowuje gatunek', !!fireT && roast.raw === 1 && roast.cooked.length === 2, roast)
+
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)
