@@ -313,6 +313,20 @@ Głęboka woda wymaga pływania, w płytkiej można brodzić. Pływanie zużywa 
 
 Zwierzęta muszą wybierać trasę uwzględniając wodę, aby się nie utopić. Szczególnie miejsce do picia powinno być z brzegu zbiornika.
 
+## Otoczenie
+
+Chcemy mieć dźwięki otoczenia, np.
+- Na łąkach śpiewają ptaki
+- Nad morzem słychać fale i mewy
+- W górach wiatr
+- W jaskiniach krople wody
+
+Oprócz tego:
+- W nocy czasem słychać sowę
+- Zwierzęta też wydają swoje dźwięki
+
+Trzeba dodać mechanizm cooldown i zabezpieczyć się przez orkiestrą równoczesnych vocalization.
+
 ---
 
 # 7. Osady
@@ -791,6 +805,10 @@ Surowce mineralne:
 - złoto,
 - miedź.
 
+Złoża mogą mieć różną wielkość.
+
+Kopanie łopatą/kilofem w okolicach złóż daje % szansy na trafienie na surowiec.
+
 ## 16.3. Zioła
 
 Są zioła, np.:
@@ -914,7 +932,7 @@ Kategorie przedmiotów obejmują:
 
 - bronie,
 - zbroje,
-- narzędzia,
+- narzędzia (pochodnia, łopata, kilof, młot, zestaw do szycia...),
 - inne przedmioty.
 
 Przykłady innych przedmiotów:
@@ -927,6 +945,12 @@ Przykłady innych przedmiotów:
   - S,
   - M,
   - L.
+
+Łopata jest ważnym narzędziem - umożliwia wyrównanie terenu pod budowę, kopanie w ziemi, zakopywania zwłok.  
+Kopanie nad morzem daje szansę na muszle, lub drogocenne muszle.  
+Kopania w okolicach osady daje szansę na przedmiot lub monety.  
+Kopanie na skałach jest niemożliwe - trzeba mieć kilof.  
+Pochodnia też jest ważna, powinna być opcja trzymania pochodni w lewej ręce, albo za pasem podczas walki (lub rzucamy ją na ziemię, aby coś nam trochę świeciło).
 
 ## 19.1. Podstawowe parametry przedmiotów
 
@@ -1241,6 +1265,14 @@ Na mobile dodajemy joystick po lewej stronie, oraz kilka guzików po prawej (int
 > - Jak duża część UI desktopowego ma być dostępna na telefonie?
 
 Całość.
+
+## Ułatwienia
+
+- Jeżeli mam nóż w ekwipunku, to UI daje mi możliwość interakcji np. ze zwłokami zwierzęcia, nawet jak nie mam noża w ręce. Powoduje to wzięcia noża do ręki.
+- Powinny być szybkie akcje podzielone na kategorie, np.
+  - Ogień: Zapal ognisko, Zapal gałąź, Zapal pochodnię
+  - Budowa: Zbuduj studnię, Zbuduj dom
+  - Teren: Wyrównaj, Wykop dziurę, Zrób wyżej
 
 ---
 
