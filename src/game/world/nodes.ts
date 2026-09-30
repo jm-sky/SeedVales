@@ -99,6 +99,7 @@ export class NodeCache {
     return this.getChunk(Number(cxs), Number(czs)).find((n) => n.id === id)
   }
 
+  /** Deterministic per seed: uses base (unedited) terrain, so digging never changes placement. */
   private generate(cx: number, cz: number): ResNode[] {
     const t = this.terrain
     const seed = t.world.seed
@@ -116,14 +117,14 @@ export class NodeCache {
         const z = z0 + (j + r2) * SPACING
         const biome = t.biomeAt(x, z)
         if (t.world.flat.length && t.roadAt(x, z) > 0.05) continue
-        const depth = t.waterDepthAt(x, z)
+        const depth = t.baseWaterDepthAt(x, z)
         const roll = hash01(seed, cx, cz, i, j, 7)
         let kind: NodeKind | null = null
         if (depth > 0 && depth < 0.7 && biome !== Biome.Ocean) {
           if (roll < 0.35) kind = 'reed'
         } else if (depth === 0) {
           // Near-water reeds.
-          if (t.waterDepthAt(x + 4, z) > 0.1 || t.waterDepthAt(x - 4, z) > 0.1 || t.waterDepthAt(x, z + 4) > 0.1 || t.waterDepthAt(x, z - 4) > 0.1) {
+          if (t.baseWaterDepthAt(x + 4, z) > 0.1 || t.baseWaterDepthAt(x - 4, z) > 0.1 || t.baseWaterDepthAt(x, z + 4) > 0.1 || t.baseWaterDepthAt(x, z - 4) > 0.1) {
             if (roll < 0.25 && biome !== Biome.Ocean && !t.isSeaAt(x, z)) kind = 'reed'
           }
           if (!kind) {

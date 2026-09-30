@@ -13,6 +13,12 @@ import { DEFAULT_RULES, VoiceLimiter } from './voices'
 
 export class Ambience {
   private ctx: AudioContext | null = null
+
+  /** Closes the AudioContext (Game.stop) — browsers limit the number of live contexts. */
+  dispose() {
+    void this.ctx?.close()
+    this.ctx = null
+  }
   private master!: GainNode
   private wind!: GainNode
   private waves!: GainNode

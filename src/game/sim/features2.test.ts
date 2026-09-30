@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { perf } from '../diag/perf'
-import { isTree } from '../world/nodes'
+import { isTree, NodeCache } from '../world/nodes'
 import { consume, mineRock } from './actions'
 import { placeSite } from './build'
 import { applyDamage } from './combat'
@@ -181,5 +181,29 @@ describe('more features', () => {
     playerFarAway(sim)
     run(sim, 70, 1)
     expect(sim.state.nodes[t.id]).toBeUndefined()
+  })
+
+  it('ARCH-03: digging next to a river does not change resource placement after cache eviction', () => {
+    const sim = testSim()
+    const w = sim.world
+    // A land point right next to a river/lake (reeds vs trees depend on water depth there).
+    let px = 0
+    let pz = 0
+    for (let k = 0; k < w.waterKind.length; k += 7) {
+      if (!w.waterKind[k]) continue
+      const x = (k % w.n) * w.cell + 6
+      const z = Math.floor(k / w.n) * w.cell
+      if (sim.terrain.waterDepthAt(x, z) === 0 && !sim.terrain.isSeaAt(x, z)) {
+        px = x
+        pz = z
+        break
+      }
+    }
+    expect(px).toBeGreaterThan(0)
+    const key = (c: NodeCache) => c.query(px, pz, 40).map((n) => `${n.id}:${n.kind}:${n.x.toFixed(2)}:${n.z.toFixed(2)}`).sort().join('|')
+    const before = key(new NodeCache(sim.terrain))
+    for (let dx = -30; dx <= 30; dx += 6) for (let dz = -30; dz <= 30; dz += 6) sim.terrain.applyEdit(px + dx, pz + dz, 4, { kind: 'add', amount: -1.5 })
+    const after = key(new NodeCache(sim.terrain)) // fresh cache = evicted chunk regenerated
+    expect(after).toBe(before)
   })
 })

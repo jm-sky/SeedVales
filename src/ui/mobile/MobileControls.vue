@@ -73,7 +73,8 @@ const MENU = [
       <button
         class="h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
         :class="state.sneak ? 'ring-2 ring-sky-400' : ''"
-        @click="game.sim.state.px.sneaking = !game.sim.state.px.sneaking; version++"
+        data-testid="touch-sneak"
+        @click="game.toggleSneak()"
       >
         Skrad.
       </button>

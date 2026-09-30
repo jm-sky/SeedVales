@@ -106,6 +106,14 @@ try {
   check(results, 'M5. przycisk Atak z auto-celowaniem (sarna z boku)', hp1 > hp0, `${hp0.toFixed(1)} → ${hp1.toFixed(1)}`)
   await S(() => window.__sv.pause(false))
   await shot(page, 'mob-06-combat')
+
+  // Sneak toggle through the touch button (intent via Game, not direct state mutation).
+  const sn0 = await S(() => window.__sv.game.sim.state.px.sneaking)
+  await page.tap('[data-testid=touch-sneak]')
+  const sn1 = await S(() => window.__sv.game.sim.state.px.sneaking)
+  await page.tap('[data-testid=touch-sneak]')
+  const sn2 = await S(() => window.__sv.game.sim.state.px.sneaking)
+  check(results, 'M6. przycisk Skradanie przełącza tryb', sn1 === !sn0 && sn2 === sn0, `${sn0} → ${sn1} → ${sn2}`)
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 300))
   await shot(page, 'mob-error')

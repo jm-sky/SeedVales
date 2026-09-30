@@ -17,7 +17,7 @@
     "bench:sim": "node --expose-gc --import tsx scripts/bench/sim-bench.ts",
     "e2e": "node scripts/e2e/smoke.mjs && node scripts/e2e/acceptance.mjs && node scripts/e2e/mobile.mjs",
     "bench:render": "node scripts/bench/render-bench.mjs",
-    "check": "pnpm type-check && pnpm lint && pnpm test"
+    "check": "pnpm type-check && pnpm lint && node scripts/check-layers.mjs && pnpm test"
   },
   "dependencies": {
     "@lucide/vue": "^1.49.0",

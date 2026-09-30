@@ -40,6 +40,8 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-SIM-10 — NPC powalony (HP ≤ 0) pozostaje nietykalny, dopóki HP nie wróci > 0; śmierć przy HP ≤ −20 z dowolnej przyczyny** (trafienie, krwawienie, głód). Bez pomocy krwawienie może zabić — zgodnie z wizją (ochrona do −20 HP).
 - **D-SIM-11 — Nawigacja lokalna: objazd budynku przez narożnik powiększonego obrysu** (`sim/detour.ts`, tylko bliski LOD), zamiast samego ślizgu po ścianie. Znane ograniczenie: stojący aktor na wąskim przejściu może blokować (tylko miękka separacja).
 
+- **D-SAVE-3 — Celowo niezapisywane:** strzały w locie (`Sim.projectiles`), akumulatory interwałów systemów (`sysAcc` — po wczytaniu systemy okresowe startują od zera, max opóźnienie = interwał), kamera, otwarty panel/toast UI, diagnostyka. `snapshot` zwraca kopię stanu.
+
 ## Rendering i assety
 
 - **D-REN-1 — Assety Quaternius (CC0):** drzewa/krzewy/skały (Stylized Nature), moduły domów (Medieval Village), rekwizyty (Fantasy Props — tylko neutralne: kowadło, beczki, stragan), zwierzęta (Animated Animal Pack), postacie = głowa z Universal Base Characters (wycięta nad szyją w skrypcie) + stroje Peasant/Ranger + animacje UAL1. Szczegóły: `docs/assets/README.md`.

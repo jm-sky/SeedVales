@@ -1,15 +1,14 @@
 /**
- * Snapshot: sync transient simulation structures (terrain edits) into GameState before saving,
- * and restore after loading.
+ * Snapshot: GameState plus transient simulation structures (terrain edits, rng) as a detached
+ * copy for saving — the live state is not mutated. Deliberately not saved (D-SAVE-3): arrows in
+ * flight, system interval accumulators, camera, open UI panel/toast, diagnostics.
  * @domain save
  */
 import type { Sim } from '../sim/sim'
 import type { GameState } from '../sim/types'
 
 export function snapshot(sim: Sim): GameState {
-  sim.state.terrainEdits = sim.terrain.edits.toJSON()
-  sim.state.rng = sim.rng.state
-  return sim.state
+  return { ...sim.state, terrainEdits: sim.terrain.edits.toJSON(), rng: sim.rng.state }
 }
 
 /** Deep clone via JSON (what goes to disk) — used by tests to simulate reload. */

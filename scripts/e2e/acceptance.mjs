@@ -178,6 +178,10 @@ try {
     const o = sv.openSpot(220)
     sv.teleport(o.x, o.z)
     const p = sv.game.sim.player
+    // Enter the fight rested and unhurt (earlier steps leave variable HP/stamina).
+    for (const k of Object.keys(p.vitals.parts)) p.vitals.parts[k] = 0
+    p.vitals.bleeding = 0
+    sv.setNeeds({ hunger: 90, thirst: 90, vigor: 90, stamina: 100 })
     p.eq.main = { id: 'axe', qty: 1, dur: 250 }
     window.__wolf = sv.spawn('wolf', 0, 3)
     const w = sv.game.sim.actor(window.__wolf)

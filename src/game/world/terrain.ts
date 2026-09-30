@@ -119,6 +119,13 @@ export class Terrain {
     return Math.max(0, s - this.heightAt(x, z))
   }
 
+  /** Water depth over the unedited (generated) terrain — deterministic inputs for resource nodes. */
+  baseWaterDepthAt(x: number, z: number): number {
+    const s = this.waterSurfaceAt(x, z)
+    if (s === -Infinity) return 0
+    return Math.max(0, s - this.baseHeightAt(x, z))
+  }
+
   /** True for sea water (non-drinkable). */
   isSeaAt(x: number, z: number): boolean {
     const [i, j] = nearestCell(x, z)

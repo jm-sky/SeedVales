@@ -8,7 +8,7 @@ import { run, testSim } from '../sim/testWorld'
 import { SAVE_VERSION } from '../sim/types'
 import { installSystems } from '../sim/worldSystems'
 import { isTree } from '../world/nodes'
-import { checkWorldCompat, listSaves, migrate, newSlotId, readSave, SaveError, writeSave } from './db'
+import { checkWorldCompat, deleteSave, listSaves, migrate, newSlotId, readSave, SaveError, writeSave } from './db'
 import { snapshot } from './snapshot'
 
 describe('save / load', () => {
@@ -65,7 +65,7 @@ describe('save / load', () => {
   it('SAVE-01: missing or corrupt slot → SaveError, not a silent new game', async () => {
     await expect(readSave('does-not-exist')).rejects.toThrow(SaveError)
     const db = await new Promise<IDBDatabase>((res) => {
-      const r = indexedDB.open('seedvales', 1)
+      const r = indexedDB.open('seedvales')
       r.onsuccess = () => res(r.result)
     })
     await new Promise<void>((res) => {
@@ -88,5 +88,40 @@ describe('save / load', () => {
     expect(slots).toContain(a)
     expect(slots).toContain(b)
     expect((await listSaves()).find((m) => m.slot === a)!.genVersion).toBe(sim.world.version)
+  })
+
+  it('SAVE-01: save list comes from the meta store; delete removes save and meta', async () => {
+    const sim = testSim()
+    await writeSave('meta-test', snapshot(sim))
+    const m = (await listSaves()).find((x) => x.slot === 'meta-test')!
+    expect(m.seed).toBe(sim.state.seed)
+    expect(m.bytes).toBeGreaterThan(1000)
+    await deleteSave('meta-test')
+    expect((await listSaves()).some((x) => x.slot === 'meta-test')).toBe(false)
+    await expect(readSave('meta-test')).rejects.toThrow(SaveError)
+  })
+
+  it('SAVE-01: quota exceeded → SaveError with a message, nothing pretends to be saved', async () => {
+    const sim = testSim()
+    const orig = IDBObjectStore.prototype.put
+    IDBObjectStore.prototype.put = function () {
+      throw new DOMException('full', 'QuotaExceededError')
+    }
+    try {
+      await expect(writeSave('quota', snapshot(sim))).rejects.toThrow(/Brak miejsca/)
+    } finally {
+      IDBObjectStore.prototype.put = orig
+    }
+    expect((await listSaves()).some((x) => x.slot === 'quota')).toBe(false)
+  })
+
+  it('SAVE-01: snapshot is a detached copy — saving does not mutate live state', () => {
+    const sim = testSim()
+    sim.terrain.applyEdit(sim.player.x + 5, sim.player.z, 2, { kind: 'add', amount: -1 })
+    const live = sim.state.terrainEdits
+    const snap = snapshot(sim)
+    expect(snap).not.toBe(sim.state)
+    expect(sim.state.terrainEdits).toBe(live)
+    expect(Object.keys(snap.terrainEdits).length).toBeGreaterThan(0)
   })
 })

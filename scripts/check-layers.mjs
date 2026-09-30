@@ -16,5 +16,16 @@ for (const layer of LAYERS) {
     }
   }
 }
-console.log(bad ? `${bad} layer violations` : `OK: ${LAYERS.join(', ')} are free of three/vue/render/ui/audio imports`)
+// UI must not mutate simulation state directly (intents go through Game / sim functions).
+const UI = path.resolve(import.meta.dirname, '../src/ui')
+const MUTATE = /\bsim\.(state|player)\b[\w.[\]'"]*\s*(=(?![=>])|\+=|-=|\+\+|--)/
+for (const f of walk(UI).filter((x) => x.endsWith('.ts') || x.endsWith('.vue'))) {
+  fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+    if (MUTATE.test(line)) {
+      console.log(`✗ ui/${path.relative(UI, f)}:${i + 1} mutates sim state directly`)
+      bad++
+    }
+  })
+}
+console.log(bad ? `${bad} layer violations` : `OK: ${LAYERS.join(', ')} are free of three/vue/render/ui/audio imports; UI does not mutate sim state`)
 process.exit(bad ? 1 : 0)

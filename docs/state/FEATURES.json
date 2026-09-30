@@ -8,7 +8,7 @@
    "behavior": "Model symulacji oddzielony od renderingu i UI (src/game/sim nie importuje three ani vue)",
    "verify": "test: scripts/check-layers + vitest sim bez DOM",
    "status": "verified",
-   "evidence": "scripts/check-layers.mjs OK; sim tests run in Node without DOM"
+   "evidence": "scripts/check-layers.mjs OK; sim tests run in Node without DOM | check-layers.mjs part of pnpm check; also forbids direct sim.state/sim.player mutation in src/ui (review #20/#25)"
   },
   {
    "id": "ARCH-02",
@@ -26,7 +26,7 @@
    "behavior": "Deterministyczny świat z seeda cache'owany osobno (wersja generatora) od zapisu gry",
    "verify": "vitest determinizm + e2e cache hit",
    "status": "verified",
-   "evidence": "generate.test.ts determinism; IndexedDB worlds store keyed seed+GEN_VERSION (save/db.ts); acceptance step 9 reload | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md): determinizm OK; parowanie save↔genVersion niekompletne (game--002 A4)"
+   "evidence": "generate.test.ts determinism; IndexedDB worlds store keyed seed+GEN_VERSION (save/db.ts); acceptance step 9 reload | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md): determinizm OK; parowanie save↔genVersion niekompletne (game--002 A4) | features2.test.ts ARCH-03: digging next to a river does not change node placement after cache eviction (nodes use base terrain: Terrain.baseWaterDepthAt; review #22)"
   },
   {
    "id": "DIAG-01",
@@ -719,7 +719,7 @@
    "behavior": "Pełny zapis/odczyt zmiennego stanu w IndexedDB (wersjonowany format); brak odtworzenia zużytych zasobów/pokonanych wrogów",
    "verify": "vitest round-trip + e2e reload",
    "status": "verified",
-   "evidence": "save.test.ts: round-trip (felled tree, killed animal, terrain edit, inventory) + SAVE-01 genVersion/seed mismatch → SaveError, migrate v1→v2 backfill + reject newer/unknown, missing/corrupt slot → SaveError, new game = new unique slot (review #4/#5/#14/#15 fixed, game--002 A4/A5); acceptance step 9 reload"
+   "evidence": "save.test.ts: round-trip (felled tree, killed animal, terrain edit, inventory) + SAVE-01 genVersion/seed mismatch → SaveError, migrate v1→v2 backfill + reject newer/unknown, missing/corrupt slot → SaveError, new game = new unique slot (review #4/#5/#14/#15 fixed, game--002 A4/A5); acceptance step 9 reload | save.test.ts: meta store list/delete, QuotaExceeded → SaveError (Game.save shows it, no false success), snapshot is a detached copy (review #16/#17/#31)"
   },
   {
    "id": "SAVE-02",

@@ -135,6 +135,7 @@ export class Game {
     this.running = false
     cancelAnimationFrame(this.raf)
     this.detach()
+    this.audio.dispose()
     document.exitPointerLock?.()
     this.renderer.renderer.dispose()
   }
@@ -184,6 +185,11 @@ export class Game {
     perf.end('frame')
   }
 
+  toggleSneak() {
+    this.sim.state.px.sneaking = !this.sim.state.px.sneaking
+    this.notify()
+  }
+
   showToast(msg: string) {
     if (!msg) return
     this.toast = msg
@@ -230,7 +236,7 @@ export class Game {
         void this.save()
         break
       case 'sneak':
-        this.sim.state.px.sneaking = !this.sim.state.px.sneaking
+        this.toggleSneak()
         break
       case 'torch':
         this.toggleTorch()
@@ -464,8 +470,15 @@ export class Game {
     return 'Musisz stać przy drodze prowadzącej do tej osady.'
   }
 
+  /** Saves; on failure (e.g. quota) shows the reason and returns '' — never pretends success. */
   async save(slot = this.slot): Promise<string> {
-    await writeSave(slot, snapshot(this.sim))
+    try {
+      await writeSave(slot, snapshot(this.sim))
+    } catch (e) {
+      this.showToast(e instanceof Error ? e.message : String(e))
+      this.notify()
+      return ''
+    }
     this.showToast('Zapisano grę.')
     this.notify()
     return slot

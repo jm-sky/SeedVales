@@ -97,4 +97,14 @@ Pozostałe pozycje: zweryfikować przy implementacji (reprodukcja testem → pop
 - **B6 ✅** — `fight`: `'stuck'` → `failGoal` (cooldown ×0.25). Test „fighting an unreachable enemy…”.
 - **B7 ❎ nie potwierdzone** — `cancel_site` już zwraca `site.delivered` na ziemię (opcja „Rozbierz plac budowy”); materiały nie giną. Dodano test regresji „cancelling a construction site returns delivered materials”. TTL porzuconych placów nie jest potrzebny (materiały zostają na placu i są do odzyskania).
 - Przy okazji (C9/#23 + luka generatora): `placeNear` w `settlements.ts` nie umieszczał zagrody rolnika i koryta pasterza w prawie wszystkich osadach (kolizje z polem/zagrodą) → fallback: przeszukanie pierścieni wokół domu; brak miejsca → `world.gen.structureMissing`; pominięte gospodarstwo → `world.gen.householdSkipped`. `GEN_VERSION` 7. Test: `generate.seeds.test.ts` (kompletne gospodarstwa na 8 seedach).
+- **C1 ✅** — IndexedDB v2: osobny store `meta` (backfill z `saves` w `onupgradeneeded`); `listSaves` czyta tylko meta, zapis/usunięcie w jednej transakcji `saves`+`meta`. Wspólne połączenie IDB (#34).
+- **C2 ✅** — `QuotaExceededError` (i inne błędy zapisu) → `SaveError` z komunikatem; `Game.save` pokazuje go i zwraca `''` (brak fałszywego „Zapisano”). Test z wymuszonym `QuotaExceededError`.
+- **C3 ✅** — `Ambience.dispose()` zamyka `AudioContext`; wołane w `Game.stop`.
+- **C4 ✅** — `check-layers.mjs` w `pnpm check`.
+- **C5 ✅** — `Game.toggleSneak()`; `MobileControls` nie mutuje już stanu; `check-layers` wykrywa przypisania do `sim.state`/`sim.player` w `src/ui` (odczyt i wywołania funkcji domenowych dozwolone). e2e mobile M6 (przycisk Skradanie).
+- **C6 ⏸ odłożone** — `Game.ts` (~500 l.) nie przeszkadzał w C3/C5/A4 (zmiany były lokalne); rozbicie przy `ui--001` (panele/zapisy nazwane), bez refaktoru dla refaktoru.
+- **C7 ✅** — `snapshot` zwraca odłączoną kopię (nie mutuje żywego stanu); co celowo nie jest zapisywane → D-SAVE-3.
+- **C8 ✅** — generowanie węzłów zasobów z bazowego terenu (`Terrain.baseWaterDepthAt`); test ARCH-03 (kopanie przy rzece + eviction → to samo rozstawienie; bez poprawki padał).
+- **C9 ✅** — zrobione przy grupie B (liczniki `householdSkipped`/`structureMissing` + test kompletności gospodarstw).
+- e2e: acceptance krok 6 zaczyna walkę z pełnym HP (wcześniejsze kroki zostawiały zmienne HP → sporadyczny KO gracza, 1/3 przebiegów).
 
