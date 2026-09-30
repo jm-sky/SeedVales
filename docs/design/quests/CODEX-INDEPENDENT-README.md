@@ -12,6 +12,10 @@ Data: 2026-09-30. Brief i ograniczenia tematyczne: Jan. Dialogi: English; dokume
 - Przeczytane plany: [sim--001](../../plans/sim--001--ai-cadence-and-animal-threat.md), [npc--001](../../plans/npc--001--trade-gifts-companions.md), [economy--001](../../plans/economy--001--gathering-cooking-transport.md), [world--001](../../plans/world--001--landmarks-and-treasure.md).
 - Kontrola kodu: `src/game/sim/quests.ts` i `interact.ts`. Obecne questy liczą zabicia/naprawę; napis „przegoń albo ubij” nie dowodzi działającego niebojowego zakończenia. Pakiet wymaga nowej obsługi narracji.
 
+### Współistnienie z pakietem Groka
+
+`README.md` w tym katalogu oraz pliki `grok-quest-*.md` są osobnym pakietem przygotowanym przez Groka/Scribe. Nie są źródłem poniższych decyzji, nie zostały scalone scenicznie i nie zmieniamy ich obsady, flag ani `roadActive`. Ten katalog zawiera dwa niezależne zestawy; implementator powinien wybrać pakiet lub zaplanować ich integrację dopiero po osobnym review.
+
 Oznaczenia we wszystkich plikach:
 
 | Kod | Znaczenie |
