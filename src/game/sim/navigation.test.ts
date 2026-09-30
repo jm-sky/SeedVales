@@ -2,8 +2,8 @@
  * UI-04: map waypoint, quest goal, visited settlements and minimap bearing (plan ui--001 step 3).
  */
 import { describe, expect, it } from 'vitest'
-import { roundTrip } from '../save/snapshot'
 import { FOG } from '../config/calibration'
+import { roundTrip } from '../save/snapshot'
 import { bearing, clearWaypoint, isExplored, isVisited, navGoal, navigationSystem, revealAround, setWaypoint } from './navigation'
 import { testSim } from './testWorld'
 
