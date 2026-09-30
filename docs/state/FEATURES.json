@@ -1,92 +1,788 @@
 {
-  "$comment": "Wymagania z docs/VISION.md. status: planned|in_progress|implemented_unverified|verified|blocked|deferred. scope: v1|later. Nie osłabiać kryteriów bez wpisu w docs/design/DECISIONS.md.",
-  "features": [
-    { "id": "ARCH-01", "vision": "§3", "scope": "v1", "behavior": "Model symulacji oddzielony od renderingu i UI (src/game/sim nie importuje three ani vue)", "verify": "test: scripts/check-layers + vitest sim bez DOM", "status": "planned", "evidence": "" },
-    { "id": "ARCH-02", "vision": "§3", "scope": "v1", "behavior": "Spatial grid dla encji, częstotliwość aktualizacji zależna od odległości od gracza (LOD symulacji)", "verify": "vitest + licznik diag (near/far updates)", "status": "planned", "evidence": "" },
-    { "id": "ARCH-03", "vision": "§3", "scope": "v1", "behavior": "Deterministyczny świat z seeda cache'owany osobno (wersja generatora) od zapisu gry", "verify": "vitest determinizm + e2e cache hit", "status": "planned", "evidence": "" },
-    { "id": "DIAG-01", "vision": "prompt §6", "scope": "v1", "behavior": "Wspólna diagnostyka: czas klatki, tick, koszty systemów; mediana/p95/p99, budżety, liczba próbek; ograniczone bufory; przełączalna", "verify": "vitest perf + overlay F3 + raport benchmarku", "status": "planned", "evidence": "" },
-    { "id": "DIAG-02", "vision": "prompt §6", "scope": "v1", "behavior": "Benchmarki scen (mała/zatłoczona osada, las, walka, podróż przez chunki, przyspieszenie, długa gra) z raportem JSON + MD", "verify": "pnpm bench", "status": "planned", "evidence": "" },
-    { "id": "WORLD-01", "vision": "§4, §6", "scope": "v1", "behavior": "Deterministyczny teren z seeda: kontynent w oceanie, góry z ostrymi szczytami, niziny, uskoki/klify", "verify": "vitest determinizm; screenshot", "status": "planned", "evidence": "" },
-    { "id": "WORLD-02", "vision": "§6", "scope": "v1", "behavior": "Biomy: lasy iglaste/liściaste/mieszane, łąki, step, bagna, góry, gradient klimatu N-S", "verify": "vitest rozkład biomów; screenshot", "status": "planned", "evidence": "" },
-    { "id": "WORLD-03", "vision": "§6.3", "scope": "v1", "behavior": "Rzeki od gór do morza/jeziora z korytem, szerokość do ~10 m, jeziora; płytka woda = brodzenie, głęboka = pływanie ze stamina", "verify": "vitest; e2e wejście do wody", "status": "planned", "evidence": "" },
-    { "id": "WORLD-04", "vision": "§4.2, §7", "scope": "v1", "behavior": "≥3 osady (SM dom, SM/MD ~1 dzień trasy, LG dalej) połączone drogami A* po terenie; drogi spłaszczają teren; brody/mosty na rzekach", "verify": "vitest: długość trasy dom→sąsiad 3.0–4.5 km, trasa istnieje", "status": "planned", "evidence": "" },
-    { "id": "WORLD-05", "vision": "§6.1", "scope": "later", "behavior": "Jaskinie (małe/średnie/duże)", "verify": "—", "status": "deferred", "evidence": "Poza v1: wymaga osobnej geometrii; zapisane w DECISIONS" },
-    { "id": "WORLD-06", "vision": "§6", "scope": "later", "behavior": "2–3 kontynenty, tundra/pustynia/dżungla, transport między kontynentami", "verify": "—", "status": "deferred", "evidence": "prompt §4: kolonizacja/kontynenty później; v1 = jeden kontynent z gradientem klimatu" },
-    { "id": "WORLD-07", "vision": "§4.1", "scope": "v1", "behavior": "Podróż wyłącznie fizyczna, streaming chunków terenu i roślinności, brak teleportu w normalnej grze", "verify": "benchmark podróży przez granice chunków", "status": "planned", "evidence": "" },
-    { "id": "WORLD-08", "vision": "§4.3", "scope": "v1", "behavior": "Autopilot po drodze do wybranej osady (bez skracania czasu, dopuszczalne bezpieczne przyspieszenie)", "verify": "e2e autopilot", "status": "planned", "evidence": "" },
-    { "id": "WORLD-09", "vision": "§4.3", "scope": "later", "behavior": "Jazda konna, juki, wozy", "verify": "—", "status": "deferred", "evidence": "Konie istnieją jako zwierzęta; jazda później" },
-    { "id": "WORLD-10", "vision": "§6 Otoczenie", "scope": "v1", "behavior": "Dźwięki otoczenia (ptaki/wiatr/fale/sowa nocą) z cooldownem i limitem równoczesnych vocalization", "verify": "vitest menedżera dźwięków", "status": "planned", "evidence": "" },
-    { "id": "TIME-01", "vision": "§5.2", "scope": "v1", "behavior": "Doba=60 min real, kalendarz 24x, rok 60 dni (12×5), 4 sezony po 15 dni; ruch w sekundach rozgrywki", "verify": "vitest kalendarza i prędkości", "status": "planned", "evidence": "" },
-    { "id": "TIME-02", "vision": "§5", "scope": "v1", "behavior": "Dzień/noc (oświetlenie, długość dnia zależna od sezonu)", "verify": "screenshot dzień/noc", "status": "planned", "evidence": "" },
-    { "id": "TIME-03", "vision": "§5.1", "scope": "v1", "behavior": "Pogoda: słońce, deszcz, burza, śnieg, mgła (także łączona), zależna od sezonu; deszcz podlewa pola, NPC/zwierzęta szukają schronienia", "verify": "vitest pogody + AI", "status": "planned", "evidence": "" },
-    { "id": "TIME-04", "vision": "§5.2", "scope": "v1", "behavior": "Sen/czekanie przyspiesza całą symulację, przerywane zagrożeniem i [Esc]", "verify": "vitest stabilności przy przyspieszeniu; e2e sen", "status": "planned", "evidence": "" },
-    { "id": "SET-01", "vision": "§7", "scope": "v1", "behavior": "Osady SM/MD/LG: plac z ogniskiem, tablicą ogłoszeń, studnią; gospodarstwa z domem, magazynem, zabudową profesji; MD/LG targ, LG gospoda", "verify": "vitest generatora osad; screenshot", "status": "planned", "evidence": "" },
-    { "id": "SET-02", "vision": "§7", "scope": "v1", "behavior": "Magazyn osady; NPC oddają nadwyżki i korzystają w ostateczności", "verify": "vitest AI", "status": "planned", "evidence": "" },
-    { "id": "SET-03", "vision": "§7 Naprawa", "scope": "v1", "behavior": "Budynki mają durability, zużycie szybsze przy złej pogodzie, NPC naprawiają (narzędzia+surowce)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "SET-04", "vision": "§7", "scope": "later", "behavior": "Rozwój/upadek osad, outposty, cmentarze", "verify": "—", "status": "deferred", "evidence": "prompt §4: rozbudowany rozwój osad później" },
-    { "id": "NPC-01", "vision": "§8", "scope": "v1", "behavior": "NPC z atrybutami, skills, osobowością, potrzebami, wyposażeniem, pieniędzmi, bronią; rodziny w gospodarstwach", "verify": "vitest generatora populacji", "status": "planned", "evidence": "" },
-    { "id": "NPC-02", "vision": "§10", "scope": "v1", "behavior": "Utility AI: siła potrzeby vs obowiązek vs kontekst vs koszt/odległość; wybór najbliższego źródła; NPC zaspokaja potrzebę i wraca do pracy; brak nieskończonych pętli przy braku zasobu", "verify": "vitest scenariusze AI", "status": "planned", "evidence": "" },
-    { "id": "NPC-03", "vision": "§11", "scope": "v1", "behavior": "Big Five wpływa na decyzje (sumienność→praca, ekstrawersja→kontakt, neurotyczność→ucieczka, ugodowość→ceny/pomoc, otwartość→dalsze źródła)", "verify": "vitest porównanie decyzji", "status": "planned", "evidence": "" },
-    { "id": "NPC-04", "vision": "§13", "scope": "v1", "behavior": "Działające profesje: drwal, rolnik, myśliwy, strażnik, zielarz, handlarz, kowal, pasterz (dane + wspólne mechanizmy)", "verify": "vitest produkcji; e2e obserwacja", "status": "planned", "evidence": "" },
-    { "id": "NPC-05", "vision": "§10", "scope": "v1", "behavior": "Potrzeba społeczna realizowana przy ognisku/w gospodzie", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "NPC-06", "vision": "§13", "scope": "later", "behavior": "Pozostałe profesje (lekarz, rybak, górnik, kurier, woźnica, hodowcy, tkacz, cieśla, leatherman, sołtys, burmistrz, handlarz wędrowny)", "verify": "—", "status": "deferred", "evidence": "Dodawane jako dane na wspólnych mechanizmach" },
-    { "id": "NPC-07", "vision": "§28", "scope": "v1", "behavior": "NPC ma ochronę do -20 HP, woła o pomoc; strażnicy reagują", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "NPC-08", "vision": "§8, §28", "scope": "later", "behavior": "Demografia wielopokoleniowa, relacje społeczne, pogrzeby", "verify": "—", "status": "deferred", "evidence": "prompt §4" },
-    { "id": "ATTR-01", "vision": "§9", "scope": "v1", "behavior": "Wspólne atrybuty SPECIAL-like i liczniki (HP z części ciała, stamina, vigor, głód, pragnienie) dla gracza/NPC; zwierzęta dzielą HP/stamina/głód/pragnienie", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "ATTR-02", "vision": "§9.2", "scope": "v1", "behavior": "Vigor ~18–20 h marszu, kary po wyczerpaniu, regeneracja zależna od komfortu miejsca snu", "verify": "vitest kalibracji", "status": "planned", "evidence": "" },
-    { "id": "ATTR-03", "vision": "§9.1", "scope": "v1", "behavior": "Atrybut Strength rośnie powoli przy noszeniu ciężaru", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "SKILL-01", "vision": "§12", "scope": "v1", "behavior": "Skills ciągłe 0–100 rosną z użyciem (malejący przyrost): medycyna, skradanie, survival, traps, melee, ranged, construction, blacksmith (+ woodcutting, farming, trading)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "SKILL-02", "vision": "§12.2", "scope": "later", "behavior": "Książki podnoszące skill do progu", "verify": "—", "status": "deferred", "evidence": "" },
-    { "id": "SKILL-03", "vision": "§12.1", "scope": "v1", "behavior": "Skill aktywowany: skradanie (zmniejsza wykrycie przez zwierzęta)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "REP-01", "vision": "§14", "scope": "v1", "behavior": "Reputacja per osada w wymiarach uczciwość/uczynność/rozpoznawalność/odwaga; rośnie i spada", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "REP-02", "vision": "§14", "scope": "v1", "behavior": "Rozchodzenie się 30% wybranych wymiarów do sąsiednich osad z opóźnieniem = czas szybkiego marszu", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "REP-03", "vision": "§14", "scope": "v1", "behavior": "Odznaki (pozytywne/negatywne), np. pogromca groźnych zwierząt, tępiciel szczurów, przyłapany na kradzieży", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "REP-04", "vision": "§14", "scope": "v1", "behavior": "Indywidualna sympatia NPC do gracza", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "FAUNA-01", "vision": "§15", "scope": "v1", "behavior": "Gatunki jako dane (sarna, jeleń, wilk, lis, dzik, zając, niedźwiedź, szczur, krowa, owca, kura, koń, osioł, pies, łoś); warianty młode/alfa/albinos", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "FAUNA-02", "vision": "§15.3", "scope": "v1", "behavior": "Żerowanie, picie z brzegu wody, ucieczka przed zagrożeniem, drapieżniki polują; deszcz → schronienie", "verify": "vitest AI zwierząt", "status": "planned", "evidence": "" },
-    { "id": "FAUNA-03", "vision": "§15.3", "scope": "v1", "behavior": "Zwierzęta wabione upuszczonym mięsem/padliną i jedzą je", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "FAUNA-04", "vision": "§15.4", "scope": "v1", "behavior": "Legowiska jako spawn-pointy; spalenie (5 gałęzi + krzesiwo) niszczy", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "FAUNA-05", "vision": "§17.1", "scope": "v1", "behavior": "Wścieklizna: odważne, atakują wszystkich, zarażają (rzadko)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "RES-01", "vision": "§16.1", "scope": "v1", "behavior": "Drzewa 10–30 m, ścinanie siekierą → belki i gałęzie; pnie; odrastanie/rozsiew", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "RES-02", "vision": "§16.2", "scope": "v1", "behavior": "Kamienie, skały (kilof → kamień), złoża węgla/żelaza/miedzi/złota z % szansą przy kopaniu", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "RES-03", "vision": "§16.3", "scope": "v1", "behavior": "4–6 ziół (pospolite/średnie/rzadkie, lecznicze/trujące)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "RES-04", "vision": "§16.4", "scope": "v1", "behavior": "Jagody, jabłka, grzyby dziko; marchew/kapusta/pomidory z pól; wpływ sezonu na plony", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "RES-05", "vision": "§16", "scope": "v1", "behavior": "Trawa z plamami kolorów, trzciny nad wodą", "verify": "screenshot", "status": "planned", "evidence": "" },
-    { "id": "RES-06", "vision": "§16.4", "scope": "later", "behavior": "Rybołówstwo", "verify": "—", "status": "deferred", "evidence": "" },
-    { "id": "WATER-01", "vision": "§17", "scope": "v1", "behavior": "Woda pitna/niepitna (morze), ryzyko choroby rośnie dalej od źródła i bliżej ludzi/zwierząt; studnia bezpieczna", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "WATER-02", "vision": "§17", "scope": "v1", "behavior": "Choroba pokarmowa/zatrucie (od wody, zepsutego jedzenia, trujących ziół) z przebiegiem i leczeniem ziołami", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "FOOD-01", "vision": "§18", "scope": "v1", "behavior": "Zwłoki → oprawianie nożem → mięso/skóra/poroże/kości; gniją po kilku godzinach, zostawiają kości", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "FOOD-02", "vision": "§18.1", "scope": "v1", "behavior": "Żywność ma wartość odżywczą i świeżość; surowe psuje się szybciej niż pieczone, suszone długo; skrzynia spowalnia psucie", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "ITEM-01", "vision": "§19", "scope": "v1", "behavior": "Katalog przedmiotów z wagą, gabarytem, durability, ceną, capabilities (cut, chop, dig, mine, carry_water, light...)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "ITEM-02", "vision": "§19.1", "scope": "v1", "behavior": "Ekwipunek z limitem wagi (Strength) i plecakiem +15 kg; magazyny (skrzynie gospodarstw, magazyn osady)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "ITEM-03", "vision": "§27 Ułatwienia", "scope": "v1", "behavior": "Interakcja wymagająca capability automatycznie bierze właściwe narzędzie z ekwipunku", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "ITEM-04", "vision": "§19", "scope": "v1", "behavior": "Łopata: kopanie (muszle nad morzem, monety w osadzie), wyrównanie terenu, zakopywanie zwłok; kilof na skałach", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "ITEM-05", "vision": "§19", "scope": "v1", "behavior": "Pochodnia daje światło; można upuścić świecącą", "verify": "screenshot noc", "status": "planned", "evidence": "" },
-    { "id": "WPN-01", "vision": "§20", "scope": "v1", "behavior": "Bronie jako dane (nóż, sztylet, miecze, topory, włócznia, młot, maczuga, łuki, proca, kusza) z zasięgiem, ostrością, szybkością, typem obrażeń; 3 rodzaje strzał", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "ARM-01", "vision": "§21", "scope": "v1", "behavior": "Zbroje w slotach, 2 warstwy, waga ×0.6, wpływ na prędkość, odporności per typ obrażeń", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "QUAL-01", "vision": "§22", "scope": "v1", "behavior": "Jakość wykonania (4) i materiału (3) wpływa na parametry; skill kowala wpływa na jakość", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "QUAL-02", "vision": "§22.3", "scope": "later", "behavior": "Technologie (damascus)", "verify": "—", "status": "deferred", "evidence": "" },
-    { "id": "CRAFT-01", "vision": "§23", "scope": "v1", "behavior": "Receptury danych: skill, narzędzie (capability), czasem warsztat; czas z paskiem postępu i przerwaniem; skill przyspiesza; zasoby spójne po przerwaniu", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "CRAFT-02", "vision": "§23", "scope": "v1", "behavior": "Zamówienia u NPC (kowal) z zaliczką", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "TRADE-01", "vision": "§28 Ekonomia", "scope": "v1", "behavior": "Handel z NPC za miedziaki (copper/silver/gold), ceny zależne od podaży, reputacji i ugodowości", "verify": "vitest bilans + e2e", "status": "planned", "evidence": "" },
-    { "id": "BUILD-01", "vision": "§24", "scope": "v1", "behavior": "Budowa (ognisko, studnia, koryto, palisada, szopa/dom): plac budowy, surowce z ekwipunku lub leżące obok, etapy pracy, przyspieszenie czasu dla długich", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "BUILD-02", "vision": "§24", "scope": "v1", "behavior": "Łopata: kopanie dołków i wyrównywanie terenu (zmiany terenu zapisywane)", "verify": "vitest + e2e po zapisie", "status": "planned", "evidence": "" },
-    { "id": "BUILD-03", "vision": "§24.2", "scope": "v1", "behavior": "Koryto napełniane wiadrem / ze studni obok; zwierzęta z niego piją", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "BUILD-04", "vision": "§24", "scope": "v1", "behavior": "Własność budynków; strażnik reaguje na budowę na drodze/placu", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "COMBAT-01", "vision": "§25", "scope": "v1", "behavior": "Combat-mode (dobyta/schowana broń), walka wręcz z celowaniem i skillem, stamina", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "COMBAT-02", "vision": "§25.1", "scope": "v1", "behavior": "Łuk: przytrzymanie LPM naciąga, pociski z grawitacją; proca", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "COMBAT-03", "vision": "§25.3, §9.2", "scope": "v1", "behavior": "Obrażenia części ciała, pancerz per typ; 0 HP → nieprzytomność, wstanie po ~3 s, 120 s ochrony (ignorowany przez wrogów)", "verify": "vitest", "status": "planned", "evidence": "" },
-    { "id": "COMBAT-04", "vision": "§28 Śmierć", "scope": "v1", "behavior": "Regeneracja/leczenie: bandaż, zioła, zielarz leczy; ciężkie rany = rekonwalescencja", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "QUEST-01", "vision": "§26.1", "scope": "v1", "behavior": "Zadanie z symulacji: zaniedbane budynki → gniazda szczurów → strażnik prosi o pomoc; ukończenie zmienia reputację; może zniknąć gdy problem rozwiąże NPC", "verify": "vitest + e2e", "status": "planned", "evidence": "" },
-    { "id": "QUEST-02", "vision": "§7, §26", "scope": "v1", "behavior": "Tablica ogłoszeń z zadaniami", "verify": "e2e", "status": "planned", "evidence": "" },
-    { "id": "QUEST-03", "vision": "§26.2", "scope": "later", "behavior": "Wieloetapowe zadania narracyjne (kopalnia złota)", "verify": "—", "status": "deferred", "evidence": "prompt §4" },
-    { "id": "SAVE-01", "vision": "§3", "scope": "v1", "behavior": "Pełny zapis/odczyt zmiennego stanu w IndexedDB (wersjonowany format); brak odtworzenia zużytych zasobów/pokonanych wrogów", "verify": "vitest round-trip + e2e reload", "status": "planned", "evidence": "" },
-    { "id": "SAVE-02", "vision": "prompt §8", "scope": "v1", "behavior": "Opuszczenie obszaru i powrót nie resetuje zmian (ścięte drzewa, teren, budowle)", "verify": "e2e", "status": "planned", "evidence": "" },
-    { "id": "UI-01", "vision": "§27", "scope": "v1", "behavior": "HUD (liczniki, czas, pogoda), ekwipunek, crafting, handel, budowa, zadania/reputacja, szybkie akcje w kategoriach, pasek postępu z przerwaniem", "verify": "e2e + screenshoty", "status": "planned", "evidence": "" },
-    { "id": "UI-02", "vision": "§27", "scope": "v1", "behavior": "Mobile: joystick po lewej, przyciski po prawej, drag kamery, auto-targeting, pełny dostęp do funkcji", "verify": "e2e z touch, viewport mobile", "status": "planned", "evidence": "" },
-    { "id": "RENDER-01", "vision": "§4.4", "scope": "v1", "behavior": "Kamera 3rd person z zoomem i kolizją z terenem; WASD+mysz", "verify": "e2e", "status": "planned", "evidence": "" },
-    { "id": "RENDER-02", "vision": "§4.4, prompt §6.1", "scope": "v1", "behavior": "Assety Quaternius (drzewa, budynki modułowe, zwierzęta, postacie z animacjami) z instancjonowaniem; placeholdery udokumentowane", "verify": "screenshot + diag draw calls", "status": "planned", "evidence": "" },
-    { "id": "ECON-01", "vision": "§28", "scope": "v1", "behavior": "Osady samowystarczalne w żywności; wymiana surowców (handlarz wędrowny między osadami)", "verify": "vitest długiej symulacji", "status": "planned", "evidence": "" },
-    { "id": "VOICE-01", "vision": "Assets", "scope": "later", "behavior": "Głosy NPC (Fish Audio)", "verify": "—", "status": "deferred", "evidence": "" }
-  ]
+ "$comment": "Wymagania z docs/VISION.md. status: planned|in_progress|implemented_unverified|verified|blocked|deferred. scope: v1|later. Nie osłabiać kryteriów bez wpisu w docs/design/DECISIONS.md.",
+ "features": [
+  {
+   "id": "ARCH-01",
+   "vision": "§3",
+   "scope": "v1",
+   "behavior": "Model symulacji oddzielony od renderingu i UI (src/game/sim nie importuje three ani vue)",
+   "verify": "test: scripts/check-layers + vitest sim bez DOM",
+   "status": "verified",
+   "evidence": "scripts/check-layers.mjs OK; sim tests run in Node without DOM"
+  },
+  {
+   "id": "ARCH-02",
+   "vision": "§3",
+   "scope": "v1",
+   "behavior": "Spatial grid dla encji, częstotliwość aktualizacji zależna od odległości od gracza (LOD symulacji)",
+   "verify": "vitest + licznik diag (near/far updates)",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts ARCH-02; SIM_LOD in config; diag gauges npc.near/farUpdates"
+  },
+  {
+   "id": "ARCH-03",
+   "vision": "§3",
+   "scope": "v1",
+   "behavior": "Deterministyczny świat z seeda cache'owany osobno (wersja generatora) od zapisu gry",
+   "verify": "vitest determinizm + e2e cache hit",
+   "status": "verified",
+   "evidence": "generate.test.ts determinism; IndexedDB worlds store keyed seed+GEN_VERSION (save/db.ts); acceptance step 9 reload"
+  },
+  {
+   "id": "DIAG-01",
+   "vision": "prompt §6",
+   "scope": "v1",
+   "behavior": "Wspólna diagnostyka: czas klatki, tick, koszty systemów; mediana/p95/p99, budżety, liczba próbek; ograniczone bufory; przełączalna",
+   "verify": "vitest perf + overlay F3 + raport benchmarku",
+   "status": "verified",
+   "evidence": "diag/perf.ts (median/p95/p99, budgets, bounded rings, detailed toggle); F3 overlay; used by benchmarks"
+  },
+  {
+   "id": "DIAG-02",
+   "vision": "prompt §6",
+   "scope": "v1",
+   "behavior": "Benchmarki scen (mała/zatłoczona osada, las, walka, podróż przez chunki, przyspieszenie, długa gra) z raportem JSON + MD",
+   "verify": "pnpm bench",
+   "status": "verified",
+   "evidence": "pnpm bench:sim (7 scenes incl. long run + memory) and pnpm bench:render; JSON+MD in test-results/bench, baseline scripts/bench/baseline.json; summary docs/state/PERF.md"
+  },
+  {
+   "id": "WORLD-01",
+   "vision": "§4, §6",
+   "scope": "v1",
+   "behavior": "Deterministyczny teren z seeda: kontynent w oceanie, góry z ostrymi szczytami, niziny, uskoki/klify",
+   "verify": "vitest determinizm; screenshot",
+   "status": "verified",
+   "evidence": "generate.test.ts; screenshots scripts/e2e/tour.mjs (manual review 2026-09-30)"
+  },
+  {
+   "id": "WORLD-02",
+   "vision": "§6",
+   "scope": "v1",
+   "behavior": "Biomy: lasy iglaste/liściaste/mieszane, łąki, step, bagna, góry, gradient klimatu N-S",
+   "verify": "vitest rozkład biomów; screenshot",
+   "status": "verified",
+   "evidence": "generate.test.ts biome coverage; map panel; tundra/desert/jungle deferred (WORLD-06)"
+  },
+  {
+   "id": "WORLD-03",
+   "vision": "§6.3",
+   "scope": "v1",
+   "behavior": "Rzeki od gór do morza/jeziora z korytem, szerokość do ~10 m, jeziora; płytka woda = brodzenie, głęboka = pływanie ze stamina",
+   "verify": "vitest; e2e wejście do wody",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts WORLD-03 swimming; hydrology; river width ≥8 m limitation (DECISIONS D-WORLD-2)"
+  },
+  {
+   "id": "WORLD-04",
+   "vision": "§4.2, §7",
+   "scope": "v1",
+   "behavior": "≥3 osady (SM dom, SM/MD ~1 dzień trasy, LG dalej) połączone drogami A* po terenie; drogi spłaszczają teren; brody/mosty na rzekach",
+   "verify": "vitest: długość trasy dom→sąsiad 3.0–4.5 km, trasa istnieje",
+   "status": "verified",
+   "evidence": "generate.test.ts: 3 settlements SM/MD/LG, route 0→1 within 0.8–1.3 day march; bridges/fords"
+  },
+  {
+   "id": "WORLD-05",
+   "vision": "§6.1",
+   "scope": "later",
+   "behavior": "Jaskinie (małe/średnie/duże)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "Poza v1: wymaga osobnej geometrii; zapisane w DECISIONS"
+  },
+  {
+   "id": "WORLD-06",
+   "vision": "§6",
+   "scope": "later",
+   "behavior": "2–3 kontynenty, tundra/pustynia/dżungla, transport między kontynentami",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "prompt §4: kolonizacja/kontynenty później; v1 = jeden kontynent z gradientem klimatu"
+  },
+  {
+   "id": "WORLD-07",
+   "vision": "§4.1",
+   "scope": "v1",
+   "behavior": "Podróż wyłącznie fizyczna, streaming chunków terenu i roślinności, brak teleportu w normalnej grze",
+   "verify": "benchmark podróży przez granice chunków",
+   "status": "verified",
+   "evidence": "bench chunk-traverse (sim+render); streaming by budget; no map teleport in normal play"
+  },
+  {
+   "id": "WORLD-08",
+   "vision": "§4.3",
+   "scope": "v1",
+   "behavior": "Autopilot po drodze do wybranej osady (bez skracania czasu, dopuszczalne bezpieczne przyspieszenie)",
+   "verify": "e2e autopilot",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts WORLD-08; map panel autopilot button"
+  },
+  {
+   "id": "WORLD-09",
+   "vision": "§4.3",
+   "scope": "later",
+   "behavior": "Jazda konna, juki, wozy",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "Konie istnieją jako zwierzęta; jazda później"
+  },
+  {
+   "id": "WORLD-10",
+   "vision": "§6 Otoczenie",
+   "scope": "v1",
+   "behavior": "Dźwięki otoczenia (ptaki/wiatr/fale/sowa nocą) z cooldownem i limitem równoczesnych vocalization",
+   "verify": "vitest menedżera dźwięków",
+   "status": "implemented_unverified",
+   "evidence": "audio/voices.test.ts (cooldown + concurrency cap) verified; procedural synthesis not verified by ear (headless)"
+  },
+  {
+   "id": "TIME-01",
+   "vision": "§5.2",
+   "scope": "v1",
+   "behavior": "Doba=60 min real, kalendarz 24x, rok 60 dni (12×5), 4 sezony po 15 dni; ruch w sekundach rozgrywki",
+   "verify": "vitest kalendarza i prędkości",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts TIME-01"
+  },
+  {
+   "id": "TIME-02",
+   "vision": "§5",
+   "scope": "v1",
+   "behavior": "Dzień/noc (oświetlenie, długość dnia zależna od sezonu)",
+   "verify": "screenshot dzień/noc",
+   "status": "verified",
+   "evidence": "Renderer.lighting (sun path, season day length); screenshots scripts/e2e/tour.mjs (manual review 2026-09-30) dusk/night"
+  },
+  {
+   "id": "TIME-03",
+   "vision": "§5.1",
+   "scope": "v1",
+   "behavior": "Pogoda: słońce, deszcz, burza, śnieg, mgła (także łączona), zależna od sezonu; deszcz podlewa pola, NPC/zwierzęta szukają schronienia",
+   "verify": "vitest pogody + AI",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts TIME-03; weather.ts seasonal table; screenshots scripts/e2e/tour.mjs (manual review 2026-09-30) rain"
+  },
+  {
+   "id": "TIME-04",
+   "vision": "§5.2",
+   "scope": "v1",
+   "behavior": "Sen/czekanie przyspiesza całą symulację, przerywane zagrożeniem i [Esc]",
+   "verify": "vitest stabilności przy przyspieszeniu; e2e sen",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts TIME-04; acceptance build/repair with acceleration"
+  },
+  {
+   "id": "SET-01",
+   "vision": "§7",
+   "scope": "v1",
+   "behavior": "Osady SM/MD/LG: plac z ogniskiem, tablicą ogłoszeń, studnią; gospodarstwa z domem, magazynem, zabudową profesji; MD/LG targ, LG gospoda",
+   "verify": "vitest generatora osad; screenshot",
+   "status": "verified",
+   "evidence": "settlements layout (plaza campfire/noticeboard/well, households, market/inn MD/LG); screenshots scripts/e2e/tour.mjs (manual review 2026-09-30)"
+  },
+  {
+   "id": "SET-02",
+   "vision": "§7",
+   "scope": "v1",
+   "behavior": "Magazyn osady; NPC oddają nadwyżki i korzystają w ostateczności",
+   "verify": "vitest AI",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts SET-02; economy.test.ts"
+  },
+  {
+   "id": "SET-03",
+   "vision": "§7 Naprawa",
+   "scope": "v1",
+   "behavior": "Budynki mają durability, zużycie szybsze przy złej pogodzie, NPC naprawiają (narzędzia+surowce)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts SET-03; ecology decay ×2.5 in bad weather"
+  },
+  {
+   "id": "SET-04",
+   "vision": "§7",
+   "scope": "later",
+   "behavior": "Rozwój/upadek osad, outposty, cmentarze",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "prompt §4: rozbudowany rozwój osad później"
+  },
+  {
+   "id": "NPC-01",
+   "vision": "§8",
+   "scope": "v1",
+   "behavior": "NPC z atrybutami, skills, osobowością, potrzebami, wyposażeniem, pieniędzmi, bronią; rodziny w gospodarstwach",
+   "verify": "vitest generatora populacji",
+   "status": "verified",
+   "evidence": "newGame.ts population; acceptance step 2; dialog panel shows traits"
+  },
+  {
+   "id": "NPC-02",
+   "vision": "§10",
+   "scope": "v1",
+   "behavior": "Utility AI: siła potrzeby vs obowiązek vs kontekst vs koszt/odległość; wybór najbliższego źródła; NPC zaspokaja potrzebę i wraca do pracy; brak nieskończonych pętli przy braku zasobu",
+   "verify": "vitest scenariusze AI",
+   "status": "verified",
+   "evidence": "npc/ai.test.ts (drink→work, no endless loop), economy 3-day test"
+  },
+  {
+   "id": "NPC-03",
+   "vision": "§11",
+   "scope": "v1",
+   "behavior": "Big Five wpływa na decyzje (sumienność→praca, ekstrawersja→kontakt, neurotyczność→ucieczka, ugodowość→ceny/pomoc, otwartość→dalsze źródła)",
+   "verify": "vitest porównanie decyzji",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts NPC-03 (C→work share); goals.ts personality terms"
+  },
+  {
+   "id": "NPC-04",
+   "vision": "§13",
+   "scope": "v1",
+   "behavior": "Działające profesje: drwal, rolnik, myśliwy, strażnik, zielarz, handlarz, kowal, pasterz (dane + wspólne mechanizmy)",
+   "verify": "vitest produkcji; e2e obserwacja",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts NPC-04: all 8 professions execute their duty acts in a day"
+  },
+  {
+   "id": "NPC-05",
+   "vision": "§10",
+   "scope": "v1",
+   "behavior": "Potrzeba społeczna realizowana przy ognisku/w gospodzie",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "acceptance step 2 observed goal social; goals.ts evening social (E)"
+  },
+  {
+   "id": "NPC-06",
+   "vision": "§13",
+   "scope": "later",
+   "behavior": "Pozostałe profesje (lekarz, rybak, górnik, kurier, woźnica, hodowcy, tkacz, cieśla, leatherman, sołtys, burmistrz, handlarz wędrowny)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "Dodawane jako dane na wspólnych mechanizmach"
+  },
+  {
+   "id": "NPC-07",
+   "vision": "§28",
+   "scope": "v1",
+   "behavior": "NPC ma ochronę do -20 HP, woła o pomoc; strażnicy reagują",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts NPC-07"
+  },
+  {
+   "id": "NPC-08",
+   "vision": "§8, §28",
+   "scope": "later",
+   "behavior": "Demografia wielopokoleniowa, relacje społeczne, pogrzeby",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "prompt §4"
+  },
+  {
+   "id": "ATTR-01",
+   "vision": "§9",
+   "scope": "v1",
+   "behavior": "Wspólne atrybuty SPECIAL-like i liczniki (HP z części ciała, stamina, vigor, głód, pragnienie) dla gracza/NPC; zwierzęta dzielą HP/stamina/głód/pragnienie",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "vitals.ts shared by player/NPC/animals (HP from body parts); combat tests"
+  },
+  {
+   "id": "ATTR-02",
+   "vision": "§9.2",
+   "scope": "v1",
+   "behavior": "Vigor ~18–20 h marszu, kary po wyczerpaniu, regeneracja zależna od komfortu miejsca snu",
+   "verify": "vitest kalibracji",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts ATTR-02 (18–20 h); penalty(); sleep comfort"
+  },
+  {
+   "id": "ATTR-03",
+   "vision": "§9.1",
+   "scope": "v1",
+   "behavior": "Atrybut Strength rośnie powoli przy noszeniu ciężaru",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts ATTR-03"
+  },
+  {
+   "id": "SKILL-01",
+   "vision": "§12",
+   "scope": "v1",
+   "behavior": "Skills ciągłe 0–100 rosną z użyciem (malejący przyrost): medycyna, skradanie, survival, traps, melee, ranged, construction, blacksmith (+ woodcutting, farming, trading)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts SKILL-01; skills train on use"
+  },
+  {
+   "id": "SKILL-02",
+   "vision": "§12.2",
+   "scope": "later",
+   "behavior": "Książki podnoszące skill do progu",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": ""
+  },
+  {
+   "id": "SKILL-03",
+   "vision": "§12.1",
+   "scope": "v1",
+   "behavior": "Skill aktywowany: skradanie (zmniejsza wykrycie przez zwierzęta)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts FAUNA-02/SKILL-03"
+  },
+  {
+   "id": "REP-01",
+   "vision": "§14",
+   "scope": "v1",
+   "behavior": "Reputacja per osada w wymiarach uczciwość/uczynność/rozpoznawalność/odwaga; rośnie i spada",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "acceptance 8b (helpfulness +12); reputation.ts"
+  },
+  {
+   "id": "REP-02",
+   "vision": "§14",
+   "scope": "v1",
+   "behavior": "Rozchodzenie się 30% wybranych wymiarów do sąsiednich osad z opóźnieniem = czas szybkiego marszu",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts REP-02"
+  },
+  {
+   "id": "REP-03",
+   "vision": "§14",
+   "scope": "v1",
+   "behavior": "Odznaki (pozytywne/negatywne), np. pogromca groźnych zwierząt, tępiciel szczurów, przyłapany na kradzieży",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts REP-03; apologise removes negative badge (tryApologize)"
+  },
+  {
+   "id": "REP-04",
+   "vision": "§14",
+   "scope": "v1",
+   "behavior": "Indywidualna sympatia NPC do gracza",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts REP-04"
+  },
+  {
+   "id": "FAUNA-01",
+   "vision": "§15",
+   "scope": "v1",
+   "behavior": "Gatunki jako dane (sarna, jeleń, wilk, lis, dzik, zając, niedźwiedź, szczur, krowa, owca, kura, koń, osioł, pies, łoś); warianty młode/alfa/albinos",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "data/species.ts 15 species + variants; 8 glTF models, 7 placeholders (docs/assets)"
+  },
+  {
+   "id": "FAUNA-02",
+   "vision": "§15.3",
+   "scope": "v1",
+   "behavior": "Żerowanie, picie z brzegu wody, ucieczka przed zagrożeniem, drapieżniki polują; deszcz → schronienie",
+   "verify": "vitest AI zwierząt",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts FAUNA-02, src/game/sim/features2.test.ts FAUNA-02 drinking at banks; predators hunt (fauna/ai.ts)"
+  },
+  {
+   "id": "FAUNA-03",
+   "vision": "§15.3",
+   "scope": "v1",
+   "behavior": "Zwierzęta wabione upuszczonym mięsem/padliną i jedzą je",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts FAUNA-03"
+  },
+  {
+   "id": "FAUNA-04",
+   "vision": "§15.4",
+   "scope": "v1",
+   "behavior": "Legowiska jako spawn-pointy; spalenie (5 gałęzi + krzesiwo) niszczy",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts FAUNA-04; burnDen action (5 branches + fire)"
+  },
+  {
+   "id": "FAUNA-05",
+   "vision": "§17.1",
+   "scope": "v1",
+   "behavior": "Wścieklizna: odważne, atakują wszystkich, zarażają (rzadko)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts FAUNA-05; rabid animals attack all"
+  },
+  {
+   "id": "RES-01",
+   "vision": "§16.1",
+   "scope": "v1",
+   "behavior": "Drzewa 10–30 m, ścinanie siekierą → belki i gałęzie; pnie; odrastanie/rozsiew",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "acceptance step 3; src/game/sim/features2.test.ts RES-01 regrowth"
+  },
+  {
+   "id": "RES-02",
+   "vision": "§16.2",
+   "scope": "v1",
+   "behavior": "Kamienie, skały (kilof → kamień), złoża węgla/żelaza/miedzi/złota z % szansą przy kopaniu",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts RES-02; dig near deposits gives ore chance"
+  },
+  {
+   "id": "RES-03",
+   "vision": "§16.3",
+   "scope": "v1",
+   "behavior": "4–6 ziół (pospolite/średnie/rzadkie, lecznicze/trujące)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts RES-03/WATER-02; 6 herbs data"
+  },
+  {
+   "id": "RES-04",
+   "vision": "§16.4",
+   "scope": "v1",
+   "behavior": "Jagody, jabłka, grzyby dziko; marchew/kapusta/pomidory z pól; wpływ sezonu na plony",
+   "verify": "vitest",
+   "status": "implemented_unverified",
+   "evidence": "berries/apples/mushrooms seasonal gathering and crop fields implemented; seasonal yield not separately tested"
+  },
+  {
+   "id": "RES-05",
+   "vision": "§16",
+   "scope": "v1",
+   "behavior": "Trawa z plamami kolorów, trzciny nad wodą",
+   "verify": "screenshot",
+   "status": "verified",
+   "evidence": "screenshots scripts/e2e/tour.mjs (manual review 2026-09-30) (grass colour patches, reeds by water)"
+  },
+  {
+   "id": "RES-06",
+   "vision": "§16.4",
+   "scope": "later",
+   "behavior": "Rybołówstwo",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": ""
+  },
+  {
+   "id": "WATER-01",
+   "vision": "§17",
+   "scope": "v1",
+   "behavior": "Woda pitna/niepitna (morze), ryzyko choroby rośnie dalej od źródła i bliżej ludzi/zwierząt; studnia bezpieczna",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts WATER-01"
+  },
+  {
+   "id": "WATER-02",
+   "vision": "§17",
+   "scope": "v1",
+   "behavior": "Choroba pokarmowa/zatrucie (od wody, zepsutego jedzenia, trujących ziół) z przebiegiem i leczeniem ziołami",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts RES-03/WATER-02; herbalist heal service (interact)"
+  },
+  {
+   "id": "FOOD-01",
+   "vision": "§18",
+   "scope": "v1",
+   "behavior": "Zwłoki → oprawianie nożem → mięso/skóra/poroże/kości; gniją po kilku godzinach, zostawiają kości",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts FOOD-01; acceptance wolf corpse"
+  },
+  {
+   "id": "FOOD-02",
+   "vision": "§18.1",
+   "scope": "v1",
+   "behavior": "Żywność ma wartość odżywczą i świeżość; surowe psuje się szybciej niż pieczone, suszone długo; skrzynia spowalnia psucie",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts FOOD-02"
+  },
+  {
+   "id": "ITEM-01",
+   "vision": "§19",
+   "scope": "v1",
+   "behavior": "Katalog przedmiotów z wagą, gabarytem, durability, ceną, capabilities (cut, chop, dig, mine, carry_water, light...)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "data/items.ts catalogue (weight, size, durability, price, capabilities)"
+  },
+  {
+   "id": "ITEM-02",
+   "vision": "§19.1",
+   "scope": "v1",
+   "behavior": "Ekwipunek z limitem wagi (Strength) i plecakiem +15 kg; magazyny (skrzynie gospodarstw, magazyn osady)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts ITEM-02"
+  },
+  {
+   "id": "ITEM-03",
+   "vision": "§27 Ułatwienia",
+   "scope": "v1",
+   "behavior": "Interakcja wymagająca capability automatycznie bierze właściwe narzędzie z ekwipunku",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts ITEM-03; acceptance step 3"
+  },
+  {
+   "id": "ITEM-04",
+   "vision": "§19",
+   "scope": "v1",
+   "behavior": "Łopata: kopanie (muszle nad morzem, monety w osadzie), wyrównanie terenu, zakopywanie zwłok; kilof na skałach",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts ITEM-04"
+  },
+  {
+   "id": "ITEM-05",
+   "vision": "§19",
+   "scope": "v1",
+   "behavior": "Pochodnia daje światło; można upuścić świecącą",
+   "verify": "screenshot noc",
+   "status": "verified",
+   "evidence": "screenshots scripts/e2e/tour.mjs (manual review 2026-09-30) night torch; dropped lit torch light"
+  },
+  {
+   "id": "WPN-01",
+   "vision": "§20",
+   "scope": "v1",
+   "behavior": "Bronie jako dane (nóż, sztylet, miecze, topory, włócznia, młot, maczuga, łuki, proca, kusza) z zasięgiem, ostrością, szybkością, typem obrażeń; 3 rodzaje strzał",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "data/items.ts weapons + 3 arrow & 3 bolt types; combat tests"
+  },
+  {
+   "id": "ARM-01",
+   "vision": "§21",
+   "scope": "v1",
+   "behavior": "Zbroje w slotach, 2 warstwy, waga ×0.6, wpływ na prędkość, odporności per typ obrażeń",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts ARM-01; worn weight ×0.6 (inventory.carriedWeight)"
+  },
+  {
+   "id": "QUAL-01",
+   "vision": "§22",
+   "scope": "v1",
+   "behavior": "Jakość wykonania (4) i materiału (3) wpływa na parametry; skill kowala wpływa na jakość",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts QUAL-01"
+  },
+  {
+   "id": "QUAL-02",
+   "vision": "§22.3",
+   "scope": "later",
+   "behavior": "Technologie (damascus)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": ""
+  },
+  {
+   "id": "CRAFT-01",
+   "vision": "§23",
+   "scope": "v1",
+   "behavior": "Receptury danych: skill, narzędzie (capability), czasem warsztat; czas z paskiem postępu i przerwaniem; skill przyspiesza; zasoby spójne po przerwaniu",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts CRAFT-01; acceptance 4b"
+  },
+  {
+   "id": "CRAFT-02",
+   "vision": "§23",
+   "scope": "v1",
+   "behavior": "Zamówienia u NPC (kowal) z zaliczką",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts CRAFT-02; orders panel"
+  },
+  {
+   "id": "TRADE-01",
+   "vision": "§28 Ekonomia",
+   "scope": "v1",
+   "behavior": "Handel z NPC za miedziaki (copper/silver/gold), ceny zależne od podaży, reputacji i ugodowości",
+   "verify": "vitest bilans + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts TRADE-01; acceptance 4a/4d"
+  },
+  {
+   "id": "BUILD-01",
+   "vision": "§24",
+   "scope": "v1",
+   "behavior": "Budowa (ognisko, studnia, koryto, palisada, szopa/dom): plac budowy, surowce z ekwipunku lub leżące obok, etapy pracy, przyspieszenie czasu dla długich",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts BUILD-01 (well); acceptance step 5 (campfire)"
+  },
+  {
+   "id": "BUILD-02",
+   "vision": "§24",
+   "scope": "v1",
+   "behavior": "Łopata: kopanie dołków i wyrównywanie terenu (zmiany terenu zapisywane)",
+   "verify": "vitest + e2e po zapisie",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts ITEM-04 dig; save.test.ts terrain edit persisted"
+  },
+  {
+   "id": "BUILD-03",
+   "vision": "§24.2",
+   "scope": "v1",
+   "behavior": "Koryto napełniane wiadrem / ze studni obok; zwierzęta z niego piją",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts BUILD-03"
+  },
+  {
+   "id": "BUILD-04",
+   "vision": "§24",
+   "scope": "v1",
+   "behavior": "Własność budynków; strażnik reaguje na budowę na drodze/placu",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "src/game/sim/features2.test.ts BUILD-04; completed buildings owner=player"
+  },
+  {
+   "id": "COMBAT-01",
+   "vision": "§25",
+   "scope": "v1",
+   "behavior": "Combat-mode (dobyta/schowana broń), walka wręcz z celowaniem i skillem, stamina",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "combat.test.ts; acceptance step 6 (mouse)"
+  },
+  {
+   "id": "COMBAT-02",
+   "vision": "§25.1",
+   "scope": "v1",
+   "behavior": "Łuk: przytrzymanie LPM naciąga, pociski z grawitacją; proca",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts COMBAT-02; hold-to-draw in player.ts"
+  },
+  {
+   "id": "COMBAT-03",
+   "vision": "§25.3, §9.2",
+   "scope": "v1",
+   "behavior": "Obrażenia części ciała, pancerz per typ; 0 HP → nieprzytomność, wstanie po ~3 s, 120 s ochrony (ignorowany przez wrogów)",
+   "verify": "vitest",
+   "status": "verified",
+   "evidence": "combat.test.ts KO protection"
+  },
+  {
+   "id": "COMBAT-04",
+   "vision": "§28 Śmierć",
+   "scope": "v1",
+   "behavior": "Regeneracja/leczenie: bandaż, zioła, zielarz leczy; ciężkie rany = rekonwalescencja",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "acceptance step 7 (bandage via UI); herbalist heal service"
+  },
+  {
+   "id": "QUEST-01",
+   "vision": "§26.1",
+   "scope": "v1",
+   "behavior": "Zadanie z symulacji: zaniedbane budynki → gniazda szczurów → strażnik prosi o pomoc; ukończenie zmienia reputację; może zniknąć gdy problem rozwiąże NPC",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "acceptance 8a/8b; src/game/sim/features.test.ts QUEST-01 (expires when NPC fixes)"
+  },
+  {
+   "id": "QUEST-02",
+   "vision": "§7, §26",
+   "scope": "v1",
+   "behavior": "Tablica ogłoszeń z zadaniami",
+   "verify": "e2e",
+   "status": "verified",
+   "evidence": "acceptance 8 (noticeboard → accept)"
+  },
+  {
+   "id": "QUEST-03",
+   "vision": "§26.2",
+   "scope": "later",
+   "behavior": "Wieloetapowe zadania narracyjne (kopalnia złota)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "prompt §4"
+  },
+  {
+   "id": "SAVE-01",
+   "vision": "§3",
+   "scope": "v1",
+   "behavior": "Pełny zapis/odczyt zmiennego stanu w IndexedDB (wersjonowany format); brak odtworzenia zużytych zasobów/pokonanych wrogów",
+   "verify": "vitest round-trip + e2e reload",
+   "status": "verified",
+   "evidence": "save.test.ts round-trip; acceptance step 9 reload"
+  },
+  {
+   "id": "SAVE-02",
+   "vision": "prompt §8",
+   "scope": "v1",
+   "behavior": "Opuszczenie obszaru i powrót nie resetuje zmian (ścięte drzewa, teren, budowle)",
+   "verify": "e2e",
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts SAVE-02; acceptance step 9"
+  },
+  {
+   "id": "UI-01",
+   "vision": "§27",
+   "scope": "v1",
+   "behavior": "HUD (liczniki, czas, pogoda), ekwipunek, crafting, handel, budowa, zadania/reputacja, szybkie akcje w kategoriach, pasek postępu z przerwaniem",
+   "verify": "e2e + screenshoty",
+   "status": "verified",
+   "evidence": "acceptance (panels: trade, craft, storage, build, quests, inventory, menu); screenshots scripts/e2e/tour.mjs (manual review 2026-09-30)"
+  },
+  {
+   "id": "UI-02",
+   "vision": "§27",
+   "scope": "v1",
+   "behavior": "Mobile: joystick po lewej, przyciski po prawej, drag kamery, auto-targeting, pełny dostęp do funkcji",
+   "verify": "e2e z touch, viewport mobile",
+   "status": "verified",
+   "evidence": "scripts/e2e/mobile.mjs 6/6 (emulated phone viewport + touch; real-device performance NOT measured)"
+  },
+  {
+   "id": "RENDER-01",
+   "vision": "§4.4",
+   "scope": "v1",
+   "behavior": "Kamera 3rd person z zoomem i kolizją z terenem; WASD+mysz",
+   "verify": "e2e",
+   "status": "verified",
+   "evidence": "camera rig (zoom, terrain collision); smoke/acceptance"
+  },
+  {
+   "id": "RENDER-02",
+   "vision": "§4.4, prompt §6.1",
+   "scope": "v1",
+   "behavior": "Assety Quaternius (drzewa, budynki modułowe, zwierzęta, postacie z animacjami) z instancjonowaniem; placeholdery udokumentowane",
+   "verify": "screenshot + diag draw calls",
+   "status": "verified",
+   "evidence": "docs/assets/README.md; screenshots scripts/e2e/tour.mjs (manual review 2026-09-30); render bench draw calls"
+  },
+  {
+   "id": "ECON-01",
+   "vision": "§28",
+   "scope": "v1",
+   "behavior": "Osady samowystarczalne w żywności; wymiana surowców (handlarz wędrowny między osadami)",
+   "verify": "vitest długiej symulacji",
+   "status": "verified",
+   "evidence": "economy.test.ts (3 days: fed, caravan trades between settlements)"
+  },
+  {
+   "id": "VOICE-01",
+   "vision": "Assets",
+   "scope": "later",
+   "behavior": "Głosy NPC (Fish Audio)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": ""
+  }
+ ]
 }

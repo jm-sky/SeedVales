@@ -129,11 +129,13 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   }
   if (cur.op === 'goto') {
     const speed = (cur.run ? RUN_SPEED_MPS : WALK_SPEED_MPS * (h.age === 'elder' ? 0.8 : 1)) * pen
+    if (ai.stepT === 0) ai.stepLimit = 40 + (Math.hypot(cur.x - h.x, cur.z - h.z) / Math.max(0.5, speed)) * 2.5
+    ai.stepT += dt
     const r = steerTo(sim, h, cur.x, cur.z, speed, dt, cur.range ?? 1.5, full)
     if (r === 'arrived') {
       ai.stepIdx++
       ai.stepT = 0
-    } else if (r === 'stuck') failGoal(sim, h)
+    } else if (r === 'stuck' || ai.stepT > (ai.stepLimit ?? 1e9)) failGoal(sim, h)
     else if (!full && Math.hypot(cur.x - h.x, cur.z - h.z) > 5000) failGoal(sim, h)
     return
   }
@@ -147,6 +149,7 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
     const fn = WORK_ACTS[cur.act]
     const ok = fn ? fn(sim, h, cur.ref, h.age === 'adult' ? 1 : 0.3) : false
     perf.count('ai.acts')
+    if (ok) perf.count(`ai.act.${cur.act}`)
     h.action = undefined
     if (!ok) {
       failGoal(sim, h, cur.act === 'shoot' ? 0.2 : 1)

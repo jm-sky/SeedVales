@@ -279,6 +279,14 @@ export const WORK_ACTS: Record<string, Act> = {
     return !!c && butcher(sim, h, c).ok
   },
   idle: () => true,
+  fletch: (sim, h) => {
+    const inv = storeOf(sim, h)
+    if (!inv || countItem(inv, 'branch') < 1) return false
+    removeItem(inv, 'branch', 1)
+    addItem(inv, newStack('arrow', 6))
+    train(h, 'ranged', 0.3)
+    return true
+  },
   /** Exchange surplus between the trader's home warehouse and the visited one (goods carried by the caravan). */
   caravan_trade: (sim, h, ref) => {
     const there = sim.building(ref)

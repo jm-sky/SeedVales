@@ -17,7 +17,7 @@ import { moveWithCollision } from './collision'
  */
 export function steerTo(
   sim: Sim,
-  a: Actor & { ai: { stuckT: number } },
+  a: Actor & { ai: { stuckT: number; avoidSide?: number } },
   tx: number,
   tz: number,
   speed: number,
@@ -43,22 +43,30 @@ export function steerTo(
   const oz = a.z
   let dirx = dx / d
   let dirz = dz / d
-  // Stuck: try side-step direction.
-  if (a.ai.stuckT > 0.6) {
-    const side = Math.floor(a.ai.stuckT / 1.5) % 2 === 0 ? 1 : -1
-    const nx = dirx * 0.3 + -dirz * side
-    const nz = dirz * 0.3 + dirx * side
+  // Blocked: slide along the obstacle on a consistent side (chosen towards the target around the
+  // nearest building), switching sides only if that also fails for long.
+  if (a.ai.stuckT > 0.35) {
+    if (!a.ai.avoidSide) {
+      const b = full ? sim.buildingsNear(a.x, a.z, 10)[0] : undefined
+      const cross = b ? dx * (b.z - a.z) - dz * (b.x - a.x) : 1
+      a.ai.avoidSide = cross > 0 ? -1 : 1
+    }
+    const side = a.ai.stuckT > 5 ? -a.ai.avoidSide : a.ai.avoidSide
+    const nx = dirx * 0.15 + -dirz * side
+    const nz = dirz * 0.15 + dirx * side
     const l = Math.hypot(nx, nz)
     dirx = nx / l
     dirz = nz / l
-  }
+  } else if (a.ai.stuckT < 0.05) a.ai.avoidSide = undefined
   moveWithCollision(sim, a, dirx * step, dirz * step, radius, full, a.kind === 'animal')
   if (full) separate(sim, a, radius)
   const moved = Math.hypot(a.x - ox, a.z - oz)
   a.vx = (a.x - ox) / Math.max(dt, 1e-4)
   a.vz = (a.z - oz) / Math.max(dt, 1e-4)
+  // Progress = getting closer to the target (sliding along walls counts while it helps).
+  const nd = Math.hypot(tx - a.x, tz - a.z)
   if (moved < step * 0.3) a.ai.stuckT += dt
-  else a.ai.stuckT = Math.max(0, a.ai.stuckT - dt * 0.5)
+  else if (nd < d - step * 0.2) a.ai.stuckT = Math.max(0, a.ai.stuckT - dt * 0.5)
   sim.actors.update(a)
   perf.count('ai.moves')
   if (a.ai.stuckT > 8) {

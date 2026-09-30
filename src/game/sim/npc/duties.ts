@@ -72,7 +72,7 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   if (house?.inv && countItem(house.inv, 'raw_meat') >= 2) return { label: 'Suszy mięso', steps: [work('dry_meat', 10, 'Suszy mięso', undefined, 'interact')] }
   // Predator control first, then game (only if population is healthy).
   const cands: Animal[] = []
-  for (const a of sim.actors.query(s.x, s.z, 750)) if (a.kind === 'animal' && !a.vitals.dead && !a.householdId) cands.push(a as Animal)
+  for (const a of sim.actors.query(s.x, s.z, 1500)) if (a.kind === 'animal' && !a.vitals.dead && a.householdId === undefined) cands.push(a as Animal)
   const wolves = cands.filter((a) => a.species === 'wolf' && Math.hypot(a.x - s.x, a.z - s.z) < s.radius + 400)
   let target: Animal | undefined = wolves[0]
   if (!target) {
@@ -82,7 +82,10 @@ function hunter(sim: Sim, h: Human): DutyPlan {
     ok.sort((a, b) => Math.hypot(a.x - h.x, a.z - h.z) - Math.hypot(b.x - h.x, b.z - h.z))
     target = ok[0]
   }
-  if (!target) return null
+  if (!target) {
+    // No healthy game around: secondary duty — make arrows at home (vision: hunter makes bows/arrows).
+    return house ? { label: 'Struga strzały', steps: [go(doorOf(house).x, doorOf(house).z, 1.5), work('fletch', 40, 'Struga strzały', undefined, 'kneel')] } : null
+  }
   return {
     label: `Poluje: ${SPECIES[target.species].name}`,
     steps: [go(target.x, target.z, 28, { run: false }), work('shoot', 2, 'Strzela', String(target.id), 'bow')],

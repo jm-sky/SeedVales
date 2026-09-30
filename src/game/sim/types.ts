@@ -89,6 +89,10 @@ export interface AiState {
   targetId?: number
   /** Utility score when the current plan was chosen (hysteresis when its precondition disappears mid-plan). */
   goalScore?: number
+  /** Obstacle avoidance: chosen side (+1/−1) while sliding along a wall. */
+  avoidSide?: number
+  /** Max gameplay seconds for the current goto step (unreachable target guard). */
+  stepLimit?: number
   /** Diagnostics: last failed goal/step. */
   lastFail?: string
 }
