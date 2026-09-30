@@ -6,7 +6,7 @@
 import type { QualityProfile } from './render/Renderer'
 import type { InteractOption, Target, TargetRef } from './sim/interact'
 import type { SimEvent } from './sim/sim'
-import type { GameState, ItemStack } from './sim/types'
+import type { GameState, ItemStack, WeaponKind } from './sim/types'
 import type { WorldData } from './world/types'
 import { Ambience } from './audio/ambience'
 import { itemDef } from './data/items'
@@ -22,6 +22,7 @@ import { meleeAttack } from './sim/combat'
 import { canCraft, craftTime } from './sim/craft'
 import { findTarget, runOption, startSleep, targetOptions } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
+import { setPrimary, switchWeapon } from './sim/loadout'
 import { createNewGame } from './sim/newGame'
 import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/player'
 import { Sim } from './sim/sim'
@@ -35,7 +36,7 @@ export interface GameOptions {
   onProgress?: (label: string) => void
 }
 
-export type Panel = null | 'inventory' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact'
+export type Panel = null | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact'
 
 export async function loadWorld(seed: number, onProgress?: (l: string) => void): Promise<WorldData> {
   onProgress?.('Szukam świata w pamięci podręcznej…')
@@ -203,6 +204,9 @@ export class Game {
       case 'build':
         this.togglePanel('build')
         break
+      case 'character':
+        this.togglePanel('character')
+        break
       case 'combat':
         this.toggleCombat()
         break
@@ -237,6 +241,9 @@ export class Game {
         break
       case 'sneak':
         this.toggleSneak()
+        break
+      case 'switchWeapon':
+        this.switchWeapon()
         break
       case 'torch':
         this.toggleTorch()
@@ -302,6 +309,17 @@ export class Game {
     // Mobile aid (vision §27): wide auto-target cone and auto-facing the chosen target.
     const hit = meleeAttack(this.sim, p, this.isTouch ? 220 : 80)
     if (hit && this.isTouch) p.rot = Math.atan2(hit.x - p.x, hit.z - p.z)
+  }
+
+  /** Quick switch between the primary melee and ranged weapon (X / mobile button). */
+  switchWeapon(kind?: WeaponKind) {
+    this.showToast(switchWeapon(this.sim, kind))
+    this.notify()
+  }
+
+  setPrimaryWeapon(kind: WeaponKind, id: string | undefined) {
+    this.showToast(setPrimary(this.sim, kind, id))
+    this.notify()
   }
 
   toggleCombat() {

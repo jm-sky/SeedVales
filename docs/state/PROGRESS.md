@@ -18,7 +18,9 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 ### Fale dodatku
 
 - **Fala 1 `sim--001` done** — AI-01, FAUNA-06/07/08 verified, TRACE-01 (część sim; dekale w render--001). `SAVE_VERSION` 5.
-- Następny krok: review fali 1 (subagent), potem fala 2 `ui--001`.
+- Review fali 1 (subagent) został PRZERWANY (limit użycia) — uruchomić ponownie: `git diff d3a31e2..40d243b -- src`, wynik do `docs/reviews/`.
+- **Fala 2 `ui--001` w toku:** zrobione krok 1–2 częściowo: ekran postaci (`CharacterPanel` + `ui/panels/character/*`: podgląd ciała/zdrowie/choroby, atrybuty/skille, reputacja/odznaki, wybór broni podstawowej), `sim/loadout.ts` (`px.primary`, `switchWeapon`, klawisz X, K = postać), ekwipunek z filtrami/sortowaniem/parametrami (`src/lib/inventoryView.ts` + test). NIE zrobione: przycisk „Broń” na mobile, e2e dla nowych paneli, test vitest `loadout`, mapa+minimapa (UI-04), ustawienia (UI-05), nazwane zapisy / nowa gra z menu, Tab-cykl celów (UI-06); FEATURES UI-03 jeszcze `planned`.
+- Następny krok: dokończyć `ui--001` od e2e/testów kroku 1–2, potem kroki 3–6.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

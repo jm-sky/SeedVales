@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
 import BuildPanel from './BuildPanel.vue'
+import CharacterPanel from './CharacterPanel.vue'
 import CraftPanel from './CraftPanel.vue'
 import DialogPanel from './DialogPanel.vue'
 import GameMenu from './GameMenu.vue'
@@ -30,6 +31,7 @@ const panel = computed(() => {
   >
     <InteractMenu v-if="panel === 'interact'" />
     <InventoryPanel v-else-if="panel === 'inventory'" />
+    <CharacterPanel v-else-if="panel === 'character'" />
     <CraftPanel v-else-if="panel === 'craft'" />
     <TradePanel v-else-if="panel === 'trade'" />
     <StoragePanel v-else-if="panel === 'storage'" />

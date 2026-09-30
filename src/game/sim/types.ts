@@ -352,7 +352,11 @@ export interface PlayerExtra {
   autopilot?: { roadId: number; idx: number; dir: 1 | -1 }
   bowDraw: number
   bed?: string
+  /** Preferred weapons (item ids) for quick switching (UI-03). */
+  primary?: Partial<Record<WeaponKind, string>>
 }
+
+export type WeaponKind = 'melee' | 'ranged'
 
 export interface Projectile {
   id: number

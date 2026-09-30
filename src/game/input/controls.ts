@@ -18,7 +18,7 @@ export interface InputState {
 
 export const input: InputState = { keys: new Set(), stickX: 0, stickY: 0, run: false, primary: false, lookDX: 0, lookDY: 0, zoom: 0 }
 
-export type KeyAction = 'interact' | 'inventory' | 'craft' | 'quests' | 'map' | 'combat' | 'sneak' | 'escape' | 'diag' | 'quick' | 'save' | 'build' | 'torch' | 'useBandage'
+export type KeyAction = 'interact' | 'inventory' | 'character' | 'craft' | 'quests' | 'map' | 'combat' | 'sneak' | 'escape' | 'diag' | 'quick' | 'save' | 'build' | 'torch' | 'useBandage' | 'switchWeapon' | 'cycleTarget'
 
 export interface ControlHandlers {
   onAction(a: KeyAction): void
@@ -29,6 +29,8 @@ export interface ControlHandlers {
 const KEYMAP: Record<string, KeyAction> = {
   KeyE: 'interact',
   KeyI: 'inventory',
+  KeyK: 'character',
+  KeyX: 'switchWeapon',
   KeyC: 'craft',
   KeyJ: 'quests',
   KeyM: 'map',
