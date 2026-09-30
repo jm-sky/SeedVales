@@ -95,6 +95,9 @@ export const FEAR = { humanM: 16, aggressiveAttackM: 6, fireM: 14, penM: 10, des
  */
 export const ROAST = { calMin: 30, vesselSlots: 2, spitSlots: 5, spitM: 3, minFreshFrac: 0.2 }
 
+/** Fog of war (MAP-01): map cell size (m) and how far around the player the map gets revealed (m). */
+export const FOG = { cellM: 64, revealM: 180 }
+
 /** Rocks (RES-07): boulders (scale ≥ boulderScale) break into chunks; a chunk breaks into `chunkStones` stones. */
 export const ROCK = { boulderScale: 2, chunkStones: 4, strikeS: 6, breakS: 4 }
 

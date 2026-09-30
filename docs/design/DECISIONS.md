@@ -68,6 +68,7 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-UI-1 — Vue HUD czyta stan przez licznik `version` (5 Hz), nie przez głęboką reaktywność.** Brak kosztu proxy na stanie symulacji.
 - **D-UI-2 — Esc przy pointer-lock najpierw zwalnia kursor (zachowanie przeglądarki); drugi Esc otwiera menu/przerywa czynność.** Menu pauzuje świat.
 - **D-UI-3 — Mobile:** joystick L, drag kamery prawą połową, przyciski Akcja/Atak/Bieg/Walka/Skradanie, pasek menu u góry; auto-cel 220° i obrót do celu.
+- **D-MAP-1 — Mgła wojny (MAP-01, `IMPORTANT-PRODUCT-NOTES.md`):** siatka 64 m (128×128 dla świata 8 km), odkrywanie w promieniu 180 m wokół gracza co 2 s (`navigationSystem`), bitmaska w `px.explored` (zapis; stare zapisy zaczynają z pustą mgłą). Maska rysowana na mapie i minimapie z wygładzeniem (miękkie krawędzie); osady/budynki w mgle ukryte. Lista osad w panelu mapy zostaje (nazwy i drogi znane ze słyszenia — autopilot). Widoczność aktorów wg zmysłów to osobny system (MAP-02, v2).
 
 ## Planowanie (2026-09-30)
 

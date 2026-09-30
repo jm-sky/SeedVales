@@ -1,3 +1,4 @@
+import { fogSide, isExploredCell } from '@/game/sim/navigation'
 import { Biome } from '@/game/world/types'
 /**
  * World map raster (biomes shaded by height + roads), drawn once per world at 1 px per terrain cell and
@@ -5,6 +6,7 @@ import { Biome } from '@/game/world/types'
  * @domain ui
  * @subdomain map
  */
+import type { Sim } from '@/game/sim/sim'
 import type { WorldData } from '@/game/world/types'
 
 const COLORS: Record<number, [number, number, number]> = {
@@ -67,4 +69,32 @@ export function drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number, a
   ctx.lineWidth = 1
   ctx.stroke()
   ctx.restore()
+}
+
+let fogCanvas: HTMLCanvasElement | null = null
+
+/**
+ * Fog-of-war mask (MAP-01): one pixel per FOG cell, opaque where unexplored. Drawn scaled with smoothing
+ * over the map raster, which gives soft edges. Rebuilt on demand (128² px — cheap at UI rate).
+ */
+export function fogMask(sim: Sim): HTMLCanvasElement {
+  const n = fogSide(sim)
+  const c = (fogCanvas ??= document.createElement('canvas'))
+  if (c.width !== n) {
+    c.width = n
+    c.height = n
+  }
+  const ctx = c.getContext('2d')!
+  const img = ctx.createImageData(n, n)
+  for (let cz = 0; cz < n; cz++) {
+    for (let cx = 0; cx < n; cx++) {
+      const o = (cz * n + cx) * 4
+      img.data[o] = 22
+      img.data[o + 1] = 19
+      img.data[o + 2] = 15
+      img.data[o + 3] = isExploredCell(sim, cx, cz) ? 0 : 255
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+  return c
 }

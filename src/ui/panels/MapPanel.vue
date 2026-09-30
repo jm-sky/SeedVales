@@ -2,8 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { isVisited, navGoal, questGoal } from '@/game/sim/navigation'
-import { drawArrow, worldMapImage } from '@/ui/map/worldMapImage'
+import { isExplored, isVisited, navGoal, questGoal } from '@/game/sim/navigation'
+import { drawArrow, fogMask, worldMapImage } from '@/ui/map/worldMapImage'
 import PanelFrame from './PanelFrame.vue'
 
 const { game, version } = useGameStrict()
@@ -29,9 +29,11 @@ function draw() {
   const ctx = c.getContext('2d')!
   ctx.imageSmoothingEnabled = true
   ctx.drawImage(worldMapImage(w), 0, 0, S, S)
+  ctx.drawImage(fogMask(sim), 0, 0, S, S)
   const sc = S / w.size
   ctx.font = 'bold 12px sans-serif'
   for (const s of view.value.settlements) {
+    if (!isExplored(sim, s.x, s.z)) continue
     ctx.fillStyle = s.visited ? '#f5d88a' : '#b8b0a0'
     ctx.fillRect(s.x * sc - 4, s.z * sc - 4, 8, 8)
     ctx.fillStyle = s.visited ? '#fff' : '#ddd'
@@ -88,7 +90,7 @@ function auto(id: number) {
       />
       <div class="flex-1 space-y-2">
         <p class="text-xs text-muted-foreground">
-          Podróż tylko fizyczna. Kliknij mapę, by wyznaczyć cel — strzałka na minimapie wskaże kierunek. Autopilot prowadzi po drodze (czas może płynąć ×3), zagrożenie go przerywa.
+          Mapa pokazuje tylko odkryte tereny. Podróż tylko fizyczna. Kliknij mapę, by wyznaczyć cel — strzałka na minimapie wskaże kierunek. Autopilot prowadzi po drodze (czas może płynąć ×3), zagrożenie go przerywa.
         </p>
         <div
           v-if="view.goal"

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
-import { navGoal } from '@/game/sim/navigation'
-import { drawArrow, worldMapImage } from '@/ui/map/worldMapImage'
+import { FOG } from '@/game/config/calibration'
+import { isExplored, navGoal } from '@/game/sim/navigation'
+import { drawArrow, fogMask, worldMapImage } from '@/ui/map/worldMapImage'
 
 /** North-up minimap around the player (UI-04) with an arrow to the waypoint / active quest. */
 const props = withDefaults(defineProps<{ size?: number; radius?: number }>(), { size: 160, radius: 220 })
@@ -37,10 +38,12 @@ function draw() {
   ctx.fillRect(0, 0, N, N)
   ctx.imageSmoothingEnabled = false
   ctx.drawImage(img, (x - R) * sc, (z - R) * sc, 2 * R * sc, 2 * R * sc, 0, 0, N, N)
+  ctx.imageSmoothingEnabled = true
+  ctx.drawImage(fogMask(sim), (x - R) / FOG.cellM, (z - R) / FOG.cellM, (2 * R) / FOG.cellM, (2 * R) / FOG.cellM, 0, 0, N, N)
   const toC = (wx: number, wz: number): [number, number] => [N / 2 + (wx - x) * k, N / 2 + (wz - z) * k]
   ctx.fillStyle = '#5a3b22'
   for (const b of sim.buildingsNear(x, z, R * 1.42)) {
-    if (b.kind === 'field' || b.kind === 'bridge') continue
+    if (b.kind === 'field' || b.kind === 'bridge' || !isExplored(sim, b.x, b.z)) continue
     const [bx, by] = toC(b.x, b.z)
     const s = Math.max(2, Math.max(b.hw, b.hd) * 2 * k)
     ctx.fillRect(bx - s / 2, by - s / 2, s, s)

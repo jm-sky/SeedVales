@@ -1017,6 +1017,33 @@
    "verify": "vitest",
    "status": "planned",
    "evidence": "plan: docs/plans/settlement--001--mayor.md"
+  },
+  {
+   "id": "MAP-01",
+   "vision": "IMPORTANT-PRODUCT-NOTES: Map visibility and Fog of War (v1)",
+   "scope": "v1",
+   "behavior": "Mapa (i minimapa) pokazuje tylko odkryte tereny; odkrycie trwałe i zapisywane",
+   "verify": "vitest + e2e",
+   "status": "verified",
+   "evidence": "sim/navigation.ts revealAround/isExplored (FOG 64 m cells, 180 m reveal, bitmask px.explored saved), navigationSystem 2 s; ui/map/worldMapImage.ts fogMask over MapPanel + Minimap (settlements/buildings in fog hidden); navigation.test.ts MAP-01; e2e acceptance step 12 (fog pixel in unexplored corner, clear around the player); screenshot acc-12-map. D-MAP-1"
+  },
+  {
+   "id": "MAP-02",
+   "vision": "IMPORTANT-PRODUCT-NOTES: sensory visibility (v2)",
+   "scope": "v2",
+   "behavior": "NPC i zwierzęta widoczne (na mapie/minimapie) tylko, gdy postać je aktualnie postrzega (percepcja, odległość, światło, zmęczenie)",
+   "verify": "vitest + e2e",
+   "status": "planned",
+   "evidence": "model zmysłów TBD (notes); obecnie minimapa nie pokazuje aktorów"
+  },
+  {
+   "id": "UI-LANG-01",
+   "vision": "IMPORTANT-PRODUCT-NOTES: UI language",
+   "scope": "v1",
+   "behavior": "Cały tekst widoczny dla gracza po angielsku (menu, HUD, przyciski, komunikaty, nazwy przedmiotów, zadania, mapa, ustawienia, błędy)",
+   "verify": "e2e + przegląd zrzutów",
+   "status": "planned",
+   "evidence": "nowe wymaganie (2026-09-30); obecnie UI po polsku — wymaga planu (katalog tekstów / i18n w data + ui, aktualizacja e2e selektorów tekstowych)"
   }
  ]
 }

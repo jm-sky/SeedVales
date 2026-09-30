@@ -3,7 +3,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import { roundTrip } from '../save/snapshot'
-import { bearing, clearWaypoint, isVisited, navGoal, navigationSystem, setWaypoint } from './navigation'
+import { FOG } from '../config/calibration'
+import { bearing, clearWaypoint, isExplored, isVisited, navGoal, navigationSystem, revealAround, setWaypoint } from './navigation'
 import { testSim } from './testWorld'
 
 describe('UI-04 navigation', () => {
@@ -47,5 +48,25 @@ describe('UI-04 navigation', () => {
     sim.player.z = far.z
     navigationSystem(sim)
     expect(isVisited(sim, far.id)).toBe(true)
+  })
+
+  it('MAP-01: fog of war — the map is revealed around the player and stays revealed (saved)', () => {
+    const sim = testSim()
+    const p = sim.player
+    sim.state.px.explored = undefined
+    expect(isExplored(sim, p.x, p.z)).toBe(false)
+    expect(revealAround(sim)).toBeGreaterThan(20)
+    expect(isExplored(sim, p.x, p.z)).toBe(true)
+    expect(isExplored(sim, p.x + FOG.revealM - 10, p.z)).toBe(true)
+    expect(isExplored(sim, p.x + FOG.revealM + FOG.cellM * 2, p.z)).toBe(false)
+    expect(revealAround(sim)).toBe(0) // nothing new at the same spot
+    const home = { x: p.x, z: p.z }
+    p.x += 1000
+    navigationSystem(sim)
+    expect(isExplored(sim, p.x, p.z)).toBe(true)
+    expect(isExplored(sim, home.x, home.z)).toBe(true) // persistent
+    const st = roundTrip(sim)
+    expect(st.px.explored).toEqual(sim.state.px.explored)
+    expect(isExplored(sim, -5, 10)).toBe(false) // off-world
   })
 })

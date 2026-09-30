@@ -362,6 +362,8 @@ export interface PlayerExtra {
   waypoint?: { x: number; z: number; label: string }
   /** Settlement ids the player has reached (map, UI-04). */
   visited?: number[]
+  /** Fog of war (MAP-01): explored map cells as a bitmask in 32-bit words (FOG.cellM grid). */
+  explored?: number[]
 }
 
 export type WeaponKind = 'melee' | 'ranged'

@@ -396,6 +396,13 @@ try {
   await page.waitForTimeout(400)
   const wp = await S(() => window.__sv.game.sim.state.px.waypoint)
   const goalShown = !!(await page.$('[data-testid="map-goal"]'))
+  // MAP-01 fog of war: a far unexplored corner of the map is covered, the player's area is not.
+  const fog = await page.$eval('[data-testid="map-canvas"]', (c, pos) => {
+    const ctx = c.getContext('2d')
+    const px = (x, y) => Array.from(ctx.getImageData(x, y, 1, 1).data.slice(0, 3))
+    return { corner: px(4, 4), player: px(Math.round(pos.x * c.width), Math.round(pos.z * c.height) + 12) }
+  }, await S(() => ({ x: window.__sv.game.sim.player.x / window.__sv.game.sim.world.size, z: window.__sv.game.sim.player.z / window.__sv.game.sim.world.size })))
+  check(results, '12. mapa: mgła wojny zakrywa nieodkryte tereny (MAP-01)', fog.corner.join() === '22,19,15' && fog.player.join() !== '22,19,15', fog)
   await shot(page, 'acc-12-map')
   await clickTest('panel-close')
   await page.waitForTimeout(600)
