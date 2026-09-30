@@ -44,3 +44,5 @@ playwright-report/*
 
 # Production config (keep .example files, ignore actuals)
 .env
+
+_temp

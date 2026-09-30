@@ -133,6 +133,55 @@ Stack: TypeScript, Vue, Tailwind CSS, shadcn-vue i Three.js, z uwzględnieniem i
 
 Mierz wydajność na jawnie opisanej scenie i w dostępnym środowisku. Raportuj wyniki oraz ograniczenia pomiarów. Nie deklaruj wydajności na telefonie tylko na podstawie emulowanego rozmiaru ekranu.
 
+### 6.1. Dostępne assety Quaternius
+
+W lokalnym katalogu `_temp/` w głównym folderze repozytorium znajduje się 12 paczek assetów Quaternius, łącznie około 1,35 GB:
+
+```text
+Fantasy Props MegaKit[Standard].zip
+Furniture Pack - March 2019-20260930T094541Z-1-001.zip
+Medieval Village MegaKit[Standard].zip
+Modular Character Outfits - Fantasy[Source].zip
+Stylized Nature MegaKit[Standard].zip
+Textured Stylized Trees - May 2020-20260930T094450Z-1-001.zip
+Ultimate Animated Animal Pack.zip
+Ultimate Food Pack - Oct 2019-20260930T094520Z-1-001.zip
+Ultimate RPG Items Pack - Aug 2019-20260930T094533Z-1-001.zip
+Universal Animation Library 2[Source].zip
+Universal Animation Library[Standard].zip
+Universal Base Characters[Standard].zip
+```
+
+Masz zgodę na ich lokalne rozpakowanie, przeglądanie, konwersję i wykorzystanie w grze.
+
+#### Wybór i integracja
+
+- Na początku zinwentaryzuj zawartość archiwów: modele, formaty, tekstury, animacje, podglądy i licencje. Nie zakładaj zawartości ani zgodności szkieletów wyłącznie na podstawie nazw paczek.
+- Rozpakowuj potrzebne paczki do osobnych katalogów w `_temp/extracted/`, zachowując oryginalne ZIP-y.
+- Preferuj dostępne assety zamiast tworzyć ich odpowiedniki od zera. Wybierz spójny wizualnie zestaw pasujący do średniowiecznej gry bez fantasy. Z paczek „Fantasy” wykorzystuj wyłącznie elementy zgodne z wizją.
+- Proceduralne generowanie świata i osad może korzystać z gotowych modeli oraz modułów budynków, roślin i rekwizytów. Proceduralność dotyczy także ich doboru, składania i rozmieszczania; nie wymaga generowania każdej siatki od zera.
+- Preferuj glTF/GLB do użycia w Three.js. Konwertuj inne formaty, jeśli jest to potrzebne i dostępne są odpowiednie narzędzia.
+- Sprawdź skalę w metrach, orientację, pivoty, materiały, zależności tekstur oraz działanie animacji. Zweryfikuj zgodność postaci, ubrań i bibliotek animacji przed ich połączeniem.
+- Placeholdery są dozwolone tymczasowo albo gdy brakuje odpowiedniego assetu. Zapisuj, co wymaga późniejszej wymiany.
+
+#### Organizacja plików
+
+- `_temp/` jest lokalnym magazynem źródłowym: dodaj go do `.gitignore` i wyklucz z obserwowania zmian przez dev server.
+- Nie kopiuj całych paczek do katalogu publicznego.
+- Do `public/assets/` przenoś wyłącznie wybrane zasoby potrzebne grze, wraz z wymaganymi teksturami i informacjami licencyjnymi.
+- Gra i jej build nie mogą zależeć od obecności `_temp/`.
+- Utwórz `docs/assets/README.md` z krótkim katalogiem paczek i wybranych assetów. Zapisuj źródłową paczkę, ścieżkę modelu, przeznaczenie, licencję i wykonane konwersje.
+- Wykorzystuj dołączone podglądy. Jeśli wybór modeli jest niejasny, wygeneruj niewielkie plansze podglądowe z nazwami plików.
+- Zachowaj skrypty potrzebne do odtworzenia istotnych konwersji.
+
+#### Wydajność i weryfikacja
+
+Ładuj zasoby stosownie do potrzeb, współdziel geometrie i materiały oraz używaj instancjonowania dla odpowiednich powtarzalnych obiektów. Sprawdzaj koszt tekstur, liczbę trójkątów i draw calls.
+
+Zweryfikuj wybrane modele w uruchomionej grze, w tym animacje, rozmiary względem postaci i kolizje. Nie utożsamiaj widocznego modelu z gotową mechaniką obiektu.
+
+Jeżeli `_temp/` nie jest dostępny w bieżącym środowisku, zapisz ten brak, kontynuuj pracę z tymczasowymi modelami i nie oznaczaj integracji assetów jako ukończonej.
+
 ## 7. Plan i pamięć między sesjami
 
 Wykorzystaj istniejące odpowiedniki poniższych dokumentów; nie twórz duplikujących się źródeł prawdy.

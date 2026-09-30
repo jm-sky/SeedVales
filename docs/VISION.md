@@ -1214,6 +1214,16 @@ Całość.
 
 ---
 
+# Assets
+
+- Mamy trochę assets od Quaternius w ignorowanym katalogu `_temp/` - można wybierać przydatne rzeczy i wrzucać np. w `public/models`
+- Dźwięki trzeba poszukać/wygenerować/dodać później
+- Głosy można zrobić w Fish Audio
+  - Dla różnych profesji i różnych klas i grup wiekowych używać różnych tekstów/fraz oraz różnych "modeli" głosów
+  - Np. frazy z grup `greeting`, `farewell`, `thanks`, `warning_danger`, `call_for_help`, `tired`, `hungry`...
+
+---
+
 # 28. Tematy do uzupełnienia
 
 ## Ekonomia i waluta
@@ -1281,7 +1291,7 @@ Tak
 
 ---
 
-## Docs, development, AI
+# Docs, development, AI
 
 - Trzeba pracować aby zapewnić optymalne środowisko dla pracy AI.  
 - Możemy używać skryptów do automatycznego utrzymania dokumentacji w oparciu o nagłówki.  
@@ -1294,7 +1304,7 @@ Tak
 
 ---
 
-## Uwagi
+# Uwagi
 
 - Nie wszystko musi być w wersji v1, ale raczej większość.
 - Wersję v1 rozumiem jako efekt pracy AI do pierwszego przeglądu przez użytkownika. Zakładam, że AI będzie pracować kilka długich, samodzielnych sesji robią auto-weryfikację, tworząc plany i kolejne wersje `0.1 -> 0.2 -> 0.3` aż dojdziem do v1.
