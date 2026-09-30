@@ -6,6 +6,7 @@
  */
 import type { Sim } from './sim'
 import type { RepDim } from './types'
+import { payToTreasury } from './treasury'
 import { REP_DIMS } from './types'
 
 /** Dimensions that travel to other settlements (not all — vision §14). */
@@ -106,7 +107,8 @@ export function tryApologize(sim: Sim, badgeId: string): string {
   if (!b || !def || def.positive) return 'Nie ma za co przepraszać.'
   if (sim.state.time.cal - b.at < 3 * 86400) return 'Ludzie jeszcze pamiętają. Odczekaj kilka dni.'
   if (sim.player.money < 20) return 'Przeprosiny wymagają zadośćuczynienia (20 m).'
-  sim.player.money -= 20
+  // Penance goes to the nearest settlement's treasury (home settlement when in the wild).
+  payToTreasury(sim, settlementAt(sim, sim.player.x, sim.player.z, 400) ?? sim.world.homeSettlement, sim.player, 20)
   delete sim.state.px.badges[badgeId]
   sim.state.px.stats[def.stat] = 0
   return 'Przeprosiny przyjęte — odznaka zdjęta.'

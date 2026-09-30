@@ -12,7 +12,7 @@ import { skillGain } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { isTree } from '../world/nodes'
 import { Biome } from '../world/types'
-import { addItem, carriedWeight, carryCapacity, countItem, findTool, newStack, removeItem, removeStack, wearTool } from './inventory'
+import { addItem, countItem, findTool, fitQty, newStack, removeItem, removeStack, wearTool } from './inventory'
 import { seasonOf } from './time'
 import { drink, eat, heal, makeIll } from './vitals'
 
@@ -30,13 +30,31 @@ export function train(h: Human, skill: keyof Human['skills'], difficulty = 0.5, 
 
 /** Gives items to actor; drops overflow on the ground next to them. */
 export function giveOrDrop(sim: Sim, h: Human, stack: ItemStack) {
-  const d = itemDef(stack.id)
-  const room = carryCapacity(h) * (h.kind === 'npc' ? 1.6 : 1) - carriedWeight(h)
-  const fit = Math.max(0, Math.min(stack.qty, Math.floor(room / Math.max(0.01, d.weight))))
+  const fit = fitQty(h, stack)
   if (fit > 0) addItem(h.inv, { ...stack, qty: fit })
   if (fit < stack.qty) dropItem(sim, h.x + Math.cos(h.rot) * 0.8, h.z + Math.sin(h.rot) * 0.8, { ...stack, qty: stack.qty - fit })
   return fit
 }
+
+/**
+ * Fills a trough: straight from a well within 12 m (well = water source), else by pouring a
+ * carried bucket (the bucket is emptied). Shared by player and NPCs.
+ */
+export function fillTrough(sim: Sim, h: Human, trough: Building): ActionResult {
+  const bucket = h.inv.items.find((s) => s.id === 'bucket')
+  if (!bucket) return fail('Potrzebne wiadro.')
+  const well = sim.buildingsNear(trough.x, trough.z, 12).find((w) => w.kind === 'well')
+  if (well) {
+    trough.water = TROUGH_CAPACITY
+    return ok('Napełniono koryto prosto ze studni.')
+  }
+  if ((bucket.water ?? 0) <= 0) return fail('Wiadro jest puste — nabierz wody.')
+  trough.water = Math.min(TROUGH_CAPACITY, (trough.water ?? 0) + (bucket.water ?? 0))
+  bucket.water = 0
+  return ok('Wlano wodę do koryta.')
+}
+
+export const TROUGH_CAPACITY = 12
 
 export function dropItem(sim: Sim, x: number, z: number, stack: ItemStack, lit = false) {
   sim.state.ground.push({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit })

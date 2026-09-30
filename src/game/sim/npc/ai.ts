@@ -98,14 +98,15 @@ function fight(sim: Sim, h: Human, dt: number, full: boolean) {
       h.attackReadyAt = sim.state.time.play + 1.5
       WORK_ACTS.shoot!(sim, h, String(t.id), 1)
     }
-    if (d > 35) steerTo(sim, h, t.x, t.z, RUN_SPEED_MPS, dt, 30, full)
+    if (d > 35 && steerTo(sim, h, t.x, t.z, RUN_SPEED_MPS, dt, 30, full) === 'stuck') failGoal(sim, h, 0.25)
     return
   }
   const reach = w.reach + SPECIES[t.species].length * 0.4 + 0.5
-  if (steerTo(sim, h, t.x, t.z, RUN_SPEED_MPS * penalty(h.vitals), dt, reach, full) === 'arrived') {
+  const r = steerTo(sim, h, t.x, t.z, RUN_SPEED_MPS * penalty(h.vitals), dt, reach, full)
+  if (r === 'arrived') {
     h.rot = Math.atan2(t.x - h.x, t.z - h.z)
     meleeAttack(sim, h, 90, t.id)
-  }
+  } else if (r === 'stuck') failGoal(sim, h, 0.25) // unreachable enemy: give up for a while, no endless circling
 }
 
 export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {

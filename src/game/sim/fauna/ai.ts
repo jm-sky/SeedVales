@@ -134,7 +134,12 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
     if (r !== 'moving') {
       ai.steps.shift()
       ai.stepT = 0
-      if (ai.goal === 'drink' && r === 'arrived') a.thirstH = 0
+      if (ai.goal === 'drink' && r === 'arrived') {
+        // Domestic animals drink from the trough on arrival (not at planning time).
+        const trough = a.householdId !== undefined ? sim.buildingsNear(a.x, a.z, 3).find((b) => b.kind === 'trough' && b.householdId === a.householdId) : undefined
+        if (trough) trough.water = Math.max(0, (trough.water ?? 0) - 0.5)
+        a.thirstH = 0
+      }
       if (ai.goal === 'scavenge' && r === 'arrived') scavenge(sim, a)
       if (ai.goal === 'hunt' && r === 'arrived') {
         const prey = sim.actor(ai.targetId)
@@ -200,7 +205,6 @@ function planAnimal(sim: Sim, a: Animal) {
       if (trough) {
         ai.goal = 'drink'
         go(trough, false, 1.5)
-        trough.water = Math.max(0, (trough.water ?? 0) - 0.5)
         return
       }
     }

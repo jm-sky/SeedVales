@@ -8,7 +8,7 @@ import type { Sim } from './sim'
 import type { Human, Inventory, ItemStack } from './types'
 import { itemDef } from '../data/items'
 import { train } from './actions'
-import { addItem, countItem, qualityMult, removeStack } from './inventory'
+import { addItem, countItem, fitQty, qualityMult, removeStack } from './inventory'
 import { houseOf } from './npc/queries'
 
 export function tradeInventory(sim: Sim, npc: Human): Inventory | undefined {
@@ -46,6 +46,7 @@ export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): Act
   const q = Math.min(qty, stack.qty)
   const price = buyPrice(sim, npc, stack) * q
   if (sim.player.money < price) return { ok: false, msg: 'Za mało pieniędzy.' }
+  if (fitQty(sim.player, { ...stack, qty: q }) < q) return { ok: false, msg: 'Nie uniesiesz tego — za ciężkie.' }
   const taken = removeStack(inv, stack, q)!
   sim.player.money -= price
   npc.money += price

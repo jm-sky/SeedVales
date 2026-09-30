@@ -6,13 +6,15 @@
  */
 import type { Sim } from '../sim'
 import type { Animal, Human } from '../types'
+import { CARAVAN_FEE } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
-import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
+import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
 import { applyDamage, weaponOf } from '../combat'
 import { addItem, countItem, findFood, newStack, removeItem } from '../inventory'
 import { forgeOrder } from '../orders'
 import { growthFactor } from '../time'
+import { payFromTreasury } from '../treasury'
 import { drink, eat, heal, hp } from '../vitals'
 import { household, houseOf } from './queries'
 
@@ -108,7 +110,8 @@ export const WORK_ACTS: Record<string, Act> = {
     for (let i = h.inv.items.length - 1; i >= 0; i--) {
       const s = h.inv.items[i]!
       const d = itemDef(s.id)
-      if (d.category === 'resource' || d.category === 'herb' || (d.category === 'food' && countItem(h.inv, s.id) > 2)) {
+      // Raw food (hunter's meat, crops) always goes home; keep ≤2 ready-to-eat portions for the road.
+      if (d.category === 'resource' || d.category === 'herb' || (d.category === 'food' && (d.food?.raw || countItem(h.inv, s.id) > 2))) {
         h.inv.items.splice(i, 1)
         addItem(inv, s)
       }
@@ -173,11 +176,9 @@ export const WORK_ACTS: Record<string, Act> = {
     train(h, 'farming', 0.6, 3)
     return true
   },
-  fill_trough: (sim, _h, ref) => {
+  fill_trough: (sim, h, ref) => {
     const b = sim.building(ref)
-    if (!b) return false
-    b.water = 12
-    return true
+    return !!b && fillTrough(sim, h, b).ok
   },
   light_torch: (sim, _h, ref) => {
     const b = sim.building(ref)
@@ -210,7 +211,8 @@ export const WORK_ACTS: Record<string, Act> = {
   },
   dry_meat: (sim, h) => {
     const inv = storeOf(sim, h)
-    if (!inv || countItem(inv, 'raw_meat') < 2) return false
+    if (!inv) return false
+    if (countItem(inv, 'raw_meat') < 2) return true // too little to dry (e.g. a hare) — nothing to do, not a failure
     removeItem(inv, 'raw_meat', 2)
     addItem(inv, newStack('dried_meat', 1))
     return true
@@ -315,7 +317,8 @@ export const WORK_ACTS: Record<string, Act> = {
       if (!f) break
       for (const s of removeItem(there.inv, f.id, 1)) addItem(h.inv, s)
     }
-    h.money += 5 + moved
+    // Fee paid by the visited settlement for the goods exchange (treasury → trader, D-ECON-1).
+    payFromTreasury(sim, there.settlementId, h, CARAVAN_FEE.base + CARAVAN_FEE.perUnit * moved)
     h.trip = { phase: 'returning', since: h.trip?.since ?? sim.state.time.cal }
     perf.count('economy.caravanTrades')
     return true

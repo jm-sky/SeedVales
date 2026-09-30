@@ -6,6 +6,7 @@
 import type { Sim } from './sim'
 import type { Quest } from './types'
 import { addRep } from './reputation'
+import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
 
 export function questSystem(sim: Sim) {
@@ -89,10 +90,12 @@ export function acceptQuest(sim: Sim, id: string): string {
 
 export function completeQuest(sim: Sim, q: Quest) {
   q.status = 'done'
-  sim.player.money += q.reward
+  // Reward is paid by the settlement treasury (never minted); a poor settlement pays what it has.
+  const paid = payFromTreasury(sim, q.settlementId, sim.player, q.reward)
+  if (paid < q.reward) sim.message(`Skarbiec osady jest pusty — wypłacono tylko ${paid} z ${q.reward} m.`, 'bad')
   const giver = sim.human(q.giverId)
   if (giver) giver.opinion = Math.min(100, giver.opinion + 25)
-  addRep(sim, q.settlementId, q.kind === 'rats' ? { helpfulness: 12, renown: 5 } : { courage: 10, renown: 8, helpfulness: 5 }, `Ukończono: ${q.title}. Nagroda ${q.reward} m`)
+  addRep(sim, q.settlementId, q.kind === 'rats' ? { helpfulness: 12, renown: 5 } : { courage: 10, renown: 8, helpfulness: 5 }, `Ukończono: ${q.title}. Nagroda ${paid} m`)
 }
 
 /** Called on kills by the player to advance quests. */

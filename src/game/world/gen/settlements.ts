@@ -6,6 +6,7 @@
 import type { GenHousehold, GenSettlement, GenStructure, ProfessionId, SettlementSize, StructureKind } from '../types'
 import { distToSegment } from '../../core/math'
 import { Rng } from '../../core/rng'
+import { perf } from '../../diag/perf'
 import { idx, nearestCell, sampleGrid } from '../grid'
 import { Biome, CELL_M, GRID_N, SEA_LEVEL, WORLD_SIZE_M } from '../types'
 
@@ -159,7 +160,10 @@ export function layoutSettlement(
       const p = around(ang, r)
       if (free(p.x, p.z, 6.5)) house = add('house', p.x, p.z, Math.atan2(cx - p.x, cz - p.z), 4, 3, hIdx)
     }
-    if (!house) return
+    if (!house) {
+      perf.count('world.gen.householdSkipped')
+      return
+    }
     households.push({ idx: hIdx, profession: prof, houseId: house.id, members: rng.int(2, 4) })
     const hx = house.x
     const hz = house.z
@@ -173,6 +177,16 @@ export function layoutSettlement(
         const p = side(dx, dz)
         if (free(p.x, p.z, Math.hypot(hw, hd))) return add(kind, p.x, p.z, house!.rot, hw, hd, hIdx)
       }
+      // Fallback: ring search around the house (preferred spots are often taken by field/pen).
+      const r0 = 7 + Math.max(hw, hd)
+      for (let r = r0; r <= r0 + 30; r += 3) {
+        for (let k = 0; k < 16; k++) {
+          const a = (k / 16) * Math.PI * 2
+          const p = side(Math.cos(a) * r, Math.sin(a) * r)
+          if (free(p.x, p.z, Math.hypot(hw, hd))) return add(kind, p.x, p.z, house!.rot, hw, hd, hIdx)
+        }
+      }
+      perf.count('world.gen.structureMissing')
       return null
     }
     placeNear('well', 0.8, 0.8, [[9, 2], [-9, 2], [9, -5], [-9, -5], [0, 10]])

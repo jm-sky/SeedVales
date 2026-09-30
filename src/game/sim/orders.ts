@@ -49,8 +49,9 @@ export function collectOrder(sim: Sim, orderId: string): string {
   const rest = o.price - o.paid
   if (sim.player.money < rest) return 'Za mało pieniędzy na dopłatę.'
   const smith = sim.human(o.npcId)
+  if (!smith) return 'Kowala już nie ma — nie ma komu zapłacić.'
   sim.player.money -= rest
-  if (smith) smith.money += rest
+  smith.money += rest
   o.paid = o.price
   o.status = 'collected'
   const item = o.item

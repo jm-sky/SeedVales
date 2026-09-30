@@ -11,13 +11,14 @@ import { angleDiff } from '../core/math'
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { isTree } from '../world/nodes'
-import { consume, dropItem, nodeAvailable } from './actions'
+import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { isDown } from './combat'
-import { addItem, countItem, equipToMain, findTool, removeStack } from './inventory'
+import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { sleepComfort, startActivity } from './player'
 import { acceptQuest } from './quests'
 import { addRep, addStat } from './reputation'
 import { hourOf, isNight } from './time'
+import { payToTreasury } from './treasury'
 import { heal } from './vitals'
 
 export type TargetRef =
@@ -218,9 +219,12 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'camp_sleep':
     case 'inn_sleep': {
       if (optionId === 'inn_sleep') {
-        p.money -= 8
-        const innkeeper = sim.state.npcs.find((n) => n.profession === 'trader' && n.settlementId === sim.building((t as { id: string }).id)?.settlementId)
-        if (innkeeper) innkeeper.money += 8
+        const sid = sim.building((t as { id: string }).id)?.settlementId ?? 0
+        const innkeeper = sim.state.npcs.find((n) => n.profession === 'trader' && n.settlementId === sid && !n.vitals.dead)
+        if (innkeeper) {
+          p.money -= 8
+          innkeeper.money += 8
+        } else payToTreasury(sim, sid, p, 8)
       }
       const comfort = optionId === 'inn_sleep' ? 0.85 : optionId === 'bed_sleep' ? 0.8 : sleepComfort(sim, null)
       return startSleep(sim, comfort)
@@ -271,15 +275,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     }
     case 'fill_trough': {
       const b = sim.building((t as { id: string }).id)
-      const bucket = p.inv.items.find((s) => s.id === 'bucket')
-      if (!b || !bucket) return ''
-      const well = sim.buildingsNear(b.x, b.z, 12).find((w) => w.kind === 'well')
-      if (well) b.water = 12
-      else if ((bucket.water ?? 0) > 0) {
-        b.water = Math.min(12, (b.water ?? 0) + (bucket.water ?? 0))
-        bucket.water = 0
-      } else return 'Wiadro jest puste — nabierz wody.'
-      return well ? 'Napełniono koryto prosto ze studni.' : 'Wlano wodę do koryta.'
+      return b ? fillTrough(sim, p, b).msg : ''
     }
     case 'gather':
       startActivity(sim, { kind: 'gather', ref: (t as { id: string }).id, label: 'Zbieranie', total: 2.5 })
@@ -329,9 +325,12 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'pickup': {
       const g = sim.state.ground.find((gg) => gg.id === (t as { id: number }).id)
       if (!g) return ''
-      sim.state.ground.splice(sim.state.ground.indexOf(g), 1)
-      addItem(p.inv, g.stack)
-      return `Podniesiono: ${itemDef(g.stack.id).name}`
+      const n = fitQty(p, g.stack)
+      if (n <= 0) return 'Nie uniesiesz więcej.'
+      addItem(p.inv, { ...g.stack, qty: n })
+      g.stack.qty -= n
+      if (g.stack.qty <= 0) sim.state.ground.splice(sim.state.ground.indexOf(g), 1)
+      return `Podniesiono: ${itemDef(g.stack.id).name}${g.stack.qty > 0 ? ` ×${n} (reszta za ciężka)` : ''}`
     }
     case 'repair':
       equip('hammer')
@@ -398,9 +397,12 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
     const rep = sim.state.settlements[b.settlementId]!.rep
     if (rep.helpfulness < 10) addRep(sim, b.settlementId, { honesty: -1, helpfulness: -1 })
   }
-  const moved = removeStack(b.inv, s)!
+  const n = fitQty(p, s)
+  if (n <= 0) return 'Nie uniesiesz więcej.'
+  const partial = n < s.qty
+  const moved = removeStack(b.inv, s, n)!
   addItem(p.inv, moved)
-  return `Wzięto: ${itemDef(moved.id).name}`
+  return `Wzięto: ${itemDef(moved.id).name}${partial ? ` ×${n} (reszta za ciężka)` : ''}`
 }
 
 export { acceptQuest, COMBAT }

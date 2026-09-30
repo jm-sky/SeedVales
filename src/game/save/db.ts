@@ -5,6 +5,7 @@
  */
 import type { GameState } from '../sim/types'
 import type { WorldData } from '../world/types'
+import { TREASURY_START } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { SAVE_VERSION } from '../sim/types'
 import { GEN_VERSION } from '../world/types'
@@ -138,6 +139,11 @@ const MIGRATIONS: Record<number, Migration> = {
   1: (st) => {
     for (const o of st.px.orders ?? []) if (o.status === 'ready' && !o.item) o.status = 'waiting'
     for (const n of st.npcs) delete n.ai.cooldowns.caravan_back
+  },
+  // v2 → v3: settlement treasuries (fixed start amounts by position in the chain: SM, MD, LG).
+  2: (st) => {
+    const start = [TREASURY_START.SM, TREASURY_START.MD, TREASURY_START.LG]
+    st.settlements.forEach((s, i) => (s.treasury ??= start[i] ?? TREASURY_START.SM))
   },
 }
 

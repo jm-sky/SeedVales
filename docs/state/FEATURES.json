@@ -179,7 +179,7 @@
    "behavior": "Osady SM/MD/LG: plac z ogniskiem, tablicą ogłoszeń, studnią; gospodarstwa z domem, magazynem, zabudową profesji; MD/LG targ, LG gospoda",
    "verify": "vitest generatora osad; screenshot",
    "status": "verified",
-   "evidence": "settlements layout (plaza campfire/noticeboard/well, households, market/inn MD/LG); screenshots scripts/e2e/tour.mjs (manual review 2026-09-30)"
+   "evidence": "settlements layout (plaza campfire/noticeboard/well, households, market/inn MD/LG); screenshots scripts/e2e/tour.mjs (manual review 2026-09-30) | generate.seeds.test.ts SET-01: every household (8 seeds) has house, well and duty structures; none skipped (placeNear ring fallback, GEN_VERSION 7; review #23)"
   },
   {
    "id": "SET-02",
@@ -521,7 +521,7 @@
    "behavior": "Ekwipunek z limitem wagi (Strength) i plecakiem +15 kg; magazyny (skrzynie gospodarstw, magazyn osady)",
    "verify": "vitest",
    "status": "verified",
-   "evidence": "src/game/sim/features.test.ts ITEM-02"
+   "evidence": "src/game/sim/features.test.ts ITEM-02 | conservation.test.ts ITEM-02: pickup/storage take what fits, buying refuses overweight (fitQty shared with giveOrDrop; review #11)"
   },
   {
    "id": "ITEM-03",
@@ -638,7 +638,7 @@
    "behavior": "Koryto napełniane wiadrem / ze studni obok; zwierzęta z niego piją",
    "verify": "vitest",
    "status": "verified",
-   "evidence": "src/game/sim/features.test.ts BUILD-03"
+   "evidence": "src/game/sim/features.test.ts BUILD-03 | conservation.test.ts BUILD-03: NPC fill_trough uses bucket water via shared fillTrough; animals take trough water on arrival (review #7/#8)"
   },
   {
    "id": "BUILD-04",
@@ -772,8 +772,8 @@
    "scope": "v1",
    "behavior": "Osady samowystarczalne w żywności; wymiana surowców (handlarz wędrowny między osadami)",
    "verify": "vitest długiej symulacji",
-   "status": "in_progress",
-   "evidence": "economy.test.ts (3 days: fed, caravan trades between settlements) | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #10: mint/vanish pieniędzy (inn_sleep, collectOrder, completeQuest, caravan_trade); #2 pętla karawany — plan game--002 A2/B4"
+   "status": "verified",
+   "evidence": "economy.test.ts (3 days far LOD: all fed/alive, caravan trades) + ECON-01 caravan heads home without trip + conservation.test.ts ECON-01: totalMoney (purses + treasuries) constant across inn/quest/order/penance/2 days of caravans (review #2/#10 fixed via h.trip and settlement treasury, game--002 A2/B4)"
   },
   {
    "id": "VOICE-01",

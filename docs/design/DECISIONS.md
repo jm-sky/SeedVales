@@ -26,6 +26,11 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-SIM-7 — Handel: NPC sprzedaje ze skrzyni domu; pieniądze zachowane (transfer 1:1).** Waluta: miedziak (100 m = 1 sr, 100 sr = 1 zł).
 - **D-SIM-8 — Kalibracja potrzeb:** pragnienie pełne→0 w 20 h, głód 30 h, wigor ~19 h marszu (NEEDS). Posiłek 25–40 sytości. Wartości do strojenia.
 
+## Ekonomia
+
+- **D-ECON-1 — Pieniądze tylko się przemieszczają: każdy przepływ ma płatnika i odbiorcę.** Portfele gracza i NPC (także zmarłych) + skarbce osad (`SettlementState.treasury`, start `TREASURY_START`: SM 150, MD 300, LG 600 m). Skarbiec płaci nagrody za zadania i opłaty karawan; przyjmuje noclegi bez gospodarza i przeprosiny. Jawne źródło z zewnątrz: monety wykopane łopatą w osadzie (ITEM-04). Podatki/dochody skarbca — poza v1 (skarbiec może się wyczerpać: nagrody wtedy częściowe).
+- **D-ECON-2 — Udźwig jest twardym limitem przy podnoszeniu, braniu z magazynu i kupnie** (`fitQty`); przeciążenie (spowolnienie ×0.5) zostaje tylko jako stan przejściowy (np. zdjęty plecak).
+
 ## Zapis
 
 - **D-SAVE-1 — Zapis = zmiany względem wygenerowanego świata, więc jest ważny tylko dla tego samego `seed` i `GEN_VERSION`.** Niezgodność → jawny odrzut z komunikatem (bez migracji świata — generatora nie da się „przemigrować”). Każda zmiana generatora (bump `GEN_VERSION`) unieważnia stare zapisy; menu je oznacza.

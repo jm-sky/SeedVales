@@ -99,6 +99,13 @@ export function carryCapacity(h: Human): number {
   return 20 + h.attrs.str * 3 + bonus
 }
 
+/** How many units of the stack the human can still carry (NPCs haul up to 1.6× — D-SIM-7 households). */
+export function fitQty(h: Human, stack: ItemStack): number {
+  const room = carryCapacity(h) * (h.kind === 'npc' ? 1.6 : 1) - carriedWeight(h)
+  const unit = stackWeight({ ...stack, qty: 1 })
+  return Math.max(0, Math.min(stack.qty, Math.floor(room / Math.max(0.01, unit))))
+}
+
 /** Finds a stack providing the capability — equipped first, then best-durability in inventory. */
 export function findTool(h: Human, cap: Capability): ItemStack | undefined {
   const has = (s?: ItemStack) => s && (itemDef(s.id).caps ?? []).includes(cap) && (s.dur === undefined || s.dur > 0)

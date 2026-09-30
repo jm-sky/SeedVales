@@ -7,7 +7,7 @@ import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 2
+export const SAVE_VERSION = 3
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -181,6 +181,8 @@ export interface SettlementState {
   name: string
   rep: Record<RepDim, number>
   warehouseId?: string
+  /** Settlement treasury (copper): pays quest rewards and caravan fees, receives inn/penance money. */
+  treasury: number
   /** Pending reputation spread from other settlements (gameplay seconds). */
   pendingRep: { at: number; delta: Partial<Record<RepDim, number>>; from: number }[]
 }

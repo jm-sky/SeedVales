@@ -6,7 +6,7 @@
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { ProfessionId, WorldData } from '../world/types'
 import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, SettlementState } from './types'
-import { START_CALENDAR_S } from '../config/calibration'
+import { START_CALENDAR_S, TREASURY_START } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { NAMES, PROFESSIONS } from '../data/professions'
 import { emptySkills } from '../data/skills'
@@ -98,6 +98,7 @@ export function createNewGame(world: WorldData): GameState {
     id: s.id, name: s.name,
     rep: { honesty: 0, helpfulness: 0, renown: 0, courage: 0 },
     warehouseId: buildings.find((b) => b.settlementId === s.id && b.kind === 'warehouse')?.id,
+    treasury: TREASURY_START[s.size],
     pendingRep: [],
   }))
 
