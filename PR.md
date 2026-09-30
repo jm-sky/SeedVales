@@ -182,11 +182,11 @@ Deszcz i burza mogą mieć efekt na zwierzęta i NPC, np.:
 
 Jeden dzień gry może trwać około:
 
-- 30–60 realnych minut.
+- 60 realnych minut.
 
 Jeden rok może trwać np.:
 
-- `12 × 5 = 70 dni gry`, przy założeniu, że miesiąc ma 5 dni,
+- `12 × 5 = 60 dni gry`, przy założeniu, że miesiąc ma 5 dni,
 - albo `12 × 10 = 120 dni`.
 
 > Pytania:
@@ -195,6 +195,29 @@ Jeden rok może trwać np.:
 
 Jeżeli miesiąc ma 5 dni, to sezon ma 15 dni. Sezon to głównie pogoda, ale też wpływ na przyrodę - mniejsze plony, mniej jedzenia dla zwierząt, niższa temperatura - ciężej nocować w namiocie.
 Deszcze naturalnie podlewają pola, dzięki czemu NPC nie muszą tego robić.
+
+| Parametr | Propozycja początkowa |
+|---|---:|
+| Doba gry | **60 realnych minut** |
+| Upływ czasu | **24×** |
+| Chodzenie | **1,5 m/s**, czyli 5,4 km/h w przestrzeni świata |
+| 1 godzina kalendarza gry | 2,5 realnej minuty → 225 m marszu |
+| 16 godzin marszu w grze | **40 realnych minut → 3,6 km** |
+| Najbliższa osada: 1–2 dni marszu | **3,6–7,2 km faktycznej trasy** |
+
+
+Odległość liczymy po dostępnej trasie, uwzględniając rzeki, góry i drogi (byłoby miło, ale dla ułatwienia możemy użyć linii prostej z modyfkatorami za przeszkody; aczkolwiek chcemy mieć drogi, więc może da radę z drogami). (drogi powinny być nakładane na geografię, wybierając sensowne przejścia, i lekko modyfikując teren aby pokazać, że ktoś tamtędy chodził i ziemia się wyrównała).
+
+Nie mnożymy prędkości chodzenia przez przyspieszenie kalendarza. Inaczej postać pędziłaby przez teren. Metry nadal służą do rozmiarów budynków, zasięgu broni i kolizji; „dzień drogi” jest miarą podróży w skompresowanym świecie.
+
+**Konsekwencje:**
+
+- **Najbliższy sąsiad to długa wyprawa:** ~~40–80 minut~~ ~30-40 minut samego marszu w jedną stronę (przy założeniu 1 dzień marszu, tzn. 16 godzin marszu, bo nie maszerujemy 24 godziny). To pasuje do ekspedycji, ale utrudnia częsty handel. Autopilot zwalnia z kierowania, lecz nie skraca czekania.
+- **Koń ma realną wartość:** przy średniej prędkości podróżnej 2× większej skraca taką podróż do 20–40 minut.
+- **Potrzeby i produkcja korzystają z kalendarza:** sen, głód, psucie żywności, pogoda, uprawy. Kalibrujemy je do długości dnia.
+- **Walka korzysta z sekund rozgrywki:** zamach, naciąganie łuku, regeneracja staminy, ochrona po utracie przytomności. Twoje 120 sekund ochrony powinno oznaczać 120 realnych sekund przy normalnym tempie.
+- **Sen i długa praca wymagają przyspieszenia:** osiem godzin snu oznaczałoby inaczej 20 minut czekania. Przyspieszenie musi obejmować cały świat i przerywać się przy zagrożeniu. Oraz z opcją "[Esc] Przerwij"
+- **Rok 60-dniowy to 60 godzin bez przyspieszania.** Wzrost roślin, rozród i starzenie wymagają osobnej kalibracji.
 
 ---
 
@@ -536,13 +559,14 @@ Nie ma poziomów, nie ma EXP. Wszystko rośnie w miarę używania i treningu.
 
 Lista profesji:
 
-- Drwal
-- Zielarz
-- Myśliwy
-- Strażnik miejski
+- Drwal - mieszka w domku, ma siekierę i chodzi ścinać drzewa.
+- Zielarz - chodzi na łąkę zbierać zioła, może mieć zioła w ogródku, zna podstawową medycynę
+- Lekarz - dobrze zna medycynę, może zbierać zioła i wytwarzać leki
+- Myśliwy - poluje na zwierzęta (np. sarny), czasem zmniejsza populację drapieżników, pilnuje aby zwierzyny nie było zbyt mało, czasem może dokarmiać zwierzęta, jest źródłem quests z serii tej profesji, może wytwarzać łuki i strzały
+- Strażnik miejski - piluje osady, patroluje w nocy, zapala pochodnie wokół osady, oferuje tani ale niezbyt wygodny nocleg, jest źródłem zadań
 - Handlarz miejski
 - Farmer
-- Pasterz
+- Pasterz - ma swoje stado 2-5 owiec, zbiera z nich wełnę, pilnuje, wyprowadza na wypas; ma często kij, czasem włócznię, procę
 - Wędkarz / Rybak
 - Kowal
 - Górnik
