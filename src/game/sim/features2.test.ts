@@ -242,7 +242,7 @@ describe('more features', () => {
     const sim = testSim()
     const wh = sim.building(sim.state.settlements[0]!.warehouseId)!
     wh.ratNest = { strength: 1, since: sim.state.time.cal }
-    for (let i = 0; i < 4; i++) sim.addAnimal(makeAnimal(sim.nextId(), 'rat', 'adult', wh.x + i, wh.z + 3, sim.terrain.heightAt(wh.x, wh.z), sim.rng))
+    for (let i = 0; i < 4; i++) sim.addAnimal({ ...makeAnimal(sim.nextId(), 'rat', 'adult', wh.x + i, wh.z + 3, sim.terrain.heightAt(wh.x, wh.z), sim.rng), denId: `nest:${wh.id}` })
     questSystem(sim)
     const n1 = sim.state.quests.filter((q) => q.kind === 'rats' && q.buildingId === wh.id).length
     expect(n1).toBe(1)

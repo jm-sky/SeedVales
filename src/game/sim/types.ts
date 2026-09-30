@@ -7,7 +7,7 @@ import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 4
+export const SAVE_VERSION = 5
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -258,6 +258,17 @@ export interface Corpse {
   meat: number
 }
 
+/** Blood on the ground (TRACE-01); rendered as decals, attracts predators. */
+export interface Trace {
+  id: number
+  x: number
+  z: number
+  /** 0..1, fades over calendar time (faster in rain). */
+  intensity: number
+  /** Calendar s of the last addition. */
+  at: number
+}
+
 export interface NodeState {
   /** Calendar s when felled / harvested / depleted. */
   at: number
@@ -380,6 +391,7 @@ export interface GameState {
   sites: ConstructionSite[]
   ground: GroundItem[]
   corpses: Corpse[]
+  traces: Trace[]
   nodes: Record<string, NodeState>
   dens: DenState[]
   quests: Quest[]

@@ -17,7 +17,8 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 
 ### Fale dodatku
 
-- Następny krok: fala 1 — `docs/plans/sim--001--ai-cadence-and-animal-threat.md`.
+- **Fala 1 `sim--001` done** — AI-01, FAUNA-06/07/08 verified, TRACE-01 (część sim; dekale w render--001). `SAVE_VERSION` 5.
+- Następny krok: review fali 1 (subagent), potem fala 2 `ui--001`.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

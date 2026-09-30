@@ -1,11 +1,11 @@
 # AI: kadencja decyzji, reakcje zwierząt na zagrożenie, zwłoki i ślady krwi
 
-**Status:** in_progress  
+**Status:** done  
 **Domain:** sim  
 **Sub domains:** npc-ai, fauna, combat, weather  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 1)  
 **Created:** 2026-09-30  
-**Finished:** —
+**Finished:** 2026-09-30
 
 ---
 
@@ -42,4 +42,8 @@ FEATURES: `AI-01`, `FAUNA-06`, `FAUNA-07`, `FAUNA-08`, `TRACE-01` (sim), `PERF-0
 - **1. AI-01 ✅** — `ai.decideAt` + `decisionInterval` (`fauna/perception.ts`): baza `DECISION.baseS` = 1 s × `SpeciesDef.decisionS` (sarna/zając 0.8, szczur/krowa/kura 1.5, owca 1.3) × zmęczenie (stamina < 25 lub wigor NPC < 15 → ×1.5). Ruch i ucieczka/atak ciągłe między decyzjami. Wymuszenie: `sim/alerts.ts` `alertAround` przy trafieniu (30 m), strzale (30 m), wołaniu o pomoc (60 m); ranne zwierzę decyduje od razu. NPC: percepcja zagrożenia w tej samej kadencji (planowanie utility nadal co 12 s / koniec planu). Liczniki `ai.decisions`, `ai.alerts`.
 - **2. FAUNA-06 ✅** — zwierzę domowe (bez psa) przy drapieżniku polującym/agresywnym/bliżej niż 12 m albo po zranieniu → cel `flee_home`: bieg do pasterza gospodarstwa (dorosły, ≤ 200 m) albo do zagrody, potem 15 s „Chowa się”. Zagrody istnieją (po `game--002` każde gospodarstwo rolnika/pasterza ma zagrodę) — bez zmiany generatora.
 - **3. FAUNA-07 ✅** — `decideAnimal`: ogień (ognisko/pochodnia na słupie/pochodnia na ziemi/człowiek z pochodnią, `FEAR.fireM` 14 m) płoszy każde dzikie zwierzę (poza wściekłym i szczurem); drapieżnik niegłodny trzyma dystans od człowieka (`FEAR.humanM` 16 m), głodny/alfa/silny atakuje; dziki/niedźwiedź atakuje tylko z bliska (< 6 m), dalej unika; zagrody omijane (poza wściekłymi i drapieżnikami głodnymi > 40 h); wyjątki ochronne: młode tego gatunku ≤ 25 m albo własne legowisko ≤ 30 m → atak zamiast ucieczki (D-SIM-12).
+- **4. FAUNA-08 ✅** — jedzenie padliny/przynęty to kroki pracy `eat` (`CARRION.eatS` 25 s na porcję, `lureEatS` 6 s), porcja odejmuje `hungerPerMeat` 15 h głodu; kontynuacja dopóki głodny i jest mięso. Przerwanie: decyzja (strach przed człowiekiem/ogniem) albo atak czyści kroki — zwłoki zachowują resztę mięsa.
+- **5. TRACE-01 (sim) ✅** — `sim/traces.ts`: trafienie z obrażeniami → ślad (intensywność `dmg/20`, scalanie w 1.5 m), zanikanie w czasie kalendarza (0.05/h, deszcz do ×4 wg intensywności), limit 300 (najstarszy usuwany), indeks przestrzenny w `Sim`, zapis `GameState.traces` (`SAVE_VERSION` 5 + migracja). Głodny drapieżnik w zasięgu węchu (70 m × intensywność) idzie „węszyć” (`investigate`, cooldown 60 s). Dekale → `render--001`.
+- Przy okazji: szczury związane z gniazdem (`denId = nest:<budynek>`) — liczenie szczurów zadania i kredyt za zabicie po przynależności, nie po odległości (uciekające szczury nie „rozwiązywały” zadania; e2e 8b sporadycznie padało).
+- Bench: A/B z poprzednim commitem w tych samych warunkach (load ~6) — bez różnicy w granicach szumu (np. crowded p95 0.64 → 0.57, long-run 1.33 → 1.18 ms).
 

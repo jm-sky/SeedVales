@@ -4,7 +4,7 @@
  * @domain sim
  */
 import type { WorldData } from '../world/types'
-import type { Actor, Animal, Building, Corpse, GameState, GroundItem, Human, Projectile, WeatherState } from './types'
+import type { Actor, Animal, Building, Corpse, GameState, GroundItem, Human, Projectile, Trace, WeatherState } from './types'
 import { CALENDAR_SPEED, SIM_LOD } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { perf } from '../diag/perf'
@@ -49,6 +49,7 @@ export class Sim {
   /** Spatial indices for items on the ground and corpses (PERF-01: no full scans per actor). */
   private groundIdx = new SpatialHash<GroundItem>(16)
   private corpseIdx = new SpatialHash<Corpse>(32)
+  private traceIdx = new SpatialHash<Trace>(16)
   bridges: Building[] = []
   /** Time multiplier (sleep/long work). Whole simulation is accelerated. */
   timeScale = 1
@@ -95,6 +96,8 @@ export class Sim {
     for (const g of this.state.ground) this.groundIdx.insert(g)
     this.corpseIdx.clear()
     for (const c of this.state.corpses) this.corpseIdx.insert(c)
+    this.traceIdx.clear()
+    for (const t of this.state.traces) this.traceIdx.insert(t)
     this.rebuildBuildingIndex()
   }
 
@@ -177,6 +180,21 @@ export class Sim {
 
   corpsesNear(x: number, z: number, r: number): Corpse[] {
     return this.corpseIdx.query(x, z, r)
+  }
+
+  addTrace(t: Trace) {
+    this.state.traces.push(t)
+    this.traceIdx.insert(t)
+  }
+
+  removeTrace(t: Trace) {
+    const i = this.state.traces.indexOf(t)
+    if (i >= 0) this.state.traces.splice(i, 1)
+    this.traceIdx.remove(t)
+  }
+
+  tracesNear(x: number, z: number, r: number): Trace[] {
+    return this.traceIdx.query(x, z, r)
   }
 
   actor(id: number | undefined): Actor | undefined {

@@ -16,3 +16,13 @@ export function animalsNear(sim: Sim, x: number, z: number, r: number, species: 
 }
 
 export const countNear = (sim: Sim, x: number, z: number, r: number, species: SpeciesId) => animalsNear(sim, x, z, r, species).length
+
+/** Tag linking rats to the rat nest of a building (rats roam and flee, but belong to their nest). */
+export const nestTag = (buildingId: string) => `nest:${buildingId}`
+
+/** Living animals per den/nest tag — one pass over animals per system run (not per den). */
+export function countByDen(sim: Sim): Map<string, number> {
+  const m = new Map<string, number>()
+  for (const a of sim.state.animals) if (a.denId && !a.vitals.dead) m.set(a.denId, (m.get(a.denId) ?? 0) + 1)
+  return m
+}

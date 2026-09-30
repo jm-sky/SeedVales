@@ -318,7 +318,7 @@ describe('reputation & quests', () => {
     const sim = testSim()
     const wh = sim.building(sim.state.settlements[0]!.warehouseId)!
     wh.ratNest = { strength: 2, since: 0 }
-    for (let i = 0; i < 3; i++) sim.addAnimal(makeAnimal(sim.nextId(), 'rat', 'adult', wh.x + i, wh.z + wh.hd + 1, 0, sim.rng))
+    for (let i = 0; i < 3; i++) sim.addAnimal({ ...makeAnimal(sim.nextId(), 'rat', 'adult', wh.x + i, wh.z + wh.hd + 1, 0, sim.rng), denId: `nest:${wh.id}` })
     questSystem(sim)
     const q = sim.state.quests.find((qq) => qq.kind === 'rats')!
     expect(q.status).toBe('available')

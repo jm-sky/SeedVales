@@ -41,6 +41,10 @@ const MIGRATIONS: Record<number, Migration> = {
       .filter((o) => o.status !== 'collected')
       .map(({ recipe, ...o }) => ({ ...o, status: o.status as Order['status'], recipeId: o.recipeId ?? recipe!, itemId: o.itemId ?? recipe! }))
   },
+  // v4 → v5: blood traces (TRACE-01).
+  4: (st) => {
+    st.traces ??= []
+  },
 }
 
 export function migrate(st: GameState): GameState {

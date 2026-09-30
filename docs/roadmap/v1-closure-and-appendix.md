@@ -25,7 +25,7 @@ Wyjście z etapu 0: `pnpm check` + `pnpm e2e` zielone, FEATURES bez fałszywych 
 
 | Plan | Zakres |
 |---|---|
-| [sim--001--ai-cadence-and-animal-threat](../plans/sim--001--ai-cadence-and-animal-threat.md) | kadencja decyzji ~1 s per gatunek/stan + wymuszenie reakcji krytycznej; ucieczka zwierząt domowych do pasterza/zagrody; strach dzikich przed ludźmi/ogniem/zagrodami z wyjątkami (młode, legowisko); zjadanie zwłok w czasie, przerywalne; ślady krwi (sim) wabiące drapieżniki |
+| [sim--001--ai-cadence-and-animal-threat](../plans/sim--001--ai-cadence-and-animal-threat.md) (done) | kadencja decyzji ~1 s per gatunek/stan + wymuszenie reakcji krytycznej; ucieczka zwierząt domowych do pasterza/zagrody; strach dzikich przed ludźmi/ogniem/zagrodami z wyjątkami (młode, legowisko); zjadanie zwłok w czasie, przerywalne; ślady krwi (sim) wabiące drapieżniki |
 
 ## Fala 2 — UI i ekrany
 

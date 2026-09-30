@@ -261,6 +261,12 @@ try {
     await clickTest('accept-rats')
     await shot(page, 'acc-08-quest')
     await clickTest('panel-close')
+    console.log('rats before kill loop', JSON.stringify(await S((bid) => {
+      const sim = window.__sv.game.sim
+      const q = sim.state.quests.find((x) => x.kind === 'rats')
+      const b = sim.building(bid)
+      return { q: q && { status: q.status, kills: q.kills }, nest: !!b.ratNest, dur: Math.round(b.durability), rats: sim.state.animals.filter((a) => a.species === 'rat').map((a) => `${a.denId}:${Math.round(Math.hypot(a.x - b.x, a.z - b.z))}`) }
+    }, questInfo.b)))
     // Kill rats: approach each rat and click (UI attack).
     await S(() => {
       window.__sv.pause(false)
@@ -271,7 +277,7 @@ try {
         const sv = window.__sv
         const sim = sv.game.sim
         const b = sim.building(bid)
-        const rat = sim.state.animals.find((a) => a.species === 'rat' && Math.hypot(a.x - b.x, a.z - b.z) < 60)
+        const rat = sim.state.animals.find((a) => a.species === 'rat' && (a.denId === `nest:${bid}` || Math.hypot(a.x - b.x, a.z - b.z) < 20))
         if (!rat) return 0
         sv.pause(false)
         sv.simStep(1.2)

@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { Animal } from '../types'
-import { CALENDAR_SPEED, HUNT } from '../../config/calibration'
+import { CALENDAR_SPEED, CARRION, HUNT } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, VARIANT_MULT } from '../../data/species'
 import { perf } from '../../diag/perf'
@@ -14,6 +14,7 @@ import { isDown, isProtected, killAnimal, meleeAttack } from '../combat'
 import { steerTo } from '../movement'
 import { nearestNaturalWater } from '../npc/queries'
 import { hourOf, isNight } from '../time'
+import { smellTrace } from '../traces'
 import { hp } from '../vitals'
 import { isBadWeather } from '../weather'
 import { decideAnimal, decisionInterval } from './perception'
@@ -122,6 +123,7 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
       if (step.act === 'graze') a.hungerH = Math.max(0, a.hungerH - 3)
       ai.steps.shift()
       ai.stepT = 0
+      if (step.act === 'eat') eatPortion(sim, a, step.ref)
     }
     return
   }
@@ -136,19 +138,34 @@ function chaseValid(sim: Sim, a: Animal): boolean {
   return Math.hypot(prey.x - a.x, prey.z - a.z) <= SPECIES[a.species].perception * HUNT.giveUpPerception
 }
 
+/** Arrived at food: start eating — it takes time (FAUNA-08) and can be interrupted (fear/attack clear steps). */
 function scavenge(sim: Sim, a: Animal) {
   const g = sim.groundNear(a.x, a.z, 2).find((gi) => itemDef(gi.stack.id).food)
   if (g) {
-    g.stack.qty--
-    if (g.stack.qty <= 0) sim.removeGround(g)
-    a.hungerH = 0
+    a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.lureEatS, label: 'Je', ref: `g${g.id}` })
     return
   }
   const c = sim.corpsesNear(a.x, a.z, 2.5).find((cc) => cc.meat > 0)
-  if (c) {
-    c.meat--
-    a.hungerH = 0
+  if (c) a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.eatS, label: 'Je padlinę', ref: `c${c.id}` })
+}
+
+/** One portion eaten at the end of an 'eat' step; keeps eating while hungry and food is left. */
+function eatPortion(sim: Sim, a: Animal, ref: string | undefined) {
+  const id = Number(ref?.slice(1))
+  if (ref?.startsWith('g')) {
+    const g = sim.groundNear(a.x, a.z, 3).find((gi) => gi.id === id)
+    if (!g) return
+    g.stack.qty--
+    if (g.stack.qty <= 0) sim.removeGround(g)
+    a.hungerH = Math.max(0, a.hungerH - CARRION.hungerPerMeat)
+    return
   }
+  const c = sim.corpsesNear(a.x, a.z, 3).find((cc) => cc.id === id && cc.meat > 0)
+  if (!c) return
+  c.meat--
+  a.hungerH = Math.max(0, a.hungerH - CARRION.hungerPerMeat)
+  perf.count('fauna.carrionPortions')
+  if (a.hungerH > 5 && c.meat > 0) a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.eatS, label: 'Je padlinę', ref })
 }
 
 function planAnimal(sim: Sim, a: Animal) {
@@ -212,6 +229,17 @@ function planAnimal(sim: Sim, a: Animal) {
       ai.goal = 'scavenge'
       go(t, true, 1.5)
       return
+    }
+    // Blood on the ground lures predators (TRACE-01).
+    if (sp.temperament === 'predator' && (ai.cooldowns.investigate ?? 0) <= sim.state.time.play) {
+      const tr = smellTrace(sim, a.x, a.z)
+      if (tr) {
+        ai.goal = 'investigate'
+        ai.cooldowns.investigate = sim.state.time.play + 60
+        go(tr, false, 2)
+        ai.steps.push({ op: 'work', act: 'sniff', dur: 5, label: 'Węszy' })
+        return
+      }
     }
     if (sp.preys && a.hungerH > 16 && (ai.cooldowns.hunt ?? 0) <= sim.state.time.play) {
       const prey = sim.actors.query(a.x, a.z, sp.perception * 1.5).find((o) => o.kind === 'animal' && sp.preys!.includes((o as Animal).species) && !isDown(sim, o))

@@ -14,10 +14,11 @@ import { addItem, newStack, spoilInventory } from './inventory'
 import { makeAnimal, rollVariant } from './newGame'
 import { npcSystem } from './npc/ai'
 import { playerSystem } from './player'
-import { countNear } from './queries'
+import { countByDen, nestTag } from './queries'
 import { questSystem } from './quests'
 import { reputationSystem } from './reputation'
 import { growthFactor, seasonOf } from './time'
+import { traceSystem } from './traces'
 import { collectTaxes } from './treasury'
 import { isBadWeather, updateWeather } from './weather'
 
@@ -27,6 +28,7 @@ function ecology(sim: Sim, dt: number) {
   updateWeather(s.weather, s.time.cal, dt * CALENDAR_SPEED, sim.rng)
   const bad = isBadWeather(s.weather)
   const g = growthFactor(s.time.cal)
+  const perNest = s.buildings.some((b) => b.ratNest) ? countByDen(sim) : undefined
   for (const b of s.buildings) {
     if (b.field) {
       b.field.moisture = Math.max(b.field.moisture - 0.02 * h, s.weather.wetness)
@@ -42,7 +44,7 @@ function ecology(sim: Sim, dt: number) {
     }
     if (b.ratNest) {
       b.ratNest.strength = Math.min(4, b.ratNest.strength + h * 0.05)
-      const rats = countNear(sim, b.x, b.z, 40, 'rat')
+      const rats = perNest?.get(nestTag(b.id)) ?? 0
       if (rats < 2 + Math.floor(b.ratNest.strength) && sim.rng.chance(0.5 * h + 0.02)) {
         // Rats emerge by the walls (outside the footprint, building-local → world).
         const lx = sim.rng.range(-b.hw, b.hw)
@@ -50,6 +52,7 @@ function ecology(sim: Sim, dt: number) {
         const x = b.x + lx * Math.cos(b.rot) + lz * Math.sin(b.rot)
         const z = b.z - lx * Math.sin(b.rot) + lz * Math.cos(b.rot)
         const rat = makeAnimal(sim.nextId(), 'rat', 'adult', x, z, sim.terrain.heightAt(x, z), sim.rng)
+        rat.denId = nestTag(b.id)
         sim.addAnimal(rat)
       }
       // Rats eat stored food.
@@ -108,8 +111,7 @@ const denSpecies = (d: string, rnd: number): SpeciesId => (d === 'deer' ? (rnd <
 function dens(sim: Sim) {
   const s = sim.state
   // One pass per run (every 30 s) instead of a scan per den: den animals roam far from the den.
-  const perDen = new Map<string, number>()
-  for (const a of s.animals) if (a.denId) perDen.set(a.denId, (perDen.get(a.denId) ?? 0) + 1)
+  const perDen = countByDen(sim)
   for (const d of s.dens) {
     if (!d.alive || s.time.cal < d.nextSpawn) continue
     const count = perDen.get(d.id) ?? 0
@@ -137,6 +139,7 @@ export function installSystems(sim: Sim) {
     { name: 'reputation', interval: 5, run: (s) => reputationSystem(s) },
     { name: 'quests', interval: 10, run: (s) => questSystem(s) },
     { name: 'taxes', interval: 30, run: (s) => collectTaxes(s) },
+    { name: 'traces', interval: 10, run: traceSystem },
   ]
   sim.systems = sys
   perf.gauge('sim.systems', sys.length)

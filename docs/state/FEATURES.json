@@ -826,8 +826,8 @@
    "scope": "v2",
    "behavior": "Zjadanie zwłok trwa w czasie; gracz może przerwać konsumpcję i przegonić drapieżnika",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+   "status": "verified",
+   "evidence": "appendix-sim.test.ts FAUNA-08: wolf arrives at a corpse, one portion takes CARRION.eatS (25 s), a person approaching makes the (not starving) wolf flee and the remaining meat stays; eating continues while hungry"
   },
   {
    "id": "FAUNA-09",
@@ -844,8 +844,8 @@
    "scope": "v2",
    "behavior": "Trafienia zadające obrażenia zostawiają ślad krwi; zanika z czasem i szybciej w deszczu; wabi drapieżniki",
    "verify": "vitest (sim) + screenshot (dekale)",
-   "status": "planned",
-   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md, render--001--weather-variety-effects.md"
+   "status": "in_progress",
+   "evidence": "sim part done: appendix-sim.test.ts TRACE-01 (hit → trace merged within 1.5 m, fades per calendar hour, faster in rain, saved in GameState.traces (SAVE_VERSION 5), hungry predator investigates within smell range 70 m × intensity); decals pending in render--001"
   },
   {
    "id": "WEATHER-01",

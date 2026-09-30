@@ -5,7 +5,7 @@
  */
 import type { Sim } from './sim'
 import type { Quest } from './types'
-import { animalsNear, countNear } from './queries'
+import { animalsNear, countByDen, countNear, nestTag } from './queries'
 import { addRep } from './reputation'
 import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
@@ -16,9 +16,10 @@ const QUEST_REPOST_S = 86400
 export function questSystem(sim: Sim) {
   const s = sim.state
   // Rats: guard notices nests with visible rats.
+  const perNest = countByDen(sim)
   for (const b of s.buildings) {
     if (!b.ratNest) continue
-    const rats = countNear(sim, b.x, b.z, 40, 'rat')
+    const rats = perNest.get(nestTag(b.id)) ?? 0
     const existing = s.quests.find((q) => q.kind === 'rats' && q.buildingId === b.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
     if (!existing && rats >= 3) {
       const guard = sim.npcsOf(b.settlementId).find((n) => n.profession === 'guard' && !n.vitals.dead)
@@ -70,7 +71,8 @@ export function questSystem(sim: Sim) {
     if (q.status !== 'available' && q.status !== 'active') continue
     if (q.kind === 'rats') {
       const b = sim.building(q.buildingId)
-      const ratsLeft = b ? countNear(sim, b.x, b.z, 60, 'rat') : 0
+      // Rats of this nest wherever they roam/fled (plus stray rats right at the building).
+      const ratsLeft = b ? (perNest.get(nestTag(b.id)) ?? 0) + countNear(sim, b.x, b.z, 20, 'rat') : 0
       if (b && !b.ratNest && ratsLeft === 0) {
         if (q.status === 'active' && q.kills > 0) completeQuest(sim, q)
         else {
@@ -103,12 +105,12 @@ export function completeQuest(sim: Sim, q: Quest) {
 }
 
 /** Called on kills by the player to advance quests. */
-export function questOnKill(sim: Sim, species: string, x: number, z: number) {
+export function questOnKill(sim: Sim, species: string, x: number, z: number, denId?: string) {
   for (const q of sim.state.quests) {
     if (q.status !== 'active') continue
     if (q.kind === 'rats' && species === 'rat') {
       const b = sim.building(q.buildingId)
-      if (b && Math.hypot(b.x - x, b.z - z) < 80) q.kills++
+      if (b && (denId === nestTag(b.id) || Math.hypot(b.x - x, b.z - z) < 80)) q.kills++
     }
     if (q.kind === 'wolves' && species === 'wolf') {
       const st = sim.world.settlements[q.settlementId]!

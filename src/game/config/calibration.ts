@@ -89,6 +89,15 @@ export const DECISION = { baseS: 1, tiredMul: 1.5, alertHitM: 30, alertShotM: 30
 /** Wild animals' fear (FAUNA-07), distances in m; exceptions: young nearby, own den, starving predator. */
 export const FEAR = { humanM: 16, aggressiveAttackM: 6, fireM: 14, penM: 10, desperateHungerH: 40, protectYoungM: 25, protectDenM: 30 }
 
+/** Eating carrion takes time (FAUNA-08): gameplay seconds per portion of meat, hunger hours satisfied per portion. */
+export const CARRION = { eatS: 25, hungerPerMeat: 15, lureEatS: 6 }
+
+/**
+ * Blood traces (TRACE-01): intensity 0..1 per hit (dmg / dmgFull), merged within mergeM, decaying per
+ * calendar hour (×rainMul in rain/storm), at most `max` kept; predators smell them within smellM × intensity.
+ */
+export const TRACE = { dmgFull: 20, mergeM: 1.5, decayPerH: 0.05, rainMul: 4, max: 300, smellM: 70 }
+
 /** Predator hunting: chase limit (gameplay s), give-up distance (× perception), retry cooldown (gameplay s). */
 export const HUNT = {
   chaseMaxS: 40,

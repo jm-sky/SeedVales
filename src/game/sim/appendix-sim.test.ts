@@ -6,10 +6,13 @@ import { describe, expect, it } from 'vitest'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { Sim } from './sim'
 import type { Animal, Building } from './types'
-import { applyDamage } from './combat'
+import { CARRION } from '../config/calibration'
+import { snapshot } from '../save/snapshot'
+import { applyDamage, killAnimal } from './combat'
 import { updateAnimal } from './fauna/ai'
 import { makeAnimal } from './newGame'
 import { playerFarAway, testSim } from './testWorld'
+import { traceSystem } from './traces'
 
 /** Isolated spot in the wild; the player stands at (x, z) (keeps actors at full LOD). */
 function wild(): { sim: Sim; x: number; z: number } {
@@ -161,5 +164,67 @@ describe('wave 1: AI cadence and animal threat behaviour', () => {
       applyDamage(sim, cow, 3, 'pierce', w)
       expect(cow.ai.goal).toBe('flee_home')
     }
+  })
+
+  it('FAUNA-08: eating a corpse takes time and a person can interrupt it (meat stays)', () => {
+    const { sim, x, z } = wild()
+    sim.player.x += 300 // nobody near at first
+    sim.actors.update(sim.player)
+    const deer = spawn(sim, 'deer', x + 2, z)
+    killAnimal(sim, deer)
+    const corpse = sim.state.corpses.at(-1)!
+    const meat0 = corpse.meat
+    const w = spawn(sim, 'wolf', x + 20, z)
+    w.hungerH = 25
+    for (let t = 0; t < 12 && w.ai.goal !== 'scavenge'; t += 0.1) tick(sim, w)
+    expect(w.ai.goal).toBe('scavenge')
+    for (let t = 0; t < 30 && !w.ai.steps.some((st) => st.op === 'work' && st.act === 'eat'); t += 0.1) tick(sim, w)
+    expect(corpse.meat).toBe(meat0) // arrived, nothing eaten yet
+    for (let t = 0; t < CARRION.eatS + 1; t += 0.1) tick(sim, w)
+    expect(corpse.meat).toBe(meat0 - 1) // one portion after eatS
+    // The player walks up: the (not starving) wolf runs off and the corpse keeps its remaining meat.
+    sim.player.x = w.x + 10
+    sim.player.z = w.z
+    sim.actors.update(sim.player)
+    for (let t = 0; t < 2; t += 0.1) tick(sim, w)
+    expect(w.fleeFrom).toBeDefined()
+    expect(w.ai.steps.some((st) => st.op === 'work' && st.act === 'eat')).toBe(false)
+    for (let t = 0; t < CARRION.eatS + 1; t += 0.1) tick(sim, w)
+    expect(corpse.meat).toBe(meat0 - 1)
+  })
+
+  it('TRACE-01: hits leave blood traces that fade (faster in rain), are saved and lure predators', () => {
+    const { sim, x, z } = wild()
+    const boar = spawn(sim, 'boar', x + 5, z)
+    applyDamage(sim, boar, 12, 'cut', sim.player)
+    const tr = sim.tracesNear(boar.x, boar.z, 2)
+    expect(tr.length).toBe(1)
+    const trace = tr[0]!
+    const i0 = trace.intensity
+    expect(i0).toBeGreaterThan(0)
+    // Fading: dry vs rain over 2 calendar hours each.
+    sim.state.weather.kind = 'clear'
+    traceSystem(sim, 300)
+    const dry = i0 - trace.intensity
+    const before = trace.intensity
+    sim.state.weather.kind = 'rain'
+    traceSystem(sim, 300)
+    const wet = before - Math.max(0, trace.intensity)
+    expect(dry).toBeGreaterThan(0)
+    expect(wet).toBeGreaterThan(dry * 2)
+    // Saved with the game state.
+    applyDamage(sim, boar, 20, 'cut', sim.player)
+    const saved = JSON.parse(JSON.stringify(snapshot(sim)))
+    expect(saved.traces.length).toBeGreaterThan(0)
+    // A hungry predator within smell range goes to investigate the blood.
+    sim.player.x += 400
+    sim.actors.update(sim.player)
+    sim.state.weather.kind = 'clear'
+    const t = sim.state.traces.at(-1)!
+    t.intensity = 1
+    const w = spawn(sim, 'wolf', t.x + 40, t.z)
+    w.hungerH = 15
+    for (let k = 0; k < 20 && w.ai.goal !== 'investigate'; k++) tick(sim, w)
+    expect(w.ai.goal).toBe('investigate')
   })
 })

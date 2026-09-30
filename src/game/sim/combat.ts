@@ -17,6 +17,7 @@ import { fleeHome } from './fauna/perception'
 import { qualityMult, removeItem, wearTool } from './inventory'
 import { questOnKill } from './quests'
 import { addRep, addStat, settlementAt } from './reputation'
+import { bleedAt } from './traces'
 import { applyPartDamage, heal, hp, makeIll, penalty } from './vitals'
 
 const FISTS: WeaponStats = { kind: 'melee', reach: 0.7, damage: 4, dmgType: 'blunt', cooldown: 0.7, sharpness: 0, stamina: 6 }
@@ -84,6 +85,7 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
   applyPartDamage(target.vitals, part, dmg, type !== 'blunt')
   sim.emit({ type: 'hit', x: target.x, y: target.y + 1, z: target.z, targetId: target.id, dmg })
   alertAround(sim, target.x, target.z, DECISION.alertHitM)
+  bleedAt(sim, target.x, target.z, dmg)
   // Rabies spreads by bites (vision §17.1).
   if (attacker?.kind === 'animal' && (attacker as Animal).rabid && type !== 'blunt') {
     if (target.kind === 'animal' && sim.rng.chance(0.2)) (target as Animal).rabid = true
@@ -180,7 +182,7 @@ export function killAnimal(sim: Sim, a: Animal, killer?: Actor) {
       const hh = sim.state.households[a.householdId]
       if (hh) addRep(sim, hh.settlementId, { honesty: -10 }, 'Zabito cudze zwierzę')
     }
-    questOnKill(sim, a.species, a.x, a.z)
+    questOnKill(sim, a.species, a.x, a.z, a.denId)
   }
 }
 
