@@ -5,6 +5,7 @@
  */
 import type { Sim } from './sim'
 import type { Human } from './types'
+import { TAX } from '../config/calibration'
 
 export function payToTreasury(sim: Sim, sid: number, from: Human, amount: number): number {
   const st = sim.state.settlements[sid]
@@ -23,6 +24,21 @@ export function payFromTreasury(sim: Sim, sid: number, to: Human, amount: number
   st!.treasury -= paid
   to.money += paid
   return paid
+}
+
+/** Once per calendar day: each living NPC pays TAX.rate of its purse above TAX.exempt (floor). */
+export function collectTaxes(sim: Sim) {
+  const day = Math.floor(sim.state.time.cal / 86400)
+  for (const st of sim.state.settlements) {
+    if (st.taxDay === day) continue
+    const first = st.taxDay === undefined
+    st.taxDay = day
+    if (first) continue // no retroactive tax at game start / after load of an old save
+    for (const n of sim.npcsOf(st.id)) {
+      if (n.vitals.dead) continue
+      payToTreasury(sim, st.id, n, Math.floor(Math.max(0, n.money - TAX.exempt) * TAX.rate))
+    }
+  }
 }
 
 /** All money in the world: purses (player + NPCs, dead included) + treasuries. Conservation checks. */

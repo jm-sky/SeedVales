@@ -52,6 +52,7 @@ describe('save / load', () => {
     const sim = testSim()
     const st = JSON.parse(JSON.stringify(snapshot(sim)))
     st.saveVersion = 1
+    for (const s of st.settlements) delete s.treasury // a real v1 save has no treasuries
     st.px.orders = [{ id: 'o1', npcId: 1, recipe: 'knife', paid: 5, price: 10, readyAt: 0, status: 'ready' }, { id: 'o2', npcId: 1, recipe: 'axe', paid: 5, price: 10, readyAt: 0, status: 'collected' }]
     st.npcs[0].ai.cooldowns.caravan_back = 123
     const m = migrate(st)

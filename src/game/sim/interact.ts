@@ -392,13 +392,13 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
   }
   const s = b.inv.items[stackIdx]
   if (!s) return ''
+  const n = fitQty(p, s)
+  if (n <= 0) return 'Nie uniesiesz więcej.'
   if (b.owner.startsWith('household') && checkTheft(sim, b)) return 'Przyłapano cię!'
   if (b.kind === 'warehouse') {
     const rep = sim.state.settlements[b.settlementId]!.rep
     if (rep.helpfulness < 10) addRep(sim, b.settlementId, { honesty: -1, helpfulness: -1 })
   }
-  const n = fitQty(p, s)
-  if (n <= 0) return 'Nie uniesiesz więcej.'
   const partial = n < s.qty
   const moved = removeStack(b.inv, s, n)!
   addItem(p.inv, moved)

@@ -185,6 +185,8 @@ export interface SettlementState {
   warehouseId?: string
   /** Settlement treasury (copper): pays quest rewards and caravan fees, receives inn/penance money. */
   treasury: number
+  /** Calendar day index of the last tax collection. */
+  taxDay?: number
   /** Pending reputation spread from other settlements (gameplay seconds). */
   pendingRep: { at: number; delta: Partial<Record<RepDim, number>>; from: number }[]
 }
@@ -309,6 +311,8 @@ export interface Order {
   price: number
   readyAt: number
   status: 'waiting' | 'ready'
+  /** Materials set aside from the smith's store when ordering (consumed at forging). */
+  reserved?: ItemStack[]
   /** Forged item held by the smith until collected (materials already consumed). */
   item?: ItemStack
 }

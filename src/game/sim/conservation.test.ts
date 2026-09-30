@@ -2,10 +2,12 @@
  * Resource & money conservation (game--002 group B, prompt §8): every flow has a source and a sink.
  */
 import { describe, expect, it } from 'vitest'
+import { perf } from '../diag/perf'
 import { dropItem } from './actions'
 import { placeSite } from './build'
+import { killAnimal } from './combat'
 import { runOption, transferToStorage } from './interact'
-import { addItem, carriedWeight, carryCapacity, countItem, newStack } from './inventory'
+import { addItem, carriedWeight, carryCapacity, countItem, equipToMain, newStack } from './inventory'
 import { makeAnimal } from './newGame'
 import { updateNpc } from './npc/ai'
 import { houseOf } from './npc/queries'
@@ -25,7 +27,9 @@ describe('conservation of resources and money', () => {
     for (const w of sim.state.buildings.filter((b) => b.kind === 'well')) w.x += 5000 // no well next to the trough
     sim.rebuildBuildingIndex()
     trough.water = 0
-    const bucket = shepherd.inv.items.find((s) => s.id === 'bucket') ?? (addItem(shepherd.inv, newStack('bucket')), shepherd.inv.items.find((s) => s.id === 'bucket')!)
+    // Shepherds carry a bucket in their kit (the trough duty needs it).
+    const bucket = shepherd.inv.items.find((s) => s.id === 'bucket')!
+    expect(bucket).toBeDefined()
     bucket.water = 0
     expect(WORK_ACTS.fill_trough!(sim, shepherd, trough.id, 1)).toBe(false)
     expect(trough.water).toBe(0)
@@ -78,8 +82,10 @@ describe('conservation of resources and money', () => {
     // Inn without an innkeeper → treasury.
     const inn = sim.state.buildings.find((b) => b.kind === 'inn')
     if (inn) {
-      for (const n of sim.state.npcs) if (n.profession === 'trader' && n.settlementId === inn.settlementId) n.vitals.dead = true
+      const keepers = sim.state.npcs.filter((n) => n.profession === 'trader' && n.settlementId === inn.settlementId)
+      for (const n of keepers) n.profession = undefined // no innkeeper for this night
       runOption(sim, { type: 'building', id: inn.id }, 'inn_sleep')
+      for (const n of keepers) n.profession = 'trader'
       sim.timeScale = 1
       sim.state.px.activity = undefined
     }
@@ -99,10 +105,14 @@ describe('conservation of resources and money', () => {
     sim.state.px.badges.thief = { at: 0, count: 1 }
     tryApologize(sim, 'thief')
     expect(totalMoney(sim)).toBe(m0)
-    // Two days of simulation incl. caravans and NPC food purchases.
+    // Three days of simulation incl. caravans (departures on even days 07–10) and NPC food purchases.
     playerFarAway(sim)
-    run(sim, 2 * 3600, 1)
+    perf.reset()
+    run(sim, 3 * 3600, 1)
+    expect(perf.report().counters['economy.caravanTrades'] ?? 0).toBeGreaterThan(0)
     expect(totalMoney(sim)).toBe(m0)
+    // Taxes recirculate purses to treasuries; caravans are paid by their home settlement.
+    expect(sim.state.settlements[0]!.treasury).toBeGreaterThan(0)
   }, 60_000)
 
   it('ITEM-02: pickup, storage and buying respect carry capacity (take what fits, rest stays)', () => {
@@ -164,5 +174,43 @@ describe('conservation of resources and money', () => {
     expect(sim.state.sites).not.toContain(site)
     const dropped = sim.state.ground.slice(g0).map((g) => `${g.stack.id}:${g.stack.qty}`).sort()
     expect(dropped).toEqual(['branch:2', 'stone:4'])
+  })
+
+  it('ECON-01: treasuries are not drained by caravans over 6 days (home pays its trader, daily tax recirculates)', () => {
+    const sim = testSim()
+    playerFarAway(sim)
+    const t0 = sim.state.settlements.map((s) => s.treasury)
+    run(sim, 6 * 3600, 2)
+    const t1 = sim.state.settlements.map((s) => s.treasury)
+    t1.forEach((t, i) => expect(t, `settlement ${i}`).toBeGreaterThanOrEqual(t0[i]! * 0.8))
+  }, 120_000)
+
+  it('NPC-04: a fight ends with a usable weapon — shepherd keeps the staff, hunter shoots again after a knife fight', () => {
+    const sim = testSim()
+    const shepherd = sim.state.npcs.find((n) => n.profession === 'shepherd' && n.age === 'adult')!
+    const main0 = shepherd.eq.main?.id
+    shepherd.ai.goal = 'fight'
+    shepherd.ai.replanAt = 1e9
+    updateNpc(sim, shepherd, 0.1, false) // no threat → fight ends
+    expect(shepherd.eq.main?.id).toBe(main0)
+    const hunter = sim.state.npcs.find((n) => n.profession === 'hunter' && n.age === 'adult')!
+    const knife = hunter.inv.items.find((s) => s.id === 'knife')!
+    equipToMain(hunter, knife)
+    expect(hunter.eq.main?.id).toBe('knife')
+    const deer = makeAnimal(sim.nextId(), 'deer', 'adult', hunter.x + 20, hunter.z, hunter.y, sim.rng)
+    sim.addAnimal(deer)
+    expect(WORK_ACTS.shoot!(sim, hunter, String(deer.id), 1)).toBe(true)
+    expect(hunter.eq.main?.id).toBe('short_bow')
+  })
+
+  it('COMBAT-03: a killed rat leaves no (ghost) corpse in state or index', () => {
+    const sim = testSim()
+    const p = sim.player
+    const rat = makeAnimal(sim.nextId(), 'rat', 'adult', p.x + 1, p.z, p.y, sim.rng)
+    sim.addAnimal(rat)
+    const n0 = sim.state.corpses.length
+    killAnimal(sim, rat, p)
+    expect(sim.state.corpses.length).toBe(n0)
+    expect(sim.corpsesNear(rat.x, rat.z, 3).length).toBe(0)
   })
 })

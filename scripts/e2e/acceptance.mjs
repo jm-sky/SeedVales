@@ -153,6 +153,24 @@ try {
   check(results, '4d. sprzedaż gałęzi', m1 > m0, `${m0} → ${m1}`)
   await clickTest('panel-close')
 
+  // 4e. Order at the blacksmith through the UI, then cancel it (deposit refunded).
+  await S(() => {
+    const sv = window.__sv
+    const smith = sv.game.sim.state.npcs.find((n) => n.profession === 'blacksmith')
+    window.__smith = smith.id
+    sv.approach(smith.x, smith.z, 1.4)
+  })
+  await waitTarget((t) => t.opts.includes('orders'))
+  await key('KeyE')
+  await clickTest('opt-orders')
+  const om0 = await S(() => window.__sv.game.sim.player.money)
+  await clickTest('order-knife')
+  const placed = await S(() => ({ n: window.__sv.game.sim.state.px.orders.length, money: window.__sv.game.sim.player.money, id: window.__sv.game.sim.state.px.orders[0]?.id }))
+  if (placed.id) await clickTest(`cancel-${placed.id}`)
+  const om1 = await S(() => ({ n: window.__sv.game.sim.state.px.orders.length, money: window.__sv.game.sim.player.money }))
+  check(results, '4e. zamówienie u kowala (UI) i anulowanie ze zwrotem zaliczki', placed.n === 1 && placed.money < om0 && om1.n === 0 && om1.money === om0, { om0, placed, om1 })
+  await clickTest('panel-close')
+
   // 5. Start and finish a simple construction (campfire) through the build panel.
   await S(() => {
     const sv = window.__sv

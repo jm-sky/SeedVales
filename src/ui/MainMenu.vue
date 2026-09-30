@@ -14,7 +14,7 @@ const seedText = ref(new URLSearchParams(location.search).get('seed') ?? '1337')
 const quality = ref<QualityProfile>((localStorage.getItem('sv-quality') as QualityProfile) || (matchMedia('(pointer: coarse)').matches ? 'low' : 'medium'))
 const saves = ref<SaveMeta[]>([])
 /** Known generator mismatch → the save cannot be loaded (checked again on load). */
-const incompatible = (s: SaveMeta) => s.genVersion !== undefined && s.genVersion !== GEN_VERSION
+const incompatible = (s: SaveMeta) => s.genVersion !== GEN_VERSION
 
 onMounted(async () => {
   try {

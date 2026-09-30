@@ -29,6 +29,8 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 ## Ekonomia
 
 - **D-ECON-1 — Pieniądze tylko się przemieszczają: każdy przepływ ma płatnika i odbiorcę.** Portfele gracza i NPC (także zmarłych) + skarbce osad (`SettlementState.treasury`, start `TREASURY_START`: SM 150, MD 300, LG 600 m). Skarbiec płaci nagrody za zadania i opłaty karawan; przyjmuje noclegi bez gospodarza i przeprosiny. Jawne źródło z zewnątrz: monety wykopane łopatą w osadzie (ITEM-04). Podatki/dochody skarbca — poza v1 (skarbiec może się wyczerpać: nagrody wtedy częściowe).
+- **D-ECON-3 — Karawanie płaci jej własna osada (skarbiec domowy), a osady pobierają dzienny podatek** 3% od sakiewek NPC ponad 20 m (`TAX`, system `taxes` co 30 s, raz na dzień kalendarza). Zamyka obieg pieniędzy w osadzie; bez tego skarbiec osady domowej gracza pustoszał w ~14 dni (review 002 #5). Symulacja 10 dni: skarbce rosną powoli, suma pieniędzy stała.
+- **D-CRAFT-1 — Zamówienie u kowala rezerwuje materiały z magazynu kowala w chwili zamówienia**; zamówić można tylko receptury, na które kowal ma materiały; anulowanie zwraca zaliczkę (z sakiewki kowala) i materiały.
 - **D-ECON-2 — Udźwig jest twardym limitem przy podnoszeniu, braniu z magazynu i kupnie** (`fitQty`); przeciążenie (spowolnienie ×0.5) zostaje tylko jako stan przejściowy (np. zdjęty plecak).
 
 ## Zapis

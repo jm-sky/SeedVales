@@ -5,13 +5,12 @@
  * @subdomain ai
  */
 import type { Sim } from '../sim'
-import type { Human, ItemStack } from '../types'
+import type { Human } from '../types'
 import { COMBAT, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
-import { itemDef } from '../../data/items'
 import { SPECIES } from '../../data/species'
 import { perf } from '../../diag/perf'
 import { isDown, killNpc, meleeAttack, weaponOf } from '../combat'
-import { equipToMain } from '../inventory'
+import { wieldBest } from '../inventory'
 import { steerTo } from '../movement'
 import { type Exertion, hp, penalty, updateVitals } from '../vitals'
 import { goalOptions } from './goals'
@@ -67,24 +66,12 @@ function failGoal(sim: Sim, h: Human, mult = 1) {
   ai.replanAt = 0
 }
 
-/** Swaps the best carried weapon of a kind into the main hand (no-op if already wielding one). */
-function wieldBest(h: Human, kind: 'melee' | 'ranged') {
-  if (weaponOf(h).kind === kind && h.eq.main) return
-  let best: ItemStack | undefined
-  for (const s of h.inv.items) {
-    const w = itemDef(s.id).weapon
-    if (w?.kind === kind && (s.dur ?? 1) > 0 && (!best || w.damage > itemDef(best.id).weapon!.damage)) best = s
-  }
-  if (best) equipToMain(h, best)
-}
-
 function fight(sim: Sim, h: Human, dt: number, full: boolean) {
   const t = threatNear(sim, h, 60)
   if (!t) {
     h.ai.goal = null
     h.ai.steps = []
     h.combat = false
-    wieldBest(h, 'ranged')
     return
   }
   h.combat = true

@@ -602,7 +602,7 @@
    "behavior": "Zamówienia u NPC (kowal) z zaliczką",
    "verify": "vitest + e2e",
    "status": "verified",
-   "evidence": "src/game/sim/features.test.ts CRAFT-02 (deposit → ready → collect) + CRAFT-02 materials test: smith consumes recipe inputs from house store at forging, no materials → order stays waiting, collect gives the buffered forged stack (review #1 fixed, game--002 A1); orders panel"
+   "evidence": "src/game/sim/features.test.ts CRAFT-02 (deposit → ready → collect) + CRAFT-02 materials test: smith consumes recipe inputs from house store at forging, no materials → order stays waiting, collect gives the buffered forged stack (review #1 fixed, game--002 A1); orders panel | review 002 #4: materials reserved at ordering (Order.reserved), only feasible recipes orderable (canOrder), cancelOrder refunds deposit + returns materials; features.test.ts CRAFT-02 cancel test; e2e acceptance 4e order+cancel through UI"
   },
   {
    "id": "TRADE-01",
@@ -773,7 +773,7 @@
    "behavior": "Osady samowystarczalne w żywności; wymiana surowców (handlarz wędrowny między osadami)",
    "verify": "vitest długiej symulacji",
    "status": "verified",
-   "evidence": "economy.test.ts (3 days far LOD: all fed/alive, caravan trades) + ECON-01 caravan heads home without trip + conservation.test.ts ECON-01: totalMoney (purses + treasuries) constant across inn/quest/order/penance/2 days of caravans (review #2/#10 fixed via h.trip and settlement treasury, game--002 A2/B4)"
+   "evidence": "economy.test.ts (3 days far LOD: all fed/alive, caravan trades) + ECON-01 caravan heads home without trip + conservation.test.ts ECON-01: totalMoney (purses + treasuries) constant across inn/quest/order/penance/2 days of caravans (review #2/#10 fixed via h.trip and settlement treasury, game--002 A2/B4) | review 002 #5: caravan fee paid by home treasury + daily 3% tax on NPC purses above 20 m (D-ECON-3); conservation.test.ts: treasuries not drained over 6 days, caravan trade asserted"
   },
   {
    "id": "VOICE-01",

@@ -14,7 +14,10 @@ Wymagania z dodatku są w `docs/state/FEATURES.json` ze `scope: "v2"` i statusem
 |---|---|---|
 | [game--002--v1-review-fixes](../plans/game--002--v1-review-fixes.md) | poprawki z review: ekonomia/zasoby, save↔genVersion, pętle AI, multi-seed WORLD-04 | done |
 | [diag--001--sim-hotspots-and-perf-report](../plans/diag--001--sim-hotspots-and-perf-report.md) | O(n×m) → spatial query, audyt skanów, `docs/state/PERF.md` | done |
-| (w PROGRESS) | RES-04 test plonów sezonowych; WORLD-10 jawnie „nieodsłuchane” | — |
+| (w PROGRESS) | RES-04 test plonów sezonowych; WORLD-10 jawnie „nieodsłuchane” | done |
+| [review 002](../reviews/2026-09-30--002--v1-closure-review.md) | niezależne review etapu 0 + poprawki | done |
+
+**Etap 0 zamknięty 2026-09-30 — v1 ogłoszone (PROGRESS.md).**
 
 Wyjście z etapu 0: `pnpm check` + `pnpm e2e` zielone, FEATURES bez fałszywych `verified`, PROGRESS.md mówi jasno „v1 ukończone” albo co blokuje.
 

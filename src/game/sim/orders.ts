@@ -1,6 +1,7 @@
 /**
- * Orders at a blacksmith: pay 50% deposit, NPC forges during work consuming the recipe's materials
- * from the household store (no materials → order keeps waiting), collect paying the rest.
+ * Orders at a blacksmith: only recipes the smith has materials for; the materials are reserved
+ * from the household store when ordering (50% deposit), the smith forges after readyAt, the player
+ * collects paying the rest or cancels (deposit refunded, materials back to the store).
  * Quality from blacksmith skill (rolled at forging).
  * @domain crafting
  * @subdomain orders
@@ -10,23 +11,34 @@ import type { Human, Inventory, Order } from './types'
 import { itemDef } from '../data/items'
 import { recipeById } from '../data/recipes'
 import { rollQuality } from './craft'
-import { addItem, hasItems, newStack, removeItem } from './inventory'
+import { addItem, fitQty, hasItems, newStack, removeItem } from './inventory'
+import { houseOf } from './npc/queries'
 
 export const orderPrice = (recipeId: string) => {
   const r = recipeById(recipeId)
   return r ? Math.round(itemDef(r.output.item).price * 1.1) : 0
 }
 
+/** Can the smith take this order now (materials in the household store)? */
+export function canOrder(sim: Sim, smith: Human, recipeId: string): boolean {
+  const r = recipeById(recipeId)
+  const store = houseOf(sim, smith)?.inv
+  return !!r && !!store && !smith.vitals.dead && hasItems(store, r.inputs)
+}
+
 export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
   const r = recipeById(recipeId)
   if (!r) return ''
+  if (!canOrder(sim, smith, recipeId)) return `${smith.name} nie ma teraz materiałów na to zamówienie.`
   const price = orderPrice(recipeId)
   const dep = Math.ceil(price / 2)
   if (sim.player.money < dep) return 'Za mało na zaliczkę.'
   sim.player.money -= dep
   smith.money += dep
+  const store = houseOf(sim, smith)!.inv!
+  const reserved = r.inputs.flatMap((inp) => removeItem(store, inp.item, inp.qty))
   const id = r.output.item
-  sim.state.px.orders.push({ id: `ord-${sim.nextId()}`, npcId: smith.id, recipeId: r.id, itemId: id, paid: dep, price, readyAt: sim.state.time.cal + 10 * 3600, status: 'waiting' })
+  sim.state.px.orders.push({ id: `ord-${sim.nextId()}`, npcId: smith.id, recipeId: r.id, itemId: id, paid: dep, price, readyAt: sim.state.time.cal + 10 * 3600, status: 'waiting', reserved })
   return `Zamówiono: ${itemDef(id).name}. Gotowe za ok. 10 godzin.`
 }
 
@@ -36,8 +48,13 @@ export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
  */
 export function forgeOrder(sim: Sim, smith: Human, store: Inventory, o: Order): boolean {
   const r = recipeById(o.recipeId)
-  if (!r || !hasItems(store, r.inputs)) return false
-  for (const inp of r.inputs) removeItem(store, inp.item, inp.qty)
+  if (!r) return false
+  if (o.reserved) o.reserved = undefined // materials were set aside when ordering
+  else {
+    // Orders from before reservation (old saves): consume from the store now.
+    if (!hasItems(store, r.inputs)) return false
+    for (const inp of r.inputs) removeItem(store, inp.item, inp.qty)
+  }
   o.item = newStack(r.output.item, 1, { q: rollQuality(sim, smith.skills.blacksmith) })
   o.status = 'ready'
   return true
@@ -50,6 +67,7 @@ export function collectOrder(sim: Sim, orderId: string): string {
   if (sim.player.money < rest) return 'Za mało pieniędzy na dopłatę.'
   const smith = sim.human(o.npcId)
   if (!smith) return 'Kowala już nie ma — nie ma komu zapłacić.'
+  if (fitQty(sim.player, o.item) < o.item.qty) return 'Nie uniesiesz tego — zrób miejsce w ekwipunku.'
   sim.player.money -= rest
   smith.money += rest
   const item = o.item
@@ -57,4 +75,21 @@ export function collectOrder(sim: Sim, orderId: string): string {
   sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
   addItem(sim.player.inv, item)
   return `Odebrano: ${itemDef(item.id).name} (jakość: ${['niska', 'średnia', 'wysoka', 'wyjątkowa'][item.q ?? 1]}).`
+}
+
+/** Cancels an order: deposit back from the smith's purse, materials/forged item back to the store. */
+export function cancelOrder(sim: Sim, orderId: string): string {
+  const o = sim.state.px.orders.find((x) => x.id === orderId)
+  if (!o) return ''
+  const smith = sim.human(o.npcId)
+  const store = smith ? houseOf(sim, smith)?.inv : undefined
+  if (store) {
+    for (const s of o.reserved ?? []) addItem(store, s)
+    if (o.item) addItem(store, o.item)
+  }
+  const refund = smith ? Math.min(o.paid, smith.money) : 0
+  if (smith) smith.money -= refund
+  sim.player.money += refund
+  sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
+  return refund < o.paid ? `Anulowano — zwrot tylko ${refund} z ${o.paid} m.` : `Anulowano zamówienie, zwrot zaliczki ${refund} m.`
 }

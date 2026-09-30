@@ -18,6 +18,7 @@ import { countNear } from './queries'
 import { questSystem } from './quests'
 import { reputationSystem } from './reputation'
 import { growthFactor, seasonOf } from './time'
+import { collectTaxes } from './treasury'
 import { isBadWeather, updateWeather } from './weather'
 
 function ecology(sim: Sim, dt: number) {
@@ -135,6 +136,7 @@ export function installSystems(sim: Sim) {
     { name: 'regrow', interval: 60, run: (s) => regrowNodes(s) },
     { name: 'reputation', interval: 5, run: (s) => reputationSystem(s) },
     { name: 'quests', interval: 10, run: (s) => questSystem(s) },
+    { name: 'taxes', interval: 30, run: (s) => collectTaxes(s) },
   ]
   sim.systems = sys
   perf.gauge('sim.systems', sys.length)

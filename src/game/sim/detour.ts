@@ -62,7 +62,7 @@ export function detourPoint(sim: Sim, ax: number, az: number, tx: number, tz: nu
   let hit: Building | undefined
   let hitT = Infinity
   for (const b of sim.buildingsNear((ax + tx) / 2, (az + tz) / 2, d / 2 + 10)) {
-    if (NO_COLLIDE.has(b.kind) || inside(b, tx, tz, m) || inside(b, ax, az, m)) continue
+    if (NO_COLLIDE.has(b.kind) || inside(b, tx, tz, m) || inside(b, ax, az, radius - 0.05)) continue
     const t = segmentHitsBox(b, ax, az, tx, tz, m)
     if (t !== null && t < hitT) {
       hitT = t

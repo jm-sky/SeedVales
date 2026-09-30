@@ -35,7 +35,14 @@ function openDb(): Promise<IDBDatabase> {
         cur.onsuccess = () => {
           const c = cur.result
           if (!c) return
-          t.objectStore('meta').put((c.value as SaveRecord).meta, c.key)
+          const rec = c.value as SaveRecord
+          let genVersion = 0 // unknown → treated as incompatible
+          try {
+            genVersion = (JSON.parse(rec.json) as GameState).genVersion ?? 0
+          } catch {
+            /* corrupt save: stays flagged */
+          }
+          t.objectStore('meta').put({ ...rec.meta, genVersion }, c.key)
           c.continue()
         }
       }
@@ -93,7 +100,7 @@ export interface SaveMeta {
   savedAt: number
   cal: number
   bytes: number
-  /** Generator version the save belongs to (absent in saves before SAVE_VERSION 2). */
+  /** Generator version the save belongs to (0 = unknown, backfilled from a pre-v2 save). */
   genVersion?: number
 }
 

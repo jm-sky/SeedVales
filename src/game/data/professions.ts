@@ -70,7 +70,7 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
   },
   shepherd: {
     id: 'shepherd', name: 'Pasterz', weapon: 'staff', money: [15, 40], workHours: [6, 18], shirt: 0x9a8c70,
-    kit: [{ item: 'sling', qty: 1 }, { item: 'sling_stone', qty: 15 }, { item: 'waterskin_m', qty: 1 }, { item: 'bandage', qty: 1 }, { item: 'blanket', qty: 1 }, { item: 'rope', qty: 1 }, { item: 'knife', qty: 1 }],
+    kit: [{ item: 'sling', qty: 1 }, { item: 'sling_stone', qty: 15 }, { item: 'bucket', qty: 1 }, { item: 'waterskin_m', qty: 1 }, { item: 'bandage', qty: 1 }, { item: 'blanket', qty: 1 }, { item: 'rope', qty: 1 }, { item: 'knife', qty: 1 }],
     skills: { survival: 30, ranged: 25 },
     store: [{ item: 'wool', qty: 6 }, { item: 'milk', qty: 2 }, { item: 'bread', qty: 3 }, { item: 'carrot', qty: 3 }],
   },

@@ -70,7 +70,10 @@ export const COMBAT = {
 /** Settlement treasury at world start (copper) — the only initial money besides NPC/player purses (D-ECON-1). */
 export const TREASURY_START = { SM: 150, MD: 300, LG: 600, XL: 1200 } as const
 
-/** Caravan: fee the visited settlement's treasury pays the trader per trip (base + per unit moved). */
+/** Daily settlement tax on NPC purses above `exempt` copper (money recirculates to the treasury). */
+export const TAX = { rate: 0.03, exempt: 20 }
+
+/** Caravan: fee the home settlement's treasury pays its trader per trip (base + per unit moved). */
 export const CARAVAN_FEE = { base: 5, perUnit: 1 }
 
 /** Days for a sheep's wool to regrow after shearing. */

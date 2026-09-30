@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
 import { RECIPES } from '@/game/data/recipes'
-import { collectOrder, orderPrice, placeOrder } from '@/game/sim/orders'
+import { cancelOrder, canOrder, collectOrder, orderPrice, placeOrder } from '@/game/sim/orders'
 import { formatClock } from '@/game/sim/time'
 import PanelFrame from './PanelFrame.vue'
 
@@ -17,12 +17,16 @@ const d = computed(() => {
   if (!n) return null
   return {
     n,
-    recipes: RECIPES.filter((r) => r.category === 'smithing' && r.quality).map((r) => ({ r, price: orderPrice(r.id) })),
+    recipes: RECIPES.filter((r) => r.category === 'smithing' && r.quality).map((r) => ({ r, price: orderPrice(r.id), ok: canOrder(g.sim, n, r.id) })),
     orders: g.sim.state.px.orders.filter((o) => o.npcId === n.id),
   }
 })
 function order(id: string) {
   game.value.showToast(placeOrder(game.value.sim, d.value!.n, id))
+  version.value++
+}
+function cancel(id: string) {
+  game.value.showToast(cancelOrder(game.value.sim, id))
   version.value++
 }
 function collect(id: string) {
@@ -48,12 +52,17 @@ function collect(id: string) {
       >
         <span>{{ itemDef(e.r.output.item).name }}</span>
         <Button
+          v-if="e.ok"
           size="xs"
           :data-testid="`order-${e.r.id}`"
           @click="order(e.r.id)"
         >
           Zamów ({{ e.price }} m, zaliczka {{ Math.ceil(e.price / 2) }})
         </Button>
+        <span
+          v-else
+          class="text-xs text-muted-foreground"
+        >brak materiałów</span>
       </div>
     </div>
     <h3 class="mb-1 mt-3 text-xs font-semibold uppercase text-muted-foreground">
@@ -71,6 +80,14 @@ function collect(id: string) {
         @click="collect(o.id)"
       >
         Odbierz (dopłata {{ o.price - o.paid }} m)
+      </Button>
+      <Button
+        size="xs"
+        variant="ghost"
+        :data-testid="`cancel-${o.id}`"
+        @click="cancel(o.id)"
+      >
+        Anuluj
       </Button>
     </div>
   </PanelFrame>

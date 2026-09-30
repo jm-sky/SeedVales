@@ -71,6 +71,10 @@ Wniosek: przy obecnych populacjach (91 NPC, ~180–240 zwierząt) zmiana jest ne
 | dense-forest | 6.5 / 7.9 | 6.2 / 7.7 | 91 | 1.08 M | chunk build 0.4 / 1.1, heap 164 MB |
 | chunk-traverse | 13.1 / 74.8 | — | — | — | chunk build 3.6 / 4.7 (max 8.1), veg rebuild 4.9 / 30.7, nodes gen 0.3 / 0.7 per chunk, heap 206 MB |
 
+### Uwaga o szumie (powtórka po review 002)
+
+Licznik „>4 ms” w `long-run-5-days` jest bardzo czuły na obciążenie maszyny: ten sam kod dał 3–5 (spokojna maszyna) i 35 (load average ~2) — test A/B HEAD vs poprawki review w tych samych warunkach: 35 vs 27. Nie jest to regresja kodu; p95 wszystkich scen nadal < 1 ms.
+
 ## Znane wąskie gardła
 
 1. **Przebudowa roślinności przy przeskoku** (`render.vegetationRebuild`): mediana 4.9 ms, ale p95 30.7 ms przy teleporcie o 100 m (generacja ~30 chunków węzłów naraz + wypełnienie instancji; 13 próbek). Przy marszu przebudowa co ~64 m (pół chunka) → pojedynczy koszt ~5 ms. Poprawa (przy `render--001`): prefetch chunków węzłów po 1–2 na klatkę w pierścieniu `vegFar` + margines i/lub rozłożenie wypełniania instancji na kilka klatek.

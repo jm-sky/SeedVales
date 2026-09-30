@@ -150,13 +150,15 @@ function onAnimalHurt(sim: Sim, a: Animal, attacker: Actor) {
 export function killAnimal(sim: Sim, a: Animal, killer?: Actor) {
   a.vitals.dead = true
   const sp = SPECIES[a.species]
-  sim.addCorpse({
-    id: sim.nextId(), species: a.species, variant: a.variant, x: a.x, z: a.z, rot: a.rot,
-    diedAt: sim.state.time.cal, butchered: false, meat: Math.round(sp.corpse.meat * VARIANT_MULT[a.variant].size),
-  })
+  // Rats vanish (bones not tracked); everything else leaves a corpse.
+  if (a.species !== 'rat') {
+    sim.addCorpse({
+      id: sim.nextId(), species: a.species, variant: a.variant, x: a.x, z: a.z, rot: a.rot,
+      diedAt: sim.state.time.cal, butchered: false, meat: Math.round(sp.corpse.meat * VARIANT_MULT[a.variant].size),
+    })
+  }
   sim.emit({ type: 'death', id: a.id })
   sim.removeAnimal(a)
-  if (a.species === 'rat') sim.state.corpses.pop() // rats vanish (bones not tracked)
   if (killer?.kind === 'player') {
     addStat(sim, 'kills')
     if (a.species === 'rat') addStat(sim, 'ratsKilled')

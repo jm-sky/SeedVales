@@ -11,7 +11,7 @@ import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
 import { applyDamage, weaponOf } from '../combat'
-import { addItem, countItem, findFood, newStack, removeItem } from '../inventory'
+import { addItem, countItem, findFood, newStack, removeItem, wieldBest } from '../inventory'
 import { forgeOrder } from '../orders'
 import { growthFactor } from '../time'
 import { payFromTreasury } from '../treasury'
@@ -273,13 +273,13 @@ export const WORK_ACTS: Record<string, Act> = {
     const a = sim.actor(Number(ref)) as Animal | undefined
     if (!a || a.vitals.dead) return false
     const d = Math.hypot(a.x - h.x, a.z - h.z)
-    const w = weaponOf(h)
-    if (w.kind !== 'ranged' || d > 45) return false
     if (countItem(h.inv, 'arrow') <= 0) {
       const store = storeOf(sim, h)
       if (store && countItem(store, 'arrow') > 0) for (const s of removeItem(store, 'arrow', 10)) addItem(h.inv, s)
-      else return false
     }
+    wieldBest(h, 'ranged') // a close fight may have left the knife in hand
+    const w = weaponOf(h)
+    if (w.kind !== 'ranged' || d > 45 || countItem(h.inv, 'arrow') <= 0) return false
     removeItem(h.inv, 'arrow', 1)
     h.rot = Math.atan2(a.x - h.x, a.z - h.z)
     h.action = { kind: 'shoot', at: sim.state.time.play }
@@ -324,8 +324,8 @@ export const WORK_ACTS: Record<string, Act> = {
       if (!f) break
       for (const s of removeItem(there.inv, f.id, 1)) addItem(h.inv, s)
     }
-    // Fee paid by the visited settlement for the goods exchange (treasury → trader, D-ECON-1).
-    payFromTreasury(sim, there.settlementId, h, CARAVAN_FEE.base + CARAVAN_FEE.perUnit * moved)
+    // The home settlement pays its caravan trader for the exchange (treasury → trader, D-ECON-3).
+    payFromTreasury(sim, h.settlementId, h, CARAVAN_FEE.base + CARAVAN_FEE.perUnit * moved)
     h.trip = { phase: 'returning', since: h.trip?.since ?? sim.state.time.cal }
     perf.count('economy.caravanTrades')
     return true

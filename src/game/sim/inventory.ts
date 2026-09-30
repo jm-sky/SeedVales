@@ -120,6 +120,21 @@ export function invHasCap(inv: Inventory, cap: Capability): boolean {
   return inv.items.some((s) => (itemDef(s.id).caps ?? []).includes(cap))
 }
 
+/**
+ * NPC weapon choice: swaps the best carried weapon of a kind into the main hand (no-op if one is
+ * already wielded). Ranged weapons only with matching ammo carried.
+ */
+export function wieldBest(h: Human, kind: 'melee' | 'ranged') {
+  const usable = (s: ItemStack | undefined) => {
+    const w = s ? itemDef(s.id).weapon : undefined
+    return !!w && w.kind === kind && (s!.dur ?? 1) > 0 && (!w.ammo || h.inv.items.some((i) => itemDef(i.id).ammoKind === w.ammo))
+  }
+  if (usable(h.eq.main)) return
+  let best: ItemStack | undefined
+  for (const s of h.inv.items) if (usable(s) && (!best || itemDef(s.id).weapon!.damage > itemDef(best.id).weapon!.damage)) best = s
+  if (best) equipToMain(h, best)
+}
+
 /** Moves a tool from inventory to main hand (UI convenience, vision §27). Returns the equipped stack. */
 export function equipToMain(h: Human, stack: ItemStack): ItemStack {
   if (h.eq.main === stack) return stack

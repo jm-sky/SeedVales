@@ -2,15 +2,22 @@
 
 **Aktualizacja:** 2026-09-30, sesja 2 (długa pętla: domknięcie v1 → dodatek)
 
-## Sesja 2 (w toku)
+## Sesja 2
 
-- Start: `pnpm check` 54/54, e2e 3/3 + 15/15 + 6/6, 0 błędów konsoli.
-- **`game--002` done** (A1–A6, B1–B7, C1–C9 bez C6, D) — szczegóły w sekcji „Wynik” planu. `SAVE_VERSION` 4, `GEN_VERSION` 7 (starsze zapisy: migracja formatu v1→v4; inny generator → odrzut z komunikatem).
-- Przy okazji poprawione błędy odsłonięte nowym układem świata: ochrona/śmierć powalonego NPC (D-SIM-10), myśliwy vs dziki (D-SIM-9), objazd budynków (D-SIM-11), brakujące zagrody/koryta w generatorze osad, skarbiec osady (D-ECON-1).
-- Stan: `pnpm check` 86/86 (z `check-layers`), e2e 3/3 + 15/15 + 7/7, 0 błędów konsoli. `bench:sim`: wszystkie sceny < 4 ms; crowded p95 0.34→0.48 ms (dryf znany z sesji 1 → `diag--001`).
-- **`diag--001` done** — `docs/state/PERF.md` (środowisko, budżety, sceny, przed/po, audyt PERF-01, wąskie gardła); indeksy w `Sim`, baseline zaktualizowany.
-- RES-04 ✅ (test sezonowych plonów); WORLD-10: logika zweryfikowana, dźwięk nieodsłuchany (D-PLAN-5).
-- Następny krok: niezależne review etapu 0 (subagent) → `docs/reviews/2026-09-30--002--v1-closure-review.md`, poprawki, pełna weryfikacja i decyzja v1.
+### Etap 0 — domknięcie v1 (zakończony)
+
+- `game--002` done (A1–A6, B1–B7, C1–C9 bez C6, D), `diag--001` done (`docs/state/PERF.md`), RES-04 verified, WORLD-10 logika zweryfikowana / dźwięk nieodsłuchany (D-PLAN-5).
+- Niezależne review: `docs/reviews/2026-09-30--002--v1-closure-review.md` — 10 ustaleń, wszystkie potwierdzone poprawione (broń NPC po walce, zwłoki szczura, zamówienia z rezerwacją i anulowaniem, obieg pieniędzy D-ECON-3, wiadro pasterza, meta starych zapisów, objazd, udźwig przy magazynie).
+- Formaty: `SAVE_VERSION` 4, `GEN_VERSION` 7 (stare zapisy: migracja formatu; inny generator → odrzut z komunikatem, menu je oznacza).
+- Weryfikacja końcowa: `pnpm check` 91/91 (type-check, lint, check-layers, vitest), e2e smoke 3/3, acceptance 16/16, mobile 7/7, 0 błędów konsoli; `bench:sim` wszystkie sceny p95 < 1.1 ms (budżet 4 ms).
+
+### Czy v1 ukończone? **TAK** (2026-09-30)
+
+Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `verified` (76) poza WORLD-10 (`implemented_unverified` — brak możliwości odsłuchu w headless, decyzja D-PLAN-5, nie blokuje); 11 pozycji `deferred` zgodnie z DECISIONS/prompt §4. Ustalenia obu review (001 Grok/Scribe, 002 subagent) poprawione z testami regresji albo jawnie odrzucone/odłożone z uzasadnieniem. Znane ograniczenia (nie blokujące): dźwięki proceduralne nieodsłuchane; brak pomiaru GPU i telefonu; przebudowa roślinności przy teleporcie (p95 ~31 ms, PERF.md); postacie 7–12 draw calli; placeholdery zwierząt (szczur, zając, dzik, niedźwiedź, owca, kura, łoś); mapa mobile przycięta w poziomie (do `ui--001`); aktor stojący w wąskim przejściu może blokować innych (D-SIM-11).
+
+### Fale dodatku
+
+- Następny krok: fala 1 — `docs/plans/sim--001--ai-cadence-and-animal-threat.md`.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

@@ -146,6 +146,8 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
         if (prey && !isDown(sim, prey)) {
           a.rot = Math.atan2(prey.x - a.x, prey.z - a.z)
           meleeAttack(sim, a, 140, prey.id)
+          // Real contact with the prey: the chase limit restarts (a fight over the prey is not a chase).
+          if (Math.hypot(prey.x - a.x, prey.z - a.z) <= sp.attackRange + 0.5) ai.goalAt = sim.state.time.play
           ai.steps.unshift({ op: 'goto', x: prey.x, z: prey.z, range: sp.attackRange, run: true })
         } else a.hungerH = Math.max(0, a.hungerH - 20)
       }
