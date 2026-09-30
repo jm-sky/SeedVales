@@ -20,6 +20,9 @@ SeedVales is a browser-based medieval-themed world simulation game with RPG elem
 
 `docs/README.md` is the index. `docs/VISION.md` is the main product-requirements-style vision doc (Polish) and the authoritative source for game design questions — read it before designing any gameplay system. Subfolders, each with their own naming convention documented in their `README.md`:
 
+Independent review (Grok / Scribe, 2026-09-30): see [docs/reviews/2026-09-30--001--v1-review.md](docs/reviews/2026-09-30--001--v1-review.md).
+
+
 - `docs/vision/` — vision broken out per domain (one file per domain)
 - `docs/design/` — detailed design for a domain/area, filename prefixed by domain (e.g. `ui-combat.md`)
 - `docs/plans/` — implementation plans, named `domain--ID--slug.md`, with a `Status: draft|planned|in_progress|blocked|done` header
