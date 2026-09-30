@@ -153,3 +153,24 @@ Wyjątki:
 - gdy człowiek znajduje się blisko ich legowiska.
 
 W takich sytuacjach zwierzęta mogą stawać się bardziej agresywne.
+
+
+## Spatial grid i częstotliwość decyzji
+
+- Systemy nie powinny skanować wszystkich obiektów świata, tylko obiekty znajdujące się w odpowiednim zasięgu, wykorzystując spatial grid lub równoważny mechanizm indeksowania przestrzennego.
+- NPC i zwierzęta nie powinny podejmować decyzji co klatkę.
+- Decyzje mogą być podejmowane np. raz na sekundę.
+- Częstotliwość podejmowania decyzji może zależeć od gatunku i stanu organizmu.
+- Słabszy gatunek lub zmęczony organizm może podejmować decyzje rzadziej.
+- Krytyczne sytuacje powinny mieć możliwość wymuszenia szybszej reakcji niezależnie od normalnej częstotliwości decyzji.
+
+## Burmistrz i zarządzanie osadą
+
+- Przy wysokiej reputacji i dobrych relacjach z mieszkańcami osady gracz może zostać jej burmistrzem.
+- Obecny burmistrz lub sołtys może wtedy zostać zastępcą gracza.
+- Dzięki temu gracz może mieć decydujący wpływ na rozbudowę osady i podobne decyzje dotyczące jej rozwoju.
+
+## Kierunek graficzny
+
+- Określenie `low poly` nie powinno ograniczać ładnego i realistycznego designu oraz grafiki tam, gdzie nie powoduje to dużego spadku FPS.
+- Przykład: ogień może korzystać z particles i mieć iskry.
