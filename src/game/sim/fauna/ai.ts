@@ -34,7 +34,7 @@ function pickWander(sim: Sim, a: Animal, r: number): Target {
 function detectRange(sim: Sim, a: Animal, targetIsPlayer: boolean): number {
   const sp = SPECIES[a.species]
   let r = sp.perception
-  if (targetIsPlayer && sim.state.px.sneaking) r *= 1 - Math.min(0.7, 0.3 + sim.player.skills.sneak / 200)
+  if (targetIsPlayer && sim.state.px.sneaking) r *= 1 - Math.min(0.75, 0.4 + sim.player.skills.sneak / 200)
   if (isNight(sim.state.time.cal)) r *= 0.7
   if (sim.weather.fog > 0.5) r *= 0.75
   return r

@@ -58,7 +58,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
     }
   }
   // Help downed neighbours (guards always; agreeable armed adults sometimes).
-  const downed = sim.state.npcs.find((o) => o !== h && o.vitals.ko && !o.vitals.dead && o.callForHelpAt && Math.hypot(o.x - h.x, o.z - h.z) < 150)
+  const downed = sim.state.npcs.find((o) => o !== h && o.vitals.ko && !o.vitals.dead && o.callForHelpAt !== undefined && Math.hypot(o.x - h.x, o.z - h.z) < 150)
   if (downed && h.age === 'adult') {
     const s = isGuard ? 0.92 : h.profession === 'herbalist' ? 0.85 : 0.35 + b5.a * 0.4
     opts.push({ id: 'help', score: s, plan: () => ({ label: `Pomaga: ${downed.name}`, steps: [go(downed.x, downed.z, 1.2, true), work('help_downed', 5, 'Opatruje rannego', String(downed.id), 'kneel')] }) })

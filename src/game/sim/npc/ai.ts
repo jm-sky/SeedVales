@@ -29,7 +29,8 @@ export function planNpc(sim: Sim, h: Human, force = false) {
     else o.score += (sim.rng.next() - 0.5) * 0.06 * (0.5 + h.big5.o)
   }
   opts.sort((a, b) => b.score - a.score)
-  const currentScore = opts.find((o) => o.id === ai.goal)?.score ?? -1
+  const inPlan = !!ai.goal && ai.stepIdx < ai.steps.length
+  const currentScore = opts.find((o) => o.id === ai.goal)?.score ?? (inPlan ? (ai.goalScore ?? 0) : -1)
   for (const o of opts) {
     if (o.score < 0) break
     // Hysteresis: keep current plan unless new goal is clearly better.
@@ -42,6 +43,7 @@ export function planNpc(sim: Sim, h: Human, force = false) {
       continue
     }
     ai.goal = o.id
+    ai.goalScore = o.score
     ai.label = plan.label
     ai.steps = plan.steps
     ai.stepIdx = 0
@@ -53,6 +55,8 @@ export function planNpc(sim: Sim, h: Human, force = false) {
 
 function failGoal(sim: Sim, h: Human, mult = 1) {
   const ai = h.ai
+  const st = ai.steps[ai.stepIdx]
+  ai.lastFail = `${ai.goal}#${ai.stepIdx}:${st?.op === 'work' ? st.act : st?.op === 'goto' ? `goto(${st.x.toFixed(0)},${st.z.toFixed(0)})` : '-'}`
   if (ai.goal) ai.cooldowns[ai.goal] = sim.state.time.play + FAIL_COOLDOWN_S * mult
   perf.count('ai.failures')
   ai.goal = null

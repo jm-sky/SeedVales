@@ -87,6 +87,10 @@ export interface AiState {
   cooldowns: Record<string, number>
   stuckT: number
   targetId?: number
+  /** Utility score when the current plan was chosen (hysteresis when its precondition disappears mid-plan). */
+  goalScore?: number
+  /** Diagnostics: last failed goal/step. */
+  lastFail?: string
 }
 
 export interface ActorBase {
