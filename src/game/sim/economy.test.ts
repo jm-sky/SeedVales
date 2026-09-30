@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { perf } from '../diag/perf'
 import { countItem } from './inventory'
+import { dutyPlan } from './npc/duties'
 import { playerFarAway, run, testSim } from './testWorld'
 
 describe('economy & long simulation', () => {
@@ -26,4 +27,21 @@ describe('economy & long simulation', () => {
     expect(Object.values(sim.state.nodes).filter((n) => n.kind === 'felled').length).toBeGreaterThan(3)
     expect(perf.report().counters['economy.caravanTrades'] ?? 0).toBeGreaterThan(0)
   }, 120_000)
+
+  it('ECON-01: a trader far from home without an active outbound trip heads home (no outbound loop)', () => {
+    const sim = testSim()
+    const trader = sim.state.npcs.find((n) => n.profession === 'trader' && sim.world.settlements[n.settlementId]!.size !== 'SM')!
+    const home = sim.world.settlements[trader.settlementId]!
+    const road = sim.world.roads.find((r) => r.from === home.id || r.to === home.id)!
+    const mid = road.points[Math.floor(road.points.length / 2)]!
+    trader.x = mid.x
+    trader.z = mid.z
+    sim.actors.update(trader)
+    trader.ai.cooldowns = {}
+    trader.trip = undefined
+    const plan = dutyPlan(sim, trader)!
+    const last = plan.steps.filter((s) => s.op === 'goto').at(-1) as { x: number; z: number }
+    expect(Math.hypot(last.x - home.x, last.z - home.z)).toBeLessThan(home.radius + 50)
+    expect(plan.steps.some((s) => s.op === 'work' && (s.act === 'caravan_trade' || s.act === 'caravan_depart'))).toBe(false)
+  })
 })

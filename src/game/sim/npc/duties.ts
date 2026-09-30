@@ -116,32 +116,43 @@ function herbalist(sim: Sim, h: Human, eff: number): DutyPlan {
   return { label: 'Zbiera zioła', steps: [go(herb.x, herb.z, 1), work('gather', 6, 'Zbiera zioła', herb.id, 'kneel'), ...homeReturn(sim, h)] }
 }
 
-/** Traveling trade between road-connected settlements (MD/LG traders), every 2nd day. */
+/** Max calendar seconds an expedition may stay outbound before giving up and returning. */
+const TRIP_MAX_CAL = 2 * 86400
+
+/**
+ * Traveling trade between road-connected settlements (MD/LG traders), every 2nd day.
+ * Explicit trip phase (h.trip): no trip + away from home → always go home (never outbound loop).
+ */
 function caravan(sim: Sim, h: Human): DutyPlan {
   const home = sim.world.settlements[h.settlementId]!
   if (home.size === 'SM') return null
   const road = sim.world.roads.find((r) => r.from === home.id || r.to === home.id)
   if (!road) return null
   const other = sim.world.settlements[road.from === home.id ? road.to : road.from]!
-  const now = sim.state.time.play
-  const day = Math.floor(sim.state.time.cal / 86400)
-  const hr = hourOf(sim.state.time.cal)
+  const cal = sim.state.time.cal
+  const day = Math.floor(cal / 86400)
+  const hr = hourOf(cal)
   const far = Math.hypot(h.x - home.x, h.z - home.z) > home.radius + 200
-  const returning = (h.ai.cooldowns.caravan_back ?? 0) > now
-  const wh = sim.building(sim.state.settlements[other.id]?.warehouseId)
-  if (returning) {
-    if (!far) {
-      h.ai.cooldowns.caravan_back = 0
-      return null
-    }
-    const pts = routeVia(sim, h.x, h.z, home.x, home.z)
-    return { label: `Wraca z ${other.name}`, steps: pts.map((p) => go(p.x, p.z, 4)) }
+  if (h.trip?.phase === 'outbound' && cal - h.trip.since > TRIP_MAX_CAL) h.trip = { phase: 'returning', since: h.trip.since }
+  if (!h.trip && !far && day % 2 === 0 && hr >= 7 && hr < 10) {
+    // Departure: pack provisions (act starts the trip), then travel.
+    return caravanOutbound(sim, h, other, true)
   }
-  if (!far && !(day % 2 === 0 && hr >= 7 && hr < 10)) return null
+  if (h.trip?.phase === 'outbound') return caravanOutbound(sim, h, other, false)
+  if (!far) {
+    h.trip = undefined
+    return null
+  }
+  const pts = routeVia(sim, h.x, h.z, home.x, home.z)
+  return { label: h.trip ? `Wraca z ${other.name}` : 'Wraca do domu', steps: pts.map((p) => go(p.x, p.z, 4)) }
+}
+
+function caravanOutbound(sim: Sim, h: Human, other: { id: number; name: string }, depart: boolean): DutyPlan {
+  const wh = sim.building(sim.state.settlements[other.id]?.warehouseId)
   if (!wh) return null
   const d = doorOf(wh)
   const pts = routeVia(sim, h.x, h.z, d.x, d.z)
-  const pack = far ? [] : [work('pack_food', 3, 'Pakuje prowiant', undefined, 'interact')]
+  const pack = depart ? [work('caravan_depart', 3, 'Pakuje prowiant', undefined, 'interact')] : []
   return { label: `Karawana do ${other.name}`, steps: [...pack, ...pts.map((p) => go(p.x, p.z, 4)), go(d.x, d.z, 2), work('caravan_trade', 30, 'Handluje w magazynie', wh.id, 'interact')] }
 }
 

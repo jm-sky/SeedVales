@@ -81,6 +81,12 @@ export const WORK_ACTS: Record<string, Act> = {
     }
     return true
   },
+  /** Starts a caravan expedition: provisions + explicit outbound phase. */
+  caravan_depart: (sim, h) => {
+    WORK_ACTS.pack_food!(sim, h, undefined, 1)
+    h.trip = { phase: 'outbound', since: sim.state.time.cal }
+    return true
+  },
   rest: () => true,
   shelter: () => true,
   socialize: (_sim, h) => {
@@ -310,7 +316,7 @@ export const WORK_ACTS: Record<string, Act> = {
       for (const s of removeItem(there.inv, f.id, 1)) addItem(h.inv, s)
     }
     h.money += 5 + moved
-    h.ai.cooldowns.caravan_back = sim.state.time.play + 3 * 3600
+    h.trip = { phase: 'returning', since: h.trip?.since ?? sim.state.time.cal }
     perf.count('economy.caravanTrades')
     return true
   },

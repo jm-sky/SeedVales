@@ -83,3 +83,4 @@ Pozostałe pozycje: zweryfikować przy implementacji (reprodukcja testem → pop
 ## Wynik
 
 - **A1 ✅** — `forgeOrder` (`sim/orders.ts`): kowal przy `smith` zużywa wejścia receptury z magazynu domu, rzuca jakość i trzyma wykuty stack w `order.item`; brak materiałów → zamówienie zostaje `waiting` (kowal najpierw wytapia sztaby z rudy+węgla). `collectOrder` wydaje `order.item`, nie `newStack`. Test: `features.test.ts` „CRAFT-02: order consumes recipe materials…”. Stare zapisy z `ready` bez `item` → obsłużone w migracji A4.
+- **A2 ✅** — jawna faza wyprawy `Human.trip` (`outbound`/`returning`, `since`); wyjazd przez akt `caravan_depart` (prowiant + `outbound`), `caravan_trade` → `returning`; brak wyprawy i `far` → zawsze trasa do domu; wyprawa `outbound` dłużej niż 2 dni kalendarza → powrót. Usunięto `cooldowns.caravan_back`. Test: `economy.test.ts` „ECON-01: a trader far from home…” (padał: cel 3.1 km od domu).

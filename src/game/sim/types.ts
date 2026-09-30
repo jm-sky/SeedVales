@@ -139,6 +139,8 @@ export interface Human extends ActorBase {
   /** Accumulated kg·hours carried (slow Strength growth). */
   strTrain: number
   callForHelpAt?: number
+  /** Trader caravan expedition (explicit phase; calendar s of departure). */
+  trip?: { phase: 'outbound' | 'returning'; since: number }
 }
 
 export interface Animal extends ActorBase {
