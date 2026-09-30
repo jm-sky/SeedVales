@@ -36,3 +36,120 @@ Chcemy osiągnąć różnorodność przez:
 - Powinno być widać padający deszcz i śnieg.
 - Teren pod wpływem opadu powinien zmieniać „teksturę”, robić się mokry.
 - Pod wpływem śniegu teren powinien robić się biały. Można pomyśleć o warstwie śniegu.
+
+
+## Landmarki i skarby
+
+### Landmarki
+
+Losowe lokalizacje mogą zawierać landmarki, np.:
+
+- kamienny krąg,
+- ruiny domu,
+- ruiny posiadłości,
+- wrak statku,
+- wrak łodzi.
+
+### Skarby i zdobycze
+
+- Skarby mogą być losowo zakopane obok landmarków.
+- Mogą znajdować się w skrzyni z losowym lootem.
+- Mogą też występować losowo w jaskiniach.
+- Rzadko skarb może znaleźć się w brzuchu drapieżnika.
+- Przykładowe wartościowe znaleziska:
+  - złote pierścienie,
+  - rubiny,
+  - szmaragdy,
+  - diamenty,
+  - monety,
+  - bardzo wysokiej jakości broń, np. sztylet damasceński lub obsydianowy.
+- Lista możliwych zdobyczy nie jest zamknięta.
+
+## Handel, prezenty i relacje
+
+- Handel powinien być możliwy z każdym NPC, ponieważ każdy NPC może mieć coś na wymianę lub sprzedaż.
+- Mechanizm handlu może też służyć do przekazywania przedmiotów.
+- Poza handlem powinien istnieć osobny system dawania prezentów.
+- Prezent może podnosić relację gracza z NPC.
+- NPC powinni móc wyrażać preferencje dotyczące przedmiotów, które chcieliby dostać, np. konkretnej broni lub innego przedmiotu.
+
+## Interfejs i ekrany
+
+Powinny istnieć ekrany obejmujące co najmniej:
+
+- podgląd postaci,
+- atrybuty,
+- reputację,
+- umiejętności,
+- aktualny stan chorób,
+- ekwipunek,
+- wybór podstawowej broni ręcznej,
+- wybór podstawowej broni dystansowej,
+- filtrowanie i sortowanie przedmiotów po kategoriach,
+- podgląd parametrów przedmiotów,
+- zadania.
+
+Powinna być dostępna:
+
+- duża mapa z oznaczeniem lokalizacji,
+- minimapa ze strzałką pomagającą kierować się w stronę wyznaczonego miejsca.
+
+Powinno istnieć menu z konfiguracją, w tym:
+
+- ustawienia jakości grafiki,
+- ustawienia głośności dźwięku.
+
+Powinna być możliwość:
+
+- rozpoczęcia nowej gry,
+- zapisania save'a pod określoną nazwą.
+
+## Wybór celu interakcji
+
+- Powinno istnieć wspomaganie wyboru celu interakcji.
+- Jeżeli wiele obiektów znajduje się w bliskim zasięgu, klawisz `Tab` może przełączać pomiędzy nimi w trybie cycling.
+
+## Pozyskiwanie surowców i transport
+
+### Drzewa
+
+- Drzewa powinno dać się ścinać siekierą.
+- Po ścięciu drzewa powinien pozostać pień.
+
+### Skały
+
+- Większe kawałki skał powinno dać się rozbijać kilofem na mniejsze kawałki.
+- W ten sposób można pozyskiwać kamienie.
+
+### Transport ciężkich surowców
+
+Do ręcznego lub zwierzęcego transportu większych ilości ciężkich surowców mogą być potrzebne:
+
+- taczka,
+- wózek ręczny,
+- wózek pod osła,
+- wózek pod konia.
+
+## Zachowanie zwierząt przy zagrożeniu
+
+### Zwierzęta domowe
+
+W przypadku zagrożenia lub ataku zwierzęta domowe powinny uciekać:
+
+- do pasterza,
+- albo do swojej zagrody.
+
+### Zwierzęta dzikie
+
+Zwierzęta dzikie powinny bać się:
+
+- ludzi,
+- ognia,
+- zagród.
+
+Wyjątki:
+
+- gdy mają młode,
+- gdy człowiek znajduje się blisko ich legowiska.
+
+W takich sytuacjach zwierzęta mogą stawać się bardziej agresywne.
