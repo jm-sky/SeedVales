@@ -6,10 +6,12 @@
  */
 import type { Sim } from '../sim'
 import type { Human } from '../types'
-import { COMBAT, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
+import { COMBAT, DECISION, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { perf } from '../../diag/perf'
+import { alertAround } from '../alerts'
 import { isDown, killNpc, meleeAttack, weaponOf } from '../combat'
+import { decisionInterval } from '../fauna/perception'
 import { wieldBest } from '../inventory'
 import { steerTo } from '../movement'
 import { type Exertion, hp, penalty, updateVitals } from '../vitals'
@@ -126,12 +128,16 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   if (cur0 <= 0) {
     h.vitals.ko = { until: now + 60, protectUntil: now + 60 }
     h.callForHelpAt = now
+    alertAround(sim, h.x, h.z, DECISION.alertHelpM)
     return
   }
 
   // Interrupt sleep/work for threats (checked at update frequency).
-  if (ai.goal !== 'fight' && ai.goal !== 'flee' && threatNear(sim, h, h.profession === 'guard' ? 45 : 22)) {
-    ai.replanAt = 0
+  // Threat perception at the decision cadence (AI-01); hits/shots/calls for help force it (alerts).
+  if (now >= (ai.decideAt ?? 0)) {
+    ai.decideAt = now + decisionInterval(h)
+    perf.count('ai.decisions')
+    if (ai.goal !== 'fight' && ai.goal !== 'flee' && threatNear(sim, h, h.profession === 'guard' ? 45 : 22)) ai.replanAt = 0
   }
   if (!ai.goal || now >= ai.replanAt || ai.stepIdx >= ai.steps.length) {
     planNpc(sim, h, ai.stepIdx >= ai.steps.length || !ai.goal)

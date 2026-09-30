@@ -16,6 +16,7 @@ import { nearestNaturalWater } from '../npc/queries'
 import { hourOf, isNight } from '../time'
 import { hp } from '../vitals'
 import { isBadWeather } from '../weather'
+import { decideAnimal, decisionInterval } from './perception'
 
 type Target = { x: number; z: number }
 
@@ -28,16 +29,6 @@ function pickWander(sim: Sim, a: Animal, r: number): Target {
     if (sim.terrain.waterDepthAt(x, z) < 0.3 && sim.terrain.inBounds(x, z)) return { x, z }
   }
   return { x: a.homeX, z: a.homeZ }
-}
-
-/** Detection distance of a human by this animal (sneak skill + night reduce it). */
-function detectRange(sim: Sim, a: Animal, targetIsPlayer: boolean): number {
-  const sp = SPECIES[a.species]
-  let r = sp.perception
-  if (targetIsPlayer && sim.state.px.sneaking) r *= 1 - Math.min(0.75, 0.4 + sim.player.skills.sneak / 200)
-  if (isNight(sim.state.time.cal)) r *= 0.7
-  if (sim.weather.fog > 0.5) r *= 0.75
-  return r
 }
 
 export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
@@ -83,41 +74,11 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
   }
   a.aggroId = undefined
 
-  // 3) Perception of humans (throttled via LOD interval).
-  if (sp.temperament !== 'domestic') {
-    for (const o of sim.actors.query(a.x, a.z, sp.perception)) {
-      if (o.kind === 'animal') {
-        const os = SPECIES[(o as Animal).species]
-        // Prey flees from predators.
-        if ((sp.temperament === 'prey' || sp.temperament === 'vermin') && os.preys?.includes(a.species) && Math.hypot(o.x - a.x, o.z - a.z) < sp.perception * 0.6) {
-          a.fleeFrom = { x: o.x, z: o.z, until: now + 12 }
-          return
-        }
-        continue
-      }
-      if (isDown(sim, o) || (o.kind === 'player' && isProtected(sim, o))) continue
-      const d = Math.hypot(o.x - a.x, o.z - a.z)
-      if (d > detectRange(sim, a, o.kind === 'player')) continue
-      if (sp.temperament === 'prey' || sp.temperament === 'vermin') {
-        if (d < sp.perception * (sp.temperament === 'vermin' ? 0.4 : 0.8)) a.fleeFrom = { x: o.x, z: o.z, until: now + 10 }
-        return
-      }
-      // Predators attack people only when hungry, alpha/strong, rabid or very close; aggressive defend territory.
-      const bold = a.rabid || a.variant === 'alpha' || a.variant === 'strong' || a.hungerH > 30
-      if ((sp.temperament === 'predator' && (bold || d < 8)) || (sp.temperament === 'aggressive' && d < 10) || a.rabid) {
-        a.aggroId = o.id
-        a.aggroUntil = now + 30
-        return
-      }
-    }
-  }
-  // Rabid: attack anything nearby.
-  if (a.rabid && sim.rng.chance(0.05)) {
-    const victim = sim.actors.query(a.x, a.z, 15).find((o) => o !== a && !isDown(sim, o))
-    if (victim) {
-      a.aggroId = victim.id
-      a.aggroUntil = now + 20
-    }
+  // 3) Perception & decisions at a cadence (AI-01); critical events set decideAt = 0.
+  if (now >= (ai.decideAt ?? 0)) {
+    ai.decideAt = now + decisionInterval(a)
+    perf.count('ai.decisions')
+    if (decideAnimal(sim, a)) return
   }
 
   // 4) Plan-level behaviour (re-evaluated when previous target reached or timed out).

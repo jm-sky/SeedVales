@@ -93,6 +93,8 @@ export interface AiState {
   avoidSide?: number
   /** Max gameplay seconds for the current goto step (unreachable target guard). */
   stepLimit?: number
+  /** Gameplay second of the next perception/decision (AI-01 cadence); 0 = decide now. */
+  decideAt?: number
   /** Gameplay second when the current goal was chosen (bounded chases). */
   goalAt?: number
   /** Diagnostics: last failed goal/step. */

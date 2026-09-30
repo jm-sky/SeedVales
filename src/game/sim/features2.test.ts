@@ -267,6 +267,8 @@ describe('more features', () => {
     playerFarAway(sim)
     // Natural growth and household production only (farmers tending fields would add noise).
     sim.systems = sim.systems.filter((x) => x.name !== 'npc')
+    // Same weather in every season (random rain would dominate the comparison).
+    sim.systems.unshift({ name: 'fixed-weather', interval: 0, run: () => Object.assign(sim.state.weather, { kind: 'clear', wetness: 0.8, until: Infinity }) })
     for (const season of ['spring', 'summer', 'autumn', 'winter'] as const) {
       sim.state.time.cal = calOf(season)
       expect(seasonOf(sim.state.time.cal)).toBe(season)

@@ -1,6 +1,6 @@
 # AI: kadencja decyzji, reakcje zwierząt na zagrożenie, zwłoki i ślady krwi
 
-**Status:** planned  
+**Status:** in_progress  
 **Domain:** sim  
 **Sub domains:** npc-ai, fauna, combat, weather  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 1)  
@@ -36,3 +36,10 @@ FEATURES: `AI-01`, `FAUNA-06`, `FAUNA-07`, `FAUNA-08`, `TRACE-01` (sim), `PERF-0
 ## Ryzyka
 
 - Zmiana kadencji może zmienić wyniki testów ekonomii (3 dni) — kalibracja zamiast osłabiania asercji.
+
+## Wynik
+
+- **1. AI-01 ✅** — `ai.decideAt` + `decisionInterval` (`fauna/perception.ts`): baza `DECISION.baseS` = 1 s × `SpeciesDef.decisionS` (sarna/zając 0.8, szczur/krowa/kura 1.5, owca 1.3) × zmęczenie (stamina < 25 lub wigor NPC < 15 → ×1.5). Ruch i ucieczka/atak ciągłe między decyzjami. Wymuszenie: `sim/alerts.ts` `alertAround` przy trafieniu (30 m), strzale (30 m), wołaniu o pomoc (60 m); ranne zwierzę decyduje od razu. NPC: percepcja zagrożenia w tej samej kadencji (planowanie utility nadal co 12 s / koniec planu). Liczniki `ai.decisions`, `ai.alerts`.
+- **2. FAUNA-06 ✅** — zwierzę domowe (bez psa) przy drapieżniku polującym/agresywnym/bliżej niż 12 m albo po zranieniu → cel `flee_home`: bieg do pasterza gospodarstwa (dorosły, ≤ 200 m) albo do zagrody, potem 15 s „Chowa się”. Zagrody istnieją (po `game--002` każde gospodarstwo rolnika/pasterza ma zagrodę) — bez zmiany generatora.
+- **3. FAUNA-07 ✅** — `decideAnimal`: ogień (ognisko/pochodnia na słupie/pochodnia na ziemi/człowiek z pochodnią, `FEAR.fireM` 14 m) płoszy każde dzikie zwierzę (poza wściekłym i szczurem); drapieżnik niegłodny trzyma dystans od człowieka (`FEAR.humanM` 16 m), głodny/alfa/silny atakuje; dziki/niedźwiedź atakuje tylko z bliska (< 6 m), dalej unika; zagrody omijane (poza wściekłymi i drapieżnikami głodnymi > 40 h); wyjątki ochronne: młode tego gatunku ≤ 25 m albo własne legowisko ≤ 30 m → atak zamiast ucieczki (D-SIM-12).
+

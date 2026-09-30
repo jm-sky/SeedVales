@@ -6,12 +6,14 @@
 import type { DamageType, WeaponStats } from '../data/items'
 import type { Sim } from './sim'
 import type { Actor, Animal, ArmorKey, BodyPart, Human, Projectile } from './types'
-import { COMBAT, STAMINA } from '../config/calibration'
+import { COMBAT, DECISION, STAMINA } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { itemDef } from '../data/items'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { train } from './actions'
+import { alertAround } from './alerts'
+import { fleeHome } from './fauna/perception'
 import { qualityMult, removeItem, wearTool } from './inventory'
 import { questOnKill } from './quests'
 import { addRep, addStat, settlementAt } from './reputation'
@@ -81,6 +83,7 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
   if (isHuman(target)) dmg *= 1 - armorResist(target, part, type)
   applyPartDamage(target.vitals, part, dmg, type !== 'blunt')
   sim.emit({ type: 'hit', x: target.x, y: target.y + 1, z: target.z, targetId: target.id, dmg })
+  alertAround(sim, target.x, target.z, DECISION.alertHitM)
   // Rabies spreads by bites (vision §17.1).
   if (attacker?.kind === 'animal' && (attacker as Animal).rabid && type !== 'blunt') {
     if (target.kind === 'animal' && sim.rng.chance(0.2)) (target as Animal).rabid = true
@@ -118,6 +121,7 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
     if (!target.vitals.ko || target.vitals.ko.until < sim.state.time.play) {
       target.vitals.ko = { until: sim.state.time.play + 60, protectUntil: sim.state.time.play + 60 }
       target.callForHelpAt = sim.state.time.play
+      alertAround(sim, target.x, target.z, DECISION.alertHelpM)
       sim.message(`${target.name} pada ranny i woła o pomoc!`, 'bad')
     }
     return false
@@ -128,6 +132,11 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
 
 function onAnimalHurt(sim: Sim, a: Animal, attacker: Actor) {
   const sp = SPECIES[a.species]
+  a.ai.decideAt = 0 // critical event: react on the next update
+  if (sp.temperament === 'domestic' && a.species !== 'dog' && a.householdId !== undefined) {
+    fleeHome(sim, a, attacker)
+    return
+  }
   if (sp.temperament === 'prey' || sp.temperament === 'domestic' || sp.temperament === 'vermin') {
     if (sp.temperament === 'vermin' || sp.damage === 0 || hp(a.vitals) < a.vitals.maxHp * 0.5 || sim.rng.chance(0.7)) {
       a.fleeFrom = { x: attacker.x, z: attacker.z, until: sim.state.time.play + 20 }
@@ -278,6 +287,7 @@ export function fireRanged(sim: Sim, h: Human, yaw: number, pitch: number, drawF
   if (h.eq.main) wearTool(h.eq.main, 0.3)
   train(h, 'ranged', 0.5)
   sim.emit({ type: 'shot', id: p.id })
+  alertAround(sim, h.x, h.z, DECISION.alertShotM)
   return true
 }
 

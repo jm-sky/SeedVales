@@ -799,8 +799,8 @@
    "scope": "v2",
    "behavior": "NPC i zwierzęta podejmują decyzje ~1×/s (nie co klatkę); częstotliwość zależy od gatunku i stanu (zmęczenie); zdarzenia krytyczne wymuszają natychmiastową decyzję",
    "verify": "vitest: liczba decyzji/min; atak wymusza decyzję w ≤1 tick; bench",
-   "status": "planned",
-   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+   "status": "verified",
+   "evidence": "appendix-sim.test.ts AI-01: animals decide ~1/s with species multipliers (deer 0.8 > wolf 1.0 > rat 1.5 s; tired ×1.5), a nearby hit forces an immediate decision (alertAround: hits 30 m, shots 30 m, calls for help 60 m); NPC threat perception on the same cadence (ai.decideAt); counters ai.decisions / ai.alerts"
   },
   {
    "id": "FAUNA-06",
@@ -808,8 +808,8 @@
    "scope": "v2",
    "behavior": "Zwierzęta domowe przy zagrożeniu/ataku uciekają do pasterza albo swojej zagrody",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+   "status": "verified",
+   "evidence": "appendix-sim.test.ts FAUNA-06: sheep with a hunting wolf nearby → goal flee_home running to the household shepherd (if within 200 m) or pen; hurt domestic animal (cow) → flee_home (fauna/perception.ts fleeHome)"
   },
   {
    "id": "FAUNA-07",
@@ -817,8 +817,8 @@
    "scope": "v2",
    "behavior": "Dzikie zwierzęta boją się ludzi, ognia i zagród; bardziej agresywne przy młodych lub gdy człowiek jest blisko legowiska",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/sim--001--ai-cadence-and-animal-threat.md"
+   "status": "verified",
+   "evidence": "appendix-sim.test.ts FAUNA-07: sated wolf keeps away from a person (hungry/alpha attacks), fire (lit campfire/torch post/ground torch/person holding a torch) scares even starving wolves, wild animals avoid pens unless starving, protective exceptions: mother with young nearby and wolf at its den attack instead of fleeing"
   },
   {
    "id": "FAUNA-08",

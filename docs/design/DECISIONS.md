@@ -26,6 +26,8 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-SIM-7 — Handel: NPC sprzedaje ze skrzyni domu; pieniądze zachowane (transfer 1:1).** Waluta: miedziak (100 m = 1 sr, 100 sr = 1 zł).
 - **D-SIM-8 — Kalibracja potrzeb:** pragnienie pełne→0 w 20 h, głód 30 h, wigor ~19 h marszu (NEEDS). Posiłek 25–40 sytości. Wartości do strojenia.
 
+- **D-SIM-12 — Strach dzikich zwierząt (dodatek): ogień > ludzie > zagrody**, parametry `FEAR` w `calibration.ts`. Drapieżnik atakuje człowieka tylko głodny (> 30 h), alfa/silny, wściekły albo osaczony (< 8 m); przy młodych/legowisku zwierzę broni się. Kadencja decyzji ~1 s (AI-01) jest niezależna od LOD ruchu (D-SIM-1); zdarzenia krytyczne wymuszają decyzję (`alertAround`).
+
 ## Ekonomia
 
 - **D-ECON-1 — Pieniądze tylko się przemieszczają: każdy przepływ ma płatnika i odbiorcę.** Portfele gracza i NPC (także zmarłych) + skarbce osad (`SettlementState.treasury`, start `TREASURY_START`: SM 150, MD 300, LG 600 m). Skarbiec płaci nagrody za zadania i opłaty karawan; przyjmuje noclegi bez gospodarza i przeprosiny. Jawne źródło z zewnątrz: monety wykopane łopatą w osadzie (ITEM-04). Podatki/dochody skarbca — poza v1 (skarbiec może się wyczerpać: nagrody wtedy częściowe).

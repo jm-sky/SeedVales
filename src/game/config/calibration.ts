@@ -79,6 +79,16 @@ export const CARAVAN_FEE = { base: 5, perUnit: 1 }
 /** Days for a sheep's wool to regrow after shearing. */
 export const WOOL_REGROW_DAYS = 10
 
+/**
+ * AI decision cadence (AI-01): perception/decisions every `baseS` gameplay seconds × species
+ * `decisionS` × state (tired ×tiredMul). Critical events (hits, shots, calls for help) force an
+ * immediate decision for actors within the alert radius (m).
+ */
+export const DECISION = { baseS: 1, tiredMul: 1.5, alertHitM: 30, alertShotM: 30, alertHelpM: 60 }
+
+/** Wild animals' fear (FAUNA-07), distances in m; exceptions: young nearby, own den, starving predator. */
+export const FEAR = { humanM: 16, aggressiveAttackM: 6, fireM: 14, penM: 10, desperateHungerH: 40, protectYoungM: 25, protectDenM: 30 }
+
 /** Predator hunting: chase limit (gameplay s), give-up distance (× perception), retry cooldown (gameplay s). */
 export const HUNT = {
   chaseMaxS: 40,

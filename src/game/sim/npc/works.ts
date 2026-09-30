@@ -6,10 +6,11 @@
  */
 import type { Sim } from '../sim'
 import type { Animal, Human } from '../types'
-import { CARAVAN_FEE, WOOL_REGROW_DAYS } from '../../config/calibration'
+import { CARAVAN_FEE, DECISION, WOOL_REGROW_DAYS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
+import { alertAround } from '../alerts'
 import { applyDamage, weaponOf } from '../combat'
 import { addItem, countItem, findFood, newStack, removeItem, wieldBest } from '../inventory'
 import { forgeOrder } from '../orders'
@@ -284,6 +285,7 @@ export const WORK_ACTS: Record<string, Act> = {
     h.rot = Math.atan2(a.x - h.x, a.z - h.z)
     h.action = { kind: 'shoot', at: sim.state.time.play }
     sim.emit({ type: 'shot', id: h.id })
+    alertAround(sim, h.x, h.z, DECISION.alertShotM)
     const chance = 0.35 + h.skills.ranged * 0.006 - d / 120
     if (sim.rng.chance(chance)) applyDamage(sim, a, w.damage * (0.9 + h.skills.ranged / 150), 'pierce', h)
     else a.fleeFrom = { x: h.x, z: h.z, until: sim.state.time.play + 15 }
