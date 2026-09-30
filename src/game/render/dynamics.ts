@@ -9,7 +9,7 @@ import type { Sim } from '../sim/sim'
 import { itemDef } from '../data/items'
 import { perf } from '../diag/perf'
 import { groundHeight } from '../sim/collision'
-import { isNight } from '../sim/time'
+import { daylight, isNight } from '../sim/time'
 import { Actors } from './actors'
 import { sharedColorMat } from './assets'
 
@@ -113,7 +113,7 @@ export class Dynamics {
     })
     // Player torch.
     const torch = p.eq.off?.id === 'torch' || p.eq.main?.id === 'torch'
-    this.playerLight.intensity = torch ? 16 * flick : 0
+    this.playerLight.intensity = torch ? 16 * flick * (1 - daylight(sim.state.time.cal) * 0.85) : 0
     this.playerLight.position.set(p.x, p.y + 1.8, p.z)
     // Ground items.
     let n = 0

@@ -189,7 +189,14 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
     if (d > reach + tr) continue
     const ang = d < 0.9 ? 0 : Math.abs(angleDiff(a.rot, Math.atan2(t.x - a.x, t.z - a.z)))
     if (ang > (coneDeg * Math.PI) / 360) continue
-    const score = d + ang * 2 - (t.id === preferId ? 5 : 0)
+    // Target priority: explicit target > attackers of this actor > wild animals > domestic animals/people.
+    let pri = t.id === preferId ? -5 : 0
+    if (t.kind === 'animal' && (t as Animal).aggroId === a.id) pri -= 3
+    if (a.kind === 'player') {
+      if (t.kind === 'npc') pri += 4
+      else if (t.kind === 'animal' && SPECIES[(t as Animal).species].temperament === 'domestic') pri += 2.5
+    }
+    const score = d + ang * 2 + pri
     if (score < bestScore) {
       bestScore = score
       best = t

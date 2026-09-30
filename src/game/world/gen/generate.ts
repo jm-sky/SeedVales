@@ -91,6 +91,7 @@ export function generateWorld(seed: number): WorldData {
     flattenStructures(height, flat, hydro.waterKind, structures)
     for (const s of settlements) s.y = sampleGrid(height, s.x, s.z)
   })
+  t('banks', () => enforceBanks(height, hydro.water, hydro.waterKind))
   // Bridges as structures (rendering + collision walkway).
   for (const r of roads) {
     r.crossings.forEach((c, i) => {
@@ -125,5 +126,22 @@ export function generateWorld(seed: number): WorldData {
     homeSettlement: 0,
     spawn: { x: homeS.x + 4, z: homeS.z + 12 },
     genMs: performance.now() - t0,
+  }
+}
+
+/** Land cells next to rivers/lakes must stay above the water surface (after roads/pads flattening). */
+function enforceBanks(height: Float32Array, water: Float32Array, waterKind: Uint8Array) {
+  const n = GRID_N
+  for (let j = 1; j < n - 1; j++) {
+    for (let i = 1; i < n - 1; i++) {
+      const k = j * n + i
+      if (waterKind[k]) continue
+      let s = -Infinity
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        const kk = (j + dj) * n + i + di
+        if (waterKind[kk] && water[kk]! > s) s = water[kk]!
+      }
+      if (s > -Infinity && height[k]! < s + 0.3) height[k] = s + 0.3
+    }
   }
 }

@@ -11,7 +11,6 @@ import { SPECIES } from '../data/species'
 import { moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
 import { carriedWeight, carryCapacity } from './inventory'
-import { nearestNaturalWater } from './npc/queries'
 import { ACTIVITY_DONE } from './playerActivities'
 import { type Exertion, hp, penalty, updateVitals } from './vitals'
 
@@ -83,11 +82,13 @@ export function playerSystem(sim: Sim, dt: number) {
     p.moving = 'idle'
     // Washed ashore if unconscious in deep water.
     if (sim.terrain.waterDepthAt(p.x, p.z) > SWIM_DEPTH_M) {
-      const shore = nearestNaturalWater(sim, p.x, p.z, 200)
+      const shore = nearestLand(sim, p.x, p.z, 400)
       if (shore) {
         p.x = shore.x
         p.z = shore.z
         p.y = sim.terrain.heightAt(p.x, p.z)
+        sim.actors.update(p)
+        sim.message('Fale wyrzucają cię na brzeg.', 'info')
       }
     }
     return
@@ -212,4 +213,18 @@ export function playerSystem(sim: Sim, dt: number) {
   }
   // Time acceleration request from activity.
   sim.timeScale = px.activity?.accel ?? (px.autopilot ? ACCEL.roadAutopilot : 1)
+}
+
+/** Nearest dry land point (ring search, 4 m steps). */
+export function nearestLand(sim: Sim, x: number, z: number, maxR: number): { x: number; z: number } | null {
+  for (let r = 4; r <= maxR; r += 4) {
+    const n = Math.max(8, Math.floor((r * Math.PI * 2) / 4))
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2
+      const px = x + Math.cos(a) * r
+      const pz = z + Math.sin(a) * r
+      if (sim.terrain.waterDepthAt(px, pz) === 0 && sim.terrain.inBounds(px, pz)) return { x: px, z: pz }
+    }
+  }
+  return null
 }

@@ -20,7 +20,7 @@ import { collectOrder, placeOrder } from './orders'
 import { cancelActivity, playerInput, startActivity } from './player'
 import { questSystem } from './quests'
 import { addRep, BADGES } from './reputation'
-import { run, testSim } from './testWorld'
+import { playerFarAway, run, testSim } from './testWorld'
 import { dayIndex, seasonOf } from './time'
 import { buyFromNpc, sellToNpc, tradeInventory } from './trade'
 import { hp, newVitals, updateVitals } from './vitals'
@@ -340,7 +340,7 @@ describe('fauna', () => {
     const den = sim.state.dens.find((d) => d.species === 'wolf')!
     for (const a of [...sim.state.animals]) if (a.denId === den.id) killAnimal(sim, a)
     den.alive = false
-    sim.player.x = 100
+    playerFarAway(sim)
     run(sim, 3600 * 2, 5)
     expect(sim.state.animals.filter((a) => a.denId === den.id).length).toBe(0)
   })
@@ -350,7 +350,7 @@ describe('npc', () => {
   it('NPC-03: conscientious NPCs spend more time working', () => {
     const measure = (c: number) => {
       const sim = testSim()
-      sim.player.x = 100
+      playerFarAway(sim)
       const npcs = sim.state.npcs.filter((n) => n.age === 'adult' && n.profession)
       for (const n of npcs) n.big5.c = c
       sim.state.time.cal = Math.floor(sim.state.time.cal / 86400) * 86400 + 8 * 3600
@@ -461,7 +461,7 @@ describe('combat, water, weather, skills', () => {
     sim.state.weather.kind = 'storm'
     sim.state.weather.intensity = 1
     sim.state.weather.until = sim.state.time.cal + 86400
-    sim.player.x = 100
+    playerFarAway(sim)
     run(sim, 300, 1)
     expect(field.field!.moisture).toBeGreaterThan(0.3)
     const goals = sim.state.npcs.map((n) => n.ai.goal)

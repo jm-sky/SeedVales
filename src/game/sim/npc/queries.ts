@@ -88,9 +88,10 @@ export function threatNear(sim: Sim, h: Human, r = 22): Animal | null {
   for (const a of sim.actors.query(h.x, h.z, r)) {
     if (a.kind !== 'animal' || isDown(sim, a)) continue
     const sp = SPECIES[a.species]
-    const hostile = a.aggroId === h.id || a.rabid || (sp.temperament === 'predator' && a.variant !== 'young') || (sp.temperament === 'aggressive' && a.aggroId !== undefined)
-    if (!hostile) continue
     const d = Math.hypot(a.x - h.x, a.z - h.z)
+    // Threat = actively hostile, or a predator that is hunting / very close (a resting wolf 20 m away is not).
+    const hostile = a.aggroId === h.id || a.rabid || (sp.temperament === 'predator' && a.variant !== 'young' && (a.ai.goal === 'hunt' || d < 10)) || (sp.temperament === 'aggressive' && a.aggroId !== undefined)
+    if (!hostile) continue
     if (d < bd) {
       bd = d
       best = a

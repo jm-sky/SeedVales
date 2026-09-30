@@ -42,8 +42,11 @@ function ecology(sim: Sim, dt: number) {
       b.ratNest.strength = Math.min(4, b.ratNest.strength + h * 0.05)
       const rats = s.animals.filter((a) => a.species === 'rat' && Math.hypot(a.x - b.x, a.z - b.z) < 40).length
       if (rats < 2 + Math.floor(b.ratNest.strength) && sim.rng.chance(0.5 * h + 0.02)) {
-        const x = b.x + sim.rng.range(-b.hw, b.hw)
-        const z = b.z + b.hd + 1
+        // Rats emerge by the walls (outside the footprint, building-local → world).
+        const lx = sim.rng.range(-b.hw, b.hw)
+        const lz = b.hd + 1.2
+        const x = b.x + lx * Math.cos(b.rot) + lz * Math.sin(b.rot)
+        const z = b.z - lx * Math.sin(b.rot) + lz * Math.cos(b.rot)
         const rat = makeAnimal(sim.nextId(), 'rat', 'adult', x, z, sim.terrain.heightAt(x, z), sim.rng)
         sim.addAnimal(rat)
       }

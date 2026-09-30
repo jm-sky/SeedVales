@@ -6,7 +6,10 @@
  */
 import type { Sim } from '../sim'
 import type { AiStep, Human } from '../types'
+import { RUN_SPEED_MPS } from '../../config/calibration'
+import { SPECIES } from '../../data/species'
 import { countItem, findFood } from '../inventory'
+import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
 import { isBadWeather } from '../weather'
 import { deliverSurplus, dutyPlan } from './duties'
@@ -41,7 +44,9 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const threat = threatNear(sim, h, isGuard ? 45 : 22)
   if (threat) {
     const armed = !!h.eq.main && h.age === 'adult'
-    const brave = isGuard || h.profession === 'hunter' || (armed && b5.n < 0.35 && b5.a < 0.6)
+    // Cornered: a faster attacker already targeting me — running is futile, an armed adult fights back.
+    const cornered = armed && threat.aggroId === h.id && SPECIES[threat.species].run > RUN_SPEED_MPS
+    const brave = isGuard || h.profession === 'hunter' || cornered || (armed && b5.n < 0.35 && b5.a < 0.6)
     if (brave) {
       opts.push({ id: 'fight', score: 0.97, plan: () => ({ label: 'Walczy!', steps: [] }) })
     } else {
@@ -52,7 +57,10 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
           const ax = h.x - threat.x
           const az = h.z - threat.z
           const d = Math.hypot(ax, az) || 1
-          return { label: 'Ucieka!', steps: [go(h.x + (ax / d) * 30, h.z + (az / d) * 30, 2, true), go(door.x, door.z, 1.5, true), work('shelter', 20, 'Chowa się')] }
+          const away = go(h.x + (ax / d) * 35, h.z + (az / d) * 35, 2, true)
+          // Near home: run inside; on the road: just get away and continue.
+          const nearHome = Math.hypot(door.x - h.x, door.z - h.z) < 150
+          return { label: 'Ucieka!', steps: nearHome ? [away, go(door.x, door.z, 1.5, true), work('shelter', 20, 'Chowa się')] : [away, work('rest', 5, 'Łapie oddech')] }
         },
       })
     }
@@ -96,8 +104,9 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
             if (sh?.inv && findFood(sh.inv)) return { label: 'Kupuje jedzenie', steps: [go(seller.x, seller.z, 2), work('buy_food', 5, 'Kupuje jedzenie', String(seller.id))] }
           }
         }
-        // Last resort: settlement warehouse.
-        const wh = sim.building(sim.state.settlements[h.settlementId]?.warehouseId)
+        // Last resort: warehouse of the settlement the NPC is in (home or visited).
+        const here = settlementAt(sim, h.x, h.z, 300) ?? h.settlementId
+        const wh = sim.building(sim.state.settlements[here]?.warehouseId)
         if (wh?.inv && findFood(wh.inv) && (v.hunger < 35 || b5.a < 0.4)) {
           const wd = doorOf(wh)
           return { label: 'Bierze z magazynu', steps: [go(wd.x, wd.z, 2), work('eat_warehouse', 5, 'Je z zapasów osady', wh.id, 'eat')] }

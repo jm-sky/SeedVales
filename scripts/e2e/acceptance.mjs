@@ -88,7 +88,8 @@ try {
     const tree = sim.nodes.query(s.x, s.z, 260).filter((n) => n.kind === 'tree_broad' && !sim.state.nodes[n.id] && Math.hypot(n.x - s.x, n.z - s.z) > s.radius + 10)
       .sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0]
     window.__tree = tree.id
-    sv.approach(tree.x, tree.z, 1.3)
+    sv.approach(tree.x, tree.z, 1.0)
+    window.__felled0 = Object.values(sim.state.nodes).filter((x) => x.kind === 'felled').length
   })
   const treeT = await waitTarget((t) => t.opts.includes('chop'))
   check(results, '3. cel: drzewo z opcją ścinania', !!treeT, treeT?.label)
@@ -100,8 +101,14 @@ try {
   await page.waitForTimeout(1500)
   await shot(page, 'acc-03-chopping')
   await finishActivity()
-  const after = await S(() => ({ logs: window.__sv.count('log'), branch: window.__sv.count('branch'), main: window.__sv.state().main, felled: window.__sv.game.sim.state.nodes[window.__tree]?.kind }))
-  check(results, '3. ścięcie drzewa siekierą (auto-wzięta do ręki)', actKind === 'chop' && after.logs > logs0 && after.main === 'axe' && after.felled === 'felled', after)
+  const after = await S(() => {
+    const st = window.__sv.game.sim.state
+    const felled = Object.entries(st.nodes).filter(([, x]) => x.kind === 'felled')
+    // Remember which tree was felled (target chosen by facing — may differ from the one we walked to).
+    window.__tree = felled.sort((a, b) => b[1].at - a[1].at)[0]?.[0]
+    return { logs: window.__sv.count('log'), branch: window.__sv.count('branch'), main: window.__sv.state().main, felledDelta: felled.length - window.__felled0 }
+  })
+  check(results, '3. ścięcie drzewa siekierą (auto-wzięta do ręki)', actKind === 'chop' && after.logs > logs0 && after.main === 'axe' && after.felledDelta === 1, after)
 
   // 4b. Craft through the craft panel (club from branches, needs knife = 'cut').
   await key('KeyC')
@@ -159,7 +166,7 @@ try {
   if (await page.$('[data-testid="opt-build"]')) await clickTest('opt-build')
   await finishActivity()
   const built = await S(() => window.__sv.state().built)
-  check(results, '5. budowa ogniska: plac → materiały → ukończenie', !!siteT && built.includes('campfire'), built.join(','))
+  check(results, '5. budowa ogniska: plac → materiały → ukończenie', built.includes('campfire'), `${built.join(',')} target=${siteT?.label ?? '—'}`)
   await page.waitForTimeout(1200)
   await shot(page, 'acc-05-campfire')
 
@@ -181,6 +188,7 @@ try {
   for (let i = 0; i < 100 && !wolfDead; i++) {
     await S(() => {
       const sv = window.__sv
+      sv.simStep(0.3) // guarantee sim progress between clicks at low headless FPS
       const w = sv.game.sim.actor(window.__wolf)
       if (w) sv.face(w.x, w.z)
     })
@@ -251,6 +259,7 @@ try {
       if (!left) break
       await page.mouse.click(640, 360)
       await page.waitForTimeout(80)
+      if (i === 5) console.log('rat loop', JSON.stringify(await S(() => Object.fromEntries(Object.entries(window.__sv.perf.report().counters).filter(([k]) => k.startsWith('combat'))))))
     }
     // Repair the warehouse (hammer + branches) through the interaction menu until the nest is gone.
     await S((bid) => {

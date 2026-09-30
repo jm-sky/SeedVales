@@ -73,7 +73,7 @@ export const WORK_ACTS: Record<string, Act> = {
   pack_food: (sim, h) => {
     const inv = storeOf(sim, h)
     if (!inv) return true
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       const f = findFood(inv)
       if (!f) break
       for (const s of removeItem(inv, f.id, 1)) addItem(h.inv, s)
@@ -293,6 +293,12 @@ export const WORK_ACTS: Record<string, Act> = {
     for (const id of ['log', 'stone', 'iron_ingot', 'grain', 'bread', 'wool', 'hide', 'dried_meat']) {
       moved += move(here, there, id, 10, 6)
       moved += move(there, here, id, 10, 6)
+    }
+    // Provisions for the way back, bought from the visited settlement's stores.
+    for (let i = 0; i < 4; i++) {
+      const f = findFood(there.inv)
+      if (!f) break
+      for (const s of removeItem(there.inv, f.id, 1)) addItem(h.inv, s)
     }
     h.money += 5 + moved
     h.ai.cooldowns.caravan_back = sim.state.time.play + 3 * 3600

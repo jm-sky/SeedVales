@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { perf } from '../diag/perf'
 import { countItem } from './inventory'
-import { run, testSim } from './testWorld'
+import { playerFarAway, run, testSim } from './testWorld'
 
 describe('economy & long simulation', () => {
   it('3 game days at far LOD stay stable: no NaN, people fed, caravan trades between settlements', () => {
     const sim = testSim()
     // Player far away → everything at far LOD (cheap), like normal play elsewhere.
-    sim.player.x = 200
-    sim.player.z = 200
+    playerFarAway(sim)
     const t0 = performance.now()
     run(sim, 3 * 3600, 1)
     const ms = performance.now() - t0
     const alive = sim.state.npcs.filter((n) => !n.vitals.dead)
+    console.log('dead', sim.state.npcs.filter((n) => n.vitals.dead).map((n) => `${n.name}/${n.profession ?? n.age}/s${n.settlementId} ${JSON.stringify(n.vitals.parts)} h${n.vitals.hunger.toFixed(0)} t${n.vitals.thirst.toFixed(0)} ${n.ai.goal} ${n.ai.lastFail}`), sim.state.messages.filter((m) => m.kind === 'bad').map((m) => m.text).slice(-6))
     expect(alive.length).toBe(sim.state.npcs.length)
     const starving = sim.state.npcs.filter((n) => n.vitals.hunger <= 0 || n.vitals.thirst <= 0).map((n) => `${n.name}/${n.profession ?? n.age}/s${n.settlementId} h${n.vitals.hunger.toFixed(0)} t${n.vitals.thirst.toFixed(0)} ${n.ai.goal}:${n.ai.label} cd=${JSON.stringify(n.ai.cooldowns)}`)
     console.log('starving', starving)

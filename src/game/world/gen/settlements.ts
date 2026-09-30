@@ -39,13 +39,17 @@ export function scoreSites(g: SiteGrid): { x: number; z: number; score: number }
     for (let x = 400; x < WORLD_SIZE_M - 400; x += step) {
       const h = sampleGrid(g.height, x, z)
       if (h < 3 || h > 55) continue
-      // Flatness within 70 m.
+      // Flatness within 70 m; no water inside the settlement area.
       let maxDiff = 0
       let blocked = false
-      for (let a = 0; a < 8; a++) {
-        for (const r of [30, 70]) {
-          const px = x + Math.cos(a * 0.785) * r
-          const pz = z + Math.sin(a * 0.785) * r
+      {
+        const [ci0, cj0] = nearestCell(x, z)
+        if (g.waterKind[idx(ci0, cj0)]) continue
+      }
+      for (let a = 0; a < 16; a++) {
+        for (const r of [12, 30, 50, 70, 90]) {
+          const px = x + Math.cos(a * 0.3927) * r
+          const pz = z + Math.sin(a * 0.3927) * r
           const [ci, cj] = nearestCell(px, pz)
           const k = idx(ci, cj)
           if (g.waterKind[k] || g.height[k]! < SEA_LEVEL + 1) blocked = true
@@ -114,6 +118,11 @@ export function layoutSettlement(
     if (ci < 1 || cj < 1 || ci >= GRID_N - 1 || cj >= GRID_N - 1) return false
     const k = idx(ci, cj)
     if (g.waterKind[k] || g.height[k]! < SEA_LEVEL + 0.8) return false
+    // Keep structures well away from rivers/lakes (pads must not flood).
+    for (let a = 0; a < 8; a++) {
+      const [wi, wj] = nearestCell(x + Math.cos(a * 0.785) * (r + 10), z + Math.sin(a * 0.785) * (r + 10))
+      if (g.waterKind[idx(wi, wj)]) return false
+    }
     const b = g.biome[k]
     if (b === Biome.Mountain || b === Biome.Snow) return false
     return Math.abs(sampleGrid(g.height, x, z) - sampleGrid(g.height, cx, cz)) < 12
