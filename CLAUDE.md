@@ -35,6 +35,8 @@ Independent review (Grok / Scribe, 2026-09-30): see [docs/reviews/2026-09-30--00
 
 `docs/VISION.md` is canonical (the old `PR.md` was migrated into it). Plan statuses: `draft|planned|in_progress|blocked|done`.
 
+For the next implementation session, review `docs/DEVELOPER-CALIBRATION-TOOLS.md` and consider whether the proposed developer calibration tools should be implemented.
+
 ## Key design constraints from the vision (`docs/VISION.md`)
 
 - **Camera/art (decided)**: third-person camera; procedural low-poly terrain/buildings, imported glTF (or procedural placeholders) for characters/animals — see `docs/design/rendering-camera-and-art.md`.
