@@ -36,7 +36,8 @@ export function sellPrice(sim: Sim, npc: Human, s: ItemStack): number {
   const m = 0.5 + sim.player.skills.trade * 0.002 + mood(sim, npc)
   const spoiled = s.fresh !== undefined && d.food && s.fresh < d.food.spoilH * 0.3 ? 0.4 : 1
   const worn = s.dur !== undefined && d.durability ? 0.4 + 0.6 * (s.dur / d.durability) : 1
-  return Math.max(0, Math.floor(d.price * qualityMult(s) * spoiled * worn * Math.min(0.9, Math.max(0.3, m))))
+  const v = d.price * qualityMult(s) * spoiled * worn * Math.min(0.9, Math.max(0.3, m))
+  return d.price > 0 ? Math.max(1, Math.round(v)) : 0
 }
 
 export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): ActionResult {

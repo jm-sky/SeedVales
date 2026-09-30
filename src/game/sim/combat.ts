@@ -10,6 +10,7 @@ import { COMBAT, STAMINA } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { itemDef } from '../data/items'
 import { SPECIES, VARIANT_MULT } from '../data/species'
+import { perf } from '../diag/perf'
 import { train } from './actions'
 import { qualityMult, removeItem, wearTool } from './inventory'
 import { questOnKill } from './quests'
@@ -178,7 +179,7 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
     const d = Math.hypot(t.x - a.x, t.z - a.z)
     const tr = t.kind === 'animal' ? SPECIES[(t as Animal).species].length * 0.4 : 0.4
     if (d > reach + tr) continue
-    const ang = Math.abs(angleDiff(a.rot, Math.atan2(t.x - a.x, t.z - a.z)))
+    const ang = d < 0.9 ? 0 : Math.abs(angleDiff(a.rot, Math.atan2(t.x - a.x, t.z - a.z)))
     if (ang > (coneDeg * Math.PI) / 360) continue
     const score = d + ang * 2 - (t.id === preferId ? 5 : 0)
     if (score < bestScore) {
@@ -186,12 +187,21 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
       best = t
     }
   }
-  if (!best) return null
+  perf.count('combat.swings')
+  if (!best) {
+    perf.count('combat.noTarget')
+    return null
+  }
   const skill = isHuman(a) ? a.skills.melee : 50
   const agi = isHuman(a) ? a.attrs.agi : 5
   const tAgi = isHuman(best) ? best.attrs.agi : 5
   const hitChance = Math.min(0.95, Math.max(0.25, 0.6 + skill * 0.004 + (agi - tAgi) * 0.03))
-  if (!sim.rng.chance(hitChance)) return best
+  perf.gauge('combat.lastHitChance', hitChance * 100)
+  if (!sim.rng.chance(hitChance)) {
+    perf.count('combat.misses')
+    return best
+  }
+  perf.count('combat.hits')
   let dmg = w.damage * (0.6 + (skill / 100) * 0.8) * penalty(a.vitals) * (0.6 + (a.vitals.stamina / 100) * 0.4)
   if (isHuman(a)) {
     dmg *= 0.8 + a.attrs.str * 0.04

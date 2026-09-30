@@ -26,6 +26,9 @@ export interface DebugApi {
   simStep(seconds: number): void
   setNeeds(v: Partial<{ hunger: number; thirst: number; vigor: number; stamina: number }>): void
   face(x: number, z: number): void
+  pause(on: boolean): void
+  /** Teleport next to a point and face it (distance d). */
+  approach(x: number, z: number, d?: number): void
 }
 
 export function installDebugApi(game: Game) {
@@ -86,6 +89,16 @@ export function installDebugApi(game: Game) {
       for (let t = 0; t < seconds; t += 0.1) s.step(0.1 * s.timeScale)
     },
     setNeeds: (v) => Object.assign(sim().player.vitals, v),
+    pause: (on) => {
+      sim().paused = on
+    },
+    approach: (x, z, d = 1.6) => {
+      const p = sim().player
+      const a = Math.atan2(p.x - x, p.z - z)
+      game.debugTeleport(x + Math.sin(a) * d, z + Math.cos(a) * d)
+      p.rot = Math.atan2(x - p.x, z - p.z)
+      game.renderer.rig.yaw = p.rot
+    },
     face: (x, z) => {
       const p = sim().player
       p.rot = Math.atan2(x - p.x, z - p.z)

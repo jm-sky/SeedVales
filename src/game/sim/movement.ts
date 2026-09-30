@@ -53,6 +53,7 @@ export function steerTo(
     dirz = nz / l
   }
   moveWithCollision(sim, a, dirx * step, dirz * step, radius, full, a.kind === 'animal')
+  if (full) separate(sim, a, radius)
   const moved = Math.hypot(a.x - ox, a.z - oz)
   a.vx = (a.x - ox) / Math.max(dt, 1e-4)
   a.vz = (a.z - oz) / Math.max(dt, 1e-4)
@@ -101,4 +102,19 @@ export function routeVia(sim: Sim, x0: number, z0: number, x1: number, z1: numbe
     }
   }
   return [{ x: x1, z: z1 }]
+}
+
+/** Soft separation from nearby actors (near LOD only) so bodies don't overlap. */
+function separate(sim: Sim, a: Actor, radius: number) {
+  for (const o of sim.actors.query(a.x, a.z, 1.5)) {
+    if (o === a || o.vitals.dead) continue
+    const dx = a.x - o.x
+    const dz = a.z - o.z
+    const d = Math.hypot(dx, dz)
+    const min = radius + 0.35
+    if (d < min && d > 1e-3) {
+      a.x += (dx / d) * (min - d) * 0.5
+      a.z += (dz / d) * (min - d) * 0.5
+    }
+  }
 }

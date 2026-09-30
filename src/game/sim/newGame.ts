@@ -146,6 +146,10 @@ export function createNewGame(world: WorldData): GameState {
           if (r.age === 'adult') addItem(npc.inv, newStack('knife'))
         }
         addItem(npc.inv, newStack('bread', 1))
+        // Varied starting needs so the settlement doesn't act in lock-step.
+        npc.vitals.thirst = rng.range(35, 95)
+        npc.vitals.hunger = rng.range(40, 95)
+        npc.vitals.social = rng.range(30, 90)
         npcs.push(npc)
         hh.memberIds.push(npc.id)
       }
@@ -196,7 +200,7 @@ export function createNewGame(world: WorldData): GameState {
   player.name = 'Wędrowiec'
   player.attrs = { str: 5, per: 5, end: 5, cha: 5, int: 5, agi: 5 }
   player.vitals = newVitals(100)
-  player.money = 60
+  player.money = 150
   player.settlementId = home.id
   player.householdId = -1
   for (const [it, q] of [['knife', 1], ['waterskin_m', 1], ['bread', 2], ['apple', 3], ['bandage', 2], ['flint', 1], ['torch', 2], ['blanket', 1]] as const) {

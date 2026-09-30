@@ -156,7 +156,8 @@ export class Game {
     // Combat facing follows camera.
     if (sim.player.combat && Math.hypot(ax, ay) < 0.1) sim.player.rot = rig.yaw
     sim.interruptReason = null
-    sim.step(dt * sim.timeScale)
+    // Game menu pauses the world (single-player).
+    if (this.panel !== 'menu') sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
     this.renderer.render(dt)
     sim.events.length = 0
@@ -164,7 +165,7 @@ export class Game {
     this.uiTimer -= dt
     if (this.uiTimer <= 0) {
       this.uiTimer = 0.2
-      this.target = sim.player.vitals.ko ? null : findTarget(sim, sim.player.rot)
+      this.target = sim.player.vitals.ko && sim.player.vitals.ko.until > sim.state.time.play ? null : findTarget(sim, sim.player.rot)
       this.options = this.target ? targetOptions(sim, this.target.ref) : []
       perf.gauge('ui.listeners', this.uiListeners.size)
       perf.measure('ui.sync', () => this.notify())

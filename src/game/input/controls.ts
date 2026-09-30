@@ -44,6 +44,7 @@ const KEYMAP: Record<string, KeyAction> = {
 }
 
 export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): () => void {
+  let lockTried = false
   const typing = (e: KeyboardEvent) => {
     const t = e.target as HTMLElement | null
     return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')
@@ -61,7 +62,9 @@ export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): (
   const md = (e: MouseEvent) => {
     if (h.isUiOpen()) return
     if (e.button === 0) {
-      if (document.pointerLockElement !== canvas) {
+      // First click grabs the mouse; if pointer lock is unavailable (e.g. embedded/headless), clicks still attack.
+      if (document.pointerLockElement !== canvas && !lockTried) {
+        lockTried = true
         canvas.requestPointerLock?.()
         return
       }
