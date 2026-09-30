@@ -934,8 +934,8 @@
    "scope": "v2",
    "behavior": "Duża mapa z lokalizacjami; minimapa ze strzałką do wyznaczonego celu",
    "verify": "e2e + screenshoty",
-   "status": "planned",
-   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+   "status": "verified",
+   "evidence": "sim/navigation.ts (px.waypoint, px.visited, navGoal = waypoint else active quest, bearing, navigationSystem 2 s) + navigation.test.ts (UI-04, 3 tests); MapPanel: click sets waypoint, per-settlement „Cel”, visited/unvisited, quest „!” markers, player arrow; HUD Minimap (north-up, buildings, goal ring or rim arrow + distance; desktop under clock, mobile under status); shared raster ui/map/worldMapImage.ts (1 px per 8 m cell, built once). e2e acceptance step 12 (map click → waypoint → minimap „Znacznik · 3.4 km” → clear), mobile M4 (minimap present); screenshots acc-12-map, acc-12-minimap. Landmarks on the map: world--001 (wave 5)"
   },
   {
    "id": "UI-05",

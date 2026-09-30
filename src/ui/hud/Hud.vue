@@ -3,6 +3,7 @@ import { useGameStrict } from '@/composables/useGame'
 import ActivityBar from './ActivityBar.vue'
 import ClockWeather from './ClockWeather.vue'
 import MessageLog from './MessageLog.vue'
+import Minimap from './Minimap.vue'
 import ModeBar from './ModeBar.vue'
 import StatusBars from './StatusBars.vue'
 import TargetPrompt from './TargetPrompt.vue'
@@ -16,9 +17,15 @@ const { game } = useGameStrict()
     <div class="absolute left-3 top-3 flex flex-col gap-2">
       <StatusBars />
       <ModeBar />
+      <Minimap
+        v-if="game.isTouch"
+        :size="88"
+        :radius="160"
+      />
     </div>
-    <div class="absolute right-3 top-3">
+    <div class="absolute right-3 top-3 flex flex-col items-end gap-2">
       <ClockWeather />
+      <Minimap v-if="!game.isTouch" />
     </div>
     <div class="absolute bottom-40 left-1/2 flex w-[min(92vw,420px)] -translate-x-1/2 flex-col items-center gap-2 sm:bottom-24">
       <ToastLine />

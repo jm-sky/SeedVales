@@ -85,7 +85,8 @@ try {
   const map = !!(await page.$('[data-testid="autopilot-1"]'))
   await shot(page, 'mob-05-map')
   await tap('panel-close')
-  check(results, 'M4. menu dotykowe: ekwipunek, wytwarzanie, mapa', inv && craft && map)
+  const minimap = !!(await page.$('[data-testid="minimap"]'))
+  check(results, 'M4. menu dotykowe: ekwipunek, wytwarzanie, mapa; minimapa w HUD', inv && craft && map && minimap)
 
   // Attack button hits an adjacent deer (auto-target cone is wider on touch).
   await S(() => {

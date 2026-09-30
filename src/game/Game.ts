@@ -23,6 +23,7 @@ import { canCraft, craftTime } from './sim/craft'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
+import { clearWaypoint, setWaypoint } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
 import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/player'
 import { Sim } from './sim/sim'
@@ -494,6 +495,17 @@ export class Game {
         break
     }
     this.panel = null
+    this.notify()
+  }
+
+  /** Map waypoint (UI-04): shown on the map and by the minimap arrow until reached or cleared. */
+  setWaypoint(x: number, z: number, label?: string) {
+    this.showToast(setWaypoint(this.sim, x, z, label))
+    this.notify()
+  }
+
+  clearWaypoint() {
+    clearWaypoint(this.sim)
     this.notify()
   }
 

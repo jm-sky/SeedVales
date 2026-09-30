@@ -356,6 +356,10 @@ export interface PlayerExtra {
   bed?: string
   /** Preferred weapons (item ids) for quick switching (UI-03). */
   primary?: Partial<Record<WeaponKind, string>>
+  /** Map waypoint set by the player (UI-04). */
+  waypoint?: { x: number; z: number; label: string }
+  /** Settlement ids the player has reached (map, UI-04). */
+  visited?: number[]
 }
 
 export type WeaponKind = 'melee' | 'ranged'

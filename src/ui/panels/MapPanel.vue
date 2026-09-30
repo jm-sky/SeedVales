@@ -1,62 +1,72 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { Biome } from '@/game/world/types'
+import { isVisited, navGoal, questGoal } from '@/game/sim/navigation'
+import { drawArrow, worldMapImage } from '@/ui/map/worldMapImage'
 import PanelFrame from './PanelFrame.vue'
 
-const { game } = useGameStrict()
+const { game, version } = useGameStrict()
 const canvas = ref<HTMLCanvasElement>()
-const COLORS: Record<number, [number, number, number]> = {
-  [Biome.Ocean]: [40, 70, 110], [Biome.Beach]: [210, 195, 140], [Biome.Meadow]: [110, 150, 60], [Biome.Steppe]: [170, 160, 90],
-  [Biome.Swamp]: [80, 90, 50], [Biome.ForestDeciduous]: [70, 115, 45], [Biome.ForestMixed]: [60, 100, 45], [Biome.ForestConifer]: [45, 80, 45],
-  [Biome.Mountain]: [120, 115, 110], [Biome.Snow]: [235, 240, 245], [Biome.Water]: [60, 110, 160],
+const S = 512
+
+const view = computed(() => {
+  void version.value
+  const sim = game.value.sim
+  const p = sim.player
+  return {
+    goal: navGoal(sim),
+    settlements: sim.world.settlements.map((s) => ({ ...s, visited: isVisited(sim, s.id), km: (Math.hypot(s.x - p.x, s.z - p.z) / 1000).toFixed(1) })),
+    quests: sim.state.quests.filter((q) => q.status === 'active').map((q) => questGoal(sim, q)).filter((g) => !!g),
+  }
+})
+
+function draw() {
+  const c = canvas.value
+  if (!c) return
+  const sim = game.value.sim
+  const w = sim.world
+  const ctx = c.getContext('2d')!
+  ctx.imageSmoothingEnabled = true
+  ctx.drawImage(worldMapImage(w), 0, 0, S, S)
+  const sc = S / w.size
+  ctx.font = 'bold 12px sans-serif'
+  for (const s of view.value.settlements) {
+    ctx.fillStyle = s.visited ? '#f5d88a' : '#b8b0a0'
+    ctx.fillRect(s.x * sc - 4, s.z * sc - 4, 8, 8)
+    ctx.fillStyle = s.visited ? '#fff' : '#ddd'
+    ctx.fillText(`${s.name}${s.visited ? '' : ' ?'}`, s.x * sc + 6, s.z * sc - 6)
+  }
+  for (const q of view.value.quests) {
+    ctx.fillStyle = '#ff5a3c'
+    ctx.font = 'bold 16px sans-serif'
+    ctx.fillText('!', q.x * sc - 3, q.z * sc + 6)
+  }
+  const g = view.value.goal
+  if (g) {
+    ctx.strokeStyle = '#4fc3ff'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(g.x * sc, g.z * sc, 7, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  const p = sim.player
+  drawArrow(ctx, p.x * sc, p.z * sc, p.rot, 8, '#ff4040')
 }
 
 onMounted(() => {
-  const g = game.value
-  const w = g.sim.world
-  const c = canvas.value!
-  const S = 512
-  c.width = S
-  c.height = S
-  const ctx = c.getContext('2d')!
-  const img = ctx.createImageData(S, S)
-  const step = (w.n - 1) / S
-  for (let y = 0; y < S; y++) {
-    for (let x = 0; x < S; x++) {
-      const k = Math.floor(y * step) * w.n + Math.floor(x * step)
-      const col = COLORS[w.biome[k]!] ?? [0, 0, 0]
-      const shade = Math.max(0.6, Math.min(1.2, 0.85 + w.height[k]! / 400))
-      const o = (y * S + x) * 4
-      img.data[o] = col[0] * shade
-      img.data[o + 1] = col[1] * shade
-      img.data[o + 2] = col[2] * shade
-      img.data[o + 3] = 255
-    }
-  }
-  ctx.putImageData(img, 0, 0)
-  const sc = S / w.size
-  ctx.strokeStyle = '#8b6a3e'
-  ctx.lineWidth = 2
-  for (const r of w.roads) {
-    ctx.beginPath()
-    r.points.forEach((p, i) => (i ? ctx.lineTo(p.x * sc, p.z * sc) : ctx.moveTo(p.x * sc, p.z * sc)))
-    ctx.stroke()
-  }
-  ctx.font = 'bold 12px sans-serif'
-  for (const s of w.settlements) {
-    ctx.fillStyle = '#f5d88a'
-    ctx.fillRect(s.x * sc - 4, s.z * sc - 4, 8, 8)
-    ctx.fillStyle = '#fff'
-    ctx.fillText(`${s.name} (${s.size})`, s.x * sc + 6, s.z * sc - 6)
-  }
-  const p = g.sim.player
-  ctx.fillStyle = '#ff4040'
-  ctx.beginPath()
-  ctx.arc(p.x * sc, p.z * sc, 5, 0, Math.PI * 2)
-  ctx.fill()
+  canvas.value!.width = S
+  canvas.value!.height = S
+  draw()
 })
+watch(view, draw)
+
+function pick(e: MouseEvent) {
+  const c = canvas.value!
+  const r = c.getBoundingClientRect()
+  const size = game.value.sim.world.size
+  game.value.setWaypoint(((e.clientX - r.left) / r.width) * size, ((e.clientY - r.top) / r.height) * size)
+}
 
 function auto(id: number) {
   game.value.showToast(game.value.autopilotTo(id))
@@ -72,25 +82,56 @@ function auto(id: number) {
     <div class="flex flex-col gap-3 sm:flex-row">
       <canvas
         ref="canvas"
-        class="aspect-square w-full max-w-[512px] rounded border"
+        class="aspect-square w-full max-w-[512px] cursor-crosshair rounded border"
+        data-testid="map-canvas"
+        @click="pick"
       />
       <div class="flex-1 space-y-2">
         <p class="text-xs text-muted-foreground">
-          Podróż tylko fizyczna. Autopilot prowadzi po drodze (czas może płynąć ×3), zagrożenie go przerywa.
+          Podróż tylko fizyczna. Kliknij mapę, by wyznaczyć cel — strzałka na minimapie wskaże kierunek. Autopilot prowadzi po drodze (czas może płynąć ×3), zagrożenie go przerywa.
         </p>
         <div
-          v-for="s in game.sim.world.settlements"
-          :key="s.id"
-          class="flex items-center justify-between rounded border p-2 text-xs"
+          v-if="view.goal"
+          class="flex items-center justify-between rounded border border-sky-400/60 p-2 text-xs"
+          data-testid="map-goal"
         >
-          <span>{{ s.name }} ({{ s.size }}) · {{ (Math.hypot(s.x - game.sim.player.x, s.z - game.sim.player.z) / 1000).toFixed(1) }} km</span>
+          <span>Cel: {{ view.goal.label }}</span>
           <Button
+            v-if="view.goal.kind === 'waypoint'"
             size="xs"
-            :data-testid="`autopilot-${s.id}`"
-            @click="auto(s.id)"
+            variant="outline"
+            data-testid="map-clear-goal"
+            @click="game.clearWaypoint()"
           >
-            Autopilot
+            Usuń
           </Button>
+        </div>
+        <div
+          v-for="s in view.settlements"
+          :key="s.id"
+          class="flex items-center justify-between gap-1 rounded border p-2 text-xs"
+        >
+          <span>{{ s.name }} ({{ s.size }}) · {{ s.km }} km<span
+            v-if="!s.visited"
+            class="text-muted-foreground"
+          > · nieodwiedzona</span></span>
+          <span class="flex gap-1">
+            <Button
+              size="xs"
+              variant="outline"
+              :data-testid="`waypoint-${s.id}`"
+              @click="game.setWaypoint(s.x, s.z, s.name)"
+            >
+              Cel
+            </Button>
+            <Button
+              size="xs"
+              :data-testid="`autopilot-${s.id}`"
+              @click="auto(s.id)"
+            >
+              Autopilot
+            </Button>
+          </span>
         </div>
       </div>
     </div>

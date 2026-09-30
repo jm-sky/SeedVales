@@ -11,6 +11,7 @@ import { regrowNodes } from './actions'
 import { projectileSystem } from './combat'
 import { faunaSystem } from './fauna/ai'
 import { addItem, newStack, spoilInventory } from './inventory'
+import { navigationSystem } from './navigation'
 import { makeAnimal, rollVariant } from './newGame'
 import { npcSystem } from './npc/ai'
 import { playerSystem } from './player'
@@ -140,6 +141,7 @@ export function installSystems(sim: Sim) {
     { name: 'quests', interval: 10, run: (s) => questSystem(s) },
     { name: 'taxes', interval: 30, run: (s) => collectTaxes(s) },
     { name: 'traces', interval: 10, run: traceSystem },
+    { name: 'navigation', interval: 2, run: navigationSystem },
   ]
   sim.systems = sys
   perf.gauge('sim.systems', sys.length)
