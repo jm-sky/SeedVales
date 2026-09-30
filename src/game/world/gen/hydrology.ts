@@ -1,3 +1,4 @@
+import { MinHeap } from '../grid'
 /**
  * Hydrology: priority-flood depression filling, flow accumulation, rivers (source in hills/mountains,
  * mouth in sea or lake), lakes in deep depressions. Carves river beds into the heightfield.
@@ -6,7 +7,6 @@
  * @subdomain hydrology
  */
 import { GRID_N, SEA_LEVEL } from '../types'
-import { MinHeap } from '../grid'
 
 const DI = [1, -1, 0, 0, 1, 1, -1, -1]
 const DJ = [0, 0, 1, -1, 1, -1, 1, -1]

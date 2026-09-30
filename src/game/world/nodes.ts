@@ -160,26 +160,6 @@ export class NodeCache {
           radius: 0,
         }
         switch (kind) {
-          case 'tree_broad':
-            node.scale = 12 + v * 10
-            node.radius = 0.35
-            break
-          case 'tree_apple':
-            node.scale = 6 + v * 3
-            node.radius = 0.25
-            break
-          case 'tree_pine':
-            node.scale = 15 + v * 15
-            node.radius = 0.35
-            break
-          case 'tree_dead':
-            node.scale = 8 + v * 6
-            node.radius = 0.3
-            break
-          case 'rock':
-            node.scale = 1.2 + v * 1.8
-            node.radius = node.scale * 0.8
-            break
           case 'bush':
           case 'bush_berry':
             node.scale = 0.8 + v * 0.6
@@ -197,6 +177,26 @@ export class NodeCache {
             node.herb ??= 'mint'
             break
           }
+          case 'rock':
+            node.scale = 1.2 + v * 1.8
+            node.radius = node.scale * 0.8
+            break
+          case 'tree_apple':
+            node.scale = 6 + v * 3
+            node.radius = 0.25
+            break
+          case 'tree_broad':
+            node.scale = 12 + v * 10
+            node.radius = 0.35
+            break
+          case 'tree_dead':
+            node.scale = 8 + v * 6
+            node.radius = 0.3
+            break
+          case 'tree_pine':
+            node.scale = 15 + v * 15
+            node.radius = 0.35
+            break
           default:
             node.scale = 0.7 + v * 0.6
         }

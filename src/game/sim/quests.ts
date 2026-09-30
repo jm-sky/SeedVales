@@ -5,8 +5,8 @@
  */
 import type { Sim } from './sim'
 import type { Quest } from './types'
-import { hp } from './vitals'
 import { addRep } from './reputation'
+import { hp } from './vitals'
 
 export function questSystem(sim: Sim) {
   const s = sim.state

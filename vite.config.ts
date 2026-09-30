@@ -17,6 +17,8 @@ export default defineConfig({
         'scripts/**',
         '*.test.ts',
         'dist/**',
+        '_temp/**',
+        'public/assets/**',
       ]
     }
   }

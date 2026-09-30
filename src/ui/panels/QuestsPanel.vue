@@ -1,0 +1,135 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Button } from '@/components/ui/button'
+import { useGameStrict } from '@/composables/useGame'
+import { acceptQuest } from '@/game/sim/quests'
+import { BADGES, REP_NAMES, tryApologize } from '@/game/sim/reputation'
+import { REP_DIMS } from '@/game/sim/types'
+import PanelFrame from './PanelFrame.vue'
+
+const { game, version } = useGameStrict()
+const STATUS = { available: 'dostępne', active: 'w toku', done: 'ukończone', expired: 'nieaktualne' }
+const d = computed(() => {
+  void version.value
+  const s = game.value.sim.state
+  return {
+    quests: [...s.quests].reverse(),
+    reps: s.settlements.map((st) => ({ name: st.name, rep: st.rep, pending: st.pendingRep.length })),
+    badges: BADGES.filter((b) => s.px.badges[b.id]),
+  }
+})
+function accept(id: string) {
+  game.value.showToast(acceptQuest(game.value.sim, id))
+  version.value++
+}
+function apologize(id: string) {
+  game.value.showToast(tryApologize(game.value.sim, id))
+  version.value++
+}
+</script>
+
+<template>
+  <PanelFrame
+    title="Zadania i reputacja"
+    wide
+    @close="game.closePanel()"
+  >
+    <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
+      Ogłoszenia i zadania
+    </h3>
+    <p
+      v-if="!d.quests.length"
+      class="text-muted-foreground"
+    >
+      Brak ogłoszeń. Problemy osad (np. szczury w zaniedbanych budynkach, wilki) pojawiają się z czasem.
+    </p>
+    <div class="grid gap-2">
+      <div
+        v-for="q in d.quests"
+        :key="q.id"
+        class="rounded-md border p-2"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-semibold">{{ q.title }}</span>
+          <span class="text-xs text-muted-foreground">{{ STATUS[q.status] }}</span>
+        </div>
+        <p class="mt-1 text-xs">
+          {{ q.desc }}
+        </p>
+        <div class="mt-1 flex items-center justify-between text-xs">
+          <span>Postęp: {{ q.kills }}/{{ q.killsNeeded }} · nagroda {{ q.reward }} m</span>
+          <Button
+            v-if="q.status === 'available'"
+            size="xs"
+            :data-testid="`accept-${q.kind}`"
+            @click="accept(q.id)"
+          >
+            Przyjmij
+          </Button>
+        </div>
+      </div>
+    </div>
+    <h3 class="mb-1 mt-4 text-xs font-semibold uppercase text-muted-foreground">
+      Reputacja
+    </h3>
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="text-muted-foreground">
+          <th class="text-left">
+            Osada
+          </th>
+          <th
+            v-for="k in REP_DIMS"
+            :key="k"
+          >
+            {{ REP_NAMES[k] }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="r in d.reps"
+          :key="r.name"
+          class="border-t"
+        >
+          <td class="py-1">
+            {{ r.name }}<span
+              v-if="r.pending"
+              class="text-muted-foreground"
+            > (wieści w drodze)</span>
+          </td>
+          <td
+            v-for="k in REP_DIMS"
+            :key="k"
+            class="text-center"
+            :class="r.rep[k] > 0 ? 'text-good' : r.rep[k] < 0 ? 'text-bad' : ''"
+          >
+            {{ r.rep[k].toFixed(1) }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 class="mb-1 mt-4 text-xs font-semibold uppercase text-muted-foreground">
+      Odznaki
+    </h3>
+    <div class="flex flex-wrap gap-2">
+      <span
+        v-for="b in d.badges"
+        :key="b.id"
+        class="rounded px-2 py-1 text-xs"
+        :class="b.positive ? 'bg-good/30' : 'bg-bad/30'"
+      >
+        {{ b.name }}
+        <button
+          v-if="!b.positive"
+          class="ml-1 underline"
+          @click="apologize(b.id)"
+        >przeproś</button>
+      </span>
+      <span
+        v-if="!d.badges.length"
+        class="text-xs text-muted-foreground"
+      >Brak.</span>
+    </div>
+  </PanelFrame>
+</template>

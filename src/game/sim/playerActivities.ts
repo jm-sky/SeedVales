@@ -7,7 +7,7 @@ import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { PlayerActivity } from './types'
 import { recipeById } from '../data/recipes'
-import { buryCorpse, burnDen, butcher, dig, drinkFromWater, fellTree, fillContainers, gatherNode, levelTerrain, mineRock, raiseTerrain, repairBuilding } from './actions'
+import { burnDen, buryCorpse, butcher, dig, drinkFromWater, fellTree, fillContainers, gatherNode, levelTerrain, mineRock, raiseTerrain, repairBuilding } from './actions'
 import { applyBuildProgress } from './build'
 import { completeCraft } from './craft'
 

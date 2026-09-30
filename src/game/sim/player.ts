@@ -13,7 +13,7 @@ import { fireRanged, isProtected, weaponOf } from './combat'
 import { carriedWeight, carryCapacity } from './inventory'
 import { nearestNaturalWater } from './npc/queries'
 import { ACTIVITY_DONE } from './playerActivities'
-import { updateVitals, type Exertion, hp, penalty } from './vitals'
+import { type Exertion, hp, penalty, updateVitals } from './vitals'
 
 export interface PlayerInput {
   /** World-space desired direction (not normalised → magnitude 0..1 for analog). */

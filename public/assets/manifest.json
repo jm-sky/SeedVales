@@ -1,0 +1,184 @@
+{
+ "generatedBy": "scripts/assets/build-assets.mjs",
+ "files": [
+  {
+   "dst": "public/assets/nature.glb",
+   "from": "Stylized_Nature_MegaKitStandard/glTF",
+   "models": [
+    "CommonTree_1",
+    "CommonTree_3",
+    "Pine_1",
+    "Pine_3",
+    "DeadTree_1",
+    "Bush_Common",
+    "Bush_Common_Flowers",
+    "Rock_Medium_1",
+    "Rock_Medium_2",
+    "Pebble_Round_1",
+    "Mushroom_Common",
+    "Flower_3_Group",
+    "Plant_1",
+    "Grass_Common_Tall",
+    "Fern_1"
+   ],
+   "kb": 3325,
+   "tex": 512
+  },
+  {
+   "dst": "public/assets/village.glb",
+   "from": "Medieval_Village_MegaKitStandard/Medieval Village MegaKit[Standard]/glTF",
+   "models": [
+    "Wall_Plaster_Straight",
+    "Wall_Plaster_Door_Round",
+    "Wall_Plaster_Window_Wide_Round",
+    "Wall_UnevenBrick_Straight",
+    "Wall_UnevenBrick_Door_Flat",
+    "Wall_UnevenBrick_Window_Wide_Flat",
+    "Wall_Plaster_WoodGrid",
+    "Corner_Exterior_Wood",
+    "Corner_Exterior_Brick",
+    "Floor_WoodDark",
+    "Roof_RoundTiles_4x4",
+    "Roof_RoundTiles_6x8",
+    "Roof_RoundTiles_8x10",
+    "Roof_RoundTiles_6x6",
+    "Roof_RoundTiles_8x8",
+    "Prop_Chimney",
+    "Prop_Crate",
+    "Prop_WoodenFence_Single",
+    "Prop_Wagon",
+    "Door_1_Round",
+    "Door_1_Flat",
+    "Window_Wide_Round1",
+    "Window_Wide_Flat1"
+   ],
+   "kb": 2458,
+   "tex": 512
+  },
+  {
+   "dst": "public/assets/props.glb",
+   "from": "Fantasy_Props_MegaKitStandard/Exports/glTF",
+   "models": [
+    "Anvil",
+    "Barrel",
+    "Bench",
+    "Stall_Empty",
+    "Stall_Cart_Empty",
+    "Workbench",
+    "Chest_Wood",
+    "Bucket_Wooden_1",
+    "Torch_Metal",
+    "Cauldron",
+    "FarmCrate_Carrot",
+    "Crate_Wooden",
+    "Lantern_Wall",
+    "Anvil_Log"
+   ],
+   "kb": 851,
+   "tex": 256
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Deer.gltf",
+   "dst": "public/assets/animals/Deer.glb",
+   "kb": 524,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Stag.gltf",
+   "dst": "public/assets/animals/Stag.glb",
+   "kb": 481,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Wolf.gltf",
+   "dst": "public/assets/animals/Wolf.glb",
+   "kb": 541,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Fox.gltf",
+   "dst": "public/assets/animals/Fox.glb",
+   "kb": 540,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Cow.gltf",
+   "dst": "public/assets/animals/Cow.glb",
+   "kb": 538,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Horse.gltf",
+   "dst": "public/assets/animals/Horse.glb",
+   "kb": 609,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Donkey.gltf",
+   "dst": "public/assets/animals/Donkey.glb",
+   "kb": 602,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Ultimate_Animated_Animal_Pack/glTF/Husky.gltf",
+   "dst": "public/assets/animals/Husky.glb",
+   "kb": 511,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Outfits/Modular Character Outfits - Fantasy[Source]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf",
+   "dst": "public/assets/characters/Male_Peasant.glb",
+   "kb": 686,
+   "ratio": 0.35,
+   "tex": 512
+  },
+  {
+   "src": "Outfits/Modular Character Outfits - Fantasy[Source]/Exports/glTF (Godot-Unreal)/Outfits/Female_Peasant.gltf",
+   "dst": "public/assets/characters/Female_Peasant.glb",
+   "kb": 462,
+   "ratio": 0.35,
+   "tex": 512
+  },
+  {
+   "src": "Outfits/Modular Character Outfits - Fantasy[Source]/Exports/glTF (Godot-Unreal)/Outfits/Male_Ranger.gltf",
+   "dst": "public/assets/characters/Male_Ranger.glb",
+   "kb": 951,
+   "ratio": 0.35,
+   "tex": 512
+  },
+  {
+   "src": "Outfits/Modular Character Outfits - Fantasy[Source]/Exports/glTF (Godot-Unreal)/Outfits/Female_Ranger.gltf",
+   "dst": "public/assets/characters/Female_Ranger.glb",
+   "kb": 949,
+   "ratio": 0.35,
+   "tex": 512
+  },
+  {
+   "src": "Universal_Base_CharactersStandard/Universal Base Characters[Standard]/Base Characters/Godot - UE/Superhero_Male_FullBody.gltf",
+   "dst": "public/assets/characters/Male_Head.glb",
+   "kb": 661,
+   "ratio": 0.5,
+   "tex": 512
+  },
+  {
+   "src": "Universal_Base_CharactersStandard/Universal Base Characters[Standard]/Base Characters/Godot - UE/Superhero_Female_FullBody.gltf",
+   "dst": "public/assets/characters/Female_Head.glb",
+   "kb": 697,
+   "ratio": 0.5,
+   "tex": 512
+  },
+  {
+   "src": "UAL1_Standard.glb",
+   "dst": "public/assets/characters/anims.glb",
+   "kb": 2496
+  }
+ ]
+}

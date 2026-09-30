@@ -1,3 +1,4 @@
+import { smoothstep } from '../../core/math'
 /**
  * Base heightfield + moisture: continent in ocean, ridged sharp mountains, rolling lowlands,
  * coastal cliffs and small meadow scarps.
@@ -5,7 +6,6 @@
  * @subdomain world-gen
  */
 import { Noise2D } from '../../core/noise'
-import { smoothstep } from '../../core/math'
 import { CELL_M, GRID_N, WORLD_SIZE_M } from '../types'
 
 export interface BaseFields {

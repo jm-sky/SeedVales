@@ -46,3 +46,6 @@ playwright-report/*
 .env
 
 _temp
+
+# E2E/bench artefacts (reports kept via docs)
+test-results/

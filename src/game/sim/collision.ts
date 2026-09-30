@@ -9,7 +9,7 @@ import type { Building } from './types'
 import { perf } from '../diag/perf'
 import { isTree } from '../world/nodes'
 
-const NO_COLLIDE = new Set(['field', 'pen', 'herbgarden', 'campfire', 'bridge'])
+const NO_COLLIDE = new Set(['bridge', 'campfire', 'field', 'herbgarden', 'pen'])
 const scratch: ResNode[] = []
 
 /** Ground height including bridge decks. */

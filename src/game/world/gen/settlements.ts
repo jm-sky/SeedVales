@@ -135,7 +135,7 @@ export function layoutSettlement(
   }
   tryAround('well', 0.3, 8, 1.1, 1.1)
   tryAround('noticeboard', 2.2, 8, 1, 0.3)
-  tryAround('warehouse', 4, 17, 5, 4)
+  tryAround('warehouse', 4, 18, 5, 4)
   if (size !== 'SM') tryAround('market', 1.3, 15, 3, 2)
   if (size === 'LG' || size === 'MD') tryAround('inn', 5.2, 22, 6, 5)
 
@@ -148,7 +148,7 @@ export function layoutSettlement(
       const ang = (hIdx / profs.length) * Math.PI * 2 + rng.range(-0.25, 0.25) + t * 0.4
       const r = baseR + rng.range(0, 16) + Math.floor(t / 6) * 8
       const p = around(ang, r)
-      if (free(p.x, p.z, 6.5)) house = add('house', p.x, p.z, Math.atan2(cx - p.x, cz - p.z), 4, 3.5, hIdx)
+      if (free(p.x, p.z, 6.5)) house = add('house', p.x, p.z, Math.atan2(cx - p.x, cz - p.z), 4, 3, hIdx)
     }
     if (!house) return
     households.push({ idx: hIdx, profession: prof, houseId: house.id, members: rng.int(2, 4) })
@@ -168,9 +168,18 @@ export function layoutSettlement(
     }
     placeNear('well', 0.8, 0.8, [[9, 2], [-9, 2], [9, -5], [-9, -5], [0, 10]])
     switch (prof) {
+      case 'blacksmith':
+        placeNear('anvil', 1.5, 1.5, [[9, 4], [-9, 4], [0, 10]])
+        break
       case 'farmer':
         placeNear('field', 11, 7, [[0, 24], [16, 22], [-16, 22], [0, 34], [22, 12], [-22, 12]])
         placeNear('pen', 4, 4, [[-11, 10], [11, 10], [0, 14]])
+        break
+      case 'herbalist':
+        placeNear('herbgarden', 4, 3, [[0, 12], [11, 9], [-11, 9]])
+        break
+      case 'hunter':
+        placeNear('dryrack', 1.5, 0.6, [[9, 6], [-9, 6], [0, 10]])
         break
       case 'shepherd':
         placeNear('pen', 6, 5, [[0, 16], [13, 11], [-13, 11], [0, 24]])
@@ -178,15 +187,6 @@ export function layoutSettlement(
         break
       case 'woodcutter':
         placeNear('woodpile', 2, 1, [[9, 6], [-9, 6], [0, 10]])
-        break
-      case 'hunter':
-        placeNear('dryrack', 1.5, 0.6, [[9, 6], [-9, 6], [0, 10]])
-        break
-      case 'herbalist':
-        placeNear('herbgarden', 4, 3, [[0, 12], [11, 9], [-11, 9]])
-        break
-      case 'blacksmith':
-        placeNear('anvil', 1.5, 1.5, [[9, 4], [-9, 4], [0, 10]])
         break
       default:
         break

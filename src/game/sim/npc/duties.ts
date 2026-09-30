@@ -165,22 +165,22 @@ export function dutyPlan(sim: Sim, h: Human): DutyPlan {
   const eff = h.age === 'adult' ? 1 : 0.3
   if (!h.profession) return chores(sim, h, eff)
   switch (h.profession) {
+    case 'blacksmith':
+      return blacksmith(sim, h)
     case 'farmer':
       return farmer(sim, h, eff)
-    case 'woodcutter':
-      return woodcutter(sim, h, eff)
-    case 'hunter':
-      return hunter(sim, h)
     case 'guard':
       return guard(sim, h)
     case 'herbalist':
       return herbalist(sim, h, eff)
-    case 'trader':
-      return trader(sim, h)
-    case 'blacksmith':
-      return blacksmith(sim, h)
+    case 'hunter':
+      return hunter(sim, h)
     case 'shepherd':
       return shepherd(sim, h)
+    case 'trader':
+      return trader(sim, h)
+    case 'woodcutter':
+      return woodcutter(sim, h, eff)
   }
 }
 

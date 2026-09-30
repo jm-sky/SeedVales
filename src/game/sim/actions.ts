@@ -97,34 +97,34 @@ export function gatherNode(sim: Sim, h: Human, n: ResNode): ActionResult {
   let item: string
   let qty = 1
   switch (n.kind) {
-    case 'stone':
-      sim.state.nodes[n.id] = { kind: 'depleted', at: sim.state.time.cal }
-      giveOrDrop(sim, h, newStack('stone', 1))
-      sim.markNodeChunk(n.id)
-      return ok('Podniesiono kamień.')
+    case 'bush':
+      item = 'branch'
+      qty = 2
+      break
     case 'bush_berry':
       if (season === 'winter' || season === 'spring') return fail('Krzew nie ma teraz owoców.')
       item = 'berries'
       qty = 3 + Math.floor(h.skills.survival / 25)
-      break
-    case 'tree_apple':
-      if (season !== 'summer' && season !== 'autumn') return fail('Brak jabłek o tej porze roku.')
-      item = 'apple'
-      qty = 4
-      break
-    case 'mushroom':
-      if (season === 'winter') return fail('Zimą nie ma grzybów.')
-      item = 'mushroom'
-      qty = 2
       break
     case 'herb':
       if (season === 'winter') return fail('Zioła są przykryte śniegiem.')
       item = n.herb ?? 'mint'
       qty = 1 + (h.skills.medicine > 30 ? 1 : 0)
       break
-    case 'bush':
-      item = 'branch'
+    case 'mushroom':
+      if (season === 'winter') return fail('Zimą nie ma grzybów.')
+      item = 'mushroom'
       qty = 2
+      break
+    case 'stone':
+      sim.state.nodes[n.id] = { kind: 'depleted', at: sim.state.time.cal }
+      giveOrDrop(sim, h, newStack('stone', 1))
+      sim.markNodeChunk(n.id)
+      return ok('Podniesiono kamień.')
+    case 'tree_apple':
+      if (season !== 'summer' && season !== 'autumn') return fail('Brak jabłek o tej porze roku.')
+      item = 'apple'
+      qty = 4
       break
     default:
       return fail('Nie da się tego zebrać.')

@@ -79,7 +79,7 @@ export const BLUEPRINTS: Blueprint[] = [
   { id: 'palisade', name: 'Palisada (4 m)', kind: 'palisade', materials: [{ item: 'log', qty: 4 }], stages: [{ name: 'Wkopywanie pali', hours: 1.5, tool: 'dig' }], hw: 2, hd: 0.3, category: 'build' },
   { id: 'dryrack', name: 'Suszarnia', kind: 'dryrack', materials: [{ item: 'branch', qty: 6 }, { item: 'rope', qty: 1 }], stages: [{ name: 'Wiązanie', hours: 1, tool: 'cut' }], hw: 1.5, hd: 0.6, category: 'build' },
   { id: 'shed', name: 'Szopa', kind: 'shed', materials: [{ item: 'log', qty: 6 }, { item: 'branch', qty: 10 }, { item: 'stone', qty: 4 }], stages: [{ name: 'Fundament', hours: 2, tool: 'dig' }, { name: 'Konstrukcja', hours: 4, tool: 'hammer' }], hw: 2, hd: 2, category: 'build' },
-  { id: 'house', name: 'Dom', kind: 'house', materials: [{ item: 'log', qty: 16 }, { item: 'branch', qty: 16 }, { item: 'stone', qty: 16 }], stages: [{ name: 'Wyrównanie i fundament', hours: 6, tool: 'dig' }, { name: 'Ściany', hours: 10, tool: 'hammer' }, { name: 'Dach', hours: 6, tool: 'hammer' }], hw: 4, hd: 3.5, category: 'build' },
+  { id: 'house', name: 'Dom', kind: 'house', materials: [{ item: 'log', qty: 16 }, { item: 'branch', qty: 16 }, { item: 'stone', qty: 16 }], stages: [{ name: 'Wyrównanie i fundament', hours: 6, tool: 'dig' }, { name: 'Ściany', hours: 10, tool: 'hammer' }, { name: 'Dach', hours: 6, tool: 'hammer' }], hw: 4, hd: 3, category: 'build' },
 ]
 
 export const recipeById = (id: string) => RECIPES.find((r) => r.id === id)
