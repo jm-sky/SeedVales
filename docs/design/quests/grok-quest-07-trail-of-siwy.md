@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # 07 — Trail of Siwy
@@ -52,6 +58,7 @@ Ordinary wolves can be scared with noise. **Siwy** returns. The den is a quest-m
 | Clue kinds | Fur/scratch via Wojciech; howl / trail marker in the woods; quest den discovered |
 | `q07.method` | Exclusive: `H` fight/bow \| `T` trap \| `N` non-lethal drive-off \| `P` poison |
 | `q07.assist` | Bool; **one-shot** at the den. **Only offered after clues ≥2** (see stage order below). |
+| `q07.preferNonLethal` | True if Opening B asked for bloodless option; unlocks method `N` at den even without stage-2 line C |
 | Item `grey_pelt` | On lethal successful H/T |
 
 **Order clarification (EN fix):** Do **not** offer the "meet me at the den at dawn" assist line until `q07.clues ≥ 2`. Stage 1 is clue gathering; stage 2 opens method + assist.
@@ -62,12 +69,20 @@ Ordinary wolves can be scared with noise. **Siwy** returns. The den is a quest-m
 
 ### Stage 1 → 2 (clues ≥2)
 
-**Dialog — Jarosław (hunter), quest offer**
+**Opening (giver) — Jarosław (hunter)**
 
-> Jarosław: "You can scare a pack off with noise. Siwy — the grey one we call by name — comes back to the door. He leaves a trail like a signature. Bring me two true signs before we talk steel or mercy."
+> Jarosław: "Siwy — the grey wolf we call by name — keeps coming back to Domowice's door. Ordinary packs scare with noise. Not him. Gather signs and help end that threat. Will you?"
+
+- A: "I'll help. Where do I start?" → continue; quest starts.
+- B: "If he can leave without blood, I'll take that door too." → note preference for method N; continue.
+- C: "Find another spear." → refuse; quest stays available after first night.
+
+**Briefing — Jarosław (clue ask)**
+
+> Jarosław: "He leaves a trail like a signature. Bring me two true signs before we talk steel or mercy — Wojciech's posts, the tree line, or the den itself."
 
 - A: "I'll start at Wojciech's posts and the tree line." → `stage=1` active; hunt clues.
-- B: "If he can leave without blood, I'll take that door too." → note preference; still need clues ≥2 before method N unlocks in stage 2.
+- B: "I'll look for the den." → `stage=1` active; hunt clues.
 
 Clues (need ≥2):
 
@@ -79,27 +94,52 @@ When clues ≥2 → `stage=2`.
 
 **Dialog — Wojciech (clue beat)**
 
-> Wojciech: "Whatever hit this post wasn't a farm dog. Grey hair in the splinters. Smells like the same trouble that took Marta's Szarik — maybe not the same beast, but the same kind of night."
+> Wojciech: "Not a farm dog. Grey hair in the splinters. Same kind of night that took Marta's dog Szarik — maybe not the same beast."
 
 - A: "I'll carry that to Jarosław." → clue +1 (fur).
 
+**Discovery — Howl / trail in the woods** (environmental)
+
+> *(self)* A howl hangs wrong — deeper than the pack. Prints in soft mud show one heavy grey walker circling Domowice and turning back toward the den thicket.
+
+- A: "Follow the signature trail." → clue +1 (howl/trail).
+
+**Discovery — Quest den** (environmental)
+
+> *(self)* Under the blown pine, a den mouth packed with grey hair and old bone. This is Siwy's place — marked for the hunt.
+
+- A: "Mark the den for Jarosław." → clue +1 (den); den location unlocked for stage 2.
+
+When clues ≥2 → `stage=2`.
+
 ### Stage 2 — Method (exclusive) + assist gate
 
-**Dialog — Jarosław (after clues ≥2)**
+**Dialog — Jarosław (after clues ≥2) — assist + unlocks**
 
-> Jarosław: "Two signs. Good. At the den we finish it. How?"
+> Jarosław: "Two signs. Good. At the den we finish it. Want me at dawn? Steel, trap, drive-off, or quieter craft — only if Dobrawa already trusts you."
 
-- A: "Meet me at the den at dawn." → `assist=true` (**allowed only now**, clues ≥2); proceed to method pick.
+- A: "Meet me at the den at dawn." → `assist=true` (**allowed only now**, clues ≥2).
 - B: "I go alone." → `assist=false`.
-- C: "If he leaves without blood, that still closes our door." → unlock method `N`.
-- D: *(if poison gate passes)* "Dobrawa’s craft can end this quiet." → unlock method `P`; if Jarosław learns you used it later: Jarosław−15.
+- C: "If he leaves without blood, that still closes our door." → unlock method `N` at den.
+- D: *(if poison gate passes)* "Dobrawa's craft can end this quiet." → unlock method `P` at den; if Jarosław learns you used it later: Jarosław−15.
+
+Method is **chosen and resolved at the den** (next beat), not twice. Unlocks only gate which options appear there.
 
 | ID | Method |
 |----|--------|
-| **H** | Fight / bow (± assist one-shot at den) |
-| **T** | Trap (traps skill) |
-| **N** | Non-lethal (noise + fire) — Siwy **leaves for a season** |
-| **P** | Poison (gate: `q04.status=done` + Dobrawa≥10 + not `q04.active`) — Jarosław−15 if he knows |
+| **H** | Fight / bow (± assist one-shot at den) — always available |
+| **T** | Trap (traps skill) — always available |
+| **N** | Non-lethal (noise + fire) — Siwy **leaves for a season** — needs stage-2 unlock C **or** `preferNonLethal` |
+| **P** | Poison (gate: `q04.status=done` + Dobrawa≥10 + not `q04.active`) — needs unlock D — Jarosław−15 if he knows |
+
+**Discovery / resolution at the den** (sets exclusive `method`)
+
+> *(self / with Jarosław if assist)* The den is quiet until it isn't. Choose how Siwy's trail ends.
+
+- A: *(H)* "Fight / bow — end it." → `method=H`; gain `grey_pelt` on success; `stage=3`.
+- B: *(T)* "Set the trap. Wait." → `method=T`; gain `grey_pelt` on success; `stage=3`.
+- C: *(N, if unlocked)* "Noise and fire — drive him off for a season." → `method=N`; Siwy leaves; `stage=3`.
+- D: *(P, if unlocked)* "Leave the bait. Quiet end." → `method=P`; `stage=3`; Jarosław−15 if he learns.
 
 Resolve at den → `stage=3`.
 
@@ -108,6 +148,11 @@ Resolve at den → `stage=3`.
 **Dialog — Jarosław (closing)**
 
 > Jarosław: "Is Siwy meat, trapped, gone to another valley — or did someone salt the quiet way?"
+
+- A: *(H)* "He's dead. Here's the grey pelt." → apply H rewards; `done`.
+- B: *(T)* "Trapped clean. Pelt's yours to see." → apply T rewards; `done`.
+- C: *(N)* "Driven off. Door's quiet for a season." → apply N rewards; `done`.
+- D: *(P)* "It's done. Quietly." → apply P rewards; Jarosław−15 if he knows; `done`.
 
 | Path | Payout | Item | Reputation | Relation |
 |------|--------|------|------------|----------|

@@ -14,6 +14,12 @@ provider_reviews:
   - round: EN-R3
     by: executor (dialog aloud / ship readiness)
     result: pass-with-nits — applied
+  - round: DIALOG-R1
+    by: executor (opening / stage dialog coverage)
+    result: revise — applied
+  - round: DIALOG-R2
+    by: executor (voice / implementability / cross-quest)
+    result: pass-with-nits — applied
 ---
 
 # 03 — Night Torches
@@ -67,13 +73,33 @@ One branch only:
 - **Sneak** alone and catch Halina at a torch → `caughtHow=sneak`.
 - **Morning** trail with Marta pointing to soot / moved stools → `caughtHow=morning`.
 
-**Dialog — Wojciech (guard), quest offer**
+**Opening (giver) — Wojciech (guard)**
 
-> Wojciech: "Third torch this week cold before midnight. Something small is climbing the posts. I want eyes, not a panic on the square."
+> Wojciech: "Night torches keep going dark — third this week before midnight. Something small climbs the posts. Without light I can't guard Domowice. Help me find who — quietly."
+
+- A: "I'll help. How do we catch them?" → continue to approach choices.
+- B: "Not my watch." → refuse; quest stays available on nights 1–3.
+
+**Approach — Wojciech (choose catch how)**
+
+> Wojciech: "I want eyes, not a panic on the square. Watch with me, sneak alone, or wait for morning trail with Marta — she lives by the dark post."
 
 - A: "I'll stand the watch with you tonight." → `caughtHow=watch`; `stage=2`.
 - B: "I'll go quiet and catch them myself." → unlock sneak approach; on success `caughtHow=sneak`; `stage=2`.
 - C: "I'll look at first light with Marta." → `caughtHow=morning`; `stage=2`.
+
+**Dialog — Marta (Halina's mother), morning trail** *(if `caughtHow=morning`)*
+
+> Marta: "Soot on the stool, little prints by the post. Halina — my girl — hasn't slept right since our dog Szarik died. Don't scare her harder than the dark does."
+
+- A: "Show me where she walks. I'll talk soft." → find Halina; `stage=2` ready for childPath.
+- B: "If she's harming the watch, the guard hears it." → Marta−5; still find Halina; `stage=2`.
+
+**Discovery — night watch / sneak** *(if `caughtHow=watch` or `sneak`)*
+
+> *(self / Wojciech aside)* A small figure climbs the post, cup over the flame. When the light dies, it's Halina — Marta's child — not a saboteur for hire.
+
+- A: "Halina — wait. Nobody's going to hurt you." → enter Halina dialog; `stage=2`.
 
 ### Stage 2 → 3 (`childPath`)
 
@@ -84,7 +110,14 @@ One branch only:
 - A: "A wolf sees in the dark anyway. Light bothers it more than it bothers us. Come — we'll ask Wojciech to show you why." → `childPath=teach`; Halina+15; `stage=3`.
 - B: "We'll go to Wojciech together. I'll speak first so you aren't alone." → `childPath=empathy`; Halina+25; Marta+10; `stage=3`.
 - C: "I'll tell the guard myself." → `childPath=report`; Halina−30; Marta−15; Wojciech+10; `stage=3`.
-- D: *(to Marta, private)* "Ten copper coins — and I keep quiet about your daughter." → `from: marta_purse` 10 copper (`if_empty: 0`); Domowice honesty−25; `childPath=extort`; `stage=3`.
+- D: *(to Marta, private)* "Ten copper coins — and I keep quiet about your daughter." → go to Marta extort beat.
+
+**Dialog — Marta (extort path only)**
+
+> Marta: "Ten copper — and you swallow what you saw? Take it. Don't you dare smile at Halina afterward."
+
+- A: "Pay. I saw nothing." → `from: marta_purse` 10 copper (`if_empty: 0`); Domowice honesty−25; `childPath=extort`; `stage=3`.
+- B: "Keep your coin. I'll talk to Wojciech fair." → cancel extort; return to Halina options A–C.
 
 | ID | Choice | Immediate effects |
 |----|--------|-------------------|
@@ -98,6 +131,11 @@ One branch only:
 **Dialog — Wojciech (closing beat)**
 
 > Wojciech: "Torches are for the living. Tell me how this ends before I set the next watch."
+
+- A: *(empathy)* "Halina and I came together. She feared wolves after Szarik. Shorten the gaps — I'll bring two torches." → apply empathy row; `done`.
+- B: *(teach)* "She understands light better now. One torch from me; you show her the board duty." → apply teach row; `done`.
+- C: *(report)* "It was Halina. Keep her off the night square three days." → apply report row; `done`.
+- D: *(extort — if taken)* "I handled it. Don't ask how." → Wojciech−10 if he learns; apply extort dirty row; `done` dirty.
 
 Apply the row for `childPath`:
 
