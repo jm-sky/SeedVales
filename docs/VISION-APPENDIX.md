@@ -174,3 +174,39 @@ W takich sytuacjach zwierzęta mogą stawać się bardziej agresywne.
 
 - Określenie `low poly` nie powinno ograniczać ładnego i realistycznego designu oraz grafiki tam, gdzie nie powoduje to dużego spadku FPS.
 - Przykład: ogień może korzystać z particles i mieć iskry.
+
+
+## Gotowanie przy ognisku
+
+- Na ognisku można upiec mięso.
+- Mając naczynie lub patelnię, można upiec 2 kawałki mięsa jednocześnie.
+- Można zbudować ruszt i piec więcej kawałków równocześnie.
+- Upieczone mięso powinno zachowywać parametry opisujące produkt, np.:
+  - gatunek zwierzęcia,
+  - świeżość.
+- Lista parametrów może być później rozszerzona.
+
+## Towarzysze
+
+- Gracz może zatrudnić towarzysza:
+  - na określony czas,
+  - za określoną kwotę,
+  - z określeniem zadania,
+  - z uwzględnieniem poziomu ryzyka.
+- Wspólne podróże i bycie towarzyszem mogą budować relację między graczem a NPC.
+- Można też zapytać NPC, czy chce dołączyć do gracza za darmo.
+- Szansę na darmowe dołączenie zwiększają:
+  - reputacja,
+  - relacja z NPC.
+- Decyzję modyfikują również:
+  - charakter NPC,
+  - jego aktualna sytuacja,
+  - obowiązki.
+- Bardziej chętni do dołączenia będą młodzi mężczyźni bez rodziny.
+- W osadzie powinien zawsze być przynajmniej jeden taki starszy syn bez własnej rodziny.
+- Gracz musi mieć możliwość przekazania towarzyszowi broni i pancerza.
+- Przekazanie może odbywać się jako:
+  - prezent,
+  - handel.
+- NPC powinien następnie faktycznie używać otrzymanego wyposażenia.
+- NPC powinien wybierać swoją lepszą broń.
