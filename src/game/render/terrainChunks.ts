@@ -78,6 +78,8 @@ export class TerrainChunks {
 
   markDirty(key: string) {
     this.dirty.add(key)
+    const [cx, cz] = key.split(',').map(Number) as [number, number]
+    this.dirty.add(`S${Math.floor(cx / 2)},${Math.floor(cz / 2)}`)
   }
 
   get chunkCount() {
@@ -98,28 +100,37 @@ export class TerrainChunks {
       this.builtTint = this.seasonTint + this.snowCover * 2
       this.chunks.forEach((c) => this.dirty.add(c.key))
     }
-    const pcx = Math.floor(px / CHUNK_M)
-    const pcz = Math.floor(pz / CHUNK_M)
-    const R = Math.ceil(this.viewDist / CHUNK_M)
-    const want = new Map<string, { cx: number; cz: number; lod: number; d: number }>()
+    // Far rings use 2×2 "superchunks" (256 m) → ~4× fewer draw calls where detail is low.
+    const SC = CHUNK_M * 2
+    const psx = Math.floor(px / SC)
+    const psz = Math.floor(pz / SC)
+    const R = Math.ceil(this.viewDist / SC) + 1
+    const want = new Map<string, { cx: number; cz: number; lod: number; d: number; span: number }>()
     const size = this.terrain.world.size
+    const lodFor = (d: number) => {
+      for (let i = 0; i < this.lods.length; i++) if (d <= this.lods[i]!.maxDist) return i
+      return this.lods.length - 1
+    }
     for (let dz = -R; dz <= R; dz++) {
       for (let dx = -R; dx <= R; dx++) {
-        const cx = pcx + dx
-        const cz = pcz + dz
-        if (cx < 0 || cz < 0 || cx * CHUNK_M >= size || cz * CHUNK_M >= size) continue
-        const ccx = (cx + 0.5) * CHUNK_M
-        const ccz = (cz + 0.5) * CHUNK_M
-        const d = Math.max(0, Math.hypot(ccx - px, ccz - pz) - CHUNK_M * 0.7)
-        if (d > this.viewDist) continue
-        let lod = this.lods.length - 1
-        for (let i = 0; i < this.lods.length; i++) {
-          if (d <= this.lods[i]!.maxDist) {
-            lod = i
-            break
+        const sx = psx + dx
+        const sz = psz + dz
+        if (sx < 0 || sz < 0 || sx * SC >= size || sz * SC >= size) continue
+        const ds = Math.max(0, Math.hypot((sx + 0.5) * SC - px, (sz + 0.5) * SC - pz) - SC * 0.71)
+        if (ds > this.viewDist) continue
+        if (ds > this.lods[1]!.maxDist) {
+          want.set(`S${sx},${sz}`, { cx: sx * 2, cz: sz * 2, lod: Math.max(2, lodFor(ds)), d: ds, span: 2 })
+          continue
+        }
+        for (let j = 0; j < 2; j++) {
+          for (let i = 0; i < 2; i++) {
+            const cx = sx * 2 + i
+            const cz = sz * 2 + j
+            const d = Math.max(0, Math.hypot((cx + 0.5) * CHUNK_M - px, (cz + 0.5) * CHUNK_M - pz) - CHUNK_M * 0.7)
+            if (d > this.viewDist) continue
+            want.set(`${cx},${cz}`, { cx, cz, lod: lodFor(d), d, span: 1 })
           }
         }
-        want.set(`${cx},${cz}`, { cx, cz, lod, d })
       }
     }
     // Remove chunks out of range.
@@ -133,7 +144,7 @@ export class TerrainChunks {
     const todo = [...want.entries()]
       .filter(([k, w]) => {
         const c = this.chunks.get(k)
-        return !c || c.lod !== w.lod || this.dirty.has(k) || c.version !== (this.terrain.edits.versions.get(k) ?? 0)
+        return !c || c.lod !== w.lod || this.dirty.has(k) || (w.span === 1 && c.version !== (this.terrain.edits.versions.get(k) ?? 0))
       })
       .sort((a, b) => a[1].d - b[1].d)
     const t0 = performance.now()
@@ -142,7 +153,9 @@ export class TerrainChunks {
       if (built > 0 && performance.now() - t0 > budgetMs) break
       const old = this.chunks.get(k)
       if (old) this.dispose(old)
-      this.chunks.set(k, perf.measure('chunks.build', () => this.build(w.cx, w.cz, w.lod)))
+      const entry = perf.measure('chunks.build', () => this.build(w.cx, w.cz, w.lod, w.span))
+      entry.key = k
+      this.chunks.set(k, entry)
       this.dirty.delete(k)
       built++
     }
@@ -178,10 +191,10 @@ export class TerrainChunks {
     out.offsetHSL(0, 0, v)
   }
 
-  private build(cx: number, cz: number, lod: number): ChunkEntry {
+  private build(cx: number, cz: number, lod: number, span = 1): ChunkEntry {
     const t = this.terrain
     const step = this.lods[lod]!.step
-    const n = CHUNK_M / step + 1
+    const n = (CHUNK_M * span) / step + 1
     const x0 = cx * CHUNK_M
     const z0 = cz * CHUNK_M
     const vCount = n * n + 4 * n // + skirts
@@ -263,7 +276,7 @@ export class TerrainChunks {
     mesh.matrixAutoUpdate = false
     this.group.add(mesh)
     const entry: ChunkEntry = { key: `${cx},${cz}`, cx, cz, lod, mesh, version: this.terrain.edits.versions.get(`${cx},${cz}`) ?? 0 }
-    const water = this.buildWater(cx, cz)
+    const water = this.buildWater(cx, cz, span)
     if (water) {
       this.group.add(water)
       entry.water = water
@@ -272,12 +285,12 @@ export class TerrainChunks {
   }
 
   /** Inland water surface (rivers/lakes) at world-grid resolution. */
-  private buildWater(cx: number, cz: number): THREE.Mesh | null {
+  private buildWater(cx: number, cz: number, span = 1): THREE.Mesh | null {
     const w = this.terrain.world
     const cell = w.cell
     const i0 = Math.floor((cx * CHUNK_M) / cell)
     const j0 = Math.floor((cz * CHUNK_M) / cell)
-    const cells = CHUNK_M / cell
+    const cells = (CHUNK_M * span) / cell
     const pos: number[] = []
     const surf = (i: number, j: number) => {
       if (i < 0 || j < 0 || i >= w.n || j >= w.n) return -Infinity

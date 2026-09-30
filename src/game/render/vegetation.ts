@@ -10,11 +10,10 @@ import type { Sim } from '../sim/sim'
 import type { ResNode } from '../world/nodes'
 import type { QualitySettings } from './quality'
 import { perf } from '../diag/perf'
-import { nodeAvailable } from '../sim/actions'
 import { seasonOf } from '../sim/time'
 import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
-import { loadGltf, mat4, mergeTemplate, part, type TemplatePart } from './assets'
+import { loadGltf, mergeTemplate, part, type TemplatePart } from './assets'
 
 
 /** Model per node kind + variant (heights normalised to node.scale for trees). */
@@ -50,7 +49,7 @@ export class Vegetation {
   group = new THREE.Group()
   private near = new Map<string, TemplatePart[]>()
   private far: Record<string, TemplatePart[]> = impostors()
-  private meshes: THREE.InstancedMesh[] = []
+  meshes: THREE.InstancedMesh[] = []
   private lastChunk = ''
   private dirty = true
   loaded = false
@@ -95,70 +94,94 @@ export class Vegetation {
     perf.measure('render.vegetationRebuild', () => this.rebuild(px, pz))
   }
 
+  /** Pooled InstancedMesh per (set key, template part); grown only when capacity is exceeded. */
+  private pool = new Map<string, THREE.InstancedMesh[]>()
+  private scratch = { m: new THREE.Matrix4(), p: new THREE.Vector3(), q: new THREE.Quaternion(), s: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }
+
   private rebuild(px: number, pz: number) {
-    for (const m of this.meshes) {
-      this.group.remove(m)
-      m.dispose()
-    }
-    this.meshes = []
     const sim = this.sim
     const winter = seasonOf(sim.state.time.cal) === 'winter'
-    const nearSets = new Map<string, THREE.Matrix4[]>()
-    const farSets = new Map<string, THREE.Matrix4[]>()
+    // Compact instance data: [x, y, z, rot, scale]*.
+    const sets = new Map<string, number[]>()
+    const push = (key: string, x: number, y: number, z: number, rot: number, sc: number) => {
+      let a = sets.get(key)
+      if (!a) sets.set(key, (a = []))
+      a.push(x, y, z, rot, sc)
+    }
     const nodes: ResNode[] = []
     sim.nodes.query(px, pz, this.farM, nodes)
+    const treeNear = this.nearM * 0.6
     let count = 0
     for (const n of nodes) {
       const tree = isTree(n.kind)
       const st = sim.state.nodes[n.id]
+      const d = Math.hypot(n.x - px, n.z - pz)
       if (tree && st?.kind === 'felled') {
-        // Stump (+ sapling growing after felling).
+        if (d < this.nearM * 1.5) push('far:stump', n.x, n.y, n.z, n.rot, 1)
         continue
       }
-      if (!tree && n.kind !== 'reed' && n.kind !== 'bush' && !nodeAvailable(sim, n) && n.kind !== 'bush_berry' && n.kind !== 'herb') continue
-      if (!tree && (n.kind === 'herb' || n.kind === 'mushroom') && st) continue
-      const d = Math.hypot(n.x - px, n.z - pz)
+      if (!tree && (n.kind === 'herb' || n.kind === 'mushroom' || n.kind === 'stone') && st) continue
+      if (n.kind === 'rock' && st?.kind === 'depleted') continue
+      if (winter && n.kind === 'herb') continue
       const def = MODEL[n.kind]!
-      if (d < this.nearM || (!tree && n.kind !== 'rock' && d < this.nearM * 1.4)) {
+      const nearR = tree ? treeNear : n.kind === 'rock' ? this.nearM : this.nearM * 1.4
+      if (d < nearR) {
         const vi = n.variant % def.models.length
         const key = this.near.has(`${n.kind}#${vi}`) ? `${n.kind}#${vi}` : `${n.kind}#0`
-        const s = tree ? n.scale / def.baseH : n.scale
-        if (winter && n.kind === 'herb') continue
-        const arr = nearSets.get(key) ?? []
-        arr.push(mat4(n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, s))
-        nearSets.set(key, arr)
+        push(`near:${key}`, n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, tree ? n.scale / def.baseH : n.scale)
         count++
       } else if (tree || n.kind === 'rock') {
-        const arr = farSets.get(n.kind) ?? []
-        const s = tree ? n.scale : n.scale
-        arr.push(mat4(n.x, n.y - 0.2, n.z, n.rot, s))
-        farSets.set(n.kind, arr)
+        push(`far:${n.kind}`, n.x, n.y - 0.2, n.z, n.rot, n.scale)
         count++
       }
     }
-    // Stumps for felled trees (near only).
-    const stumps: THREE.Matrix4[] = []
-    for (const n of nodes) {
-      if (isTree(n.kind) && sim.state.nodes[n.id]?.kind === 'felled' && Math.hypot(n.x - px, n.z - pz) < this.nearM * 1.5) stumps.push(mat4(n.x, n.y, n.z, n.rot))
-    }
-    if (stumps.length) farSets.set('stump', stumps)
-    const add = (parts: TemplatePart[] | undefined, mats: THREE.Matrix4[], shadows: boolean) => {
-      if (!parts) return
-      for (const p of parts) {
-        const im = new THREE.InstancedMesh(p.geometry, p.material, mats.length)
-        mats.forEach((m, i) => im.setMatrixAt(i, m))
-        im.instanceMatrix.needsUpdate = true
-        im.computeBoundingSphere()
-        im.castShadow = shadows
-        this.group.add(im)
-        this.meshes.push(im)
-      }
-    }
-    for (const [k, mats] of nearSets) add(this.near.get(k), mats, true)
     if (!this.far.stump) this.far.stump = mergeTemplate([part(new THREE.CylinderGeometry(0.3, 0.38, 0.5, 7).translate(0, 0.25, 0), 0x6a4a2e)])
-    for (const [k, mats] of farSets) add(this.far[k], mats, false)
+    const { m, p, q, s: sc, up } = this.scratch
+    const used = new Set<string>()
+    let drawCalls = 0
+    for (const [key, data] of sets) {
+      const [kind, id] = key.split(':') as [string, string]
+      const parts = kind === 'near' ? this.near.get(id) : this.far[id]
+      if (!parts) continue
+      const n = data.length / 5
+      let meshes = this.pool.get(key)
+      if (!meshes || meshes[0]!.instanceMatrix.count < n) {
+        for (const old of meshes ?? []) {
+          this.group.remove(old)
+          old.dispose()
+        }
+        const cap = Math.ceil(n * 1.3) + 8
+        meshes = parts.map((pt) => {
+          const im = new THREE.InstancedMesh(pt.geometry, pt.material, cap)
+          im.castShadow = kind === 'near'
+          im.frustumCulled = false
+          this.group.add(im)
+          return im
+        })
+        this.pool.set(key, meshes)
+      }
+      for (let i = 0; i < n; i++) {
+        const o = i * 5
+        p.set(data[o]!, data[o + 1]!, data[o + 2]!)
+        q.setFromAxisAngle(up, data[o + 3]!)
+        sc.setScalar(data[o + 4]!)
+        m.compose(p, q, sc)
+        for (const im of meshes) im.setMatrixAt(i, m)
+      }
+      for (const im of meshes) {
+        im.count = n
+        im.visible = n > 0
+        im.instanceMatrix.needsUpdate = true
+        drawCalls++
+      }
+      used.add(key)
+    }
+    for (const [key, meshes] of this.pool) {
+      if (!used.has(key)) for (const im of meshes) im.visible = false
+    }
+    this.meshes = [...this.pool.values()].flat()
     this.instances = count
     perf.gauge('render.vegetationInstances', count)
-    perf.gauge('render.vegetationDrawCalls', this.meshes.length)
+    perf.gauge('render.vegetationDrawCalls', drawCalls)
   }
 }

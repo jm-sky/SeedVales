@@ -26,6 +26,7 @@ io.registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': 
 /** EXT_meshopt_compression (decoded in the browser by three's MeshoptDecoder). */
 const compress = () => meshopt({ encoder: MeshoptEncoder, level: 'medium' })
 
+
 const NATURE = path.join(SRC, 'Stylized_Nature_MegaKitStandard/glTF')
 const VILLAGE = path.join(SRC, 'Medieval_Village_MegaKitStandard/Medieval Village MegaKit[Standard]/glTF')
 const PROPS = path.join(SRC, 'Fantasy_Props_MegaKitStandard/Exports/glTF')
@@ -127,7 +128,8 @@ for (const name of ['Deer', 'Stag', 'Wolf', 'Fox', 'Cow', 'Horse', 'Donkey', 'Hu
 
 // --- Characters: outfits (head-less) + extracted heads ---
 for (const name of ['Male_Peasant', 'Female_Peasant', 'Male_Ranger', 'Female_Ranger']) {
-  await convert(`${OUTFITS}/${name}.gltf`, `${OUT}/characters/${name}.glb`, { tex: 512, ratio: 0.35, error: 0.004, transforms: [baseColorOnly(), prune()] })
+  // join(): merge outfit parts sharing a material into one skinned primitive (fewer draw calls).
+  await convert(`${OUTFITS}/${name}.gltf`, `${OUT}/characters/${name}.glb`, { tex: 512, ratio: 0.35, error: 0.004, transforms: [baseColorOnly(), unifySkins(), flatten(), join({ keepNamed: false }), prune()] })
 }
 
 /** Keep only triangles fully above the neck line from the base body mesh (head + hair + eyes). */
@@ -155,7 +157,7 @@ for (const sex of ['Male', 'Female']) {
     tex: 512,
     ratio: 0.5,
     error: 0.003,
-    transforms: [headOnly(sex === 'Male' ? 1.5 : 1.44), baseColorOnly(), prune()],
+    transforms: [headOnly(sex === 'Male' ? 1.5 : 1.44), baseColorOnly(), unifySkins(), flatten(), join({ keepNamed: false }), prune()],
   })
 }
 

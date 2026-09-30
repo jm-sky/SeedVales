@@ -6,6 +6,7 @@
  * @subdomain actors
  */
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
 import type { Sim } from '../sim/sim'
 import type { Actor, Animal, Human } from '../sim/types'
@@ -14,7 +15,7 @@ import { PROFESSIONS } from '../data/professions'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { isDown } from '../sim/combat'
-import { loadGltf, sharedColorMat } from './assets'
+import { loadGltf } from './assets'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 const PLACEHOLDER_DIST = 320
@@ -33,44 +34,55 @@ interface Visual {
 
 type CharKey = 'Male_Peasant' | 'Female_Peasant' | 'Male_Ranger' | 'Female_Ranger'
 
-function placeholderHuman(shirt: number, child: boolean): THREE.Object3D {
-  const g = new THREE.Group()
-  const s = child ? 0.65 : 1
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.7, 3, 6), sharedColorMat(shirt))
-  body.position.y = 1.05
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 5), sharedColorMat(0xd9a67e))
-  head.position.y = 1.65
-  const legs = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.7, 0.2), sharedColorMat(0x4a3b2c))
-  legs.position.y = 0.35
-  g.add(body, head, legs)
-  g.scale.setScalar(s)
+const phCache = new Map<string, THREE.BufferGeometry>()
+const phMat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
+
+/** Merges coloured primitive parts into one vertex-coloured geometry (1 draw call per placeholder). */
+function mergedGeometry(key: string, parts: { geo: THREE.BufferGeometry; color: number; at: [number, number, number] }[]): THREE.BufferGeometry {
+  let g = phCache.get(key)
+  if (g) return g
+  const geos = parts.map(({ geo, color, at }) => {
+    const x = geo.index ? geo.toNonIndexed() : geo
+    x.translate(...at)
+    const c = new THREE.Color(color)
+    const n = x.attributes.position!.count
+    const col = new Float32Array(n * 3)
+    for (let i = 0; i < n; i++) col.set([c.r, c.g, c.b], i * 3)
+    x.setAttribute('color', new THREE.BufferAttribute(col, 3))
+    for (const k of Object.keys(x.attributes)) if (k !== 'position' && k !== 'normal' && k !== 'color') x.deleteAttribute(k)
+    return x
+  })
+  g = mergeGeometries(geos, false)!
+  phCache.set(key, g)
   return g
+}
+
+function placeholderHuman(shirt: number, child: boolean): THREE.Object3D {
+  const g = mergedGeometry(`h:${shirt}`, [
+    { geo: new THREE.CapsuleGeometry(0.22, 0.7, 3, 6), color: shirt, at: [0, 1.05, 0] },
+    { geo: new THREE.SphereGeometry(0.14, 6, 5), color: 0xd9a67e, at: [0, 1.65, 0] },
+    { geo: new THREE.BoxGeometry(0.34, 0.7, 0.2), color: 0x4a3b2c, at: [0, 0.35, 0] },
+  ])
+  const m = new THREE.Mesh(g, phMat)
+  m.scale.setScalar(child ? 0.65 : 1)
+  return m
 }
 
 function placeholderAnimal(a: Animal): THREE.Object3D {
   const sp = SPECIES[a.species]
-  const g = new THREE.Group()
   const col = a.variant === 'albino' ? 0xf4f1ea : sp.color
   const h = sp.height
   const l = sp.length
-  const body = new THREE.Mesh(new THREE.BoxGeometry(l * 0.35, h * 0.5, l * 0.8), sharedColorMat(col))
-  body.position.y = h * 0.55
-  const head = new THREE.Mesh(new THREE.BoxGeometry(l * 0.22, h * 0.3, l * 0.28), sharedColorMat(col))
-  head.position.set(0, h * 0.8, l * 0.45)
-  g.add(body, head)
   const legH = h * 0.35
-  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(l * 0.07, legH, l * 0.07), sharedColorMat(col))
-    leg.position.set((x! * l) / 8, legH / 2, (z! * l) / 3)
-    g.add(leg)
-  }
-  if (a.species === 'stag' || a.species === 'moose') {
-    const ant = new THREE.Mesh(new THREE.BoxGeometry(l * 0.4, 0.05, 0.05), sharedColorMat(0xd8cba8))
-    ant.position.set(0, h * 1.02, l * 0.45)
-    g.add(ant)
-  }
-  g.scale.setScalar(VARIANT_MULT[a.variant].size)
-  return g
+  const parts: { geo: THREE.BufferGeometry; color: number; at: [number, number, number] }[] = [
+    { geo: new THREE.BoxGeometry(l * 0.35, h * 0.5, l * 0.8), color: col, at: [0, h * 0.55, 0] },
+    { geo: new THREE.BoxGeometry(l * 0.22, h * 0.3, l * 0.28), color: col, at: [0, h * 0.8, l * 0.45] },
+    ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([x, z]) => ({ geo: new THREE.BoxGeometry(l * 0.07, legH, l * 0.07), color: col, at: [(x! * l) / 8, legH / 2, (z! * l) / 3] as [number, number, number] })),
+  ]
+  if (a.species === 'stag' || a.species === 'moose') parts.push({ geo: new THREE.BoxGeometry(l * 0.4, 0.05, 0.05), color: 0xd8cba8, at: [0, h * 1.02, l * 0.45] })
+  const m = new THREE.Mesh(mergedGeometry(`a:${a.species}:${a.variant === 'albino'}`, parts), phMat)
+  m.scale.setScalar(VARIANT_MULT[a.variant].size)
+  return m
 }
 
 export class Actors {
