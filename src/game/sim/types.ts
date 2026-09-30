@@ -87,6 +87,8 @@ export interface AiState {
   cooldowns: Record<string, number>
   stuckT: number
   targetId?: number
+  /** Last blood trace this predator investigated (not revisited, TRACE-01). */
+  sniffedTrace?: number
   /** Utility score when the current plan was chosen (hysteresis when its precondition disappears mid-plan). */
   goalScore?: number
   /** Obstacle avoidance: chosen side (+1/−1) while sliding along a wall. */

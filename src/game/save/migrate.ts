@@ -5,6 +5,7 @@
 import type { GameState, Order } from '../sim/types'
 import type { WorldData } from '../world/types'
 import { TREASURY_START } from '../config/calibration'
+import { nestTag } from '../sim/queries'
 import { SAVE_VERSION } from '../sim/types'
 import { SaveError } from './errors'
 
@@ -42,8 +43,15 @@ const MIGRATIONS: Record<number, Migration> = {
       .map(({ recipe, ...o }) => ({ ...o, status: o.status as Order['status'], recipeId: o.recipeId ?? recipe!, itemId: o.itemId ?? recipe! }))
   },
   // v4 → v5: blood traces (TRACE-01).
+  // Rats get tied to their nest (denId = nest tag) so nest respawn and the rat quest count them.
   4: (st) => {
     st.traces ??= []
+    const nests = st.buildings.filter((b) => b.ratNest)
+    for (const a of st.animals) {
+      if (a.species !== 'rat' || a.denId) continue
+      const b = nests.find((n) => Math.hypot(n.x - a.x, n.z - a.z) < 40)
+      if (b) a.denId = nestTag(b.id)
+    }
   },
 }
 

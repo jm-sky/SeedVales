@@ -9,6 +9,7 @@ import type { Actor, Animal, Human } from '../types'
 import { DECISION, FEAR } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { isDown, isProtected } from '../combat'
+import { isNight } from '../time'
 import { hp } from '../vitals'
 
 type P = { x: number; z: number }
@@ -28,7 +29,12 @@ export function fireNear(sim: Sim, x: number, z: number, r: number): P | null {
   return null
 }
 
+/** Goals a fear-flee interrupts; they are suppressed for a while so the animal does not walk straight back. */
+const FEAR_SUPPRESSED = ['hunt', 'scavenge', 'investigate']
+
 function flee(sim: Sim, a: Animal, from: P, seconds: number) {
+  const g = a.ai.goal
+  if (g && FEAR_SUPPRESSED.includes(g)) a.ai.cooldowns[g] = Math.max(a.ai.cooldowns[g] ?? 0, sim.state.time.play + FEAR.suppressS)
   a.fleeFrom = { x: from.x, z: from.z, until: sim.state.time.play + seconds }
   a.ai.steps = []
   a.ai.goal = null
@@ -46,18 +52,27 @@ function detectRange(sim: Sim, a: Animal, targetIsPlayer: boolean): number {
   const sp = SPECIES[a.species]
   let r = sp.perception
   if (targetIsPlayer && sim.state.px.sneaking) r *= 1 - Math.min(0.75, 0.4 + sim.player.skills.sneak / 200)
-  const hr = ((sim.state.time.cal / 3600) % 24 + 24) % 24
-  if (hr < 5 || hr >= 21) r *= 0.7
+  if (isNight(sim.state.time.cal)) r *= 0.7
   if (sim.weather.fog > 0.5) r *= 0.75
   return r
 }
 
-/** Mother with young of its species nearby, or an animal next to its own den, defends instead of fleeing. */
-function protective(sim: Sim, a: Animal): boolean {
-  if (a.variant === 'young' || SPECIES[a.species].damage <= 0) return false
-  if (a.denId) {
-    const den = sim.state.dens.find((d) => d.id === a.denId)
-    if (den?.alive && Math.hypot(den.x - a.x, den.z - a.z) < FEAR.protectDenM) return true
+/**
+ * Distance within which the animal attacks people instead of fleeing (0 = never): predators and aggressive
+ * animals defend their own den and young; prey (deer, fox) only defends its young at close range.
+ */
+function guardRange(sim: Sim, a: Animal): number {
+  const sp = SPECIES[a.species]
+  if (a.variant === 'young' || sp.damage <= 0) return 0
+  const fighter = sp.temperament === 'predator' || sp.temperament === 'aggressive'
+  if (!protective(sim, a, fighter)) return 0
+  return fighter ? sp.perception * 0.6 : FEAR.preyDefendM
+}
+
+function protective(sim: Sim, a: Animal, den: boolean): boolean {
+  if (den && a.denId && !a.denId.startsWith('nest:')) {
+    const d = sim.state.dens.find((x) => x.id === a.denId)
+    if (d?.alive && Math.hypot(d.x - a.x, d.z - a.z) < FEAR.protectDenM) return true
   }
   return sim.actors.query(a.x, a.z, FEAR.protectYoungM).some((o) => o !== a && o.kind === 'animal' && o.species === a.species && o.variant === 'young' && !o.vitals.dead)
 }
@@ -78,7 +93,7 @@ export function decideAnimal(sim: Sim, a: Animal): boolean {
       return true
     }
   }
-  const guard = protective(sim, a)
+  const guard = guardRange(sim, a)
   for (const o of sim.actors.query(a.x, a.z, sp.perception)) {
     if (o === a) continue
     const d = Math.hypot(o.x - a.x, o.z - a.z)
@@ -93,7 +108,7 @@ export function decideAnimal(sim: Sim, a: Animal): boolean {
     }
     if (isDown(sim, o) || (o.kind === 'player' && isProtected(sim, o))) continue
     if (d > detectRange(sim, a, o.kind === 'player')) continue
-    if (a.rabid || (guard && d < sp.perception * 0.6)) {
+    if (a.rabid || d < guard) {
       attack(sim, a, o, 30)
       return true
     }
@@ -134,7 +149,8 @@ export function decideAnimal(sim: Sim, a: Animal): boolean {
       return true
     }
   }
-  if (a.rabid && sim.rng.chance(0.05)) {
+  // Once per decision (~1 s); was 5 % per 0.1 s update before the decision cadence (AI-01).
+  if (a.rabid && sim.rng.chance(0.4)) {
     const victim = sim.actors.query(a.x, a.z, 15).find((o) => o !== a && !isDown(sim, o))
     if (victim) {
       attack(sim, a, victim, 20)
@@ -151,7 +167,7 @@ function decideDomestic(sim: Sim, a: Animal) {
   for (const o of sim.actors.query(a.x, a.z, sp.perception)) {
     if (o.kind !== 'animal' || o === a || o.vitals.dead) continue
     const os = SPECIES[o.species]
-    if (os.temperament !== 'predator' && os.temperament !== 'aggressive' && !o.rabid) continue
+    if (os.temperament !== 'predator' && os.temperament !== 'aggressive' && !o.rabid && !os.preys?.includes(a.species)) continue
     const d = Math.hypot(o.x - a.x, o.z - a.z)
     if (o.rabid || o.aggroId !== undefined || o.ai.goal === 'hunt' || d < 12) {
       fleeHome(sim, a, o)

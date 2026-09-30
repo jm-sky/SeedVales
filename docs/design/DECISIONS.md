@@ -27,6 +27,7 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-SIM-8 — Kalibracja potrzeb:** pragnienie pełne→0 w 20 h, głód 30 h, wigor ~19 h marszu (NEEDS). Posiłek 25–40 sytości. Wartości do strojenia.
 
 - **D-SIM-12 — Strach dzikich zwierząt (dodatek): ogień > ludzie > zagrody**, parametry `FEAR` w `calibration.ts`. Drapieżnik atakuje człowieka tylko głodny (> 30 h), alfa/silny, wściekły albo osaczony (< 8 m); przy młodych/legowisku zwierzę broni się. Kadencja decyzji ~1 s (AI-01) jest niezależna od LOD ruchu (D-SIM-1); zdarzenia krytyczne wymuszają decyzję (`alertAround`).
+- **D-SIM-13 — Obrona legowiska i młodych (review 003):** legowiska bronią tylko drapieżniki i zwierzęta agresywne (zasięg `perception × 0,6`); ofiary (sarna, jeleń, lis) nigdy nie szarżują przy legowisku, a młodych bronią tylko z bliska (`FEAR.preyDefendM` = 6 m) — dalej uciekają. Spłoszenie przerywa polowanie/padlinę/węszenie i blokuje je na `FEAR.suppressS` (45 s).
 
 ## Ekonomia
 

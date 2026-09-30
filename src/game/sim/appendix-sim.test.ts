@@ -124,10 +124,16 @@ describe('wave 1: AI cadence and animal threat behaviour', () => {
 
   it('FAUNA-07: protective exceptions — a mother with young or a wolf at its den attacks instead of fleeing', () => {
     const { sim, x, z } = wild()
-    const doe = spawn(sim, 'deer', x + 18, z)
-    spawn(sim, 'deer', x + 22, z + 3, 'young')
+    // Prey defends its young only at close range (D-SIM-13); farther away it still flees.
+    const doe = spawn(sim, 'deer', x + 5, z)
+    spawn(sim, 'deer', x + 9, z + 3, 'young')
     tick(sim, doe)
     expect(doe.aggroId).toBe(sim.player.id)
+    const farDoe = spawn(sim, 'deer', x, z - 18)
+    spawn(sim, 'deer', x, z - 22, 'young')
+    tick(sim, farDoe)
+    expect(farDoe.aggroId).toBeUndefined()
+    expect(farDoe.fleeFrom).toBeDefined()
     const lone = spawn(sim, 'deer', x - 18, z)
     tick(sim, lone)
     expect(lone.aggroId).toBeUndefined()
@@ -138,6 +144,22 @@ describe('wave 1: AI cadence and animal threat behaviour', () => {
     w.denId = 'den-test'
     tick(sim, w)
     expect(w.aggroId).toBe(sim.player.id)
+    // Review 003 #1: prey at its own den still flees from people (only predators/aggressive defend a den).
+    sim.state.dens.push({ id: 'den-deer', species: 'deer', x: x - 30, z: z - 30, alive: true, maxCount: 3, nextSpawn: Infinity })
+    const stag = spawn(sim, 'deer', x - 20, z - 20)
+    stag.denId = 'den-deer'
+    tick(sim, stag)
+    expect(stag.aggroId).toBeUndefined()
+    expect(stag.fleeFrom).toBeDefined()
+  })
+
+  it('review 003 #3: a predator scared off its hunt does not replan the same hunt right away', () => {
+    const { sim, x, z } = wild()
+    const w = spawn(sim, 'wolf', x + 12, z)
+    w.ai.goal = 'hunt'
+    tick(sim, w)
+    expect(w.fleeFrom).toBeDefined()
+    expect(w.ai.cooldowns.hunt ?? 0).toBeGreaterThan(sim.state.time.play + 30)
   })
 
   it('FAUNA-06: domestic animals run to their shepherd or pen when a predator hunts nearby', () => {
@@ -158,6 +180,16 @@ describe('wave 1: AI cadence and animal threat behaviour', () => {
     const toPen = pen ? Math.hypot(target.x - pen.x, target.z - pen.z) : Infinity
     const toShepherd = shepherd ? Math.hypot(target.x - shepherd.x, target.z - shepherd.z) : Infinity
     expect(Math.min(toPen, toShepherd)).toBeLessThan(1)
+    // Review 003 #2: a fox hunting chickens is a threat too (fox is 'prey' temperament but preys on chickens).
+    const hen = sim.state.animals.find((a) => a.species === 'chicken' && a.householdId !== undefined)
+    if (hen) {
+      const fox = spawn(sim, 'fox', hen.x + 5, hen.z)
+      fox.ai.goal = 'hunt'
+      hen.ai.decideAt = 0
+      tick(sim, hen)
+      expect(hen.ai.goal).toBe('flee_home')
+      sim.removeAnimal(fox)
+    }
     // Hurting a domestic animal also sends it home.
     const cow = sim.state.animals.find((a) => a.species === 'cow' && a.householdId !== undefined)
     if (cow) {

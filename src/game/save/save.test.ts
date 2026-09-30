@@ -67,6 +67,22 @@ describe('save / load', () => {
     expect(() => migrate({ ...st, saveVersion: 0 })).toThrow(SaveError)
   })
 
+  it('SAVE-01: v4 → v5 migration ties old rats to the nearest rat nest (review 003 #6)', () => {
+    const sim = testSim()
+    const st = JSON.parse(JSON.stringify(snapshot(sim)))
+    st.saveVersion = 4
+    delete st.traces
+    const b = st.buildings.find((x: { kind: string }) => x.kind === 'warehouse')
+    b.ratNest = { strength: 1, since: 0 }
+    const rat = { ...st.animals[0], id: 999_999, species: 'rat', x: b.x + 10, z: b.z, denId: undefined }
+    const far = { ...rat, id: 999_998, x: b.x + 300 }
+    st.animals.push(rat, far)
+    const m = migrate(st)
+    expect(m.traces).toEqual([])
+    expect(m.animals.find((a) => a.id === 999_999)!.denId).toBe(`nest:${b.id}`)
+    expect(m.animals.find((a) => a.id === 999_998)!.denId).toBeUndefined()
+  })
+
   it('SAVE-01: missing or corrupt slot → SaveError, not a silent new game', async () => {
     await expect(readSave('does-not-exist')).rejects.toThrow(SaveError)
     const db = await new Promise<IDBDatabase>((res) => {

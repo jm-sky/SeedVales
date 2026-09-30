@@ -42,10 +42,11 @@ export function traceSystem(sim: Sim, dt: number) {
 }
 
 /** Strongest trace a predator at (x, z) can smell (range scales with intensity), or null. */
-export function smellTrace(sim: Sim, x: number, z: number): Trace | null {
+export function smellTrace(sim: Sim, x: number, z: number, skipId?: number): Trace | null {
   let best: Trace | null = null
   let score = 0
   for (const t of sim.tracesNear(x, z, TRACE.smellM)) {
+    if (t.id === skipId) continue
     const d = Math.hypot(t.x - x, t.z - z)
     if (d > TRACE.smellM * t.intensity || d < 3) continue
     const s = t.intensity / (1 + d / 20)

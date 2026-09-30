@@ -232,8 +232,9 @@ function planAnimal(sim: Sim, a: Animal) {
     }
     // Blood on the ground lures predators (TRACE-01).
     if (sp.temperament === 'predator' && (ai.cooldowns.investigate ?? 0) <= sim.state.time.play) {
-      const tr = smellTrace(sim, a.x, a.z)
+      const tr = smellTrace(sim, a.x, a.z, ai.sniffedTrace)
       if (tr) {
+        ai.sniffedTrace = tr.id
         ai.goal = 'investigate'
         ai.cooldowns.investigate = sim.state.time.play + 60
         go(tr, false, 2)
