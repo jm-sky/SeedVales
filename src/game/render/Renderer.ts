@@ -81,6 +81,27 @@ export class Renderer {
     await this.actors.load()
   }
 
+  /** Switches the quality profile without restarting (UI-05); antialiasing stays as created. */
+  setQuality(quality: QualityProfile) {
+    if (quality === this.quality) return
+    const q = QUALITY[quality]
+    const shadowsChanged = this.renderer.shadowMap.enabled !== q.shadows
+    this.quality = quality
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.pixelRatio))
+    this.renderer.shadowMap.enabled = q.shadows
+    this.sun.castShadow = q.shadows
+    this.fogFar = q.fogFar
+    this.terrain.setQuality(q)
+    this.vegetation.setQuality(q)
+    this.actors.setQuality(q)
+    if (shadowsChanged) {
+      this.scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material
+        if (m) for (const x of Array.isArray(m) ? m : [m]) x.needsUpdate = true
+      })
+    }
+  }
+
   resize(w: number, h: number) {
     this.renderer.setSize(w, h, false)
     this.rig.camera.aspect = w / Math.max(1, h)

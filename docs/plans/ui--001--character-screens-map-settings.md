@@ -1,11 +1,11 @@
 # UI: ekrany postaci, mapa/minimapa, ustawienia, zapisy nazwane, cykl celów
 
-**Status:** in_progress  
+**Status:** done  
 **Domain:** ui  
 **Sub domains:** hud, panels, save, input, audio, render-quality  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 2)  
 **Created:** 2026-09-30  
-**Finished:** —
+**Finished:** 2026-09-30
 
 ---
 
@@ -36,4 +36,7 @@ Panele w `src/ui/panels/`: Inventory, Quests, Map (MapPanel), Trade, Craft, Buil
 - **Krok 1–2 (UI-03) — done (2026-09-30):** `CharacterPanel` + `ui/panels/character/*`, `sim/loadout.ts` (`px.primary`, `switchWeapon`, X / mobile „Broń”), ekwipunek: filtry/sortowanie/szczegóły (`src/lib/inventoryView.ts`). Testy: `loadout.test.ts`, `inventoryView.test.ts`; e2e acceptance krok 10, mobile M7.
 - **Krok 6 (UI-06) — done (2026-09-30):** `findTargets` (lista w zasięgu, sort odległość + kąt), `nextTarget`, `Game.cycleTarget` (cel przypięty, dopóki w zasięgu), pierścień na ziemi (`render/targetMarker.ts`), podpowiedź „Tab” w `TargetPrompt`, mobile „Cel”. Test `targetCycle.test.ts`; e2e acceptance krok 11, mobile M8.
 - **Krok 3 (UI-04) — done (2026-09-30):** `sim/navigation.ts` (waypoint, odwiedzone osady, cel = waypoint albo aktywne zadanie, namiar), `MapPanel` (klik = cel, „Cel” przy osadzie, znaczniki zadań, strzałka gracza), `hud/Minimap.vue` (północ u góry, budynki, cel albo strzałka na obwodzie + odległość), wspólny raster `ui/map/worldMapImage.ts` (raz na świat, bez drugiego renderera Three.js). Landmarki na mapie — w `world--001`. Test `navigation.test.ts`; e2e acceptance krok 12, mobile M4.
-- Pozostało: krok 4 (ustawienia, UI-05), krok 5 (nazwane zapisy / nowa gra z menu).
+- **Krok 4 (UI-05) — done:** `src/lib/settings.ts` (localStorage, odporne na błędy), `SettingsPanel` (menu → Ustawienia), `Renderer.setQuality` bez restartu (poza antyaliasingiem), `Ambience.setVolumes` (ogólna/otoczenie/efekty).
+- **Krok 5 — done:** zapisy pod nazwą (`SaveMeta.name`/`place`, `Game.saveAs`, lista w menu głównym), „Nowa gra…” w menu gry (ten sam / losowy świat, z potwierdzeniem). Stare wpisy cache świata (review 002 #8) — nadal odłożone (brak realnego problemu z miejscem; do `diag`).
+- e2e: acceptance 24/24 (kroki 10–13), mobile 10/10 (M4, M7–M9), smoke 3/3.
+- (historyczne) Pozostało: krok 4 (ustawienia, UI-05), krok 5 (nazwane zapisy / nowa gra z menu).

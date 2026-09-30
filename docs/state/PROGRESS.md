@@ -19,10 +19,11 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 
 - **Fala 1 `sim--001` done** — AI-01, FAUNA-06/07/08 verified, TRACE-01 (część sim; dekale w render--001). `SAVE_VERSION` 5.
 - Review fali 1: `docs/reviews/2026-09-30--003--wave1-sim-review.md` — 9 ustaleń; 7 poprawionych z testami regresji (sarna przy legowisku nie szarżuje — D-SIM-13, lis jako zagrożenie dla drobiu, cooldown po spłoszeniu, ślad krwi nie odwiedzany ponownie, sezonowa noc w detekcji, migracja 4→5 przypina szczury do gniazda, szansa ataku wściekłego zwierzęcia), 2 informacyjne.
-- **Fala 2 `ui--001` w toku:** zrobione kroki 1–2 (UI-03 verified: ekran postaci, broń podstawowa + X/„Broń”, ekwipunek filtr/sort/szczegóły) i krok 6 (UI-06 verified: Tab/„Cel” cyklicznie przez cele w zasięgu, pierścień celu). e2e: acceptance 19/19 (nowe kroki 10–11; krok 8 idzie do tablicy osady, w której pojawiło się gniazdo), mobile 9/9 (M7–M8), smoke 3/3; `pnpm check` 112/112.
+- **Fala 2 `ui--001`:** zrobione kroki 1–2 (UI-03 verified: ekran postaci, broń podstawowa + X/„Broń”, ekwipunek filtr/sort/szczegóły) i krok 6 (UI-06 verified: Tab/„Cel” cyklicznie przez cele w zasięgu, pierścień celu). e2e: acceptance 19/19 (nowe kroki 10–11; krok 8 idzie do tablicy osady, w której pojawiło się gniazdo), mobile 9/9 (M7–M8), smoke 3/3; `pnpm check` 112/112.
 - Uwaga dla e2e: nie edytuj `src/` ani nie uruchamiaj vitest w trakcie `pnpm e2e` — HMR Vite przeładowuje stronę („Execution context was destroyed”); worktree subagenta w katalogu repo też to wywołuje.
 - Krok 3 (UI-04 verified): mapa z celem/odwiedzonymi osadami/znacznikami zadań + minimapa ze strzałką do celu (`sim/navigation.ts`, `hud/Minimap.vue`). e2e acceptance 21/21, mobile 9/9.
-- Następny krok: `ui--001` krok 4 (ustawienia, UI-05), potem 5 (zapisy nazwane / nowa gra z menu).
+- Kroki 4–5 (UI-05 verified): ustawienia jakości/głośności bez restartu, zapisy pod nazwą, nowa gra z menu gry. **Fala 2 `ui--001` done** — UI-03/04/05/06 verified. Weryfikacja: `pnpm check` (type-check, lint, vitest 119/119), check-layers OK, e2e acceptance 24/24, mobile 10/10, smoke 3/3, 0 błędów konsoli.
+- Następny krok: review fali 2 (subagent w izolowanym worktree: `git diff 4fa9118~2..HEAD -- src` — od `8cc8df6^`), potem fala 3: `economy--001` i `npc--001`.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

@@ -102,6 +102,15 @@ export interface SaveMeta {
   bytes: number
   /** Generator version the save belongs to (0 = unknown, backfilled from a pre-v2 save). */
   genVersion?: number
+  /** Player-given name (named saves, UI-05). */
+  name?: string
+  /** Where the player was (nearest settlement), for the save list. */
+  place?: string
+}
+
+export interface SaveInfo {
+  name?: string
+  place?: string
 }
 
 export interface SaveRecord {
@@ -112,10 +121,11 @@ export interface SaveRecord {
 /** Unique slot id for a new playthrough (a new game never overwrites an existing save). */
 export const newSlotId = (seed: number, now = Date.now()) => `slot-${seed}-${now.toString(36)}`
 
-export async function writeSave(slot: string, state: GameState): Promise<SaveMeta> {
+export async function writeSave(slot: string, state: GameState, info: SaveInfo = {}): Promise<SaveMeta> {
   const t0 = performance.now()
   const json = JSON.stringify(state)
-  const meta: SaveMeta = { slot, seed: state.seed, savedAt: Date.now(), cal: state.time.cal, bytes: json.length, genVersion: state.genVersion }
+  const name = info.name?.trim().slice(0, 40) || undefined
+  const meta: SaveMeta = { slot, seed: state.seed, savedAt: Date.now(), cal: state.time.cal, bytes: json.length, genVersion: state.genVersion, name, place: info.place }
   try {
     await tx(['saves', 'meta'], 'readwrite', (t) => {
       t.objectStore('saves').put({ meta, json } satisfies SaveRecord, slot)
@@ -146,6 +156,10 @@ export async function readSave(slot: string): Promise<GameState> {
   const st = migrate(raw)
   perf.record('save.read', performance.now() - t0)
   return st
+}
+
+export async function readSaveMeta(slot: string): Promise<SaveMeta | undefined> {
+  return tx<SaveMeta | undefined>('meta', 'readonly', (t) => t.objectStore('meta').get(slot))
 }
 
 export async function listSaves(): Promise<SaveMeta[]> {

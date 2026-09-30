@@ -102,6 +102,10 @@ export class Actors {
     this.q = q
   }
 
+  setQuality(q: QualitySettings) {
+    this.q = q
+  }
+
   async load() {
     try {
       const [anims, mh, fh] = await Promise.all([loadGltf('characters/anims.glb'), loadGltf('characters/Male_Head.glb'), loadGltf('characters/Female_Head.glb')])

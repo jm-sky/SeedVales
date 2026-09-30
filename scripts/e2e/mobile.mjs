@@ -149,6 +149,15 @@ try {
   check(results, 'M8. przycisk Cel przełącza cel interakcji', !!tg0 && !!tg1 && tg0 !== tg1, `${tg0} → ${tg1}`)
   await S(() => window.__sv.pause(false))
   await shot(page, 'mob-08-target')
+
+  // M9. Settings from the touch menu (UI-05).
+  await tap('touch-menu-menu')
+  await tap('menu-settings')
+  const settings = !!(await page.$('[data-testid="quality-low"]'))
+  await shot(page, 'mob-09-settings')
+  await tap('panel-close')
+  await tap('panel-close')
+  check(results, 'M9. ustawienia dostępne z menu dotykowego', settings)
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 300))
   await shot(page, 'mob-error')

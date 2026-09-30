@@ -6,12 +6,14 @@ import { parseSeed } from '@/game/core/rng'
 import { deleteSave, listSaves, type SaveMeta } from '@/game/save/db'
 import { formatClock, formatDate } from '@/game/sim/time'
 import { GEN_VERSION } from '@/game/world/types'
+import { loadSettings, saveSettings } from '@/lib/settings'
 import type { StartRequest } from './types'
 import type { QualityProfile } from '@/game/render/Renderer'
 
 const emit = defineEmits<{ start: [StartRequest] }>()
 const seedText = ref(new URLSearchParams(location.search).get('seed') ?? '1337')
-const quality = ref<QualityProfile>((localStorage.getItem('sv-quality') as QualityProfile) || (matchMedia('(pointer: coarse)').matches ? 'low' : 'medium'))
+const touch = matchMedia('(pointer: coarse)').matches
+const quality = ref<QualityProfile>(loadSettings(touch).quality)
 const saves = ref<SaveMeta[]>([])
 /** Known generator mismatch → the save cannot be loaded (checked again on load). */
 const incompatible = (s: SaveMeta) => s.genVersion !== GEN_VERSION
@@ -25,7 +27,7 @@ onMounted(async () => {
 })
 
 function begin(slot?: string, seed?: number) {
-  localStorage.setItem('sv-quality', quality.value)
+  saveSettings({ ...loadSettings(touch), quality: quality.value })
   emit('start', { seed: seed ?? parseSeed(seedText.value), slot, quality: quality.value })
 }
 
@@ -87,7 +89,13 @@ async function remove(slot: string) {
           >
             <div>
               <div class="font-medium">
-                Seed {{ s.seed }} — {{ formatDate(s.cal) }} {{ formatClock(s.cal) }}
+                {{ s.name ?? `Seed ${s.seed}` }} — {{ formatDate(s.cal) }} {{ formatClock(s.cal) }}
+              </div>
+              <div
+                v-if="s.name || s.place"
+                class="text-xs text-muted-foreground"
+              >
+                {{ [s.name ? `seed ${s.seed}` : '', s.place].filter(Boolean).join(' · ') }}
               </div>
               <div class="text-xs text-muted-foreground">
                 {{ new Date(s.savedAt).toLocaleString() }} · {{ Math.round(s.bytes / 1024) }} KB
@@ -103,6 +111,7 @@ async function remove(slot: string) {
               <Button
                 size="sm"
                 data-testid="load-save"
+                :data-slot-name="s.name ?? ''"
                 :disabled="incompatible(s)"
                 @click="begin(s.slot, s.seed)"
               >
@@ -120,7 +129,7 @@ async function remove(slot: string) {
         </ul>
       </div>
       <p class="mt-6 text-xs text-muted-foreground">
-        Sterowanie: WASD + mysz (kliknij, by złapać kursor), Shift bieg, E interakcja, LPM atak / przytrzymaj — łuk,
+        Sterowanie: WASD + mysz (kliknij, by złapać kursor), Shift bieg, E interakcja, Tab następny cel, LPM atak / przytrzymaj — łuk, X zmiana broni, K postać,
         I ekwipunek, C wytwarzanie, B budowa, Q szybkie akcje, J zadania, M mapa, R walka, Z skradanie, T pochodnia,
         F5 zapis, F3 diagnostyka, Esc przerwij/menu.
       </p>

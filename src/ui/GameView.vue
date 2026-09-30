@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { provideGame } from '@/composables/useGame'
 import { installDebugApi } from '@/game/debug/api'
 import { Game } from '@/game/Game'
+import { loadSettings } from '@/lib/settings'
 import type { StartRequest } from './types'
 import DiagOverlay from './hud/DiagOverlay.vue'
 import Hud from './hud/Hud.vue'
@@ -11,7 +12,7 @@ import MobileControls from './mobile/MobileControls.vue'
 import PanelHost from './panels/PanelHost.vue'
 
 const props = defineProps<{ request: StartRequest }>()
-const emit = defineEmits<{ quit: [] }>()
+const emit = defineEmits<{ quit: []; restart: [seed: number | null] }>()
 const canvas = ref<HTMLCanvasElement>()
 const loading = ref('Przygotowanie…')
 const error = ref('')
@@ -24,6 +25,7 @@ onMounted(async () => {
     const g = await Game.create(c, { seed: props.request.seed, slot: props.request.slot, quality: props.request.quality, onProgress: (l) => (loading.value = l) })
     game.value = g
     g.onUi(() => version.value++)
+    g.applySettings({ ...loadSettings(g.isTouch), quality: props.request.quality ?? loadSettings(g.isTouch).quality })
     installDebugApi(g)
     ro = new ResizeObserver(() => g.renderer.resize(c.clientWidth, c.clientHeight))
     ro.observe(c)
@@ -51,7 +53,10 @@ onBeforeUnmount(() => {
     <template v-if="game && !loading">
       <Hud />
       <MobileControls v-if="game.isTouch" />
-      <PanelHost @quit="emit('quit')" />
+      <PanelHost
+        @quit="emit('quit')"
+        @restart="emit('restart', $event)"
+      />
       <DiagOverlay v-if="game.showDiag" />
     </template>
     <div

@@ -82,6 +82,12 @@ export class Vegetation {
     this.dirty = true
   }
 
+  setQuality(q: QualitySettings) {
+    this.nearM = q.vegNear
+    this.farM = q.vegFar
+    this.markDirty()
+  }
+
   markDirty() {
     this.dirty = true
   }

@@ -12,10 +12,11 @@ import MapPanel from './MapPanel.vue'
 import OrdersPanel from './OrdersPanel.vue'
 import QuestsPanel from './QuestsPanel.vue'
 import QuickPanel from './QuickPanel.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import StoragePanel from './StoragePanel.vue'
 import TradePanel from './TradePanel.vue'
 
-const emit = defineEmits<{ quit: [] }>()
+const emit = defineEmits<{ quit: []; restart: [seed: number | null] }>()
 const { game, version } = useGameStrict()
 const panel = computed(() => {
   void version.value
@@ -41,9 +42,11 @@ const panel = computed(() => {
     <MapPanel v-else-if="panel === 'map'" />
     <DialogPanel v-else-if="panel === 'dialog'" />
     <OrdersPanel v-else-if="panel === 'orders'" />
+    <SettingsPanel v-else-if="panel === 'settings'" />
     <GameMenu
       v-else-if="panel === 'menu'"
       @quit="emit('quit')"
+      @restart="emit('restart', $event)"
     />
   </div>
 </template>

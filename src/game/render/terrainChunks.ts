@@ -76,6 +76,12 @@ export class TerrainChunks {
     this.group.add(this.ocean)
   }
 
+  /** Quality change at runtime: new LOD rings/view distance; chunks rebuild as the update loop revisits them. */
+  setQuality(q: QualitySettings) {
+    this.lods = q.lods.map((d, i) => ({ maxDist: d, step: STEPS[i]! }))
+    this.viewDist = q.viewDist
+  }
+
   markDirty(key: string) {
     this.dirty.add(key)
     const [cx, cz] = key.split(',').map(Number) as [number, number]

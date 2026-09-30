@@ -943,8 +943,8 @@
    "scope": "v2",
    "behavior": "Menu konfiguracji (jakość grafiki, głośność); nowa gra; zapis pod nazwą",
    "verify": "e2e",
-   "status": "planned",
-   "evidence": "plan: docs/plans/ui--001--character-screens-map-settings.md"
+   "status": "verified",
+   "evidence": "src/lib/settings.ts (+ settings.test.ts UI-05: round-trip, corrupt/blocked storage, clamping, legacy key) in localStorage, not the savegame; SettingsPanel (menu → Ustawienia): quality low/medium/high switched at runtime (Renderer.setQuality: pixel ratio, shadows + material recompile, fog, terrain LOD rings, vegetation radii, actor model distances; antialias needs restart), volumes master/ambient/effects (Ambience.setVolumes). Named saves: writeSave(slot, state, {name, place}) + readSaveMeta, Game.saveAs, main-menu list shows name/place (save.test.ts UI-05). New game from the in-game menu (same or random world, GameView remount). e2e acceptance step 13 (quality high→low without restart, volume persisted, save as „Moja wyprawa” listed in main menu, new game resets calendar/money), mobile M9; screenshots acc-13-settings, acc-13-saves, mob-09-settings"
   },
   {
    "id": "UI-06",

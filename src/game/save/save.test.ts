@@ -8,7 +8,7 @@ import { run, testSim } from '../sim/testWorld'
 import { SAVE_VERSION } from '../sim/types'
 import { installSystems } from '../sim/worldSystems'
 import { isTree } from '../world/nodes'
-import { checkWorldCompat, deleteSave, listSaves, migrate, newSlotId, readSave, SaveError, writeSave } from './db'
+import { checkWorldCompat, deleteSave, listSaves, migrate, newSlotId, readSave, readSaveMeta, SaveError, writeSave } from './db'
 import { snapshot } from './snapshot'
 
 describe('save / load', () => {
@@ -120,6 +120,19 @@ describe('save / load', () => {
     await deleteSave('meta-test')
     expect((await listSaves()).some((x) => x.slot === 'meta-test')).toBe(false)
     await expect(readSave('meta-test')).rejects.toThrow(SaveError)
+  })
+
+  it('UI-05: named saves keep their name and place in the save list (trimmed, max 40 chars)', async () => {
+    const sim = testSim()
+    await writeSave('named', snapshot(sim), { name: '  Wyprawa na północ  ', place: 'Jaworzno' })
+    await writeSave('long', snapshot(sim), { name: 'x'.repeat(60) })
+    await writeSave('blank', snapshot(sim), { name: '   ' })
+    const list = await listSaves()
+    expect(list.find((m) => m.slot === 'named')).toMatchObject({ name: 'Wyprawa na północ', place: 'Jaworzno' })
+    expect(list.find((m) => m.slot === 'long')!.name).toHaveLength(40)
+    expect(list.find((m) => m.slot === 'blank')!.name).toBeUndefined()
+    expect((await readSaveMeta('named'))?.name).toBe('Wyprawa na północ')
+    for (const s of ['named', 'long', 'blank']) await deleteSave(s)
   })
 
   it('SAVE-01: quota exceeded → SaveError with a message, nothing pretends to be saved', async () => {

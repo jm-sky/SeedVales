@@ -26,6 +26,13 @@ export class Ambience {
   private limiter = new VoiceLimiter(DEFAULT_RULES, 4)
   private t = 0
   enabled = true
+  /** Player volume settings (UI-05), 0..1 each. */
+  private vol = { master: 0.8, ambient: 1, effects: 1 }
+
+  setVolumes(v: { master: number; ambient: number; effects: number }) {
+    this.vol = { ...v }
+    if (this.ctx) this.master.gain.setTargetAtTime(0.6 * v.master, this.ctx.currentTime, 0.05)
+  }
 
   /** Must be called from a user gesture (autoplay policy). */
   start() {
@@ -33,7 +40,7 @@ export class Ambience {
     const ctx = new AudioContext()
     this.ctx = ctx
     this.master = ctx.createGain()
-    this.master.gain.value = 0.5
+    this.master.gain.value = 0.6 * this.vol.master
     this.master.connect(ctx.destination)
     const noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
     const d = noise.getChannelData(0)
@@ -66,7 +73,7 @@ export class Ambience {
     o.frequency.setValueAtTime(freqs[0]!, t0)
     freqs.slice(1).forEach((f, i) => o.frequency.linearRampToValueAtTime(f, t0 + ((i + 1) / freqs.length) * dur))
     g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(vol, t0 + 0.02)
+    g.gain.linearRampToValueAtTime(Math.max(0.0002, vol * this.vol.effects), t0 + 0.02)
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
     o.connect(g).connect(this.master)
     o.start(t0)
@@ -134,7 +141,7 @@ export class Ambience {
     const mountain = biome === Biome.Mountain || biome === Biome.Snow || p.y > 90
     let coast = 0
     for (const [dx, dz] of [[60, 0], [-60, 0], [0, 60], [0, -60]]) if (t.isSeaAt(p.x + dx!, p.z + dz!)) coast = 1
-    const set = (g: GainNode, v: number) => g.gain.setTargetAtTime(v, this.ctx!.currentTime, 0.8)
+    const set = (g: GainNode, v: number) => g.gain.setTargetAtTime(v * this.vol.ambient, this.ctx!.currentTime, 0.8)
     set(this.wind, (mountain ? 0.35 : 0.06) + (w.kind === 'storm' ? 0.35 : 0) * 1)
     set(this.waves, coast * 0.25)
     set(this.rain, w.kind === 'rain' || w.kind === 'storm' ? 0.12 + w.intensity * 0.15 : 0)

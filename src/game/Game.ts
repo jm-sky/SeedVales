@@ -14,7 +14,7 @@ import { blueprintById, recipeById } from './data/recipes'
 import { perf } from './diag/perf'
 import { attachControls, input, type KeyAction, moveAxes, wantsRun } from './input/controls'
 import { Renderer } from './render/Renderer'
-import { checkWorldCompat, loadWorldCache, newSlotId, readSave, storeWorldCache, writeSave } from './save/db'
+import { checkWorldCompat, loadWorldCache, newSlotId, readSave, readSaveMeta, storeWorldCache, writeSave } from './save/db'
 import { snapshot } from './save/snapshot'
 import { consume, dropItem } from './sim/actions'
 import { placeSite, startBuildWork } from './sim/build'
@@ -37,7 +37,7 @@ export interface GameOptions {
   onProgress?: (label: string) => void
 }
 
-export type Panel = null | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact'
+export type Panel = null | 'settings' | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact'
 
 export async function loadWorld(seed: number, onProgress?: (l: string) => void): Promise<WorldData> {
   onProgress?.('Szukam świata w pamięci podręcznej…')
@@ -67,6 +67,8 @@ export class Game {
   /** Interactive objects currently in range (for the Tab hint). */
   targetCount = 0
   slot: string
+  /** Player-given name of the current save slot (UI-05). */
+  saveName?: string
   running = false
   private raf = 0
   private last = 0
@@ -110,10 +112,18 @@ export class Game {
     installSystems(sim)
     const renderer = new Renderer(canvas, sim, o.quality ?? 'medium')
     const game = new Game(canvas, sim, renderer, o.slot ?? newSlotId(seed))
+    if (o.slot) game.saveName = (await readSaveMeta(o.slot).catch(() => undefined))?.name
     renderer.resize(canvas.clientWidth, canvas.clientHeight)
     o.onProgress?.('Wczytuję modele…')
     await renderer.loadAssets(o.onProgress)
     return game
+  }
+
+  /** Player preferences (UI-05): quality switches at runtime, volumes go to the audio mixer. */
+  applySettings(s: { quality: QualityProfile; volume: { master: number; ambient: number; effects: number } }) {
+    this.renderer.setQuality(s.quality)
+    this.audio.setVolumes(s.volume)
+    this.notify()
   }
 
   onUi(fn: () => void) {
@@ -172,7 +182,7 @@ export class Game {
     if (sim.player.combat && Math.hypot(ax, ay) < 0.1) sim.player.rot = rig.yaw
     sim.interruptReason = null
     // Game menu pauses the world (single-player).
-    if (this.panel !== 'menu') sim.step(dt * sim.timeScale)
+    if (this.panel !== 'menu' && this.panel !== 'settings') sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
     this.renderer.markerAt = this.panel || sim.state.px.activity ? null : this.target
     this.renderer.render(dt)
@@ -534,15 +544,37 @@ export class Game {
   }
 
   /** Saves; on failure (e.g. quota) shows the reason and returns '' — never pretends success. */
+  /** Nearest settlement name (save list metadata). */
+  private placeName(): string | undefined {
+    const p = this.sim.player
+    let best: { name: string; d: number } | undefined
+    for (const s of this.sim.world.settlements) {
+      const d = Math.hypot(s.x - p.x, s.z - p.z) - s.radius
+      if (!best || d < best.d) best = { name: s.name, d }
+    }
+    return best && (best.d < 150 ? best.name : `okolice: ${best.name}`)
+  }
+
+  /** Saves into a new slot under a player-given name; later quick saves go to that slot. */
+  async saveAs(name: string): Promise<string> {
+    const slot = newSlotId(this.sim.state.seed)
+    const prev = { slot: this.slot, name: this.saveName }
+    this.slot = slot
+    this.saveName = name.trim() || undefined
+    const ok = await this.save(slot)
+    if (!ok) Object.assign(this, { slot: prev.slot, saveName: prev.name })
+    return ok
+  }
+
   async save(slot = this.slot): Promise<string> {
     try {
-      await writeSave(slot, snapshot(this.sim))
+      await writeSave(slot, snapshot(this.sim), { name: this.saveName, place: this.placeName() })
     } catch (e) {
       this.showToast(e instanceof Error ? e.message : String(e))
       this.notify()
       return ''
     }
-    this.showToast('Zapisano grę.')
+    this.showToast(this.saveName ? `Zapisano: ${this.saveName}` : 'Zapisano grę.')
     this.notify()
     return slot
   }
