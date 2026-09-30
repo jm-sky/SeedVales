@@ -118,6 +118,8 @@ Skalibruj koszty potrzeb, produkcję i podróże wspólnie. Nie kopiuj bezpośre
 
 Kamera i oprawa (decyzja, `docs/VISION.md` §4.4): widok zza postaci; teren, roślinność i budynki proceduralne low-poly; postacie i zwierzęta — importowane glTF lub proceduralne placeholdery.
 
+Dokładniej: Teren proceduralny low-poly; roślinność i zabudowa rozmieszczane lub składane proceduralnie, z preferencją dla dostępnych assetów Quaternius.
+
 Stack: TypeScript, Vue, Tailwind CSS, shadcn-vue i Three.js, z uwzględnieniem istniejącej konfiguracji repo.
 
 - Oddziel model świata i reguły symulacji od renderowania i UI.
@@ -233,6 +235,10 @@ Przy dodawaniu lub istotnej zmianie systemu:
 
 Najpierw mierz, potem optymalizuj. Rozbudowuj szczegółowość diagnostyki tam, gdzie wyniki wskazują problem. Mechanizmy diagnostyczne i benchmarki utrzymuj wraz z kodem, aby kolejne sesje mogły automatycznie wykrywać i analizować regresje.
 
+Wspólna infrastruktura diagnostyczna powstaje na początku w minimalnej działającej postaci. Pomiary dodawaj wraz z systemami, a scenariusze benchmarkowe wraz z odpowiadającą im rozgrywką.
+
+Na każdym etapie uruchamiaj krótki benchmark zmienianego systemu. Pełny zestaw i długotrwałe scenariusze uruchamiaj przy większych integracjach oraz odbiorze końcowym. Regresje czasowe potwierdzaj powtórzeniem pomiaru.
+
 ## 7. Plan i pamięć między sesjami
 
 Wykorzystaj istniejące odpowiedniki poniższych dokumentów; nie twórz duplikujących się źródeł prawdy.
@@ -299,6 +305,8 @@ Po każdym większym etapie wykonaj osobną rundę review:
 Jeżeli korzystasz z subagentów, jako agent główny odpowiadasz za ich rezultat. Przejrzyj zmiany, sprawdź integrację i uruchom odpowiednią weryfikację. Sam raport subagenta ani jego deklaracja „testy przeszły” nie wystarczają do oznaczenia funkcji jako `verified`.
 
 Jeżeli subagenci są dostępni, zleć niezależne review najważniejszych zmian i końcowego scenariusza odbioru agentowi, który nie implementował ocenianego fragmentu. Oceń zasadność uwag, popraw potwierdzone problemy i zapisz wynik review w `docs/reviews/`.
+
+Błędy poprawności i niespełnione kryteria odbioru wymagają naprawy. Sugestie stylistyczne i opcjonalne refaktoryzacje zapisuj do późniejszego wykonania, jeśli nie rozwiązują konkretnego problemu. Kończ review, gdy wymagane kryteria są spełnione.
 
 ### Weryfikacja w przeglądarce
 
@@ -368,6 +376,10 @@ Przed zakończeniem sesji zapisz:
 - komendy uruchomienia i weryfikacji.
 
 Twórz lokalne commity obejmujące spójne zmiany. Nie dołączaj przypadkowo cudzych zmian.
+
+Aktualizuj postęp po każdym ukończonym fragmencie oraz przed kompakcją kontekstu. Zapisuj również rozpoczęte prace i stan niedokończonych zmian.
+
+Scenariusz z §9 jest testem przekrojowym. Ukończenie v1 wymaga dodatkowo zweryfikowania wszystkich obowiązkowych pozycji z FEATURES.json, w tym całego zakresu §4.
 
 Końcowy raport dla użytkownika ma być krótki i zawierać:
 - sposób uruchomienia gry;

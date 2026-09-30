@@ -302,6 +302,17 @@ Przykłady:
   - przepaście,
   - kaniony.
 
+
+## 6.3. Rzeki, jeziora, morza
+
+Rzeki powinny mieć źródła w górach - najpierw tworząc strumień, potem rzekę; mieć ujście do morza lub jeziora.
+
+Powinny mieć jakieś koryto i głębokość. Rzeka powinna móc osiągnąć szerokość nawet 10 m. Rzeki w miejscach przecięcia z drogą powinny mieć bród, albo nawet prosty most.
+
+Głęboka woda wymaga pływania, w płytkiej można brodzić. Pływanie zużywa stamina, może prowadzić do utonięcia.
+
+Zwierzęta muszą wybierać trasę uwzględniając wodę, aby się nie utopić. Szczególnie miejsce do picia powinno być z brzegu zbiornika.
+
 ---
 
 # 7. Osady
@@ -359,6 +370,11 @@ Cmentarze - małe osady mogą mieć własny cmentarz lub wspólny z najbliższą
 Magazyny - każda osada ma magazyn (albo magazyny - osobny na surowce, osobny na żywność). Household też mają swoje magazyny. To może być sterta drewna, skrzynia na przedmioty, beczka, szopa.
 
 NPC często oddają swoje nadwyżki do wspólnego magazynu osady, oraz w razie potrzeby mogą z niego korzystać - ale jako ostateczność.
+
+## Naprawa
+
+- Budynki i obiekty użytkowe mają swój stan (durability?) i mogą wymagać okresowych napraw. Zła pogada wpływa na szybsze zużycie.
+- NPC starają się naprawiać swoje i wspólne budowle i obiekty.  Trzeba zapewnić im narzędzia i surowce na początku gry, jako minimalny początkowy zestaw.
 
 ---
 
@@ -441,6 +457,12 @@ HP jest wyliczane ze stanu zdrowia i obrażeń obszarów ciała, np.:
 - Wraz z dalszą aktywnością:
   - rosną kary,
   - potem trzeba dłużej odpocząć.
+
+Vigor regeneruje się podczas odpoczynku zależnie od komfortu miejsca.  
+- Spanie na kocu w polu podczas deszczu - to chyba najniższy komfort.
+- Namiot lub stóg siana - daje niski komfort (+ survival skill)
+- Namiot + ognisko + posłanie ze skór - daje średni komfort (+ survival skill)
+- Dom z łóżkiem - daje komfort średni-wysoki zależnie od warunków.
 
 ### Hunger
 
@@ -742,6 +764,10 @@ Można je zniszczyć, np.:
 
 # 16. Surowce, rośliny i żywność
 
+Wyobrażam sobie, że będzie trawa. Warto aby miała połacia/obszary różnych kolorów - np. większość zielona, plamy żółtawe, plany ciemniejsze.
+
+Dobrze by nad wodą były trzciny.
+
 ## 16.1. Drzewa
 
 - Drzewa rosną.
@@ -750,6 +776,8 @@ Można je zniszczyć, np.:
 - Są źródłem:
   - gałęzi,
   - belek.
+
+Wyobrażam sobie, że drzewa mają realistyczną wysokość, nie 4 m, tylko raczej 10-30 m (albo nawet więcej).
 
 ## 16.2. Kamień i złoża
 
@@ -773,6 +801,8 @@ Zioła mogą być:
 
 - lecznicze,
 - trujące.
+
+Proponuję 4-6 ziół na początek: pospolite, średnie i rzadkie; z różnym zakresem i potencjałem leczniczym.
 
 ## 16.4. Żywność i rośliny
 
