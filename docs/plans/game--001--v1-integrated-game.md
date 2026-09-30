@@ -1,6 +1,6 @@
 # V1 — zintegrowana gra do pierwszego przeglądu
 
-**Status:** in_progress  
+**Status:** in_progress (sesja 1 zakończona — patrz docs/state/PROGRESS.md)  
 **Domain:** game (cross-domain)  
 **Sub domains:** world, sim, npc, fauna, items, combat, economy, build, quests, save, render, ui, diag  
 **Roadmap:** —  
