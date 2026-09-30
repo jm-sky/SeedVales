@@ -156,6 +156,32 @@ describe('items, food, trade, craft', () => {
     expect(countItem(sim.player.inv, 'knife')).toBe(2)
   })
 
+  it('CRAFT-02: order consumes recipe materials from the smith store; without them it keeps waiting', () => {
+    const sim = testSim()
+    const smith = sim.state.npcs.find((n) => n.profession === 'blacksmith')!
+    const store = houseOf(sim, smith)!.inv!
+    const ingots0 = countItem(store, 'iron_ingot')
+    const branch0 = countItem(store, 'branch')
+    expect(placeOrder(sim, smith, 'axe')).toContain('Zamówiono')
+    sim.state.time.cal += 11 * 3600
+    WORK_ACTS.smith!(sim, smith, undefined, 1)
+    const o = sim.state.px.orders[0]!
+    expect(o.status).toBe('ready')
+    expect(countItem(store, 'iron_ingot')).toBe(ingots0 - 2)
+    expect(countItem(store, 'branch')).toBe(branch0 - 1)
+    // Second order with an empty store: stays waiting, nothing is minted on collect.
+    store.items = []
+    placeOrder(sim, smith, 'knife')
+    const o2 = sim.state.px.orders[1]!
+    sim.state.time.cal += 11 * 3600
+    WORK_ACTS.smith!(sim, smith, undefined, 1)
+    expect(o2.status).toBe('waiting')
+    expect(collectOrder(sim, o2.id)).toContain('niegotowe')
+    const axes0 = countItem(sim.player.inv, 'axe')
+    expect(collectOrder(sim, o.id)).toContain('Odebrano')
+    expect(countItem(sim.player.inv, 'axe')).toBe(axes0 + 1)
+  })
+
   it('ITEM-02: carry capacity (Strength + backpack) and weight', () => {
     const sim = testSim()
     const p = sim.player

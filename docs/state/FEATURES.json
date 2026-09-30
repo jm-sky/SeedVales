@@ -601,8 +601,8 @@
    "scope": "v1",
    "behavior": "Zamówienia u NPC (kowal) z zaliczką",
    "verify": "vitest + e2e",
-   "status": "in_progress",
-   "evidence": "src/game/sim/features.test.ts CRAFT-02; orders panel | review 2026-09-30 (docs/reviews/2026-09-30--001--v1-review.md) #1: zamówienie kowala nie zużywa materiałów (works.ts smith → ready; collectOrder newStack) — plan game--002 A1"
+   "status": "verified",
+   "evidence": "src/game/sim/features.test.ts CRAFT-02 (deposit → ready → collect) + CRAFT-02 materials test: smith consumes recipe inputs from house store at forging, no materials → order stays waiting, collect gives the buffered forged stack (review #1 fixed, game--002 A1); orders panel"
   },
   {
    "id": "TRADE-01",

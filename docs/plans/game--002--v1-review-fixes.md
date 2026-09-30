@@ -1,6 +1,6 @@
 # V1 — poprawki po niezależnym review (Grok / Scribe)
 
-**Status:** planned  
+**Status:** in_progress  
 **Domain:** game (cross-domain)  
 **Sub domains:** sim, economy, fauna, npc, save, world-gen, ui, diag  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md)  
@@ -82,4 +82,4 @@ Pozostałe pozycje: zweryfikować przy implementacji (reprodukcja testem → pop
 
 ## Wynik
 
-—
+- **A1 ✅** — `forgeOrder` (`sim/orders.ts`): kowal przy `smith` zużywa wejścia receptury z magazynu domu, rzuca jakość i trzyma wykuty stack w `order.item`; brak materiałów → zamówienie zostaje `waiting` (kowal najpierw wytapia sztaby z rudy+węgla). `collectOrder` wydaje `order.item`, nie `newStack`. Test: `features.test.ts` „CRAFT-02: order consumes recipe materials…”. Stare zapisy z `ready` bez `item` → obsłużone w migracji A4.

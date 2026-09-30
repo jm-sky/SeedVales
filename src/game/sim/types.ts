@@ -297,6 +297,8 @@ export interface Order {
   price: number
   readyAt: number
   status: 'waiting' | 'ready' | 'collected'
+  /** Forged item held by the smith until collected (materials already consumed). */
+  item?: ItemStack
 }
 
 export type WeatherKind = 'clear' | 'overcast' | 'rain' | 'storm' | 'snow'

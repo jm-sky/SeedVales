@@ -11,6 +11,7 @@ import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
 import { applyDamage, weaponOf } from '../combat'
 import { addItem, countItem, findFood, newStack, removeItem } from '../inventory'
+import { forgeOrder } from '../orders'
 import { growthFactor } from '../time'
 import { drink, eat, heal, hp } from '../vitals'
 import { household, houseOf } from './queries'
@@ -213,12 +214,12 @@ export const WORK_ACTS: Record<string, Act> = {
     if (!inv) return false
     // Fulfil player orders first.
     const order = sim.state.px.orders.find((o) => o.npcId === h.id && o.status === 'waiting' && sim.state.time.cal >= o.readyAt)
-    if (order) {
-      order.status = 'ready'
+    if (order && forgeOrder(sim, h, inv, order)) {
       sim.message(`${h.name}: zamówienie gotowe do odbioru.`, 'quest')
+      train(h, 'blacksmith', 0.5, 2)
       return true
     }
-    if (countItem(inv, 'iron_ingot') < 1) {
+    if (countItem(inv, 'iron_ingot') < (order ? 4 : 1)) {
       if (countItem(inv, 'iron_ore') >= 2 && countItem(inv, 'coal') >= 1) {
         removeItem(inv, 'iron_ore', 2)
         removeItem(inv, 'coal', 1)

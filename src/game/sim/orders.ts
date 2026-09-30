@@ -1,15 +1,16 @@
 /**
- * Orders at a blacksmith: pay 50% deposit, NPC crafts during work (smith act marks ready),
- * collect paying the rest. Quality from blacksmith skill.
+ * Orders at a blacksmith: pay 50% deposit, NPC forges during work consuming the recipe's materials
+ * from the household store (no materials → order keeps waiting), collect paying the rest.
+ * Quality from blacksmith skill (rolled at forging).
  * @domain crafting
  * @subdomain orders
  */
 import type { Sim } from './sim'
-import type { Human } from './types'
+import type { Human, Inventory, Order } from './types'
 import { itemDef } from '../data/items'
 import { recipeById } from '../data/recipes'
 import { rollQuality } from './craft'
-import { addItem, newStack } from './inventory'
+import { addItem, hasItems, newStack, removeItem } from './inventory'
 
 export const orderPrice = (recipeId: string) => {
   const r = recipeById(recipeId)
@@ -29,9 +30,22 @@ export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
   return `Zamówiono: ${itemDef(id).name}. Gotowe za ok. 10 godzin.`
 }
 
+/**
+ * Smith forges a due order from its store. Returns false when materials are missing
+ * (the order stays 'waiting'; nothing is created).
+ */
+export function forgeOrder(sim: Sim, smith: Human, store: Inventory, o: Order): boolean {
+  const r = recipeById(o.recipe)
+  if (!r || !hasItems(store, r.inputs)) return false
+  for (const inp of r.inputs) removeItem(store, inp.item, inp.qty)
+  o.item = newStack(r.output.item, 1, { q: rollQuality(sim, smith.skills.blacksmith) })
+  o.status = 'ready'
+  return true
+}
+
 export function collectOrder(sim: Sim, orderId: string): string {
   const o = sim.state.px.orders.find((x) => x.id === orderId)
-  if (!o || o.status !== 'ready') return 'Zamówienie niegotowe.'
+  if (!o || o.status !== 'ready' || !o.item) return 'Zamówienie niegotowe.'
   const rest = o.price - o.paid
   if (sim.player.money < rest) return 'Za mało pieniędzy na dopłatę.'
   const smith = sim.human(o.npcId)
@@ -39,7 +53,8 @@ export function collectOrder(sim: Sim, orderId: string): string {
   if (smith) smith.money += rest
   o.paid = o.price
   o.status = 'collected'
-  const q = rollQuality(sim, smith?.skills.blacksmith ?? 30)
-  addItem(sim.player.inv, newStack(o.recipe, 1, { q }))
-  return `Odebrano: ${itemDef(o.recipe).name} (jakość: ${['niska', 'średnia', 'wysoka', 'wyjątkowa'][q]}).`
+  const item = o.item
+  o.item = undefined
+  addItem(sim.player.inv, item)
+  return `Odebrano: ${itemDef(item.id).name} (jakość: ${['niska', 'średnia', 'wysoka', 'wyjątkowa'][item.q ?? 1]}).`
 }
