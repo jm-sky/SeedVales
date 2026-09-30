@@ -386,7 +386,7 @@
    "behavior": "Żerowanie, picie z brzegu wody, ucieczka przed zagrożeniem, drapieżniki polują; deszcz → schronienie",
    "verify": "vitest AI zwierząt",
    "status": "verified",
-   "evidence": "src/game/sim/features.test.ts FAUNA-02, src/game/sim/features2.test.ts FAUNA-02 drinking at banks; predators hunt (fauna/ai.ts)"
+   "evidence": "src/game/sim/features.test.ts FAUNA-02, src/game/sim/features2.test.ts FAUNA-02 drinking at banks; predators hunt (fauna/ai.ts) | combat.test.ts FAUNA-02 chase bound: pościg ≤ HUNT.chaseMaxS (40 s) albo ofiara > 1.6× percepcji → porzucenie + cooldown 90 s (game--002 A3)"
   },
   {
    "id": "FAUNA-03",

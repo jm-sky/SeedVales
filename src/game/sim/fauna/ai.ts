@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { Animal } from '../types'
-import { CALENDAR_SPEED } from '../../config/calibration'
+import { CALENDAR_SPEED, HUNT } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, VARIANT_MULT } from '../../data/species'
 import { perf } from '../../diag/perf'
@@ -121,6 +121,13 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
   }
 
   // 4) Plan-level behaviour (re-evaluated when previous target reached or timed out).
+  if (ai.goal === 'hunt' && !chaseValid(sim, a)) {
+    ai.steps.length = 0
+    ai.goal = null
+    ai.cooldowns.hunt = now + HUNT.cooldownS
+    ai.lastFail = 'hunt:chase'
+    perf.count('fauna.huntGiveUp')
+  }
   const step = ai.steps[0]
   if (step?.op === 'goto') {
     const r = steerTo(sim, a, step.x, step.z, (step.run ? sp.run : sp.walk) * speedMul, dt, step.range ?? 1, full, 0.3)
@@ -151,6 +158,14 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
     return
   }
   planAnimal(sim, a)
+}
+
+/** A hunt continues only while the prey is alive, perceivable and the chase time limit is not exceeded. */
+function chaseValid(sim: Sim, a: Animal): boolean {
+  const prey = sim.actor(a.ai.targetId)
+  if (!prey || isDown(sim, prey)) return true // kill done: finish the step normally
+  if (sim.state.time.play - (a.ai.goalAt ?? 0) > HUNT.chaseMaxS) return false
+  return Math.hypot(prey.x - a.x, prey.z - a.z) <= SPECIES[a.species].perception * HUNT.giveUpPerception
 }
 
 function scavenge(sim: Sim, a: Animal) {
@@ -230,10 +245,11 @@ function planAnimal(sim: Sim, a: Animal) {
       go(t, true, 1.5)
       return
     }
-    if (sp.preys && a.hungerH > 16) {
+    if (sp.preys && a.hungerH > 16 && (ai.cooldowns.hunt ?? 0) <= sim.state.time.play) {
       const prey = sim.actors.query(a.x, a.z, sp.perception * 1.5).find((o) => o.kind === 'animal' && sp.preys!.includes((o as Animal).species) && !isDown(sim, o))
       if (prey) {
         ai.goal = 'hunt'
+        ai.goalAt = sim.state.time.play
         ai.targetId = prey.id
         go(prey, true, sp.attackRange)
         return

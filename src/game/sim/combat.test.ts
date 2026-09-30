@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { HUNT } from '../config/calibration'
 import { meleeAttack } from './combat'
+import { updateAnimal } from './fauna/ai'
 import { makeAnimal } from './newGame'
-import { run, testSim } from './testWorld'
+import { playerFarAway, run, testSim } from './testWorld'
 import { hp } from './vitals'
 
 describe('combat', () => {
@@ -39,5 +41,38 @@ describe('combat', () => {
     run(sim, 60)
     expect(hp(p.vitals)).toBeGreaterThanOrEqual(hpAt - 0.01)
     expect(p.vitals.ko!.until).toBeLessThan(sim.state.time.play)
+  })
+
+  it('FAUNA-02: predator chase is bounded — gives up after the limit and cools down', () => {
+    const sim = testSim()
+    playerFarAway(sim)
+    const x = sim.player.x
+    const z = sim.player.z
+    sim.player.x += 1500
+    sim.actors.update(sim.player)
+    sim.state.weather.kind = 'clear'
+    sim.state.time.cal = Math.floor(sim.state.time.cal / 86400) * 86400 + 20 * 3600
+    const w = makeAnimal(sim.nextId(), 'wolf', 'adult', x, z, sim.terrain.heightAt(x, z), sim.rng)
+    const deer = makeAnimal(sim.nextId(), 'deer', 'adult', x + 12, z, sim.terrain.heightAt(x, z), sim.rng)
+    sim.addAnimal(w)
+    sim.addAnimal(deer)
+    w.hungerH = 20
+    w.thirstH = 0
+    let hunted = false
+    let t = 0
+    // The deer always stays ahead (never caught): the chase must end by itself.
+    for (; t < HUNT.chaseMaxS + 30; t += 0.1) {
+      sim.state.time.play += 0.1
+      deer.x = w.x + 8
+      deer.z = w.z
+      sim.actors.update(deer)
+      updateAnimal(sim, w, 0.1, true)
+      if (w.ai.goal === 'hunt') hunted = true
+      else if (hunted) break
+    }
+    expect(hunted).toBe(true)
+    expect(w.ai.goal).not.toBe('hunt')
+    expect(t).toBeLessThanOrEqual(HUNT.chaseMaxS + 1)
+    expect(w.ai.cooldowns.hunt ?? 0).toBeGreaterThan(sim.state.time.play)
   })
 })

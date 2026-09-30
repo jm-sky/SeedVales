@@ -67,6 +67,13 @@ export const COMBAT = {
   bandageHeal: 15,
 }
 
+/** Predator hunting: chase limit (gameplay s), give-up distance (× perception), retry cooldown (gameplay s). */
+export const HUNT = {
+  chaseMaxS: 40,
+  giveUpPerception: 1.6,
+  cooldownS: 90,
+}
+
 /** Time acceleration for sleep and long work (whole simulation). */
 export const ACCEL = {
   sleep: 40,
