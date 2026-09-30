@@ -122,14 +122,14 @@ Odległość między pierwszą osadą a najbliższą osadą to około 1–2 dni 
 
 Przyjmujemy:
 
-- dzień marszu: około 16 godzin,
-- prędkość marszu: około 5 km/h.
+- dzień marszu: około 16 godzin kalendarza,
+- prędkość marszu: 1,5 m/s w przestrzeni świata (≈ 5,4 km/h).
 
-Przykład:
+Przykład (skala skompresowana, patrz §5.2):
 
-`16 h × 5 km/h = 80 km`
+`16 h kalendarza = 40 realnych minut × 1,5 m/s ≈ 3,6 km trasy`
 
-ALE może to być ciężkie do osiągnięcia, więc możemy zrobić trochę bardziej gęsty świat.
+Realistyczne 80 km/dzień (16 h × 5 km/h) byłoby zbyt dużym światem, dlatego świat jest celowo gęstszy. Obowiązuje wartość 3,6 km/dzień marszu.
 
 ## 4.3. Długie podróże
 
@@ -150,6 +150,12 @@ Gracz/NPC może mieć konia/osła. Te zwierzęta mogą mieć juki i ciągnąć w
 > - Czy podróż konna zużywa zasoby lub męczy konia?
 
 Podróż konna męczy konia, a gracza minimalnie - ale zależnie od skill "Riding".
+
+## 4.4. Kamera i oprawa wizualna (decyzja)
+
+- **Kamera:** widok zza postaci (third-person), z możliwością przybliżenia. Sterowanie: WASD + mysz na desktopie; joystick + przeciąganie kamery na mobile. Walka wręcz i dystansowa opiera się na tym widoku.
+- **Oprawa:** hybryda. Teren, roślinność i budynki są generowane proceduralnie (low-poly, kolory z palety). Postacie i zwierzęta mogą używać importowanych assetów (glTF) o zgodnej licencji; do czasu ich doboru — proste modele proceduralne jako placeholdery.
+- Szczegóły i uzasadnienie: `docs/design/rendering-camera-and-art.md`.
 
 ---
 
@@ -186,8 +192,8 @@ Jeden dzień gry może trwać około:
 
 Jeden rok może trwać np.:
 
-- `12 × 5 = 60 dni gry`, przy założeniu, że miesiąc ma 5 dni,
-- albo `12 × 10 = 120 dni`.
+- `12 × 5 = 60 dni gry`, przy założeniu, że miesiąc ma 5 dni — **wariant początkowy (domyślny)**,
+- albo `12 × 10 = 120 dni` — wariant do rozważenia później, jako parametr konfiguracji.
 
 > Pytania:
 > - Jak dokładnie działają sezony i ile trwa każdy z nich?
@@ -203,7 +209,7 @@ Deszcze naturalnie podlewają pola, dzięki czemu NPC nie muszą tego robić.
 | Chodzenie | **1,5 m/s**, czyli 5,4 km/h w przestrzeni świata |
 | 1 godzina kalendarza gry | 2,5 realnej minuty → 225 m marszu |
 | 16 godzin marszu w grze | **40 realnych minut → 3,6 km** |
-| Najbliższa osada: 1–2 dni marszu | **3,6–7,2 km faktycznej trasy** |
+| Najbliższa osada: 1–2 dni marszu | **3,6–7,2 km faktycznej trasy** (start: ~1 dzień) |
 
 
 Odległość liczymy po dostępnej trasie, uwzględniając rzeki, góry i drogi (byłoby miło, ale dla ułatwienia możemy użyć linii prostej z modyfkatorami za przeszkody; aczkolwiek chcemy mieć drogi, więc może da radę z drogami). (drogi powinny być nakładane na geografię, wybierając sensowne przejścia, i lekko modyfikując teren aby pokazać, że ktoś tamtędy chodził i ziemia się wyrównała).
@@ -212,8 +218,8 @@ Nie mnożymy prędkości chodzenia przez przyspieszenie kalendarza. Inaczej post
 
 **Konsekwencje:**
 
-- **Najbliższy sąsiad to długa wyprawa:** ~~40–80 minut~~ ~30-40 minut samego marszu w jedną stronę (przy założeniu 1 dzień marszu, tzn. 16 godzin marszu, bo nie maszerujemy 24 godziny). To pasuje do ekspedycji, ale utrudnia częsty handel. Autopilot zwalnia z kierowania, lecz nie skraca czekania.
-- **Koń ma realną wartość:** przy średniej prędkości podróżnej 2× większej skraca taką podróż do 20–40 minut.
+- **Najbliższy sąsiad to długa wyprawa:** około 30–40 minut samego marszu w jedną stronę (przy założeniu 1 dzień marszu, tzn. 16 godzin marszu, bo nie maszerujemy 24 godziny). To pasuje do ekspedycji, ale utrudnia częsty handel. Autopilot zwalnia z kierowania, lecz nie skraca czekania.
+- **Koń ma realną wartość:** przy średniej prędkości podróżnej 2× większej skraca taką podróż do około 15–20 minut.
 - **Potrzeby i produkcja korzystają z kalendarza:** sen, głód, psucie żywności, pogoda, uprawy. Kalibrujemy je do długości dnia.
 - **Walka korzysta z sekund rozgrywki:** zamach, naciąganie łuku, regeneracja staminy, ochrona po utracie przytomności. Twoje 120 sekund ochrony powinno oznaczać 120 realnych sekund przy normalnym tempie.
 - **Sen i długa praca wymagają przyspieszenia:** osiem godzin snu oznaczałoby inaczej 20 minut czekania. Przyspieszenie musi obejmować cały świat i przerywać się przy zagrożeniu. Oraz z opcją "[Esc] Przerwij"

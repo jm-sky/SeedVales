@@ -116,6 +116,8 @@ Skalibruj koszty potrzeb, produkcję i podróże wspólnie. Nie kopiuj bezpośre
 
 ## 6. Architektura i wydajność
 
+Kamera i oprawa (decyzja, `docs/VISION.md` §4.4): widok zza postaci; teren, roślinność i budynki proceduralne low-poly; postacie i zwierzęta — importowane glTF lub proceduralne placeholdery.
+
 Stack: TypeScript, Vue, Tailwind CSS, shadcn-vue i Three.js, z uwzględnieniem istniejącej konfiguracji repo.
 
 - Oddziel model świata i reguły symulacji od renderowania i UI.
@@ -135,12 +137,12 @@ Mierz wydajność na jawnie opisanej scenie i w dostępnym środowisku. Raportuj
 
 Wykorzystaj istniejące odpowiedniki poniższych dokumentów; nie twórz duplikujących się źródeł prawdy.
 
-Jeżeli ich nie ma, utwórz:
+Jeżeli ich nie ma, utwórz zgodnie ze strukturą `docs/`:
 
-- `docs/implementation/PLAN.md` — etapy, zależności i priorytety;
-- `docs/implementation/FEATURES.json` — wymagania i kryteria odbioru;
-- `docs/implementation/DECISIONS.md` — istotne decyzje i uproszczenia;
-- `docs/implementation/PROGRESS.md` — aktualny stan i przekazanie następnej sesji.
+- `docs/plans/` — plany etapów, pliki `domain--ID--slug.md` (patrz `docs/plans/README.md`);
+- `docs/state/FEATURES.json` — lista wymagań i kryteria odbioru wraz ze statusami;
+- `docs/state/PROGRESS.md` — aktualny stan i przekazanie następnej sesji;
+- `docs/design/DECISIONS.md` — istotne decyzje projektowe i uproszczenia (szczegółowy design obszarów: `docs/design/<domena>-*.md`).
 
 Każda pozycja listy wymagań powinna zawierać:
 - stabilne ID;

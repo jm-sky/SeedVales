@@ -25,4 +25,4 @@ Treść...
 
 ```
 
-- Status: `draft`, `planned`, `done`
+- Status: `draft`, `planned`, `in_progress`, `blocked`, `done`

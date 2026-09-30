@@ -1,50 +1,56 @@
 {
   "name": "SeedVales-2",
+  "private": true,
   "version": "1.0.0",
+  "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
     "dev": "vite",
+    "build": "vue-tsc -b && vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --cache",
-    "lint:fix": "eslint . --fix --cache"
+    "lint:fix": "eslint . --fix --cache",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@lucide/vue": "^1.49.0",
     "@tailwindcss/vite": "4.2.2",
     "@unovis/ts": "^1.6.5",
     "@unovis/vue": "^1.6.5",
     "@vee-validate/zod": "^4.15.1",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/tsconfig": "^0.9.1",
     "@vueuse/core": "^14.3.0",
     "axios": "^1.18.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-vue-next": "^1.0.0",
     "reka-ui": "^2.9.10",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "4.2.2",
-    "tw-animate-css": "^1.4.0",
-    "vue": "^3.5.38",
-    "vue-router": "^4.6.4"
+    "three": "^0.186.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vue": "^3.5.42",
+    "vue-router": "^4.6.4",
+    "vue-tsc": "^3.3.11"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
-    "@types/node": "^22.19.21",
-    "@vitejs/plugin-vue": "^6.0.7",
+    "@types/node": "^24.13.3",
+    "@types/three": "^0.186.0",
     "@vue/eslint-config-typescript": "^14.8.0",
-    "@vue/tsconfig": "^0.9.1",
     "dotenv": "^17.4.2",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "eslint-plugin-perfectionist": "^4.15.1",
     "eslint-plugin-vue": "~10.8.0",
     "happy-dom": "^20.10.2",
     "jiti": "^2.7.0",
     "tw-animate-css": "^1.4.0",
-    "typescript": "~5.9.3",
-    "vite": "^7.3.6",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^4.1.8",
-    "vue-tsc": "3.3.4"
+    "vitest": "^4.1.8"
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }
