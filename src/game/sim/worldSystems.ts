@@ -14,6 +14,7 @@ import { addItem, newStack, spoilInventory } from './inventory'
 import { makeAnimal, rollVariant } from './newGame'
 import { npcSystem } from './npc/ai'
 import { playerSystem } from './player'
+import { countNear } from './queries'
 import { questSystem } from './quests'
 import { reputationSystem } from './reputation'
 import { growthFactor, seasonOf } from './time'
@@ -40,7 +41,7 @@ function ecology(sim: Sim, dt: number) {
     }
     if (b.ratNest) {
       b.ratNest.strength = Math.min(4, b.ratNest.strength + h * 0.05)
-      const rats = s.animals.filter((a) => a.species === 'rat' && Math.hypot(a.x - b.x, a.z - b.z) < 40).length
+      const rats = countNear(sim, b.x, b.z, 40, 'rat')
       if (rats < 2 + Math.floor(b.ratNest.strength) && sim.rng.chance(0.5 * h + 0.02)) {
         // Rats emerge by the walls (outside the footprint, building-local → world).
         const lx = sim.rng.range(-b.hw, b.hw)
@@ -67,14 +68,14 @@ function ecology(sim: Sim, dt: number) {
     const gi = s.ground[i]!
     if (gi.stack.fresh !== undefined) {
       gi.stack.fresh -= h * 1.2
-      if (gi.stack.fresh <= 0) s.ground.splice(i, 1)
+      if (gi.stack.fresh <= 0) sim.removeGround(gi)
     }
   }
   // Corpses: rot then leave bones (removed after 48 h).
   for (let i = s.corpses.length - 1; i >= 0; i--) {
     const c = s.corpses[i]!
     const age = (s.time.cal - c.diedAt) / 3600
-    if (age > FOOD.corpseBonesAfterH) s.corpses.splice(i, 1)
+    if (age > FOOD.corpseBonesAfterH) sim.removeCorpse(c)
     else if (age > FOOD.corpseRotH) c.meat = Math.max(0, c.meat - h * 0.2)
   }
 }
@@ -105,9 +106,12 @@ const denSpecies = (d: string, rnd: number): SpeciesId => (d === 'deer' ? (rnd <
 
 function dens(sim: Sim) {
   const s = sim.state
+  // One pass per run (every 30 s) instead of a scan per den: den animals roam far from the den.
+  const perDen = new Map<string, number>()
+  for (const a of s.animals) if (a.denId) perDen.set(a.denId, (perDen.get(a.denId) ?? 0) + 1)
   for (const d of s.dens) {
     if (!d.alive || s.time.cal < d.nextSpawn) continue
-    const count = s.animals.filter((a) => a.denId === d.id).length
+    const count = perDen.get(d.id) ?? 0
     if (count < d.maxCount) {
       const x = d.x + sim.rng.range(-10, 10)
       const z = d.z + sim.rng.range(-10, 10)

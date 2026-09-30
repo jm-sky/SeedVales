@@ -174,14 +174,14 @@ function chaseValid(sim: Sim, a: Animal): boolean {
 }
 
 function scavenge(sim: Sim, a: Animal) {
-  const g = sim.state.ground.find((gi) => Math.hypot(gi.x - a.x, gi.z - a.z) < 2 && itemDef(gi.stack.id).food)
+  const g = sim.groundNear(a.x, a.z, 2).find((gi) => itemDef(gi.stack.id).food)
   if (g) {
     g.stack.qty--
-    if (g.stack.qty <= 0) sim.state.ground.splice(sim.state.ground.indexOf(g), 1)
+    if (g.stack.qty <= 0) sim.removeGround(g)
     a.hungerH = 0
     return
   }
-  const c = sim.state.corpses.find((cc) => Math.hypot(cc.x - a.x, cc.z - a.z) < 2.5 && cc.meat > 0)
+  const c = sim.corpsesNear(a.x, a.z, 2.5).find((cc) => cc.meat > 0)
   if (c) {
     c.meat--
     a.hungerH = 0
@@ -199,9 +199,10 @@ function planAnimal(sim: Sim, a: Animal) {
   if (sp.temperament === 'domestic' && a.householdId !== undefined) {
     const hh = sim.state.households[a.householdId]
     const owner = hh ? sim.human(hh.memberIds[0]) : undefined
-    const pen = sim.state.buildings.find((b) => b.householdId === a.householdId && b.kind === 'pen')
+    const own = sim.householdBuildings(a.householdId)
+    const pen = own.find((b) => b.kind === 'pen')
     if (a.thirstH > sp.drinkEveryH) {
-      const trough = sim.state.buildings.find((b) => b.householdId === a.householdId && b.kind === 'trough' && (b.water ?? 0) > 0)
+      const trough = own.find((b) => b.kind === 'trough' && (b.water ?? 0) > 0)
       if (trough) {
         ai.goal = 'drink'
         go(trough, false, 1.5)
@@ -241,8 +242,8 @@ function planAnimal(sim: Sim, a: Animal) {
   }
   // Carnivores: scavenge attractive food, then hunt.
   if (sp.diet !== 'grass' && a.hungerH > 10) {
-    const lure = sim.state.ground.find((g) => itemDef(g.stack.id).food && Math.hypot(g.x - a.x, g.z - a.z) < sp.perception * 2.5)
-    const carrion = sim.state.corpses.find((c) => c.meat > 0 && Math.hypot(c.x - a.x, c.z - a.z) < sp.perception * 3)
+    const lure = sim.groundNear(a.x, a.z, sp.perception * 2.5).find((g) => itemDef(g.stack.id).food)
+    const carrion = sim.corpsesNear(a.x, a.z, sp.perception * 3).find((c) => c.meat > 0)
     const t = lure ?? carrion
     if (t) {
       ai.goal = 'scavenge'

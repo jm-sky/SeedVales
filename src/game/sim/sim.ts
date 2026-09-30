@@ -4,7 +4,7 @@
  * @domain sim
  */
 import type { WorldData } from '../world/types'
-import type { Actor, Animal, Building, GameState, Human, Projectile, WeatherState } from './types'
+import type { Actor, Animal, Building, Corpse, GameState, GroundItem, Human, Projectile, WeatherState } from './types'
 import { CALENDAR_SPEED, SIM_LOD } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { perf } from '../diag/perf'
@@ -42,6 +42,13 @@ export class Sim {
   private sysAcc = new Map<string, number>()
   private byId = new Map<number, Actor>()
   private buildingGrid = new Map<string, Building[]>()
+  private buildingById = new Map<string, Building>()
+  private buildingsByHousehold = new Map<number, Building[]>()
+  private buildingsBySettlementKind = new Map<string, Building[]>()
+  private npcsBySettlement = new Map<number, Human[]>()
+  /** Spatial indices for items on the ground and corpses (PERF-01: no full scans per actor). */
+  private groundIdx = new SpatialHash<GroundItem>(16)
+  private corpseIdx = new SpatialHash<Corpse>(32)
   bridges: Building[] = []
   /** Time multiplier (sleep/long work). Whole simulation is accelerated. */
   timeScale = 1
@@ -78,12 +85,33 @@ export class Sim {
       this.actors.insert(a)
       this.byId.set(a.id, a)
     }
+    this.npcsBySettlement.clear()
+    for (const n of this.state.npcs) {
+      let arr = this.npcsBySettlement.get(n.settlementId)
+      if (!arr) this.npcsBySettlement.set(n.settlementId, (arr = []))
+      arr.push(n)
+    }
+    this.groundIdx.clear()
+    for (const g of this.state.ground) this.groundIdx.insert(g)
+    this.corpseIdx.clear()
+    for (const c of this.state.corpses) this.corpseIdx.insert(c)
     this.rebuildBuildingIndex()
   }
 
   rebuildBuildingIndex() {
     this.buildingGrid.clear()
+    this.buildingById.clear()
+    this.buildingsByHousehold.clear()
+    this.buildingsBySettlementKind.clear()
+    const push = <K>(m: Map<K, Building[]>, k: K, b: Building) => {
+      const arr = m.get(k)
+      if (arr) arr.push(b)
+      else m.set(k, [b])
+    }
     for (const b of this.state.buildings) {
+      this.buildingById.set(b.id, b)
+      if (b.householdId !== undefined) push(this.buildingsByHousehold, b.householdId, b)
+      push(this.buildingsBySettlementKind, `${b.settlementId}:${b.kind}`, b)
       const k = `${Math.floor(b.x / 64)},${Math.floor(b.z / 64)}`
       let arr = this.buildingGrid.get(k)
       if (!arr) this.buildingGrid.set(k, (arr = []))
@@ -105,8 +133,50 @@ export class Sim {
   }
 
   building(id: string | undefined): Building | undefined {
-    if (!id) return undefined
-    return this.state.buildings.find((b) => b.id === id)
+    return id ? this.buildingById.get(id) : undefined
+  }
+
+  householdBuildings(householdId: number): readonly Building[] {
+    return this.buildingsByHousehold.get(householdId) ?? []
+  }
+
+  settlementBuildings(settlementId: number, kind: Building['kind']): readonly Building[] {
+    return this.buildingsBySettlementKind.get(`${settlementId}:${kind}`) ?? []
+  }
+
+  /** NPCs of a settlement (population is fixed per playthrough in v1). */
+  npcsOf(settlementId: number): readonly Human[] {
+    return this.npcsBySettlement.get(settlementId) ?? []
+  }
+
+  addGround(g: GroundItem) {
+    this.state.ground.push(g)
+    this.groundIdx.insert(g)
+  }
+
+  removeGround(g: GroundItem) {
+    const i = this.state.ground.indexOf(g)
+    if (i >= 0) this.state.ground.splice(i, 1)
+    this.groundIdx.remove(g)
+  }
+
+  groundNear(x: number, z: number, r: number): GroundItem[] {
+    return this.groundIdx.query(x, z, r)
+  }
+
+  addCorpse(c: Corpse) {
+    this.state.corpses.push(c)
+    this.corpseIdx.insert(c)
+  }
+
+  removeCorpse(c: Corpse) {
+    const i = this.state.corpses.indexOf(c)
+    if (i >= 0) this.state.corpses.splice(i, 1)
+    this.corpseIdx.remove(c)
+  }
+
+  corpsesNear(x: number, z: number, r: number): Corpse[] {
+    return this.corpseIdx.query(x, z, r)
   }
 
   actor(id: number | undefined): Actor | undefined {

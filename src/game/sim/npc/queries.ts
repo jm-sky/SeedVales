@@ -20,11 +20,11 @@ export function houseOf(sim: Sim, h: Human): Building | undefined {
 }
 
 export function householdBuilding(sim: Sim, h: Human, kind: Building['kind']): Building | undefined {
-  return sim.state.buildings.find((b) => b.householdId === h.householdId && b.kind === kind)
+  return sim.householdBuildings(h.householdId).find((b) => b.kind === kind)
 }
 
 export function settlementBuildings(sim: Sim, sid: number, kind: Building['kind']): Building[] {
-  return sim.state.buildings.filter((b) => b.settlementId === sid && b.kind === kind)
+  return [...sim.settlementBuildings(sid, kind)]
 }
 
 /** Door point in front of a building (local +z side). */

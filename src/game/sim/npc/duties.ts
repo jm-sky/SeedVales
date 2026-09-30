@@ -68,7 +68,7 @@ const HUNTED_GAME: SpeciesId[] = ['deer', 'stag', 'hare']
 function hunter(sim: Sim, h: Human): DutyPlan {
   const s = sim.world.settlements[h.settlementId]!
   // Butcher an existing fresh corpse nearby first.
-  const corpse = sim.state.corpses.find((c) => !c.butchered && Math.hypot(c.x - h.x, c.z - h.z) < 200 && sim.state.time.cal - c.diedAt < 5 * 3600 && SPECIES[c.species].corpse.meat > 0)
+  const corpse = sim.corpsesNear(h.x, h.z, 200).find((c) => !c.butchered && sim.state.time.cal - c.diedAt < 5 * 3600 && SPECIES[c.species].corpse.meat > 0)
   if (corpse) return { label: 'Oprawia zwierzynę', steps: [go(corpse.x, corpse.z, 1.2), work('butcher', 12, 'Oprawia zwierzynę', String(corpse.id), 'kneel'), ...homeReturn(sim, h), work('dry_meat', 8, 'Suszy mięso')] }
   const house = houseOf(sim, h)
   if (house?.inv && countItem(house.inv, 'raw_meat') >= 2) return { label: 'Suszy mięso', steps: [work('dry_meat', 10, 'Suszy mięso', undefined, 'interact')] }

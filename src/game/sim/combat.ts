@@ -150,7 +150,7 @@ function onAnimalHurt(sim: Sim, a: Animal, attacker: Actor) {
 export function killAnimal(sim: Sim, a: Animal, killer?: Actor) {
   a.vitals.dead = true
   const sp = SPECIES[a.species]
-  sim.state.corpses.push({
+  sim.addCorpse({
     id: sim.nextId(), species: a.species, variant: a.variant, x: a.x, z: a.z, rot: a.rot,
     diedAt: sim.state.time.cal, butchered: false, meat: Math.round(sp.corpse.meat * VARIANT_MULT[a.variant].size),
   })
@@ -304,7 +304,7 @@ export function projectileSystem(sim: Sim, dt: number) {
         done = true
         // Arrows can be recovered sometimes.
         if (p.item && p.item !== 'sling_stone' && sim.rng.chance(0.5)) {
-          sim.state.ground.push({ id: sim.nextId(), x: p.x, z: p.z, stack: { id: p.item, qty: 1 }, droppedAt: sim.state.time.cal })
+          sim.addGround({ id: sim.nextId(), x: p.x, z: p.z, stack: { id: p.item, qty: 1 }, droppedAt: sim.state.time.cal })
         }
       }
     }

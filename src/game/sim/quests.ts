@@ -5,6 +5,7 @@
  */
 import type { Sim } from './sim'
 import type { Quest } from './types'
+import { animalsNear, countNear } from './queries'
 import { addRep } from './reputation'
 import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
@@ -17,10 +18,10 @@ export function questSystem(sim: Sim) {
   // Rats: guard notices nests with visible rats.
   for (const b of s.buildings) {
     if (!b.ratNest) continue
-    const rats = s.animals.filter((a) => a.species === 'rat' && Math.hypot(a.x - b.x, a.z - b.z) < 40).length
+    const rats = countNear(sim, b.x, b.z, 40, 'rat')
     const existing = s.quests.find((q) => q.kind === 'rats' && q.buildingId === b.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
     if (!existing && rats >= 3) {
-      const guard = s.npcs.find((n) => n.settlementId === b.settlementId && n.profession === 'guard' && !n.vitals.dead)
+      const guard = sim.npcsOf(b.settlementId).find((n) => n.profession === 'guard' && !n.vitals.dead)
       if (!guard) continue
       const sett = s.settlements[b.settlementId]!
       const q: Quest = {
@@ -43,10 +44,10 @@ export function questSystem(sim: Sim) {
   }
   // Wolves threatening a settlement.
   for (const sett of sim.world.settlements) {
-    const wolves = s.animals.filter((a) => a.species === 'wolf' && Math.hypot(a.x - sett.x, a.z - sett.z) < sett.radius + 350)
+    const wolves = animalsNear(sim, sett.x, sett.z, sett.radius + 350, 'wolf')
     const existing = s.quests.find((q) => q.kind === 'wolves' && q.settlementId === sett.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
     if (!existing && wolves.length >= 2) {
-      const giver = s.npcs.find((n) => n.settlementId === sett.id && n.profession === 'hunter') ?? s.npcs.find((n) => n.settlementId === sett.id && n.profession === 'guard')
+      const giver = sim.npcsOf(sett.id).find((n) => n.profession === 'hunter') ?? sim.npcsOf(sett.id).find((n) => n.profession === 'guard')
       if (!giver) continue
       s.quests.push({
         id: `q-wolves-${sett.id}-${Math.floor(s.time.cal)}`,
@@ -69,7 +70,7 @@ export function questSystem(sim: Sim) {
     if (q.status !== 'available' && q.status !== 'active') continue
     if (q.kind === 'rats') {
       const b = sim.building(q.buildingId)
-      const ratsLeft = s.animals.filter((a) => a.species === 'rat' && b && Math.hypot(a.x - b.x, a.z - b.z) < 60).length
+      const ratsLeft = b ? countNear(sim, b.x, b.z, 60, 'rat') : 0
       if (b && !b.ratNest && ratsLeft === 0) {
         if (q.status === 'active' && q.kills > 0) completeQuest(sim, q)
         else {

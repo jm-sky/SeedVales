@@ -8,7 +8,8 @@
 - **`game--002` done** (A1–A6, B1–B7, C1–C9 bez C6, D) — szczegóły w sekcji „Wynik” planu. `SAVE_VERSION` 4, `GEN_VERSION` 7 (starsze zapisy: migracja formatu v1→v4; inny generator → odrzut z komunikatem).
 - Przy okazji poprawione błędy odsłonięte nowym układem świata: ochrona/śmierć powalonego NPC (D-SIM-10), myśliwy vs dziki (D-SIM-9), objazd budynków (D-SIM-11), brakujące zagrody/koryta w generatorze osad, skarbiec osady (D-ECON-1).
 - Stan: `pnpm check` 86/86 (z `check-layers`), e2e 3/3 + 15/15 + 7/7, 0 błędów konsoli. `bench:sim`: wszystkie sceny < 4 ms; crowded p95 0.34→0.48 ms (dryf znany z sesji 1 → `diag--001`).
-- Następny krok: `diag--001` (hotspoty O(n×m), audyt pełnych skanów, `docs/state/PERF.md`).
+- **`diag--001` done** — `docs/state/PERF.md` (środowisko, budżety, sceny, przed/po, audyt PERF-01, wąskie gardła); indeksy w `Sim`, baseline zaktualizowany.
+- Następny krok: RES-04 (test plonów sezonowych), WORLD-10 (jawnie „nieodsłuchane”), potem niezależne review etapu 0.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

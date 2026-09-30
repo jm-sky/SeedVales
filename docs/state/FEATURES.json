@@ -43,8 +43,8 @@
    "scope": "v1",
    "behavior": "Benchmarki scen (mała/zatłoczona osada, las, walka, podróż przez chunki, przyspieszenie, długa gra) z raportem JSON + MD",
    "verify": "pnpm bench",
-   "status": "implemented_unverified",
-   "evidence": "pnpm bench:sim (7 scenes incl. long run + memory) and pnpm bench:render; JSON+MD in test-results/bench, baseline scripts/bench/baseline.json; summary docs/state/PERF.md | docs/state/PERF.md jeszcze NIE istnieje (zweryfikowane 2026-09-30) — plan diag--001"
+   "status": "verified",
+   "evidence": "pnpm bench:sim (7 scenes incl. long run + memory) and pnpm bench:render medium; JSON+MD in test-results/bench, baseline scripts/bench/baseline.json (updated 2026-09-30 after GEN 7 + audit); summary with env, budgets, before/after, bottlenecks: docs/state/PERF.md"
   },
   {
    "id": "WORLD-01",
@@ -790,8 +790,8 @@
    "scope": "v1",
    "behavior": "Systemy per-tick nie skanują wszystkich obiektów świata; zapytania przestrzenne (sim.actors.query / nodes.query) w zasięgu",
    "verify": "audyt w PERF.md + bench:sim przed/po",
-   "status": "planned",
-   "evidence": "plan: docs/plans/diag--001--sim-hotspots-and-perf-report.md"
+   "status": "verified",
+   "evidence": "Audit table in docs/state/PERF.md: per-actor/per-tick full scans replaced by spatial queries/indices (sim.actors.query, groundNear/corpsesNear, building/household/settlement/NPC indices); remaining full loops justified (LOD scheduler, calendar systems, rare acts); bench:sim before/after ×2 in PERF.md"
   },
   {
    "id": "AI-01",

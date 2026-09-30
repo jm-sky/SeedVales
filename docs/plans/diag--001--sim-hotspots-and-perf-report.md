@@ -1,11 +1,11 @@
 # Wydajność symulacji: gorące pętle + raport PERF.md
 
-**Status:** planned  
+**Status:** done  
 **Domain:** diag  
 **Sub domains:** sim, render, bench  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md)  
 **Created:** 2026-09-30  
-**Finished:** —
+**Finished:** 2026-09-30
 
 ---
 
@@ -51,3 +51,12 @@ Utwórz (FEATURES DIAG-02 już na niego wskazuje). Zawartość:
 ## Kryterium ukończenia
 
 PERF.md istnieje i jest aktualny; brak pętli O(n×m) po aktorach w systemach per-tick; bench po ≤ bench przed (lub wyjaśnione); `pnpm check` zielone; DIAG-02 `evidence` zgodne z rzeczywistością.
+
+## Wynik
+
+- Pomiar przed/po (×2) i audyt w [docs/state/PERF.md](../state/PERF.md). Regresja z sesji 1 (crowded 0.34→0.53, sleep 1.0→1.9) nie potwierdzona na obecnym kodzie: crowded p95 0.36–0.38, sleep 0.59–0.74 ms (świat GEN 7).
+- Gorące pętle z pkt 2 zastąpione: `sim/queries.ts` (`animalsNear`/`countNear`), legowiska — jedno przejście na uruchomienie systemu.
+- Nowe indeksy w `Sim`: `building(id)` (Map), `householdBuildings`, `settlementBuildings`, `npcsOf`, przestrzenne `groundNear`/`corpsesNear` (mutacje wyłącznie przez `addGround/removeGround/addCorpse/removeCorpse`).
+- Po zmianie: neutralnie w granicach szumu przy obecnych populacjach (uzasadnienie w PERF.md); baseline zaktualizowany (świat GEN 5→7).
+- Wykryte wąskie gardło renderu (przebudowa roślinności przy przeskoku, p95 30.7 ms przy teleportach) — opisane w PERF.md, do `render--001`.
+

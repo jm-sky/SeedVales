@@ -66,7 +66,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
     }
   }
   // Help downed neighbours (guards always; agreeable armed adults sometimes).
-  const downed = sim.state.npcs.find((o) => o !== h && o.vitals.ko && !o.vitals.dead && o.callForHelpAt !== undefined && Math.hypot(o.x - h.x, o.z - h.z) < 150)
+  const downed = sim.actors.query(h.x, h.z, 150).find((o): o is Human => o.kind === 'npc' && o !== h && !!o.vitals.ko && !o.vitals.dead && (o as Human).callForHelpAt !== undefined)
   if (downed && h.age === 'adult') {
     const s = isGuard ? 0.92 : h.profession === 'herbalist' ? 0.85 : 0.35 + b5.a * 0.4
     opts.push({ id: 'help', score: s, plan: () => ({ label: `Pomaga: ${downed.name}`, steps: [go(downed.x, downed.z, 1.2, true), work('help_downed', 5, 'Opatruje rannego', String(downed.id), 'kneel')] }) })
@@ -98,7 +98,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
         if (house && householdFoodCount(sim, h) > 0) return { label: 'Idzie na posiłek', steps: [go(door.x, door.z), work('eat_store', 6, 'Je w domu', house.id, 'eat')] }
         // Buy from a trader/household with food.
         if (h.money >= 6) {
-          const seller = sim.state.npcs.find((o) => o.settlementId === h.settlementId && (o.profession === 'trader' || o.profession === 'farmer') && o.householdId !== h.householdId && !o.vitals.dead)
+          const seller = sim.npcsOf(h.settlementId).find((o) => (o.profession === 'trader' || o.profession === 'farmer') && o.householdId !== h.householdId && !o.vitals.dead)
           if (seller) {
             const sh = houseOf(sim, seller)
             if (sh?.inv && findFood(sh.inv)) return { label: 'Kupuje jedzenie', steps: [go(seller.x, seller.z, 2), work('buy_food', 5, 'Kupuje jedzenie', String(seller.id))] }

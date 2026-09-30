@@ -82,8 +82,8 @@ export function findTarget(sim: Sim, facing: number, maxDist = 3.2): Target | nu
     if (a.kind === 'npc') push({ type: 'npc', id: a.id }, (a as Human).name, a.x, a.z)
     else if (a.kind === 'animal' && SPECIES[(a as Animal).species].temperament === 'domestic') push({ type: 'animal', id: a.id }, SPECIES[(a as Animal).species].name, a.x, a.z)
   }
-  for (const c of sim.state.corpses) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Zwłoki: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)
-  for (const g of sim.state.ground) if (Math.abs(g.x - p.x) < 4 && Math.abs(g.z - p.z) < 4) push({ type: 'ground', id: g.id }, itemDef(g.stack.id).name, g.x, g.z, 0.3)
+  for (const c of sim.corpsesNear(p.x, p.z, 7.1)) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Zwłoki: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)
+  for (const g of sim.groundNear(p.x, p.z, 5.7)) if (Math.abs(g.x - p.x) < 4 && Math.abs(g.z - p.z) < 4) push({ type: 'ground', id: g.id }, itemDef(g.stack.id).name, g.x, g.z, 0.3)
   for (const s of sim.state.sites) push({ type: 'site', id: s.id }, 'Plac budowy', s.x, s.z, 1)
   for (const d of sim.state.dens) if (d.alive) push({ type: 'den', id: d.id }, `Legowisko (${SPECIES[d.species === 'deer' ? 'deer' : d.species].name})`, d.x, d.z, 1.5)
   for (const b of sim.buildingsNear(p.x, p.z, maxDist + 6)) {
@@ -220,7 +220,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'inn_sleep': {
       if (optionId === 'inn_sleep') {
         const sid = sim.building((t as { id: string }).id)?.settlementId ?? 0
-        const innkeeper = sim.state.npcs.find((n) => n.profession === 'trader' && n.settlementId === sid && !n.vitals.dead)
+        const innkeeper = sim.npcsOf(sid).find((n) => n.profession === 'trader' && !n.vitals.dead)
         if (innkeeper) {
           p.money -= 8
           innkeeper.money += 8
@@ -311,7 +311,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     }
     case 'market': {
       const b = sim.building((t as { id: string }).id)
-      const trader = sim.state.npcs.find((n) => n.profession === 'trader' && n.settlementId === b?.settlementId)
+      const trader = b ? sim.npcsOf(b.settlementId).find((n) => n.profession === 'trader') : undefined
       return trader ? `Handlarz: ${trader.name} — podejdź i porozmawiaj (Handluj).` : 'Stragan pusty.'
     }
     case 'mine':
@@ -329,7 +329,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (n <= 0) return 'Nie uniesiesz więcej.'
       addItem(p.inv, { ...g.stack, qty: n })
       g.stack.qty -= n
-      if (g.stack.qty <= 0) sim.state.ground.splice(sim.state.ground.indexOf(g), 1)
+      if (g.stack.qty <= 0) sim.removeGround(g)
       return `Podniesiono: ${itemDef(g.stack.id).name}${g.stack.qty > 0 ? ` ×${n} (reszta za ciężka)` : ''}`
     }
     case 'repair':

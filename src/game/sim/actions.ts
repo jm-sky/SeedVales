@@ -57,7 +57,7 @@ export function fillTrough(sim: Sim, h: Human, trough: Building): ActionResult {
 export const TROUGH_CAPACITY = 12
 
 export function dropItem(sim: Sim, x: number, z: number, stack: ItemStack, lit = false) {
-  sim.state.ground.push({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit })
+  sim.addGround({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit })
 }
 
 export function nodeAvailable(sim: Sim, n: ResNode): boolean {
@@ -256,7 +256,7 @@ export function raiseTerrain(sim: Sim, h: Human, x: number, z: number): ActionRe
 export function buryCorpse(sim: Sim, h: Human, c: Corpse): ActionResult {
   const tool = findTool(h, 'dig')
   if (!tool) return fail('Potrzebujesz łopaty.')
-  sim.state.corpses.splice(sim.state.corpses.indexOf(c), 1)
+  sim.removeCorpse(c)
   wearTool(tool, 1)
   sim.state.px.stats.buried = (sim.state.px.stats.buried ?? 0) + (h.kind === 'player' ? 1 : 0)
   return ok('Zwłoki zakopane.')

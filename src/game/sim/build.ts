@@ -48,7 +48,7 @@ export function placeSite(sim: Sim, bpId: string, x: number, z: number, rot: num
   const onRoad = sim.world.roads.some((rd) => rd.points.some((p, i) => i > 0 && distToSegment(x, z, rd.points[i - 1]!.x, rd.points[i - 1]!.z, p.x, p.z) < 4))
   const nearPlaza = sid !== null && Math.hypot(sim.world.settlements[sid]!.x - x, sim.world.settlements[sid]!.z - z) < 14
   if ((onRoad || nearPlaza) && bp.kind !== 'campfire') {
-    const guard = sim.state.npcs.find((n) => n.profession === 'guard' && sid !== null && n.settlementId === sid)
+    const guard = sid !== null ? sim.npcsOf(sid).find((n) => n.profession === 'guard') : undefined
     sim.message(`${guard?.name ?? 'Strażnik'}: „Budujesz na ${onRoad ? 'drodze' : 'placu'}? To się nikomu nie spodoba!”`, 'bad')
     if (sid !== null) addRep(sim, sid, { honesty: -3, helpfulness: -2 })
   }
@@ -71,7 +71,7 @@ export function deliverMaterials(sim: Sim, site: ConstructionSite): { item: stri
       g.stack.qty -= take
       need -= take
       site.delivered[m.item] = (site.delivered[m.item] ?? 0) + take
-      if (g.stack.qty <= 0) sim.state.ground.splice(i, 1)
+      if (g.stack.qty <= 0) sim.removeGround(g)
     }
     const have = Math.min(need, countItem(p.inv, m.item))
     if (have > 0) {
