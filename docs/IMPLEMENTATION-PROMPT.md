@@ -182,6 +182,57 @@ Zweryfikuj wybrane modele w uruchomionej grze, w tym animacje, rozmiary względe
 
 Jeżeli `_temp/` nie jest dostępny w bieżącym środowisku, zapisz ten brak, kontynuuj pracę z tymczasowymi modelami i nie oznaczaj integracji assetów jako ukończonej.
 
+### Wydajność i diagnostyka przez cały cykl implementacji
+
+Wydajność jest częścią każdego etapu, od fundamentów do odbioru końcowego. Każdy istotny system powinien od początku udostępniać diagnostykę pozwalającą ustalić jego koszt i przyczynę spowolnień.
+
+#### Wspólna infrastruktura pomiarowa
+
+- Przygotuj lekki, wspólny mechanizm pomiarów, liczników i agregacji wyników.
+- Mierz czas klatki i ticka symulacji oraz koszty poszczególnych systemów.
+- Rozdziel czas CPU od pomiarów GPU. Nie przedstawiaj czasu wywołań renderera jako czasu wykonania pracy przez GPU.
+- Raportuj medianę, p95, p99, przekroczenia budżetu oraz liczbę próbek.
+- Powiąż wyniki z obciążeniem: liczbą aktywnych NPC, zwierząt, obiektów, chunków i wykonywanych operacji.
+- Zapewnij możliwość włączenia dokładniejszych pomiarów wybranego systemu bez zalewania logów.
+- Ogranicz narzut diagnostyki przez agregację i próbkowanie. Unikaj logowania każdej klatki i każdej encji.
+- Szczegółowa diagnostyka powinna być przełączalna; bufory pomiarowe muszą mieć ograniczony rozmiar.
+
+#### Zakres diagnostyki
+
+Obejmij pomiarami odpowiednie warstwy:
+- generowanie świata, streaming chunków i cache;
+- scheduler symulacji, AI, wybór celów i pathfinding;
+- zapytania przestrzenne, kolizje i interakcje;
+- rendering: draw calls, trójkąty, geometrie, tekstury i aktywne animacje;
+- UI: częstotliwość aktualizacji i koszt synchronizacji z symulacją;
+- ładowanie assetów: transfer, dekodowanie i przygotowanie do użycia;
+- zapis/odczyt: czas, wielkość danych i operacje bazy;
+- pamięć i długie zadania głównego wątku, w zakresie dostępnym w środowisku.
+
+Brak dostępnego pomiaru oznaczaj jawnie. Nie zastępuj go wymyśloną wartością.
+
+#### Powtarzalne benchmarki i raporty
+
+- Przygotuj sceny benchmarkowe: mała osada, zatłoczona osada, gęsty las, walka, podróż przez granice chunków oraz przyspieszona symulacja.
+- Dodaj scenariusze sprawdzające narastanie kosztu lub zużycia pamięci podczas dłuższej gry i wielokrotnego odwiedzania obszarów.
+- Benchmarki powinny mieć określony seed, stan początkowy, rozgrzewkę, czas pomiaru i profil jakości.
+- Zapisuj środowisko pomiaru, wersję kodu, parametry sceny i ustawienia diagnostyki.
+- Generuj automatycznie raport JSON oraz krótkie podsumowanie Markdown z najdroższymi systemami i regresjami.
+- Rozdziel pomiary poprawności wykonywane w headless od pomiarów reprezentatywnych dla rzeczywistej wydajności graficznej.
+- Ustal początkowe budżety wydajności i zapisuj ich uzasadnienie. Nie zmieniaj progów wyłącznie po to, aby ukryć regresję.
+
+#### Obowiązek na każdym etapie
+
+Przy dodawaniu lub istotnej zmianie systemu:
+1. Określ przewidywany koszt i sposób jego pomiaru.
+2. Dodaj odpowiednie liczniki lub pomiary do wspólnej diagnostyki.
+3. Uruchom właściwy benchmark i sprawdź wpływ na całą grę.
+4. Zidentyfikuj dominujące wąskie gardło i popraw je, jeśli przekracza budżet.
+5. Porównaj wyniki przed i po zmianie w tych samych warunkach.
+6. Sprawdź, czy optymalizacja nie zmieniła poprawności symulacji.
+
+Najpierw mierz, potem optymalizuj. Rozbudowuj szczegółowość diagnostyki tam, gdzie wyniki wskazują problem. Mechanizmy diagnostyczne i benchmarki utrzymuj wraz z kodem, aby kolejne sesje mogły automatycznie wykrywać i analizować regresje.
+
 ## 7. Plan i pamięć między sesjami
 
 Wykorzystaj istniejące odpowiedniki poniższych dokumentów; nie twórz duplikujących się źródeł prawdy.
@@ -237,6 +288,51 @@ Nie traktuj udanego buildu jako dowodu grywalności.
 Użyj dostępnych narzędzi automatyzacji przeglądarki. Sprawdzaj zachowanie, błędy konsoli i wygląd. Jeśli narzędzie jest niedostępne, oznacz niewykonaną weryfikację i kontynuuj dostępne testy.
 
 Jeśli środowisko obsługuje subagentów, możesz delegować niezależne prace i review. Ustal odpowiedzialności i dopilnuj integracji. Wielu agentów nie jest wymaganiem.
+
+### Review i odpowiedzialność za jakość
+
+Po każdym większym etapie wykonaj osobną rundę review:
+- porównaj rezultat z wymaganiami i kryteriami odbioru;
+- sprawdź poprawność mechanik, integrację, architekturę i możliwe regresje;
+- wypisz konkretne problemy, popraw je i ponownie zweryfikuj zmienione obszary.
+
+Jeżeli korzystasz z subagentów, jako agent główny odpowiadasz za ich rezultat. Przejrzyj zmiany, sprawdź integrację i uruchom odpowiednią weryfikację. Sam raport subagenta ani jego deklaracja „testy przeszły” nie wystarczają do oznaczenia funkcji jako `verified`.
+
+Jeżeli subagenci są dostępni, zleć niezależne review najważniejszych zmian i końcowego scenariusza odbioru agentowi, który nie implementował ocenianego fragmentu. Oceń zasadność uwag, popraw potwierdzone problemy i zapisz wynik review w `docs/reviews/`.
+
+### Weryfikacja w przeglądarce
+
+Na początku sprawdź dostępność narzędzia browser/MCP lub automatyzacji przeglądarki. Wykorzystuj je podczas implementacji oraz przy odbiorze końcowym.
+
+Otwórz działającą grę, wykonuj rzeczywiste interakcje i oglądaj zrzuty ekranu. Sprawdź:
+- czytelność tekstu, kontrast, hierarchię informacji i spójność wizualną;
+- rozmieszczenie HUD, menu, ekwipunku, dialogów i paneli;
+- nakładanie elementów, przycinanie treści, przewijanie i skalowanie;
+- desktop oraz widoki mobile, w tym sterowanie dotykowe;
+- odkrywalność akcji, informację zwrotną, anulowanie i obsługę błędów;
+- kamerę, widoczność postaci i celów oraz zasłanianie świata przez UI;
+- pełny przebieg podstawowych czynności gracza, a nie tylko wygląd ekranu.
+
+Naprawiaj wykryte problemy i powtarzaj związane z nimi scenariusze. Brak błędów konsoli, poprawny DOM lub pojedynczy screenshot nie stanowią pełnej weryfikacji UI/UX.
+
+Jeżeli dostęp do przeglądarki jest niemożliwy, jawnie oznacz kontrolę wizualną i interakcyjną jako niewykonaną. Nie zastępuj jej deklaracją opartą wyłącznie na analizie kodu.
+
+### Automatyzacja weryfikacji i oszczędność kontekstu
+
+Powtarzalne sprawdzenia realizuj za pomocą wielokrotnie używalnych skryptów i scenariuszy. Unikaj długich sekwencji pojedynczych wywołań narzędzi typu „ruch → screenshot → ruch → screenshot”.
+
+- Przygotuj wspólne komendy do uruchamiania kontroli jakości, testów, scenariuszy przeglądarkowych i benchmarków.
+- Scenariusze powinny samodzielnie przygotowywać stan, wykonywać serię działań, sprawdzać oczekiwane rezultaty i zwracać zwięzłe podsumowanie.
+- Korzystaj ze stałych seedów, kontrolowanych zapisów gry i powtarzalnych scen testowych.
+- Udostępnij interfejs testowy/debug do przygotowania sceny, ustawienia czasu, pozycji i wyposażenia oraz odczytu stanu symulacji. Oddziel go od normalnych funkcji gracza.
+- Przygotowanie stanu może korzystać z interfejsu testowego, ale sprawdzenie konkretnej interakcji UI musi wykonywać tę interakcję przez UI.
+- Weryfikuj logikę przez asercje stanu i zdarzeń. Screenshoty wykonuj w wybranych punktach kontroli wizualnej oraz przy błędach.
+- Używaj warunków zakończenia i limitów czasu zamiast długich, sztywnych opóźnień.
+- Do kontekstu przekazuj podsumowania i istotne błędy. Pełne logi, trace i screenshoty zapisuj jako lokalne artefakty dostępne do analizy.
+- Po błędzie wykonaj ograniczoną reprodukcję, ustal przyczynę i popraw problem. Nie powtarzaj identycznego scenariusza bez nowej hipotezy lub zmiany.
+- Po naprawie uruchom scenariusz dotyczący problemu i odpowiednie testy regresji. Pełny zestaw uruchamiaj przy większych integracjach i odbiorze końcowym.
+
+Automatyzacja nie zastępuje oceny wyglądu i wygody gry. Kontrolę wizualną wykonuj celowo, na reprezentatywnych ekranach i stanach.
 
 ## 9. Scenariusz odbioru
 
