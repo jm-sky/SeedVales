@@ -47,12 +47,16 @@ export function cancelActivity(sim: Sim, reason?: string) {
   if (reason) sim.message(reason)
 }
 
-function threatToPlayer(sim: Sim): boolean {
+/** 'attack' = an animal is attacking the player; 'near' = predator close by; null = safe. */
+function threatToPlayer(sim: Sim): 'attack' | 'near' | null {
   const p = sim.player
+  let near = false
   for (const a of sim.actors.query(p.x, p.z, 35)) {
-    if (a.kind === 'animal' && (a.aggroId === p.id || (SPECIES[a.species].temperament === 'predator' && Math.hypot(a.x - p.x, a.z - p.z) < 25))) return true
+    if (a.kind !== 'animal') continue
+    if (a.aggroId === p.id && (a.aggroUntil ?? 0) > sim.state.time.play) return 'attack'
+    if (SPECIES[a.species].temperament === 'predator' && Math.hypot(a.x - p.x, a.z - p.z) < 25) near = true
   }
-  return false
+  return near ? 'near' : null
 }
 
 export function sleepComfort(sim: Sim, inBed: number | null): number {
@@ -106,7 +110,9 @@ export function playerSystem(sim: Sim, dt: number) {
     a.elapsed += dt
     ex = a.kind === 'sleep' ? 'sleep' : a.kind === 'rest' ? 'rest' : 'work'
     if (a.kind === 'sleep') comfort = Number(a.data ?? 0.3)
-    if ((a.kind === 'sleep' || a.kind === 'rest' || (a.accel ?? 1) > 1) && threatToPlayer(sim)) {
+    // Any activity stops when attacked; long/accelerated ones already when a predator is near.
+    const threat = threatToPlayer(sim)
+    if (threat === 'attack' || ((a.kind === 'sleep' || a.kind === 'rest' || (a.accel ?? 1) > 1) && threat)) {
       sim.interruptReason = 'threat'
       cancelActivity(sim, 'Zagrożenie! Przerywasz.')
     } else if (a.kind === 'sleep' && p.vitals.vigor >= 99 && a.elapsed > 150) {

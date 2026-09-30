@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { Animal, Human } from '../types'
-import { CARAVAN_FEE } from '../../config/calibration'
+import { CARAVAN_FEE, WOOL_REGROW_DAYS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
@@ -198,9 +198,16 @@ export const WORK_ACTS: Record<string, Act> = {
   shear: (sim, h) => {
     const inv = storeOf(sim, h)
     if (!inv) return false
-    const sheep = sim.state.animals.filter((a) => a.species === 'sheep' && a.householdId === h.householdId).length
-    addItem(inv, newStack('wool', sheep))
-    return sheep > 0
+    // Only sheep with regrown wool (per-animal cooldown).
+    const cal = sim.state.time.cal
+    let n = 0
+    for (const a of sim.state.animals) {
+      if (a.species !== 'sheep' || a.householdId !== h.householdId || cal - (a.shornAt ?? -Infinity) < WOOL_REGROW_DAYS * 86400) continue
+      a.shornAt = cal
+      n++
+    }
+    if (n > 0) addItem(inv, newStack('wool', n))
+    return n > 0
   },
   herb_garden: (sim, h, _ref, eff) => {
     const inv = storeOf(sim, h)

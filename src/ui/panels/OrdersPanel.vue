@@ -18,7 +18,7 @@ const d = computed(() => {
   return {
     n,
     recipes: RECIPES.filter((r) => r.category === 'smithing' && r.quality).map((r) => ({ r, price: orderPrice(r.id) })),
-    orders: g.sim.state.px.orders.filter((o) => o.npcId === n.id && o.status !== 'collected'),
+    orders: g.sim.state.px.orders.filter((o) => o.npcId === n.id),
   }
 })
 function order(id: string) {
@@ -64,7 +64,7 @@ function collect(id: string) {
       :key="o.id"
       class="flex items-center justify-between rounded border px-2 py-1 text-xs"
     >
-      <span>{{ itemDef(o.recipe).name }} — {{ o.status === 'ready' ? 'gotowe' : `gotowe ok. ${formatClock(o.readyAt)}` }}</span>
+      <span>{{ itemDef(o.itemId).name }} — {{ o.status === 'ready' ? 'gotowe' : `gotowe ok. ${formatClock(o.readyAt)}` }}</span>
       <Button
         v-if="o.status === 'ready'"
         size="xs"

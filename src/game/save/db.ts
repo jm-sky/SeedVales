@@ -83,7 +83,7 @@ export async function loadWorldCache(seed: number): Promise<WorldData | null> {
 
 export async function storeWorldCache(w: WorldData): Promise<void> {
   const t0 = performance.now()
-  await tx('worlds', 'readwrite', (t) => t.objectStore('worlds').put(w, worldKey(w.seed)))
+  await tx('worlds', 'readwrite', (t) => t.objectStore('worlds').put({ ...w, genMs: 0 }, worldKey(w.seed)))
   perf.record('save.worldCacheWrite', performance.now() - t0)
 }
 

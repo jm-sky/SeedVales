@@ -147,5 +147,6 @@ export interface WorldData {
   deposits: GenDeposit[]
   homeSettlement: number
   spawn: { x: number; z: number }
+  /** Wall-clock generation time of THIS run (not stored in the cache; 0 on cache hit). */
   genMs: number
 }

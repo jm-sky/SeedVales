@@ -9,13 +9,16 @@ import { addRep } from './reputation'
 import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
 
+/** A resolved/expired problem is not re-posted for the same building/settlement within a day (no spam when populations fluctuate). */
+const QUEST_REPOST_S = 86400
+
 export function questSystem(sim: Sim) {
   const s = sim.state
   // Rats: guard notices nests with visible rats.
   for (const b of s.buildings) {
     if (!b.ratNest) continue
     const rats = s.animals.filter((a) => a.species === 'rat' && Math.hypot(a.x - b.x, a.z - b.z) < 40).length
-    const existing = s.quests.find((q) => q.kind === 'rats' && q.buildingId === b.id && (q.status === 'available' || q.status === 'active'))
+    const existing = s.quests.find((q) => q.kind === 'rats' && q.buildingId === b.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
     if (!existing && rats >= 3) {
       const guard = s.npcs.find((n) => n.settlementId === b.settlementId && n.profession === 'guard' && !n.vitals.dead)
       if (!guard) continue
@@ -41,7 +44,7 @@ export function questSystem(sim: Sim) {
   // Wolves threatening a settlement.
   for (const sett of sim.world.settlements) {
     const wolves = s.animals.filter((a) => a.species === 'wolf' && Math.hypot(a.x - sett.x, a.z - sett.z) < sett.radius + 350)
-    const existing = s.quests.find((q) => q.kind === 'wolves' && q.settlementId === sett.id && (q.status === 'available' || q.status === 'active'))
+    const existing = s.quests.find((q) => q.kind === 'wolves' && q.settlementId === sett.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
     if (!existing && wolves.length >= 2) {
       const giver = s.npcs.find((n) => n.settlementId === sett.id && n.profession === 'hunter') ?? s.npcs.find((n) => n.settlementId === sett.id && n.profession === 'guard')
       if (!giver) continue

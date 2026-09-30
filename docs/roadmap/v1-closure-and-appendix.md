@@ -12,7 +12,7 @@ Wymagania z dodatku są w `docs/state/FEATURES.json` ze `scope: "v2"` i statusem
 
 | Plan | Zakres | Status |
 |---|---|---|
-| [game--002--v1-review-fixes](../plans/game--002--v1-review-fixes.md) | poprawki z review: ekonomia/zasoby, save↔genVersion, pętle AI, multi-seed WORLD-04 | planned |
+| [game--002--v1-review-fixes](../plans/game--002--v1-review-fixes.md) | poprawki z review: ekonomia/zasoby, save↔genVersion, pętle AI, multi-seed WORLD-04 | done |
 | [diag--001--sim-hotspots-and-perf-report](../plans/diag--001--sim-hotspots-and-perf-report.md) | O(n×m) → spatial query, audyt skanów, `docs/state/PERF.md` | planned |
 | (w PROGRESS) | RES-04 test plonów sezonowych; WORLD-10 jawnie „nieodsłuchane” | — |
 

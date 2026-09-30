@@ -75,7 +75,7 @@ export function createNewGame(world: WorldData): GameState {
         h(b.x + Math.sin(b.rot) * b.hd, b.z + Math.cos(b.rot) * b.hd),
         h(b.x - Math.sin(b.rot) * b.hd, b.z - Math.cos(b.rot) * b.hd),
       ]
-      ;(b as Building & { deck?: number }).deck = Math.max(...ends, (world.water[Math.round(b.z / world.cell) * world.n + Math.round(b.x / world.cell)] ?? 0) + 0.8) + 0.2
+      b.deck = Math.max(...ends, (world.water[Math.round(b.z / world.cell) * world.n + Math.round(b.x / world.cell)] ?? 0) + 0.8) + 0.2
       void road
       b.durability = 100
     }

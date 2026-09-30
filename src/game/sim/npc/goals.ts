@@ -161,7 +161,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
 
   // --- Duties (conscientiousness) ---
   const inWork = isGuard || onTrip || (hr >= 6 && hr < 19 && !night)
-  if (inWork && h.age !== 'child' || (h.age === 'child' && hr >= 9 && hr < 16)) {
+  if ((inWork && h.age !== 'child') || (h.age === 'child' && hr >= 9 && hr < 16)) {
     const s = (0.32 + b5.c * 0.3) * (v.vigor > 10 ? 1 : 0.3) * (h.age === 'adult' ? 1 : 0.7)
     opts.push({ id: 'work', score: s, plan: () => dutyPlan(sim, h) })
   }

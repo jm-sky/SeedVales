@@ -26,7 +26,7 @@ export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
   sim.player.money -= dep
   smith.money += dep
   const id = r.output.item
-  sim.state.px.orders.push({ id: `ord-${sim.nextId()}`, npcId: smith.id, recipe: id, paid: dep, price, readyAt: sim.state.time.cal + 10 * 3600, status: 'waiting' })
+  sim.state.px.orders.push({ id: `ord-${sim.nextId()}`, npcId: smith.id, recipeId: r.id, itemId: id, paid: dep, price, readyAt: sim.state.time.cal + 10 * 3600, status: 'waiting' })
   return `Zamówiono: ${itemDef(id).name}. Gotowe za ok. 10 godzin.`
 }
 
@@ -35,7 +35,7 @@ export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
  * (the order stays 'waiting'; nothing is created).
  */
 export function forgeOrder(sim: Sim, smith: Human, store: Inventory, o: Order): boolean {
-  const r = recipeById(o.recipe)
+  const r = recipeById(o.recipeId)
   if (!r || !hasItems(store, r.inputs)) return false
   for (const inp of r.inputs) removeItem(store, inp.item, inp.qty)
   o.item = newStack(r.output.item, 1, { q: rollQuality(sim, smith.skills.blacksmith) })
@@ -52,10 +52,9 @@ export function collectOrder(sim: Sim, orderId: string): string {
   if (!smith) return 'Kowala już nie ma — nie ma komu zapłacić.'
   sim.player.money -= rest
   smith.money += rest
-  o.paid = o.price
-  o.status = 'collected'
   const item = o.item
-  o.item = undefined
+  // Collected orders leave the list (no unbounded growth).
+  sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
   addItem(sim.player.inv, item)
   return `Odebrano: ${itemDef(item.id).name} (jakość: ${['niska', 'średnia', 'wysoka', 'wyjątkowa'][item.q ?? 1]}).`
 }

@@ -73,6 +73,9 @@ export const TREASURY_START = { SM: 150, MD: 300, LG: 600, XL: 1200 } as const
 /** Caravan: fee the visited settlement's treasury pays the trader per trip (base + per unit moved). */
 export const CARAVAN_FEE = { base: 5, perUnit: 1 }
 
+/** Days for a sheep's wool to regrow after shearing. */
+export const WOOL_REGROW_DAYS = 10
+
 /** Predator hunting: chase limit (gameplay s), give-up distance (× perception), retry cooldown (gameplay s). */
 export const HUNT = {
   chaseMaxS: 40,

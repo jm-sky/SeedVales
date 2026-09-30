@@ -7,7 +7,7 @@ import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 3
+export const SAVE_VERSION = 4
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -161,6 +161,8 @@ export interface Animal extends ActorBase {
   fleeFrom?: { x: number; z: number; until: number }
   aggroId?: number
   aggroUntil?: number
+  /** Calendar s of last shearing (wool regrows over WOOL_REGROW_DAYS). */
+  shornAt?: number
 }
 
 export type Actor = Human | Animal
@@ -209,6 +211,8 @@ export interface Building {
   field?: { crop: FieldCrop; growth: number; moisture: number }
   ratNest?: { strength: number; since: number }
   playerBuilt?: boolean
+  /** Bridge deck height (m) — walkway surface for collision/rendering. */
+  deck?: number
   /** Fractional daily household food production accumulator. */
   foodAcc?: number
 }
@@ -298,11 +302,13 @@ export interface PlayerActivity {
 export interface Order {
   id: string
   npcId: number
-  recipe: string
+  /** Recipe to forge and the item it yields (separate fields — a recipe id is not an item id). */
+  recipeId: string
+  itemId: string
   paid: number
   price: number
   readyAt: number
-  status: 'waiting' | 'ready' | 'collected'
+  status: 'waiting' | 'ready'
   /** Forged item held by the smith until collected (materials already consumed). */
   item?: ItemStack
 }

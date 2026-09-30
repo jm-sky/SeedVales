@@ -2,7 +2,7 @@
  * Save compatibility: world pairing check (seed + GEN_VERSION) and save-format migrations.
  * @domain save
  */
-import type { GameState } from '../sim/types'
+import type { GameState, Order } from '../sim/types'
 import type { WorldData } from '../world/types'
 import { TREASURY_START } from '../config/calibration'
 import { SAVE_VERSION } from '../sim/types'
@@ -32,6 +32,14 @@ const MIGRATIONS: Record<number, Migration> = {
   2: (st) => {
     const start = [TREASURY_START.SM, TREASURY_START.MD, TREASURY_START.LG]
     st.settlements.forEach((s, i) => (s.treasury ??= start[i] ?? TREASURY_START.SM))
+  },
+  // v3 → v4: orders get explicit recipeId/itemId (was `recipe` = item id); collected orders dropped.
+  3: (st) => {
+    type OldOrder = Omit<Order, 'status' | 'recipeId' | 'itemId'> & { recipe?: string; recipeId?: string; itemId?: string; status: string }
+    const orders = (st.px.orders ?? []) as unknown as OldOrder[]
+    st.px.orders = orders
+      .filter((o) => o.status !== 'collected')
+      .map(({ recipe, ...o }) => ({ ...o, status: o.status as Order['status'], recipeId: o.recipeId ?? recipe!, itemId: o.itemId ?? recipe! }))
   },
 }
 

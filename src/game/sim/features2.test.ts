@@ -2,15 +2,18 @@
  * More rule-level checks for FEATURES.json (IDs in names).
  */
 import { describe, expect, it } from 'vitest'
+import { WOOL_REGROW_DAYS } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { isTree, NodeCache } from '../world/nodes'
 import { consume, mineRock } from './actions'
 import { placeSite } from './build'
 import { applyDamage } from './combat'
-import { addItem, newStack } from './inventory'
+import { addItem, countItem, newStack } from './inventory'
 import { makeAnimal } from './newGame'
 import { houseOf } from './npc/queries'
-import { playerInput } from './player'
+import { WORK_ACTS } from './npc/works'
+import { playerInput, startActivity } from './player'
+import { questSystem } from './quests'
 import { playerFarAway, run, testSim } from './testWorld'
 import { buyPrice, tradeInventory } from './trade'
 import { hp } from './vitals'
@@ -205,5 +208,49 @@ describe('more features', () => {
     for (let dx = -30; dx <= 30; dx += 6) for (let dz = -30; dz <= 30; dz += 6) sim.terrain.applyEdit(px + dx, pz + dz, 4, { kind: 'add', amount: -1.5 })
     const after = key(new NodeCache(sim.terrain)) // fresh cache = evicted chunk regenerated
     expect(after).toBe(before)
+  })
+
+  it('COMBAT-01: an attack interrupts even a short, non-accelerated activity', () => {
+    const sim = testSim()
+    const p = sim.player
+    startActivity(sim, { kind: 'build', label: 'Budowa', total: 30 })
+    const w = makeAnimal(sim.nextId(), 'wolf', 'adult', p.x + 4, p.z, p.y, sim.rng)
+    sim.addAnimal(w)
+    w.aggroId = p.id
+    w.aggroUntil = sim.state.time.play + 30
+    run(sim, 0.2)
+    expect(sim.state.px.activity).toBeUndefined()
+  })
+
+  it('NPC-04: shearing takes wool only from sheep whose wool has regrown', () => {
+    const sim = testSim()
+    const shepherd = sim.state.npcs.find((n) => n.profession === 'shepherd' && n.age === 'adult')!
+    const store = houseOf(sim, shepherd)!.inv!
+    const sheep = sim.state.animals.filter((a) => a.species === 'sheep' && a.householdId === shepherd.householdId).length
+    expect(sheep).toBeGreaterThan(0)
+    const w0 = countItem(store, 'wool')
+    expect(WORK_ACTS.shear!(sim, shepherd, undefined, 1)).toBe(true)
+    expect(countItem(store, 'wool')).toBe(w0 + sheep)
+    expect(WORK_ACTS.shear!(sim, shepherd, undefined, 1)).toBe(false)
+    expect(countItem(store, 'wool')).toBe(w0 + sheep)
+    sim.state.time.cal += (WOOL_REGROW_DAYS + 1) * 86400
+    expect(WORK_ACTS.shear!(sim, shepherd, undefined, 1)).toBe(true)
+  })
+
+  it('QUEST-01: a resolved rat problem is not re-posted within a day', () => {
+    const sim = testSim()
+    const wh = sim.building(sim.state.settlements[0]!.warehouseId)!
+    wh.ratNest = { strength: 1, since: sim.state.time.cal }
+    for (let i = 0; i < 4; i++) sim.addAnimal(makeAnimal(sim.nextId(), 'rat', 'adult', wh.x + i, wh.z + 3, sim.terrain.heightAt(wh.x, wh.z), sim.rng))
+    questSystem(sim)
+    const n1 = sim.state.quests.filter((q) => q.kind === 'rats' && q.buildingId === wh.id).length
+    expect(n1).toBe(1)
+    sim.state.quests.at(-1)!.status = 'expired'
+    sim.state.time.cal += 3600
+    questSystem(sim)
+    expect(sim.state.quests.filter((q) => q.kind === 'rats' && q.buildingId === wh.id).length).toBe(1)
+    sim.state.time.cal += 86400
+    questSystem(sim)
+    expect(sim.state.quests.filter((q) => q.kind === 'rats' && q.buildingId === wh.id).length).toBe(2)
   })
 })

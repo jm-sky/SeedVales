@@ -52,11 +52,15 @@ describe('save / load', () => {
     const sim = testSim()
     const st = JSON.parse(JSON.stringify(snapshot(sim)))
     st.saveVersion = 1
-    st.px.orders = [{ id: 'o1', npcId: 1, recipe: 'knife', paid: 5, price: 10, readyAt: 0, status: 'ready' }]
+    st.px.orders = [{ id: 'o1', npcId: 1, recipe: 'knife', paid: 5, price: 10, readyAt: 0, status: 'ready' }, { id: 'o2', npcId: 1, recipe: 'axe', paid: 5, price: 10, readyAt: 0, status: 'collected' }]
     st.npcs[0].ai.cooldowns.caravan_back = 123
     const m = migrate(st)
     expect(m.saveVersion).toBe(SAVE_VERSION)
     expect(m.px.orders[0]!.status).toBe('waiting')
+    expect(m.px.orders.length).toBe(1) // collected dropped
+    expect(m.px.orders[0]!.recipeId).toBe('knife')
+    expect(m.px.orders[0]!.itemId).toBe('knife')
+    expect(m.settlements.every((s) => s.treasury > 0)).toBe(true)
     expect(m.npcs[0]!.ai.cooldowns.caravan_back).toBeUndefined()
     expect(() => migrate({ ...st, saveVersion: SAVE_VERSION + 1 })).toThrow(SaveError)
     expect(() => migrate({ ...st, saveVersion: 0 })).toThrow(SaveError)

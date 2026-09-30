@@ -137,7 +137,7 @@ export class Structures {
   }
 
   private specsFor(b: Building): InstanceSpec[] {
-    const y = b.kind === 'bridge' ? (b as Building & { deck?: number }).deck ?? this.sim.terrain.heightAt(b.x, b.z) : this.sim.terrain.heightAt(b.x, b.z)
+    const y = b.kind === 'bridge' ? b.deck ?? this.sim.terrain.heightAt(b.x, b.z) : this.sim.terrain.heightAt(b.x, b.z)
     const base = (sx = 1, sy = 1, sz = 1, dy = 0) => mat4(b.x, y + dy, b.z, b.rot, sx, sy, sz)
     const L = this.loaded
     switch (b.kind) {

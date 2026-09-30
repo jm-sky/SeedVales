@@ -42,7 +42,7 @@ export class Sim {
   private sysAcc = new Map<string, number>()
   private byId = new Map<number, Actor>()
   private buildingGrid = new Map<string, Building[]>()
-  bridges: (Building & { deck?: number })[] = []
+  bridges: Building[] = []
   /** Time multiplier (sleep/long work). Whole simulation is accelerated. */
   timeScale = 1
   /** Set by threats to interrupt acceleration. */

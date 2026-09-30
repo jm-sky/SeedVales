@@ -1,11 +1,11 @@
 # V1 — poprawki po niezależnym review (Grok / Scribe)
 
-**Status:** in_progress  
+**Status:** done  
 **Domain:** game (cross-domain)  
 **Sub domains:** sim, economy, fauna, npc, save, world-gen, ui, diag  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md)  
 **Created:** 2026-09-30  
-**Finished:** —
+**Finished:** 2026-09-30
 
 ---
 
@@ -107,4 +107,9 @@ Pozostałe pozycje: zweryfikować przy implementacji (reprodukcja testem → pop
 - **C8 ✅** — generowanie węzłów zasobów z bazowego terenu (`Terrain.baseWaterDepthAt`); test ARCH-03 (kopanie przy rzece + eviction → to samo rozstawienie; bez poprawki padał).
 - **C9 ✅** — zrobione przy grupie B (liczniki `householdSkipped`/`structureMissing` + test kompletności gospodarstw).
 - e2e: acceptance krok 6 zaczyna walkę z pełnym HP (wcześniejsze kroki zostawiały zmienne HP → sporadyczny KO gracza, 1/3 przebiegów).
+- **Grupa D ✅** — #26: atak zwierzęcia przerywa każdą czynność gracza (krótkie też), bliski drapieżnik — tylko długie/przyspieszone (test COMBAT-01); #27: strzyżenie per owca z `shornAt` i `WOOL_REGROW_DAYS` (test NPC-04); #28: zamówienie ma `recipeId` + `itemId`, odebrane znika z listy (`SAVE_VERSION` 4, migracja); #29: problem rozwiązany/wygasły nie wraca jako nowe ogłoszenie przez dobę (test QUEST-01); #32: `Building.deck` typowane; #33: `genMs` nie trafia do cache świata; #34: wspólne połączenie IDB (C1); nit: nawiasy w bramce pracy `npc/goals.ts`.
+
+### Podsumowanie
+
+Kryterium ukończenia spełnione: A1–A6, B1–B6 zrobione z testami (B7 nie potwierdzone — test regresji dodany), C1–C5, C7–C9 zrobione, C6 odłożone (uzasadnienie wyżej), D zrobione. `pnpm check` 86/86 (w tym `check-layers`), e2e 3/3 + 15/15 + 7/7, 0 błędów konsoli. Formaty: `SAVE_VERSION` 1→4, `GEN_VERSION` 5→7.
 
