@@ -21,6 +21,10 @@ export function generateBaseFields(seed: number): BaseFields {
   const nWarp = new Noise2D(seed ^ 0xdef0)
   const nMoist = new Noise2D(seed ^ 0x2468)
   const nScarp = new Noise2D(seed ^ 0x1357)
+  const nHill = new Noise2D(seed ^ 0x7a31) // hilliness region (WORLD-12)
+  const nRoll = new Noise2D(seed ^ 0x3c5d)
+  const nKnoll = new Noise2D(seed ^ 0x6e19)
+  const nRidge = new Noise2D(seed ^ 0x4b87)
   const n = GRID_N
   const height = new Float32Array(n * n)
   const moisture = new Float32Array(n * n)
@@ -57,7 +61,17 @@ export function generateBaseFields(seed: number): BaseFields {
       const sc = nScarp.fbm(wx * 18, wz * 18, 2)
       const scarp = smoothstep(0.02, 0.06, sc) * 1.6 * smoothstep(0.35, 0.5, nScarp.get(wx * 5, wz * 5) + 0.5)
 
-      let h = hills + mh + scarp
+      // Mid-scale relief (WORLD-12): rolling hills, knolls/hollows and gentle ridges, scaled by a
+      // low-frequency hilliness region so flat meadows survive; none on mountains.
+      const hilly = smoothstep(0.34, 0.74, 0.5 + nHill.fbm(nx * 3.2, nz * 3.2, 2) * 1.2)
+      const calm = 1 - rangeMask
+      const rolling = nRoll.fbm(x / 200, z / 200, 2) * 14 // ~100–200 m wavelength, ±~8 m
+      const knolls = nKnoll.fbm(x / 64, z / 64, 2) * 3 // ~40–60 m, ±~3 m
+      const ridgeT = nRidge.ridged(x / 320, z / 320, 2)
+      const ridges = smoothstep(0.5, 0.95, ridgeT) * smoothstep(0.1, 0.5, nHill.get(nx * 6 + 9, nz * 6 + 9) + 0.5) * 6
+      const relief = (rolling + knolls * (0.4 + 0.6 * hilly) + ridges) * hilly * calm * 1.15
+
+      let h = hills + mh + scarp + relief
       // Coast: sharper transition where cliff noise is high (4–8 m cliffs), soft beaches elsewhere.
       const cliffy = smoothstep(0.1, 0.4, nWarp.get(wx * 9, wz * 9))
       const edgeA = 0.5 - cliffy * 0.12
