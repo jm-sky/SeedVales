@@ -23,6 +23,7 @@ import { TargetMarker } from './targetMarker'
 import { TerrainChunks } from './terrainChunks'
 import { Vegetation } from './vegetation'
 import { readVisualFlags, type VisualFlags } from './visualFlags'
+import { updateWind } from './wind'
 
 export type { QualityProfile } from './quality'
 
@@ -57,6 +58,8 @@ export class Renderer {
   private sky = new THREE.Color()
   private first = true
   private frameNo = 0
+  /** Render-time seconds for shader animation (wind); advances with real frames, not the calendar. */
+  private renderS = 0
   private fogFar: number
   private toLight = new THREE.Vector3(0, 1, 0)
   private snapIn = new THREE.Vector3()
@@ -223,6 +226,8 @@ export class Renderer {
     this.handleEvents()
     this.rig.update(p.x, p.y, p.z, dt)
     this.lighting()
+    this.renderS += dt
+    updateWind(this.renderS, this.sim.weather, this.sim.state.time.cal)
     perf.measure('render.terrain', () => this.terrain.update(p.x, p.z, this.first ? 4000 : 5))
     this.first = false
     perf.measure('render.vegetation', () => this.vegetation.update(p.x, p.z))
