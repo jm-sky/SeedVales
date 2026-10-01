@@ -10,6 +10,12 @@
  * (e.g. Knight with helmet, Ranger without hood, Wizard) — see docs/plans/render--005.
  *
  * Usage: node scripts/assets/build-characters.mjs [variantName…]   (no manifest.json write: owned by the other build scripts)
+ *        node scripts/assets/build-characters.mjs --raw [variantName…]   Blender-authored variants: every
+ *            assets-src/characters/<Name>.raw.glb (scripts/assets/blender-character-variants.py) goes through the
+ *            same recipe into public/assets/characters/<Name>.glb (ratio per name in RAW_RATIO, default 0.35)
+ *        node scripts/assets/build-characters.mjs --tex   colour-variant maps: Textures/<Outfit>/T_<Outfit>_2|3_BaseColor.png
+ *            -> public/assets/characters/tex/<Outfit>_2|3.png (512 px, no geometry copy)
+ * (no manifest.json write: owned by the other build scripts)
  */
 import { NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
@@ -21,7 +27,11 @@ import sharp from 'sharp'
 
 const ROOT = path.resolve(import.meta.dirname, '../..')
 const SRC = path.join(ROOT, '_temp/extracted/Modular Character Outfits - Fantasy[Source]/Exports/glTF (Godot-Unreal)/Outfits')
+const TEX_SRC = path.join(ROOT, '_temp/extracted/Modular Character Outfits - Fantasy[Source]/Textures')
+const RAW_SRC = path.join(ROOT, 'assets-src/characters')
 const OUT = path.join(ROOT, 'public/assets/characters')
+/** Simplify ratio per raw variant when 0.35 busts the class budget (≤ 13 k tris, ≤ 1 MB). */
+const RAW_RATIO = {}
 
 await MeshoptSimplifier.ready
 await MeshoptEncoder.ready
@@ -33,6 +43,10 @@ const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies(
 /** `drop` = node-name suffixes removed from the outfit (the head comes from Male_Head/Female_Head at runtime). */
 const VARIANTS = [
   ...['Male', 'Female'].map((sex) => ({ name: `${sex}_Knight`, source: `${sex}_Knight`, drop: ['Head_Armet', 'Head_Horns'], ratio: 0.35 })),
+  ...['Male', 'Female'].map((sex) => ({ name: `${sex}_Knight_Helm`, source: `${sex}_Knight`, drop: ['Head_Horns'], ratio: 0.35 })),
+  ...['Male', 'Female'].map((sex) => ({ name: `${sex}_Knight_Cloth`, source: `${sex}_Knight_Cloth`, drop: ['Head_Armet', 'Head_Horns'], ratio: 0.35 })),
+  ...['Male', 'Female'].map((sex) => ({ name: `${sex}_Ranger_NoHood`, source: `${sex}_Ranger`, drop: ['Head_Hood'], ratio: 0.35 })),
+  ...['Male', 'Female'].map((sex) => ({ name: `${sex}_Wizard`, source: `${sex}_Wizard`, drop: [], ratio: 0.5 })),
 ]
 
 /** Drop normal/roughness/ORM maps (low-poly style, 3–4× less texture memory). */
@@ -55,12 +69,39 @@ const dropParts = (suffixes) => (doc) => {
   }
 }
 
-const only = process.argv.slice(2)
-for (const v of VARIANTS) {
+/** Authored sources can carry stray clips; the shared anims.glb is the only animation source. */
+const dropAnimations = () => (doc) => {
+  for (const a of doc.getRoot().listAnimations()) a.dispose()
+}
+
+const args = process.argv.slice(2)
+const raw = args.includes('--raw')
+const only = args.filter((a) => !a.startsWith('--'))
+
+if (args.includes('--tex')) {
+  fs.mkdirSync(path.join(OUT, 'tex'), { recursive: true })
+  for (const outfit of ['Knight', 'Noble', 'Peasant', 'Ranger', 'Wizard']) {
+    for (const n of [2, 3]) {
+      const dst = path.join(OUT, 'tex', `${outfit}_${n}.png`)
+      await sharp(path.join(TEX_SRC, outfit, `T_${outfit}_${n}_BaseColor.png`)).resize(512, 512).png({ compressionLevel: 9 }).toFile(dst)
+      console.log(`${path.relative(ROOT, dst)}  ${Math.round(fs.statSync(dst).size / 1024)} KB`)
+    }
+  }
+  process.exit(0)
+}
+
+const rawVariants = raw && fs.existsSync(RAW_SRC)
+  ? fs.readdirSync(RAW_SRC).filter((f) => f.endsWith('.raw.glb')).map((f) => {
+    const name = f.slice(0, -'.raw.glb'.length)
+    return { name, file: path.join(RAW_SRC, f), drop: [], ratio: RAW_RATIO[name] ?? 0.35 }
+  })
+  : []
+
+for (const v of raw ? rawVariants : VARIANTS) {
   if (only.length && !only.includes(v.name)) continue
-  const doc = await io.read(path.join(SRC, `${v.source}.gltf`))
+  const doc = await io.read(v.file ?? path.join(SRC, `${v.source}.gltf`))
   await doc.transform(
-    dropParts(v.drop),
+    dropParts(v.drop), dropAnimations(),
     prune(), dedup(), resample(), baseColorOnly(),
     weld(), simplify({ simplifier: MeshoptSimplifier, ratio: v.ratio, error: 0.004 }),
     textureCompress({ encoder: sharp, targetFormat: 'png', resize: [512, 512] }),
