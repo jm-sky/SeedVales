@@ -92,3 +92,32 @@ Orders reserve materials at placement and keep the forged item in the order unti
 1. Add strict persisted-state validation before migration and turn every structural failure into a player-facing `SaveError`.
 2. Make slot IDs collision-proof under a constant clock and test concurrent/same-seed creation.
 3. Replace version-number-only migration fixtures with committed historical JSON fixtures loaded through IndexedDB and `Sim`, including an explicit v5→v6 no-cart case.
+
+## Uwagi Grok po weryfikacji review
+
+**Weryfikacja:** 2026-10-01 · drzewo lokalne HEAD `bd2899b` (review cytuje `ffa2380`) · Grok / Scribe
+
+### Werdykt
+Review jest **w większości poprawny i wystarczająco kompletny** dla ścieżki happy-path oraz findingów SAVE-07-1 i SAVE-07-2. SAVE-07-3 trzyma się jako krytyka jakości fixture’ów migracji, ale **jeden szczegół jest nieaktualny** (test v5→v6 carts już istnieje). Kolizja ID `007` jest realna — plik przemianowany na `008`.
+
+### Tabela weryfikacji
+
+| Finding | Status | Uwaga |
+|---------|--------|-------|
+| SAVE-07-1 (słaba walidacja `readSave` → crash w `Sim.reindex`) | **POTWIERDZONE** | `db.ts` sprawdza tylko `saveVersion` + truthy `player`; `sim.ts` `reindex` wymaga tablic |
+| SAVE-07-2 (kolizja `newSlotId` przy tym samym seed+ms) | **POTWIERDZONE** | `db.ts` `newSlotId`; UI „Save as new” → `Game.ts` |
+| SAVE-07-3 (fixture’y migracji ≠ historyczne kształty) | **CZĘŚCIOWO** | Ogólna teza OK (`save.test.ts` v1/v4, `appendix-npc` v6). **Błąd:** twierdzenie, że backfill v5→v6 `carts` „nadal nieprzetestowany” — test jest w `src/game/sim/review006.test.ts` (`c5ed00c`, przodek commit’u tego review) |
+
+### Kolizja ID
+Oba pliki miały ID `007`: `agent-workflow-roi` oraz ten save/load. Zgodnie z `docs/reviews/README.md` ID mają być unikalne. **Zrobione:** rename → `2026-10-01--008--save-load-review.md`.
+
+### Braki / korekty (tylko silne)
+
+1. **[Korekta SAVE-07-3]** Twierdzenie o braku testu v5→v6 carts jest nieaktualne — test jest (`review006.test.ts`, describe SAVE-01).
+2. **[Medium, pominięte]** Niekompletny zapis ze *starym* `saveVersion` (np. `1`) i bez `npcs` / `settlements` / `buildings` kończy się `TypeError` w `migrate`, nie `SaveError` — to samo okno recovery co SAVE-07-1.
+3. **[Medium, pominięte]** `TerrainEdits.fromJSON` nie waliduje długości/typu tablic edycji → możliwe ciche przekłamanie terenu po „udanym” loadzie.
+
+### Poza zakresem podniesienia
+Hotkey save przy działającej symulacji, brak mutexa zapisu, quota/transakcje IDB — zgodne z opisem w review / bez nowego High/Medium.
+
+— Grok / Scribe, 2026-10-01
