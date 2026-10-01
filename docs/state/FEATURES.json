@@ -794,6 +794,15 @@
    "evidence": "Audit table in docs/state/PERF.md: per-actor/per-tick full scans replaced by spatial queries/indices (sim.actors.query, groundNear/corpsesNear, building/household/settlement/NPC indices); remaining full loops justified (LOD scheduler, calendar systems, rare acts); bench:sim before/after ×2 in PERF.md"
   },
   {
+   "id": "PERF-02",
+   "vision": "APPX: Kierunek graficzny (bez dużego spadku FPS)",
+   "scope": "v2",
+   "behavior": "Metryki renderu: RAF pacing p50/p95/p99 i udział długich klatek, opcjonalny GPU timer (brak rozszerzenia = brak danych), kwantyle i średnie z tego samego okna, liczba programów/świateł; sceny A/B noc/woda/deszcz/śnieg/marsz; checklista pomiaru na urządzeniu",
+   "verify": "bench:render raportuje nowe metryki; PERF.md z baseline headless i instrukcją pomiaru urządzeń",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--002--visual-foundation-and-render-metrics.md (krok 0)"
+  },
+  {
    "id": "AI-01",
    "vision": "APPX: Spatial grid i częstotliwość decyzji",
    "scope": "v2",
@@ -854,7 +863,7 @@
    "behavior": "Chmury na niebie; widoczny padający deszcz i śnieg",
    "verify": "screenshot tour + bench:render",
    "status": "planned",
-   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md (opady już istnieją — 2500 punktów w dynamics.ts; brak chmur i skalowania z profilem)"
   },
   {
    "id": "WEATHER-02",
@@ -880,6 +889,24 @@
    "scope": "v2",
    "behavior": "Low-poly nie ogranicza jakości tam, gdzie nie kosztuje dużo FPS; ogień z cząsteczkami i iskrami (za profilem jakości)",
    "verify": "screenshot + bench:render",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+  },
+  {
+   "id": "RENDER-04",
+   "vision": "APPX: Kierunek graficzny",
+   "scope": "v2",
+   "behavior": "Naturalniejsze światło i podłoże przy zachowanym budżecie: jeden zestaw parametrów pory dnia/pogody (słońce, hemisfera, mgła, niebo, ekspozycja, tone mapping), gładkie normalne terenu bez szwów między chunkami/LOD, detal gruntu z masek (nie z RGB), selektywny PBR+IBL po pilotażu A/B (D-REN-6)",
+   "verify": "zrzuty A/B tych samych kadrów (dzień/zachód/noc, 3 seedy na szwy) + bench:render ≤10% regresji p95 (render.cpu − render.draw) vs baseline (D-PERF-2)",
+   "status": "planned",
+   "evidence": "plan: docs/plans/render--002--visual-foundation-and-render-metrics.md"
+  },
+  {
+   "id": "RENDER-05",
+   "vision": "APPX: Kierunek graficzny",
+   "scope": "v2",
+   "behavior": "Życie sceny: roślinność porusza się na wietrze (czas renderu, siła z pogody, zgodne cienie); woda z normalnymi, Fresnelem i odbiciem nieba bez drugiego renderu sceny",
+   "verify": "zrzuty/film sceny las + brzeg wody + bench:render",
    "status": "planned",
    "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
   },

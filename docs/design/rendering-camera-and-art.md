@@ -14,7 +14,7 @@
 
 ## Doprecyzowanie (VISION-APPENDIX, 2026-09-30)
 
-„Low-poly” opisuje styl geometrii, a **nie** ogranicza jakości: tam, gdzie nie kosztuje to dużo FPS, stosujemy ładniejsze efekty (np. ogień z cząsteczkami i iskrami, chmury, opady, mokry/ośnieżony teren), sterowane profilem jakości (`render/quality.ts`). Patrz D-REN-5 w `DECISIONS.md` i plan `docs/plans/render--001--weather-variety-effects.md`.
+„Low-poly” opisuje styl geometrii, a **nie** ogranicza jakości: tam, gdzie nie kosztuje to dużo FPS, stosujemy ładniejsze efekty (np. ogień z cząsteczkami i iskrami, chmury, opady, mokry/ośnieżony teren), sterowane profilem jakości (`render/quality.ts`). Patrz D-REN-5 w `DECISIONS.md` i plan `docs/plans/render--001--weather-variety-effects.md`. Od 2026-10-01 (D-REN-6, D-REN-7): kierunek na naturalny wygląd materiałów i światła (gładkie normalne terenu, detal gruntu, selektywny PBR+IBL po A/B) przy oszczędnej geometrii; kolejność prac: `render--002` (fundament) → `render--001` (efekty) → `render--003` (warunkowe wykończenie/optymalizacja).
 
 ## Konsekwencje
 

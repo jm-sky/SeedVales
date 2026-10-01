@@ -19,7 +19,7 @@ SeedVales is a browser-based medieval-themed world simulation game with RPG elem
 - `pnpm e2e` — Playwright smoke + acceptance (§9) + mobile; needs `pnpm dev --port 5199` running
 - `pnpm bench:sim [--update-baseline]`, `pnpm bench:render [low|medium]` — reports in `test-results/bench/` (gitignored); summary goes to `docs/state/PERF.md`
 - `node scripts/e2e/tour.mjs` — screenshots for visual review; `pnpm build` — production build
-- Headless Chromium uses SwiftShader: FPS numbers are not representative, CPU timings are.
+- Headless Chromium uses SwiftShader: FPS/GPU numbers are not representative; pure JS phases (sim, chunk/vegetation builds, render preparation) are comparable within the same environment, `render.draw` is not (software rasterization). Device measurements are the user's step (D-PERF-2).
 
 ## Documentation hub (`docs/`)
 
@@ -41,7 +41,7 @@ Independent review (Grok / Scribe, 2026-09-30): see [docs/reviews/2026-09-30--00
 
 `docs/VISION.md` is canonical (the old `PR.md` was migrated into it). Plan statuses: `draft|planned|in_progress|blocked|done`.
 
-The next session starts from `NEXT-SESSION-KICK-OFF-PROMPT.md` (long-running loop). The developer calibration tools proposal (`docs/DEVELOPER-CALIBRATION-TOOLS.md`) was assessed: a small first slice is planned as `docs/plans/tools--001--calibration-lab.md` (draft, optional alongside the render wave).
+The next session starts from `NEXT-SESSION-KICK-OFF-PROMPT.md` (long-running loop). Rendering/visual work order (wave 4a foundation → 4b effects → wave 6 conditional polish/optimization) comes from `docs/research/2026-10-01--002--realistic-visuals-practical-roadmap.md` + `docs/reviews/2026-10-01--005--rendering-research-critical-review.md`; plans `render--002`, `render--001`, `render--003`. The developer calibration tools proposal (`docs/DEVELOPER-CALIBRATION-TOOLS.md`) was assessed: a small first slice is planned as `docs/plans/tools--001--calibration-lab.md` (draft, optional alongside the render wave).
 
 ## Key design constraints from the vision (`docs/VISION.md`)
 
