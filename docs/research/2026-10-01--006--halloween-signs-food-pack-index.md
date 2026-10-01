@@ -188,7 +188,7 @@ Hypotheses only — nothing here is decided.
 | Textures | 1024² png atlas per file (identical across files → one after dedup) | none | none |
 | PBR | metallic 1 / roughness 1 in the exports → flattened to 0 / 1 (renderer is Lambert-style) | same | same |
 
-**Keep (built into `assets-src/`, scale baked so 1 unit = 1 m):**
+**Keep (built into `public/assets/parked/`, scale baked so 1 unit = 1 m):**
 
 | Group → file | Pieces (node name, source, scale, resulting size) | Consumer / rationale |
 |---|---|---|

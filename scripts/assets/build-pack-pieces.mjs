@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Builds the kept pieces of the Halloween Bits / Signs pack / Ultimate Food Pack (research 006 keep list,
- * render--004 step 3) into assets-src/{graveyard,signs,food}.glb. Nothing is written to public/assets/:
- * no plan consumes these pieces yet (see the plan notes), so they stay as ready-to-ship sources.
+ * render--004 step 3) into public/assets/parked/{graveyard,signs,food}.glb. Output sits in the parked/ subfolder:
+ * no plan consumes these pieces yet and no render code requests them (no assetNames.ts entry), so they are ready to use.
  *
  * Sources (CC0, via Poly Pizza; confirmed 2026-10-01): _temp/extracted/{Halloween Bits.undefined-glb,
  * Signs pack-glb, Ultimate Food Pack-glb}. Kay Lousberg, iPoly3D and Quaternius respectively.
@@ -148,7 +148,7 @@ async function build(name, g) {
     textureCompress({ encoder: sharp, resize: [512, 512] }),
     meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
   )
-  const dst = path.join(ROOT, 'assets-src', `${name}.glb`)
+  const dst = path.join(ROOT, 'public/assets/parked', `${name}.glb`)
   fs.mkdirSync(path.dirname(dst), { recursive: true })
   await io.write(dst, clean)
   const kb = Math.round(fs.statSync(dst).size / 1024)
