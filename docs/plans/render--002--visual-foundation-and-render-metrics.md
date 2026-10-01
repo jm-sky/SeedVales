@@ -1,6 +1,7 @@
 # Render: fundament wizualny (światło, niebo, teren, materiały) i metryki renderu
 
 **Status:** in_progress  
+**Model:** sonnet for step 3 (terrain material, normals, tint uniforms — draft code in "Wynik") and step 4 implementation; opus for keep/drop decisions, the exit gate and the wave review  
 **Domain:** render  
 **Sub domains:** lighting, sky, terrain, materials, diag, assets  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 4a — przed `render--001`)  

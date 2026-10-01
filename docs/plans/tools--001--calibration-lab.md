@@ -1,6 +1,7 @@
 # Narzędzia deweloperskie: Calibration Lab (pierwszy wycinek)
 
 **Status:** draft  
+**Model:** opus decides D-TOOLS-1 and the scope (draft); sonnet implements  
 **Domain:** tools  
 **Sub domains:** render, assets, debug  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (opcjonalnie przed/razem z falą 4)  

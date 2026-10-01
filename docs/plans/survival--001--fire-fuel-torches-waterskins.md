@@ -1,6 +1,7 @@
 # Survival: campfire fuel, stone hearth, standing torches, waterskin recipe
 
 **Status:** planned  
+**Model:** sonnet — steps 1–4 (spec is complete, user decisions recorded); opus only for step 5 (design) and the wave review  
 **Domain:** survival  
 **Sub domains:** build, craft, items, traces, npc-duties, render  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (between 4a and 4b — the sim model feeds `render--001` steps 1 and 8; step 1 can go any time)  

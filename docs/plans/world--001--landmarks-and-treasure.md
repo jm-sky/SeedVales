@@ -1,6 +1,7 @@
 # Świat: landmarki i skarby
 
 **Status:** planned  
+**Model:** sonnet — generator + sim work; batch the `GEN_VERSION` bump with the English name pools  
 **Domain:** world  
 **Sub domains:** world-gen, items, loot, render  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 5)  

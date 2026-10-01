@@ -16,7 +16,7 @@ Subagent rules (always worktree, forbidden git commands): `CLAUDE.md` → "Stand
 
 ## 2. Spawn the reviewer
 
-`Agent` with `isolation: "worktree"`. The prompt must include:
+`Agent` with `isolation: "worktree"` and `model: "opus"` (reviews are Opus work, D-PLAN-7 — also when the session itself runs on Sonnet). The prompt must include:
 - scope (range + files), the plans and FEATURES IDs, relevant `docs/design/DECISIONS.md` entries;
 - the ban: **no `git checkout`, `git switch`, `git reset`, `git stash`**;
 - ask for findings only (severity, file:line, failure scenario, how to reproduce) written into the report file in its worktree; no fixes to `src/`;

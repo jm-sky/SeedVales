@@ -1,6 +1,7 @@
 # Diag: trustworthy render benchmarks (startup, transitions, lifecycle, real travel)
 
 **Status:** planned  
+**Model:** sonnet — benchmark tooling with a clear spec; Opus only if a result is contradictory or a gate decision is needed  
 **Domain:** diag  
 **Sub domains:** bench, render, lifecycle  
 **Roadmap:** side track in tiers (D-PERF-4) — tier A before `render--002` step 3 / `render--001` step 6, tier B before `render--003` leaves draft, tier C conditional; from [review 009](../reviews/2026-10-01--009--render-performance-and-measurement-review.md)  

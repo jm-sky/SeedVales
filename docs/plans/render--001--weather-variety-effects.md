@@ -1,6 +1,7 @@
 # Render: pogoda, życie sceny (ogień, wiatr, woda), różnorodność postaci i zwierząt, dekale
 
 **Status:** planned  
+**Model:** sonnet — implementation of all steps; opus for the keep/drop calls on visual variants and the exit-gate review  
 **Domain:** render  
 **Sub domains:** weather, actors, terrain, effects, vegetation, water, assets  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 4b — po `render--002`)  

@@ -67,6 +67,7 @@ The next session starts from `NEXT-SESSION-KICK-OFF-PROMPT.md` (long-running loo
 - Never weaken criteria, disable tests, or change budgets/baselines to hide a regression. "Flaky" is not a diagnosis — find the cause.
 - Subagents: always `isolation: "worktree"` and forbid `git checkout/switch/reset/stash` (an unisolated one once switched the repo to an old commit). Commit the files they need first (a worktree is created from a commit). After merging their branches, remove the worktrees (`git worktree remove`, `git branch -D`) as hygiene.
 - Use `pnpm e2e:run` (no HMR). With the manual `pnpm e2e` + `pnpm dev`, do not edit `src/` or run vitest / `pnpm install` meanwhile — HMR reloads the page ("Execution context was destroyed"). `window.__*` globals are lost on page reload in e2e; pass ids via Node script variables.
+- Model split (D-PLAN-7): plans carry `**Model:** sonnet|opus`. Opus sets direction and controls quality (architecture, hard decisions, keep/drop, reviews); Sonnet does most implementation. Wave reviews always run on Opus (`wave-review`).
 - Project skills (`.claude/skills/`): `verify` (check/e2e/bench), `wave-review` (worktree subagent review + triage), `handoff` (state files, version bumps, commit/push) — use them instead of re-deriving these procedures.
 
 ## Code style (enforced by `eslint.config.ts`)

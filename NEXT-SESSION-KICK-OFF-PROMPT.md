@@ -26,6 +26,9 @@ Outside the waves (do not start without a plan): MAP-02 sensory visibility; ques
 
 ## 3. Work loop (for each plan item)
 
+Model split (D-PLAN-7): check the plan's `**Model:**` line. Run the loop on Sonnet for `sonnet` items; `opus` items (keep/drop, draft → planned, review triage decisions, wave reviews) go to an Opus subagent (`model: "opus"`, worktree) or wait for an Opus session — recorded in PROGRESS, never skipped silently.
+
+
 1. Take the next item; set the plan `in_progress` at the first one.
 2. Check in code whether the gap still exists; if not, note it in the plan's "Wynik".
 3. Write the test for the new behaviour first (vitest, FEATURES ID in the name) — it must fail. Render logic that can run in Node (no WebGL) gets vitest too (`render/dynamics.test.ts`, `render/vegetation.test.ts` are the pattern).

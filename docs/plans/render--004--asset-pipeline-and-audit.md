@@ -1,6 +1,7 @@
 # Render: offline asset pipeline — audit, guard test, missing models
 
 **Status:** planned  
+**Model:** sonnet — audit, guard test, Blender authoring  
 **Domain:** render  
 **Sub domains:** assets, perf, tooling  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (side track: steps 1–2 during wave 4b, step 3 before/with wave 5, step 4 only through wave 6)  

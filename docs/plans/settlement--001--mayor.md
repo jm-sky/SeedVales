@@ -1,6 +1,7 @@
 # Osada: gracz jako burmistrz
 
 **Status:** draft  
+**Model:** opus — vision-level design still open (draft, depends on deferred SET-04)  
 **Domain:** settlement  
 **Sub domains:** reputation, npc, build  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 5)  

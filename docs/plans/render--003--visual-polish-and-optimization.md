@@ -1,6 +1,7 @@
 # Render: wykończenie obrazu i optymalizacja grafiki (warunkowo)
 
 **Status:** draft  
+**Model:** opus to take it out of draft and pick items from measurements; sonnet implements the chosen items  
 **Domain:** render  
 **Sub domains:** postprocess, assets, perf, actors, vegetation, quality  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 6 — po fali 5)  
