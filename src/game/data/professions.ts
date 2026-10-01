@@ -6,7 +6,7 @@ import type { ProfessionId } from '../world/types'
 import type { SkillId } from './skills'
 
 /** Outfit GLB family under characters/ (`<Male|Female>_<outfit>.glb`); the player keeps Ranger (hood). */
-export type CharOutfit = 'Peasant' | 'Ranger' | 'Ranger_NoHood' | 'Knight' | 'Wizard'
+export type CharOutfit = 'Peasant' | 'Ranger' | 'Ranger_NoHood' | 'Knight' | 'Wizard' | 'Peasant_Boots' | 'Blacksmith' | 'Herbalist'
 
 export interface ProfessionDef {
   id: ProfessionId
@@ -26,7 +26,7 @@ export interface ProfessionDef {
 
 export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
   farmer: {
-    id: 'farmer', name: 'Farmer', weapon: 'staff', money: [20, 60], workHours: [6, 18], shirt: 0x8a7a4a,
+    id: 'farmer', name: 'Farmer', weapon: 'staff', money: [20, 60], workHours: [6, 18], shirt: 0x8a7a4a, outfit: 'Peasant_Boots',
     kit: [{ item: 'shovel', qty: 1 }, { item: 'knife', qty: 1 }, { item: 'bucket', qty: 1 }],
     skills: { farming: 45, survival: 15 },
     store: [{ item: 'carrot', qty: 10 }, { item: 'cabbage', qty: 5 }, { item: 'grain', qty: 12 }, { item: 'bread', qty: 3 }],
@@ -50,7 +50,7 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
     store: [{ item: 'bread', qty: 4 }, { item: 'dried_meat', qty: 3 }, { item: 'torch', qty: 6 }],
   },
   herbalist: {
-    id: 'herbalist', name: 'Herbalist', weapon: 'staff', money: [30, 70], workHours: [7, 16], shirt: 0x4d6b5a,
+    id: 'herbalist', name: 'Herbalist', weapon: 'staff', money: [30, 70], workHours: [7, 16], shirt: 0x4d6b5a, outfit: 'Herbalist',
     kit: [{ item: 'knife', qty: 1 }, { item: 'bandage', qty: 4 }, { item: 'salve', qty: 2 }],
     skills: { medicine: 45, survival: 25 },
     store: [{ item: 'mint', qty: 6 }, { item: 'chamomile', qty: 6 }, { item: 'yarrow', qty: 3 }, { item: 'bread', qty: 3 }, { item: 'carrot', qty: 4 }],
@@ -68,7 +68,7 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
     ],
   },
   blacksmith: {
-    id: 'blacksmith', name: 'Blacksmith', weapon: 'war_hammer', money: [60, 150], workHours: [7, 17], shirt: 0x333333,
+    id: 'blacksmith', name: 'Blacksmith', weapon: 'war_hammer', money: [60, 150], workHours: [7, 17], shirt: 0x333333, outfit: 'Blacksmith',
     kit: [{ item: 'hammer', qty: 1 }, { item: 'knife', qty: 1 }],
     skills: { blacksmith: 55, melee: 25 },
     store: [{ item: 'iron_ingot', qty: 8 }, { item: 'iron_ore', qty: 6 }, { item: 'coal', qty: 8 }, { item: 'branch', qty: 6 }, { item: 'bread', qty: 3 }],
