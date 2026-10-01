@@ -7,10 +7,10 @@ import { weaponChoices } from '@/game/sim/loadout'
 import type { WeaponKind } from '@/game/sim/types'
 
 const KINDS: { kind: WeaponKind; label: string }[] = [
-  { kind: 'melee', label: 'Broń do walki wręcz' },
-  { kind: 'ranged', label: 'Broń dystansowa' },
+  { kind: 'melee', label: 'Melee weapons' },
+  { kind: 'ranged', label: 'Ranged weapons' },
 ]
-const AMMO_NAMES: Record<AmmoKind, string> = { arrow: 'strzały', bolt: 'bełty', stone: 'kamienie' }
+const AMMO_NAMES: Record<AmmoKind, string> = { arrow: 'arrows', bolt: 'bolts', stone: 'stones' }
 const { game, version } = useGameStrict()
 const v = computed(() => {
   void version.value
@@ -19,7 +19,7 @@ const v = computed(() => {
 })
 const stats = (id: string) => {
   const w = itemDef(id).weapon!
-  return w.kind === 'melee' ? `obr. ${w.damage}, zasięg ${w.reach} m` : `obr. ${w.damage}, amunicja: ${w.ammo ? AMMO_NAMES[w.ammo] : '—'}`
+  return w.kind === 'melee' ? `dmg ${w.damage}, reach ${w.reach} m` : `dmg ${w.damage}, ammo: ${w.ammo ? AMMO_NAMES[w.ammo] : '—'}`
 }
 </script>
 
@@ -29,7 +29,7 @@ const stats = (id: string) => {
     data-testid="character-weapons"
   >
     <p class="text-xs text-muted-foreground">
-      Klawisz X (mobile: przycisk „Broń”) przełącza między bronią podstawową wręcz i dystansową.
+      The X key (mobile: the “Weapon” button) switches between your primary melee and ranged weapon.
     </p>
     <div
       v-for="k in KINDS"
@@ -39,21 +39,21 @@ const stats = (id: string) => {
         {{ k.label }}
       </h3>
       <p v-if="!v.choices[k.kind].length">
-        Nie masz takiej broni.
+        You have no such weapon.
       </p>
       <div
         v-for="id in v.choices[k.kind]"
         :key="id"
         class="flex items-center justify-between gap-2 border-b py-1"
       >
-        <span>{{ itemDef(id).name }} <span class="text-xs text-muted-foreground">({{ stats(id) }}){{ v.main === id ? ' · w ręce' : '' }}</span></span>
+        <span>{{ itemDef(id).name }} <span class="text-xs text-muted-foreground">({{ stats(id) }}){{ v.main === id ? ' · in hand' : '' }}</span></span>
         <Button
           size="xs"
           :variant="v.primary[k.kind] === id ? 'default' : 'outline'"
           :data-testid="`primary-${k.kind}-${id}`"
           @click="game.setPrimaryWeapon(k.kind, id)"
         >
-          {{ v.primary[k.kind] === id ? 'Podstawowa' : 'Ustaw jako podstawową' }}
+          {{ v.primary[k.kind] === id ? 'Primary' : 'Set as primary' }}
         </Button>
       </div>
     </div>

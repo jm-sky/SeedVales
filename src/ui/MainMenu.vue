@@ -44,10 +44,10 @@ async function remove(slot: string) {
         SeedVales
       </h1>
       <p class="mt-1 text-sm text-muted-foreground">
-        Średniowieczna symulacja świata z elementami RPG.
+        A medieval world simulation with RPG elements.
       </p>
       <div class="mt-6 space-y-3">
-        <label class="block text-sm font-medium">Ziarno świata (seed)</label>
+        <label class="block text-sm font-medium">World seed</label>
         <div class="flex gap-2">
           <Input
             v-model="seedText"
@@ -58,11 +58,11 @@ async function remove(slot: string) {
             data-testid="new-game"
             @click="begin()"
           >
-            Nowa gra
+            New game
           </Button>
         </div>
         <div class="flex items-center gap-2 text-sm">
-          <span class="text-muted-foreground">Jakość:</span>
+          <span class="text-muted-foreground">Quality:</span>
           <Button
             v-for="q in (['low', 'medium', 'high'] as const)"
             :key="q"
@@ -70,7 +70,7 @@ async function remove(slot: string) {
             :variant="quality === q ? 'default' : 'outline'"
             @click="quality = q"
           >
-            {{ { low: 'niska', medium: 'średnia', high: 'wysoka' }[q] }}
+            {{ { low: 'low', medium: 'medium', high: 'high' }[q] }}
           </Button>
         </div>
       </div>
@@ -79,7 +79,7 @@ async function remove(slot: string) {
         class="mt-6"
       >
         <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Zapisy
+          Saves
         </h2>
         <ul class="space-y-2">
           <li
@@ -104,7 +104,7 @@ async function remove(slot: string) {
                 v-if="incompatible(s)"
                 class="text-xs text-destructive"
               >
-                Niezgodna wersja świata (v{{ s.genVersion }}) — nie można wczytać
+                Incompatible world version (v{{ s.genVersion }}) — cannot load
               </div>
             </div>
             <div class="flex gap-1">
@@ -115,7 +115,7 @@ async function remove(slot: string) {
                 :disabled="incompatible(s)"
                 @click="begin(s.slot, s.seed)"
               >
-                Wczytaj
+                Load
               </Button>
               <Button
                 size="sm"
@@ -129,9 +129,9 @@ async function remove(slot: string) {
         </ul>
       </div>
       <p class="mt-6 text-xs text-muted-foreground">
-        Sterowanie: WASD + mysz (kliknij, by złapać kursor), Shift bieg, E interakcja, Tab następny cel, LPM atak / przytrzymaj — łuk, X zmiana broni, K postać,
-        I ekwipunek, C wytwarzanie, B budowa, Q szybkie akcje, J zadania, M mapa, R walka, Z skradanie, T pochodnia,
-        F5 zapis, F3 diagnostyka, Esc przerwij/menu.
+        Controls: WASD + mouse (click to capture the cursor), Shift run, E interact, Tab next target, LMB attack / hold — bow, X switch weapon, K character,
+        I inventory, C crafting, B building, Q quick actions, J quests, M map, R combat, Z sneak, T torch,
+        F5 save, F3 diagnostics, Esc cancel/menu.
       </p>
     </div>
   </div>

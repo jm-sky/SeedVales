@@ -5,8 +5,8 @@ import { BODY_PARTS, type BodyPart, type IllnessKind } from '@/game/sim/types'
 import { hp } from '@/game/sim/vitals'
 import BodyDiagram from './BodyDiagram.vue'
 
-const ILLNESS: Record<IllnessKind, string> = { stomach: 'Zatrucie pokarmowe', poison: 'Zatrucie trucizną', rabies: 'Wścieklizna' }
-const PART: Record<BodyPart, string> = { head: 'Głowa', torso: 'Tułów', gut: 'Brzuch', larm: 'Lewa ręka', rarm: 'Prawa ręka', lleg: 'Lewa noga', rleg: 'Prawa noga' }
+const ILLNESS: Record<IllnessKind, string> = { stomach: 'Food poisoning', poison: 'Poisoned', rabies: 'Rabies' }
+const PART: Record<BodyPart, string> = { head: 'Head', torso: 'Torso', gut: 'Belly', larm: 'Left arm', rarm: 'Right arm', lleg: 'Left leg', rleg: 'Right leg' }
 
 const { game, version } = useGameStrict()
 const v = computed(() => {
@@ -22,12 +22,12 @@ const v = computed(() => {
     damage,
     hurt: BODY_PARTS.filter((b) => vit.parts[b] > 0.5).map((b) => `${PART[b]} (${Math.round(vit.parts[b])})`),
     needs: [
-      ['Sytość', vit.hunger],
-      ['Nawodnienie', vit.thirst],
-      ['Wigor', vit.vigor],
+      ['Satiety', vit.hunger],
+      ['Hydration', vit.thirst],
+      ['Vigor', vit.vigor],
       ['Stamina', vit.stamina],
     ] as const,
-    illness: vit.illness ? `${ILLNESS[vit.illness.kind]} — ${Math.round(vit.illness.severity)}%, jeszcze ok. ${Math.ceil(vit.illness.hoursLeft)} h` : '',
+    illness: vit.illness ? `${ILLNESS[vit.illness.kind]} — ${Math.round(vit.illness.severity)}%, about ${Math.ceil(vit.illness.hoursLeft)} h left` : '',
     bleeding: vit.bleeding > 0,
     convalescence: vit.convalescenceH > 0 ? Math.ceil(vit.convalescenceH) : 0,
   }
@@ -45,7 +45,7 @@ const v = computed(() => {
         {{ v.name }}
       </div>
       <div class="text-muted-foreground">
-        Zdrowie {{ Math.round(v.hp) }} / {{ v.maxHp }} · Pieniądze {{ v.money }} m
+        Health {{ Math.round(v.hp) }} / {{ v.maxHp }} · Money {{ v.money }} c
       </div>
       <div
         v-for="[label, val] in v.needs"
@@ -61,19 +61,19 @@ const v = computed(() => {
         </div>
       </div>
       <h3 class="pt-2 text-xs font-semibold uppercase text-muted-foreground">
-        Stan zdrowia
+        Condition
       </h3>
       <p data-testid="character-illness">
-        {{ v.illness || 'Brak chorób.' }}
+        {{ v.illness || 'No illness.' }}
       </p>
       <p v-if="v.bleeding">
-        Krwawienie — opatrz rany (bandaż).
+        Bleeding — dress your wounds (bandage).
       </p>
       <p v-if="v.convalescence">
-        Rekonwalescencja: jeszcze ok. {{ v.convalescence }} h.
+        Convalescing: about {{ v.convalescence }} h left.
       </p>
       <p v-if="v.hurt.length">
-        Obrażenia: {{ v.hurt.join(', ') }}
+        Injuries: {{ v.hurt.join(', ') }}
       </p>
     </div>
   </div>

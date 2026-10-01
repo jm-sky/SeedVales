@@ -21,12 +21,12 @@ const list = computed(() => {
 
 <template>
   <PanelFrame
-    title="Budowa"
+    title="Building"
     @close="game.closePanel()"
   >
     <p class="mb-2 text-xs text-muted-foreground">
-      Plac budowy stanie przed tobą. Materiały z plecaka lub leżące do 6 m od placu są zaliczane automatycznie.
-      Długie etapy przyspieszają czas (Esc przerywa, postęp zostaje).
+      The building site is marked in front of you. Materials in your backpack or lying within 6 m of the site count automatically.
+      Long stages speed up time (Esc cancels, progress is kept).
     </p>
     <div class="grid gap-2">
       <div
@@ -41,7 +41,7 @@ const list = computed(() => {
             :data-testid="`place-${e.b.id}`"
             @click="game.placeBlueprint(e.b.id)"
           >
-            Wyznacz plac
+            Mark site
           </Button>
         </div>
         <div class="text-xs">
@@ -53,7 +53,7 @@ const list = computed(() => {
           >{{ m.name }} {{ m.have }}/{{ m.qty }}</span>
         </div>
         <div class="text-[11px] text-muted-foreground">
-          Etapy: {{ e.b.stages.map((s) => `${s.name} (${s.hours} h, ${s.tool})`).join(' → ') }}
+          Stages: {{ e.b.stages.map((s) => `${s.name} (${s.hours} h, ${s.tool})`).join(' → ') }}
         </div>
       </div>
     </div>

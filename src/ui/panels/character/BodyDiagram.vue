@@ -16,7 +16,7 @@ const color = (p: BodyPart) => {
     viewBox="0 0 100 200"
     class="h-56 w-28"
     role="img"
-    aria-label="Stan części ciała"
+    aria-label="Body part condition"
   >
     <circle
       cx="50"

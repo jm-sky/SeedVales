@@ -9,14 +9,14 @@ import type { QualityProfile } from '@/game/render/quality'
 const { game } = useGameStrict()
 const s = ref<GameSettings>({ ...loadSettings(game.value.isTouch), quality: game.value.renderer.quality })
 const QUALITIES: { id: QualityProfile; label: string; hint: string }[] = [
-  { id: 'low', label: 'Niska', hint: 'bez cieni, krótszy zasięg — telefony' },
-  { id: 'medium', label: 'Średnia', hint: 'cienie, zasięg 1 km' },
-  { id: 'high', label: 'Wysoka', hint: 'więcej roślinności i detali, zasięg 1,4 km' },
+  { id: 'low', label: 'Low', hint: 'no shadows, shorter view distance — phones' },
+  { id: 'medium', label: 'Medium', hint: 'shadows, 1 km view distance' },
+  { id: 'high', label: 'High', hint: 'more vegetation and detail, 1.4 km view distance' },
 ]
 const VOLUMES: { id: keyof Volumes; label: string }[] = [
-  { id: 'master', label: 'Głośność ogólna' },
-  { id: 'ambient', label: 'Otoczenie (wiatr, fale, deszcz)' },
-  { id: 'effects', label: 'Efekty (walka, zwierzęta, ptaki)' },
+  { id: 'master', label: 'Master volume' },
+  { id: 'ambient', label: 'Ambient (wind, waves, rain)' },
+  { id: 'effects', label: 'Effects (combat, animals, birds)' },
 ]
 
 watch(s, (v) => {
@@ -27,13 +27,13 @@ watch(s, (v) => {
 
 <template>
   <PanelFrame
-    title="Ustawienia"
+    title="Settings"
     @close="game.togglePanel('menu')"
   >
     <div class="grid gap-4 text-sm">
       <section>
         <h3 class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Jakość grafiki
+          Graphics quality
         </h3>
         <div class="grid gap-1">
           <Button
@@ -50,12 +50,12 @@ watch(s, (v) => {
           </Button>
         </div>
         <p class="mt-1 text-xs text-muted-foreground">
-          Zmiana działa od razu (wygładzanie krawędzi — po ponownym uruchomieniu gry).
+          Changes apply immediately (anti-aliasing — after restarting the game).
         </p>
       </section>
       <section class="grid gap-2">
         <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Dźwięk
+          Sound
         </h3>
         <label
           v-for="v in VOLUMES"

@@ -38,11 +38,11 @@ function collect(id: string) {
 <template>
   <PanelFrame
     v-if="d"
-    :title="`Zamówienia u kowala: ${d.n.name}`"
+    :title="`Blacksmith orders: ${d.n.name}`"
     @close="game.closePanel()"
   >
     <p class="mb-2 text-xs text-muted-foreground">
-      Zaliczka 50% na surowce; resztę płacisz przy odbiorze. Jakość zależy od umiejętności kowala ({{ Math.round(d.n.skills.blacksmith) }}).
+      A 50% deposit covers materials; you pay the rest on collection. Quality depends on the blacksmith's skill ({{ Math.round(d.n.skills.blacksmith) }}).
     </p>
     <div class="grid gap-1">
       <div
@@ -57,29 +57,29 @@ function collect(id: string) {
           :data-testid="`order-${e.r.id}`"
           @click="order(e.r.id)"
         >
-          Zamów ({{ e.price }} m, zaliczka {{ Math.ceil(e.price / 2) }})
+          Order ({{ e.price }} c, deposit {{ Math.ceil(e.price / 2) }})
         </Button>
         <span
           v-else
           class="text-xs text-muted-foreground"
-        >brak materiałów</span>
+        >no materials</span>
       </div>
     </div>
     <h3 class="mb-1 mt-3 text-xs font-semibold uppercase text-muted-foreground">
-      Twoje zamówienia
+      Your orders
     </h3>
     <div
       v-for="o in d.orders"
       :key="o.id"
       class="flex items-center justify-between rounded border px-2 py-1 text-xs"
     >
-      <span>{{ itemDef(o.itemId).name }} — {{ o.status === 'ready' ? 'gotowe' : `gotowe ok. ${formatClock(o.readyAt)}` }}</span>
+      <span>{{ itemDef(o.itemId).name }} — {{ o.status === 'ready' ? 'ready' : `ready around ${formatClock(o.readyAt)}` }}</span>
       <Button
         v-if="o.status === 'ready'"
         size="xs"
         @click="collect(o.id)"
       >
-        Odbierz (dopłata {{ o.price - o.paid }} m)
+        Collect (pay {{ o.price - o.paid }} c)
       </Button>
       <Button
         size="xs"
@@ -87,7 +87,7 @@ function collect(id: string) {
         :data-testid="`cancel-${o.id}`"
         @click="cancel(o.id)"
       >
-        Anuluj
+        Cancel
       </Button>
     </div>
   </PanelFrame>

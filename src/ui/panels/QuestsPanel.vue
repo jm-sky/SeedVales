@@ -8,7 +8,7 @@ import { REP_DIMS } from '@/game/sim/types'
 import PanelFrame from './PanelFrame.vue'
 
 const { game, version } = useGameStrict()
-const STATUS = { available: 'dostępne', active: 'w toku', done: 'ukończone', expired: 'nieaktualne' }
+const STATUS = { available: 'available', active: 'in progress', done: 'completed', expired: 'expired' }
 const d = computed(() => {
   void version.value
   const s = game.value.sim.state
@@ -30,18 +30,18 @@ function apologize(id: string) {
 
 <template>
   <PanelFrame
-    title="Zadania i reputacja"
+    title="Quests and reputation"
     wide
     @close="game.closePanel()"
   >
     <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-      Ogłoszenia i zadania
+      Notices and quests
     </h3>
     <p
       v-if="!d.quests.length"
       class="text-muted-foreground"
     >
-      Brak ogłoszeń. Problemy osad (np. szczury w zaniedbanych budynkach, wilki) pojawiają się z czasem.
+      No notices. Settlement troubles (e.g. rats in neglected buildings, wolves) appear over time.
     </p>
     <div class="grid gap-2">
       <div
@@ -57,26 +57,26 @@ function apologize(id: string) {
           {{ q.desc }}
         </p>
         <div class="mt-1 flex items-center justify-between text-xs">
-          <span>Postęp: {{ q.kills }}/{{ q.killsNeeded }} · nagroda {{ q.reward }} m</span>
+          <span>Progress: {{ q.kills }}/{{ q.killsNeeded }} · reward {{ q.reward }} c</span>
           <Button
             v-if="q.status === 'available'"
             size="xs"
             :data-testid="`accept-${q.kind}`"
             @click="accept(q.id)"
           >
-            Przyjmij
+            Accept
           </Button>
         </div>
       </div>
     </div>
     <h3 class="mb-1 mt-4 text-xs font-semibold uppercase text-muted-foreground">
-      Reputacja
+      Reputation
     </h3>
     <table class="w-full text-xs">
       <thead>
         <tr class="text-muted-foreground">
           <th class="text-left">
-            Osada
+            Settlement
           </th>
           <th
             v-for="k in REP_DIMS"
@@ -96,7 +96,7 @@ function apologize(id: string) {
             {{ r.name }}<span
               v-if="r.pending"
               class="text-muted-foreground"
-            > (wieści w drodze)</span>
+            > (news on the way)</span>
           </td>
           <td
             v-for="k in REP_DIMS"
@@ -110,7 +110,7 @@ function apologize(id: string) {
       </tbody>
     </table>
     <h3 class="mb-1 mt-4 text-xs font-semibold uppercase text-muted-foreground">
-      Odznaki
+      Badges
     </h3>
     <div class="flex flex-wrap gap-2">
       <span
@@ -124,12 +124,12 @@ function apologize(id: string) {
           v-if="!b.positive"
           class="ml-1 underline"
           @click="apologize(b.id)"
-        >przeproś</button>
+        >apologize</button>
       </span>
       <span
         v-if="!d.badges.length"
         class="text-xs text-muted-foreground"
-      >Brak.</span>
+      >None.</span>
     </div>
   </PanelFrame>
 </template>

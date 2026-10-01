@@ -25,7 +25,7 @@ const list = computed(() => {
 
 <template>
   <PanelFrame
-    title="Wytwarzanie"
+    title="Crafting"
     wide
     @close="game.closePanel()"
   >
@@ -44,7 +44,7 @@ const list = computed(() => {
             :data-testid="`craft-${e.r.id}`"
             @click="game.craft(e.r.id)"
           >
-            Wytwórz ({{ Math.round(e.time) }} s)
+            Craft ({{ Math.round(e.time) }} s)
           </Button>
         </div>
         <div class="mt-1 text-xs">
@@ -56,7 +56,7 @@ const list = computed(() => {
           >{{ i.name }} {{ i.have }}/{{ i.qty }}</span>
         </div>
         <div class="text-[11px] text-muted-foreground">
-          {{ SKILL_NAMES[e.r.skill] }}<span v-if="e.r.tool"> · narzędzie: {{ e.r.tool }}</span><span v-if="e.r.station"> · przy: {{ STATION_NAMES[e.r.station] }}</span>
+          {{ SKILL_NAMES[e.r.skill] }}<span v-if="e.r.tool"> · tool: {{ e.r.tool }}</span><span v-if="e.r.station"> · at: {{ STATION_NAMES[e.r.station] }}</span>
           <span
             v-if="!e.check.ok"
             class="text-bad"

@@ -77,7 +77,7 @@ function auto(id: number) {
 
 <template>
   <PanelFrame
-    title="Mapa (wiedza podróżnika)"
+    title="Map (traveller's knowledge)"
     wide
     @close="game.closePanel()"
   >
@@ -90,14 +90,14 @@ function auto(id: number) {
       />
       <div class="flex-1 space-y-2">
         <p class="text-xs text-muted-foreground">
-          Mapa pokazuje tylko odkryte tereny. Podróż tylko fizyczna. Kliknij mapę, by wyznaczyć cel — strzałka na minimapie wskaże kierunek. Autopilot prowadzi po drodze (czas może płynąć ×3), zagrożenie go przerywa.
+          The map shows only explored land. Travel is on foot only. Click the map to set a target — the minimap arrow points the way. Autopilot follows the road (time may run ×3); danger interrupts it.
         </p>
         <div
           v-if="view.goal"
           class="flex items-center justify-between rounded border border-sky-400/60 p-2 text-xs"
           data-testid="map-goal"
         >
-          <span>Cel: {{ view.goal.label }}</span>
+          <span>Target: {{ view.goal.label }}</span>
           <Button
             v-if="view.goal.kind === 'waypoint'"
             size="xs"
@@ -105,7 +105,7 @@ function auto(id: number) {
             data-testid="map-clear-goal"
             @click="game.clearWaypoint()"
           >
-            Usuń
+            Clear
           </Button>
         </div>
         <div
@@ -116,7 +116,7 @@ function auto(id: number) {
           <span>{{ s.name }} ({{ s.size }}) · {{ s.km }} km<span
             v-if="!s.visited"
             class="text-muted-foreground"
-          > · nieodwiedzona</span></span>
+          > · not visited</span></span>
           <span class="flex gap-1">
             <Button
               size="xs"
@@ -124,7 +124,7 @@ function auto(id: number) {
               :data-testid="`waypoint-${s.id}`"
               @click="game.setWaypoint(s.x, s.z, s.name)"
             >
-              Cel
+              Target
             </Button>
             <Button
               size="xs"

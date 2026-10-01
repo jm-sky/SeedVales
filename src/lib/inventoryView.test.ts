@@ -25,8 +25,8 @@ describe('inventory view (UI-03)', () => {
 
   it('UI-03: item parameters include damage for weapons and freshness for food', () => {
     const sword = itemParams(newStack('sword'))
-    expect(sword.some((p) => p.label === 'Obrażenia')).toBe(true)
+    expect(sword.some((p) => p.label === 'Damage')).toBe(true)
     const bread = itemParams(newStack('bread'))
-    expect(bread.some((p) => p.label === 'Świeżość')).toBe(true)
+    expect(bread.some((p) => p.label === 'Freshness')).toBe(true)
   })
 })

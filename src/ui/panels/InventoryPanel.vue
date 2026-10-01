@@ -34,17 +34,17 @@ const v = computed(() => {
 })
 const useLabel = (id: string) => {
   const d = itemDef(id)
-  if (d.weapon || (d.caps?.length && !d.waterCapacity)) return 'Weź do ręki'
-  if (d.armor) return 'Załóż'
-  if (d.waterCapacity) return 'Pij'
-  if (d.food || d.herb || d.category === 'medical') return d.category === 'medical' ? 'Użyj' : 'Zjedz'
+  if (d.weapon || (d.caps?.length && !d.waterCapacity)) return 'Wield'
+  if (d.armor) return 'Wear'
+  if (d.waterCapacity) return 'Drink'
+  if (d.food || d.herb || d.category === 'medical') return d.category === 'medical' ? 'Use' : 'Eat'
   return ''
 }
 </script>
 
 <template>
   <PanelFrame
-    title="Ekwipunek"
+    title="Inventory"
     wide
     @close="game.closePanel()"
   >
@@ -55,9 +55,9 @@ const useLabel = (id: string) => {
         data-testid="open-character"
         @click="game.togglePanel('character')"
       >
-        Postać (K)
+        Character (K)
       </Button>
-      <span class="ml-auto text-xs text-muted-foreground">Udźwig {{ v.weight.toFixed(1) }} / {{ v.cap.toFixed(0) }} kg</span>
+      <span class="ml-auto text-xs text-muted-foreground">Load {{ v.weight.toFixed(1) }} / {{ v.cap.toFixed(0) }} kg</span>
     </div>
     <InventoryToolbar
       v-model:filter="filter"
@@ -66,7 +66,7 @@ const useLabel = (id: string) => {
     <div class="grid gap-3 sm:grid-cols-2">
       <div>
         <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-          Plecak
+          Backpack
         </h3>
         <div
           class="grid gap-1"
@@ -93,14 +93,14 @@ const useLabel = (id: string) => {
               variant="ghost"
               @click.stop="game.drop(s)"
             >
-              Upuść
+              Drop
             </Button>
           </ItemRow>
           <p
             v-if="!v.items.length"
             class="text-muted-foreground"
           >
-            Pusto.
+            Empty.
           </p>
         </div>
       </div>
@@ -113,11 +113,11 @@ const useLabel = (id: string) => {
           v-else
           class="text-xs text-muted-foreground"
         >
-          Kliknij przedmiot, by zobaczyć jego parametry.
+          Click an item to see its details.
         </p>
         <div>
           <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-            Wyposażenie
+            Equipped
           </h3>
           <div class="grid gap-1">
             <ItemRow
@@ -132,7 +132,7 @@ const useLabel = (id: string) => {
                 variant="outline"
                 @click.stop="game.unequip(slot)"
               >
-                Zdejmij
+                Unequip
               </Button>
             </ItemRow>
           </div>

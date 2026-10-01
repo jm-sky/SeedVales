@@ -28,7 +28,7 @@ async function saveAs() {
         data-testid="menu-save"
         @click="game.save()"
       >
-        Zapisz grę{{ game.saveName ? ` („${game.saveName}”)` : '' }}
+        Save game{{ game.saveName ? ` (“${game.saveName}”)` : '' }}
       </Button>
       <form
         class="flex gap-2"
@@ -37,7 +37,7 @@ async function saveAs() {
         <Input
           v-model="name"
           maxlength="40"
-          placeholder="Nazwa zapisu"
+          placeholder="Save name"
           data-testid="save-name"
         />
         <Button
@@ -45,7 +45,7 @@ async function saveAs() {
           variant="outline"
           data-testid="menu-save-as"
         >
-          Zapisz jako nowy
+          Save as new
         </Button>
       </form>
       <Button
@@ -53,14 +53,14 @@ async function saveAs() {
         data-testid="menu-save-quit"
         @click="saveQuit"
       >
-        Zapisz i wyjdź do menu
+        Save and quit to menu
       </Button>
       <Button
         variant="outline"
         data-testid="menu-settings"
         @click="game.togglePanel('settings')"
       >
-        Ustawienia
+        Settings
       </Button>
       <Button
         v-if="!confirmNew"
@@ -68,14 +68,14 @@ async function saveAs() {
         data-testid="menu-new-game"
         @click="confirmNew = true"
       >
-        Nowa gra…
+        New game…
       </Button>
       <div
         v-else
         class="grid gap-2 rounded border border-destructive/50 p-2"
       >
         <p class="text-xs">
-          Niezapisany postęp przepadnie. Zacząć od nowa?
+          Unsaved progress will be lost. Start over?
         </p>
         <div class="grid grid-cols-2 gap-2">
           <Button
@@ -83,7 +83,7 @@ async function saveAs() {
             data-testid="new-game-same"
             @click="emit('restart', game.sim.state.seed)"
           >
-            Ten sam świat
+            Same world
           </Button>
           <Button
             size="sm"
@@ -91,7 +91,7 @@ async function saveAs() {
             data-testid="new-game-random"
             @click="emit('restart', null)"
           >
-            Losowy świat
+            Random world
           </Button>
         </div>
         <Button
@@ -99,14 +99,14 @@ async function saveAs() {
           variant="ghost"
           @click="confirmNew = false"
         >
-          Anuluj
+          Cancel
         </Button>
       </div>
       <Button
         variant="ghost"
         @click="emit('quit')"
       >
-        Wyjdź bez zapisu
+        Quit without saving
       </Button>
       <div class="mt-2 grid grid-cols-2 gap-2">
         <Button
@@ -116,12 +116,12 @@ async function saveAs() {
           size="sm"
           @click="game.togglePanel(p)"
         >
-          {{ { inventory: 'Ekwipunek', character: 'Postać', craft: 'Wytwarzanie', build: 'Budowa', quests: 'Zadania', map: 'Mapa', quick: 'Szybkie akcje' }[p] }}
+          {{ { inventory: 'Inventory', character: 'Character', craft: 'Crafting', build: 'Building', quests: 'Quests', map: 'Map', quick: 'Quick actions' }[p] }}
         </Button>
       </div>
       <p class="mt-2 text-xs text-muted-foreground">
-        WASD/strzałki — ruch · mysz — kamera (kliknij w grę) · kółko — zoom · Shift — bieg · E — interakcja · Tab — następny cel · LPM — atak
-        (przytrzymaj z łukiem) · X — zmiana broni · K — postać · R — walka · Z — skradanie · T — pochodnia · H — bandaż · F3 — diagnostyka · F5 — zapis.
+        WASD/arrows — move · mouse — camera (click the game) · wheel — zoom · Shift — run · E — interact · Tab — next target · LMB — attack
+        (hold with a bow) · X — switch weapon · K — character · R — combat · Z — sneak · T — torch · H — bandage · F3 — diagnostics · F5 — save.
       </p>
     </div>
   </PanelFrame>

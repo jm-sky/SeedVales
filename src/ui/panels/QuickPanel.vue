@@ -6,10 +6,10 @@ import PanelFrame from './PanelFrame.vue'
 type QuickId = 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'campfire'
 const { game } = useGameStrict()
 const GROUPS: { name: string; items: { id: QuickId | `bp:${string}`; label: string }[] }[] = [
-  { name: 'Ogień', items: [{ id: 'campfire', label: 'Rozpal ognisko' }, { id: 'torch', label: 'Zapal / schowaj pochodnię' }, { id: 'drop_torch', label: 'Rzuć płonącą pochodnię' }] },
-  { name: 'Budowa', items: [{ id: 'bp:well', label: 'Zbuduj studnię' }, { id: 'bp:trough', label: 'Zbuduj koryto' }, { id: 'bp:house', label: 'Zbuduj dom' }, { id: 'bp:palisade', label: 'Palisada' }] },
-  { name: 'Teren', items: [{ id: 'level', label: 'Wyrównaj' }, { id: 'dig', label: 'Wykop dziurę' }, { id: 'raise', label: 'Zrób wyżej' }] },
-  { name: 'Obóz', items: [{ id: 'sleep', label: 'Śpij tutaj' }, { id: 'rest', label: 'Odpocznij' }] },
+  { name: 'Fire', items: [{ id: 'campfire', label: 'Light a campfire' }, { id: 'torch', label: 'Light / stow torch' }, { id: 'drop_torch', label: 'Drop burning torch' }] },
+  { name: 'Building', items: [{ id: 'bp:well', label: 'Build a well' }, { id: 'bp:trough', label: 'Build a trough' }, { id: 'bp:house', label: 'Build a house' }, { id: 'bp:palisade', label: 'Palisade' }] },
+  { name: 'Terrain', items: [{ id: 'level', label: 'Level ground' }, { id: 'dig', label: 'Dig a hole' }, { id: 'raise', label: 'Raise ground' }] },
+  { name: 'Camp', items: [{ id: 'sleep', label: 'Sleep here' }, { id: 'rest', label: 'Rest' }] },
 ]
 function run(id: string) {
   if (id.startsWith('bp:')) game.value.placeBlueprint(id.slice(3))
@@ -19,7 +19,7 @@ function run(id: string) {
 
 <template>
   <PanelFrame
-    title="Szybkie akcje"
+    title="Quick actions"
     @close="game.closePanel()"
   >
     <div class="grid gap-3 sm:grid-cols-2">

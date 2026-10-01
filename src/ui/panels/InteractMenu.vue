@@ -9,7 +9,7 @@ const data = computed(() => {
   void version.value
   const g = game.value
   const ref = g.panelRef
-  return ref ? { ref, opts: targetOptions(g.sim, ref), title: g.target?.label ?? 'Interakcja' } : null
+  return ref ? { ref, opts: targetOptions(g.sim, ref), title: g.target?.label ?? 'Interact' } : null
 })
 </script>
 
