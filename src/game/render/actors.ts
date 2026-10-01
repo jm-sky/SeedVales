@@ -36,7 +36,7 @@ interface Visual {
   rot: number
 }
 
-type CharKey = 'Male_Peasant' | 'Female_Peasant' | 'Male_Ranger' | 'Female_Ranger'
+type CharKey = 'Male_Peasant' | 'Female_Peasant' | 'Male_Ranger' | 'Female_Ranger' | 'Male_Knight' | 'Female_Knight'
 
 const phCache = new Map<string, THREE.BufferGeometry>()
 const phMat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
@@ -116,7 +116,7 @@ export class Actors {
       this.clips = anims.animations
       this.heads.set('Male', mh)
       this.heads.set('Female', fh)
-      await Promise.all((['Male_Peasant', 'Female_Peasant', 'Male_Ranger', 'Female_Ranger'] as CharKey[]).map(async (k) => this.chars.set(k, await loadGltf(`characters/${k}.glb`))))
+      await Promise.all((['Male_Peasant', 'Female_Peasant', 'Male_Ranger', 'Female_Ranger', 'Male_Knight', 'Female_Knight'] as CharKey[]).map(async (k) => this.chars.set(k, await loadGltf(`characters/${k}.glb`))))
     } catch (e) {
       console.warn('character assets failed', e)
     }
@@ -137,8 +137,8 @@ export class Actors {
   }
 
   private charKey(h: Human): CharKey {
-    const ranger = h.kind === 'player' || h.profession === 'hunter' || h.profession === 'guard'
-    return `${h.male ? 'Male' : 'Female'}_${ranger ? 'Ranger' : 'Peasant'}` as CharKey
+    const outfit = h.profession === 'guard' ? 'Knight' : h.kind === 'player' || h.profession === 'hunter' ? 'Ranger' : 'Peasant'
+    return `${h.male ? 'Male' : 'Female'}_${outfit}` as CharKey
   }
 
   private buildHuman(h: Human): Visual | null {
