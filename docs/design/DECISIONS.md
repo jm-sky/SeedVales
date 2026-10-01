@@ -70,6 +70,7 @@ Format: **ID — decyzja.** Uzasadnienie. Odwracalność / co dalej.
 - **D-UI-3 — Mobile:** joystick L, drag kamery prawą połową, przyciski Akcja/Atak/Bieg/Walka/Skradanie, pasek menu u góry; auto-cel 220° i obrót do celu.
 - **D-MAP-1 — Mgła wojny (MAP-01, `IMPORTANT-PRODUCT-NOTES.md`):** siatka 64 m (128×128 dla świata 8 km), odkrywanie w promieniu 180 m wokół gracza co 2 s (`navigationSystem`), bitmaska w `px.explored` (zapis; stare zapisy zaczynają z pustą mgłą). Maska rysowana na mapie i minimapie z wygładzeniem (miękkie krawędzie); osady/budynki w mgle ukryte. Lista osad w panelu mapy zostaje (nazwy i drogi znane ze słyszenia — autopilot). Widoczność aktorów wg zmysłów to osobny system (MAP-02, v2).
 
+- **D-UI-4 — Interfejs wyłącznie po angielsku (UI-LANG-01, `IMPORTANT-PRODUCT-NOTES.md`, potwierdzone przez użytkownika 2026-10-01):** cały tekst widoczny dla gracza (UI, nazwy przedmiotów/budowli/gatunków/umiejętności, komunikaty symulacji, zadania, daty, pogoda, błędy zapisu) jest po angielsku, bez warstwy i18n (wybór użytkownika: „English only”). Terminologia: `docs/design/ui-english-glossary.md`. Nazwy własne (osady, NPC) pozostają bez zmian. Dokumentacja i komentarze mogą być po polsku.
 ## Planowanie (2026-09-30)
 
 - **D-PLAN-1 — Najpierw domknięcie v1, potem VISION-APPENDIX falami** (decyzja użytkownika 2026-09-30). Kolejność: `docs/roadmap/v1-closure-and-appendix.md`. Wymagania dodatku w FEATURES.json mają `scope: "v2"`.
