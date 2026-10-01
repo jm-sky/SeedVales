@@ -13,25 +13,12 @@ import { rockPieces } from '../sim/actions'
 import { seasonOf } from '../sim/time'
 import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
+import { NATURE_MODEL } from './assetNames'
 import { loadGltf, mergeTemplate, part, type TemplatePart } from './assets'
 
 /** Per-frame budget of a vegetation rebuild job (ms); terrain chunk builds have their own 5 ms. */
 const VEG_BUDGET_MS = 2.5
 
-/** Model per node kind + variant (heights normalised to node.scale for trees). */
-const MODEL: Record<string, { models: string[]; baseH: number }> = {
-  tree_broad: { models: ['CommonTree_1', 'CommonTree_3'], baseH: 8 },
-  tree_apple: { models: ['CommonTree_3'], baseH: 9 },
-  tree_pine: { models: ['Pine_1', 'Pine_3'], baseH: 7.1 },
-  tree_dead: { models: ['DeadTree_1'], baseH: 9.2 },
-  bush: { models: ['Fern_1'], baseH: 1.3 },
-  bush_berry: { models: ['Bush_Common'], baseH: 1 },
-  rock: { models: ['Rock_Medium_1', 'Rock_Medium_2'], baseH: 1 },
-  stone: { models: ['Pebble_Round_1'], baseH: 1 },
-  herb: { models: ['Flower_3_Group', 'Plant_1'], baseH: 1 },
-  mushroom: { models: ['Mushroom_Common'], baseH: 1 },
-  reed: { models: ['Grass_Common_Tall'], baseH: 1 },
-}
 
 function impostors(): Record<string, TemplatePart[]> {
   const broad = mergeTemplate([
@@ -71,7 +58,7 @@ export class Vegetation {
   async load() {
     try {
       const g = await loadGltf('nature.glb')
-      for (const [kind, def] of Object.entries(MODEL)) {
+      for (const [kind, def] of Object.entries(NATURE_MODEL)) {
         def.models.forEach((name, i) => {
           const obj = g.scene.getObjectByName(name)
           if (obj) this.near.set(`${kind}#${i}`, mergeTemplate([{ obj, matrix: new THREE.Matrix4() }]))
@@ -180,7 +167,7 @@ export class Vegetation {
           if (!tree && (n.kind === 'herb' || n.kind === 'mushroom' || n.kind === 'stone') && st) continue
           if (n.kind === 'rock' && st?.kind === 'depleted') continue
           if (winter && n.kind === 'herb') continue
-          const def = MODEL[n.kind]!
+          const def = NATURE_MODEL[n.kind]!
           // A mined rock shrinks with the pieces taken (RES-07).
           const sc = n.kind === 'rock' && st?.kind === 'harvested' ? n.scale * (0.45 + 0.55 * (st.left ?? 0) / rockPieces(n)) : n.scale
           const nearR = tree ? treeNear : n.kind === 'rock' ? this.nearM : this.nearM * 1.4

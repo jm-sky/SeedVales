@@ -1,6 +1,6 @@
 # Render: offline asset pipeline — audit, guard test, missing models
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — audit, guard test, Blender authoring  
 **Domain:** render  
 **Sub domains:** assets, perf, tooling  
@@ -14,7 +14,8 @@ Source: [research 003 — Blender MCP](../research/2026-10-01--003--blender-mcp.
 
 ## Critical assessment of research 003 (what we take, what we correct)
 
-- **Taken:** Blender is an offline tool that prepares `.glb` files; the runtime stays procedural world + glTF via Three.js; no AI 3D generators, no realistic Sketchfab models; source and licence recorded per asset.
+- **Taken:** Blender is an offline tool that prepares `.glb` files; the runtime stays procedural world + glTF via Three.js; no AI 3D generators; source and licence recorded per asset.
+- **Updated 2026-10-01 — D-REN-10 (user):** direction is realistic models where the CPU/GPU cost is small. "Quaternius-compatible palette / style mismatch" is no longer a hard criterion; realistic CC0/CC-BY models (Sketchfab, Poly Pizza, Poly Haven) are allowed within the step-1 triangle/texture class, with before/after `bench:render` and screenshots, and a whole class (e.g. fauna) is replaced together to avoid mixed styles. The audit (step 1) therefore also defines the per-class budget.
 - **Already done since the research:** rat, hare, boar and bear now have models (`e1c3267`, `scripts/assets/build-extra-animals.mjs`; boar/bear static, bear a style mismatch — `docs/assets/README.md`). The research's "missing animals" item shrinks to: rigs/clips for boar and bear, sheep/chicken/moose placeholders, a low-poly bear replacement.
 - **Corrected — optimisation is not first:** the research ranks "decimate the village roofs / atlas the materials" as highest value. The roadmap's rule (wave 6) is "no measured problem → no work", and no measurement says triangles are the bottleneck: buildings are merged per material and instanced (D-REN-2), and headless `render.draw` is not representative (SwiftShader). So step 1 is an **audit** (measurement), and optimisation goes through `render--003` with a measured trigger.
 - **Corrected — Blender is not required for the audit:** `scripts/assets/inspect-pack.mjs` and glTF Transform already run in Node and are reproducible by any session (cloud sessions have no Blender). Blender MCP is used where a human-style edit is needed (re-orienting, rigging, modelling).
@@ -38,7 +39,7 @@ Exit: test in `pnpm check`; README updated.
 
 ### 3. Missing models (on demand, timebox per model)
 
-Only when a plan needs the model. Each model: low-poly, Quaternius-compatible palette, named nodes, ≤ the triangle/texture class of comparable assets from the step-1 table, credits, before/after `bench:render` in a scene showing it, screenshots (`tour.mjs`).
+Only when a plan needs the model. Each model: realistic or low-poly per D-REN-10 (class consistency, cost within the audited budget), named nodes, ≤ the triangle/texture class of comparable assets from the step-1 table, credits, before/after `bench:render` in a scene showing it, screenshots (`tour.mjs`).
 
 | Need | Consumer | Trigger |
 |---|---|---|
@@ -59,4 +60,4 @@ Steps 1–2 done; step 3 rows closed as delivered / fallback kept / not needed; 
 
 ## Wynik
 
-*(not started)*
+*(in progress)* Step 2 done 2026-10-01: `src/game/render/assetNames.ts` + `assetNames.test.ts` guard, workflow section in `docs/assets/README.md`. Step 1 (audit) and step 3 rows open.

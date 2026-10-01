@@ -16,6 +16,8 @@
 
 „Low-poly” opisuje styl geometrii, a **nie** ogranicza jakości: tam, gdzie nie kosztuje to dużo FPS, stosujemy ładniejsze efekty (np. ogień z cząsteczkami i iskrami, chmury, opady, mokry/ośnieżony teren), sterowane profilem jakości (`render/quality.ts`). Patrz D-REN-5 w `DECISIONS.md` i plan `docs/plans/render--001--weather-variety-effects.md`. Od 2026-10-01 (D-REN-6, D-REN-7): kierunek na naturalny wygląd materiałów i światła (gładkie normalne terenu, detal gruntu, selektywny PBR+IBL po A/B) przy oszczędnej geometrii; kolejność prac: `render--002` (fundament) → `render--001` (efekty) → `render--003` (warunkowe wykończenie/optymalizacja).
 
+**Modele (D-REN-10, 2026-10-01, decyzja użytkownika):** nowe i wymieniane modele celują w realistyczny, naturalny wygląd, o ile koszt CPU/GPU jest mały (budżet trójkątów/tekstur z audytu `render--004`, instancing, LOD, pomiar `bench:render`); droższe modele za profilem jakości. Wymieniamy całe klasy naraz (np. cała fauna), żeby nie mieszać stylów.
+
 ## Konsekwencje
 
 - **Sterowanie:** desktop — WASD + mysz; mobile — joystick + drag kamery, przyciski akcji.
