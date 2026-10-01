@@ -1,6 +1,6 @@
 # Diag: trustworthy render benchmarks (startup, transitions, lifecycle, real travel)
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — benchmark tooling with a clear spec; Opus only if a result is contradictory or a gate decision is needed  
 **Domain:** diag  
 **Sub domains:** bench, render, lifecycle  
@@ -40,4 +40,4 @@ Tiers A and B done; tier C done or closed as "not needed". Each step produces it
 
 ## Wynik
 
-*(not started)*
+**Step 1 (startup) done — session 7, 2026-10-01 (Sonnet):** `scripts/bench/startup-bench.mjs` (`pnpm bench:startup`), results in `test-results/bench/startup-<quality>.json` and a table in PERF.md "Startup" (cloud-only numbers, labelled). Steps 2–7 not started (tier B/C).

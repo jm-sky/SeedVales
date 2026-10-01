@@ -161,3 +161,15 @@ pnpm bench:sim                     # 2× to confirm; compared with scripts/bench
 pnpm bench:render low              # own Vite server; 2× to confirm
 pnpm bench:render medium
 ```
+
+## Startup (diag--002 step 1; `pnpm bench:startup [low|medium|high] [--runs=3]`)
+
+A result class of its own (not the steady-state gate). Fresh browser process per run, empty cache and IndexedDB (world generated, not cached), "New game" click → first HUD frame, then 4 s of frames. Cloud container (4-core Xeon, SwiftShader) — **cloud-only, comparable only within this environment**; the tool is the deliverable, WSL numbers are a user step (D-PERF-5).
+
+| quality | HUD ms (median / max) | render.cpu max | render.prep max | chunks.build n / max | veg rebuild max | actors max | world gen ms | asset files / KB | asset time ÷ HUD |
+|---|---|---:|---:|---|---:|---:|---:|---|---:|
+| low | 5956 / 6204 | 884 | 382.3 | 60 / 26.7 | 122.6 | 59.2 | 3823.5 | 14 / 15064 | 0.06 |
+| medium | 8271 / 8456 | 2157 | 446.1 | 114 / 27.3 | 121.1 | 59.8 | 3435 | 15 / 15147 | 0.03 |
+
+Reading: world generation dominates the cold start (~3.4–3.8 s of 6–8 s); asset download/decode is a small share here (localhost, so network cost is absent — a real network adds the 15 MB). First-frame `render.cpu` max (0.9–2.2 s on SwiftShader) is mostly shader compilation + software rasterisation, not representative. Use as the "before" for `render--002` step 3.
+

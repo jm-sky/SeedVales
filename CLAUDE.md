@@ -18,7 +18,7 @@ SeedVales is a browser-based medieval-themed world simulation game with RPG elem
 - `node scripts/check-layers.mjs` — sim/world/data/config/core/save must not import three/vue/render/ui/audio (already run by `pnpm check`)
 - `pnpm e2e:run [smoke] [acceptance] [mobile]` — preferred: starts its own Vite server (free port, no HMR/watch), runs the suites (all by default), prints one summary line; Chrome auto-detected (override with `CHROME_PATH`)
 - `pnpm e2e` — same suites against an already running `pnpm dev --port 5199` (manual debugging)
-- `pnpm bench:sim [--update-baseline]`, `pnpm bench:render [low|medium]` — reports in `test-results/bench/` (gitignored); summary goes to `docs/state/PERF.md`
+- `pnpm bench:sim [--update-baseline]`, `pnpm bench:render [low|medium]`, `pnpm bench:startup [low|medium] [--runs=3]` (cold-start result class) — reports in `test-results/bench/` (gitignored); summary goes to `docs/state/PERF.md`
 - `node scripts/e2e/tour.mjs` — screenshots for visual review; `pnpm build` — production build
 - Headless Chromium uses SwiftShader: FPS/GPU numbers are not representative; pure JS phases (sim, chunk/vegetation builds, render preparation) are comparable within the same environment, `render.draw` is not (software rasterization). Device measurements are the user's step (D-PERF-2).
 

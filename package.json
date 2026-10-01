@@ -18,7 +18,8 @@
     "e2e:run": "node scripts/e2e/run.mjs",
     "e2e": "node scripts/e2e/smoke.mjs && node scripts/e2e/acceptance.mjs && node scripts/e2e/mobile.mjs",
     "bench:render": "node scripts/bench/render-bench.mjs",
-    "check": "pnpm type-check && pnpm lint && node scripts/check-layers.mjs && pnpm test"
+    "check": "pnpm type-check && pnpm lint && node scripts/check-layers.mjs && pnpm test",
+    "bench:startup": "node scripts/bench/startup-bench.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.49.0",
