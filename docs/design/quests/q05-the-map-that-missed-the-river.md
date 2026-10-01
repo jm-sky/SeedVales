@@ -1,144 +1,144 @@
 # Q05 — The Map That Missed the River
 
-**Status: propozycja N/P; pakiet A (Codex 1), wyprawa ze skarbem.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Wymaga `WORLD-11` (landmarki, P) i `LOOT-01` (skarby, P); jaskinia niepotrzebna. Cztery etapy, trzy zakończenia. Skala: wyprawa ze skarbem między {V} a {T}.
+**Status: proposal (N/P); pack A (Codex round 1), treasure expedition.** Cast: [QUEST-WORLD](QUEST-WORLD.md). Needs `WORLD-11` (landmarks, P) and `LOOT-01` (treasure, P); no cave needed. Four stages, three endings. Scale: treasure expedition between {V} and {T}.
 
-## Założenie
+## Premise
 
-Radomira, handlarka w {T}, ma mapę narysowaną przez babkę Dobrosławę — też handlarkę, która czterdzieści lat temu straciła wóz przy przeprawie przez rzekę w roku powodzi. Babka ocalała, ale skrzynkę z rezerwą handlową zakopała w pośpiechu przy kamiennym kręgu, „po wschodniej stronie, nie w pierwszym dole”. Kiedy wróciła po kilku tygodniach, woda zmieniła koryto i nie potrafiła znaleźć miejsca. Narysowała mapę z pamięci — z rzeką o trzech zakolach. Dziś rzeka ma dwa. Archiwista Przemysł uważa, że mapa jest po prostu błędna. Radomira podejrzewa, że „brakujące” zakole to stare koryto, a więc droga.
+Rosalind Marchant, a trader in {T}, has a map drawn by her grandmother Dulcie — also a trader, who forty years ago lost her cart at a river crossing in the flood year. Dulcie survived, but in her hurry she buried her trading reserve by a stone circle, "on the east side, not in the first hollow". When she came back weeks later the water had changed course and she couldn't find the place. She drew the map from memory — with a river of three bends. Today the river has two. Percy Clark, the town scribe, thinks the map is simply wrong. Rosalind suspects the "missing" bend is an old channel, and therefore a way across.
 
-Prawdziwa odpowiedź: trzecie zakole wyschło i jest dziś suchym, zarośniętym łożem — jedynym miejscem, gdzie latem da się przejść na wyspę z kręgiem bez brodzenia w bystrym nurcie. Skrzynka leży pod wschodnim kamieniem. „Pierwszy dół” w środku kręgu to stary wykop szabrowników sprzed lat — pusty.
+The truth: the third bend dried up and is now an overgrown, stony bed — the only place where, in summer, you can reach the island with the circle without wading the fast current. The box lies under the eastern stone. The "first hollow" in the middle of the circle is an old diggers' pit — empty.
 
-Emocja: zachwyt odkrycia, potem prawdziwy łup w ręku i decyzja, co zrobić z wiedzą o przejściu.
+Feel: the delight of discovery, then real loot in hand and a decision about what to do with the knowledge of the crossing.
 
-**Wiedza NPC.** Radomira zna rodzinną opowieść (niedokładną). Przemysł zna papier, atrament, znak mierniczego — nie zna terenu. Dorota (myśliwa V), jeśli gracz z nią rozmawiał w Q02, wie, że „nad dolnym zakolem woda zmienia się co wiosnę”. Nikt nie wie, co jest w skrzynce.
+**NPC knowledge.** Rosalind knows the family story (inexactly). Percy knows the paper, the ink, a surveyor's mark — not the ground. Edith Fowler (V hunter), if the player knows her from Q02, knows that "below the long bend the water changes every spring". Nobody knows what's in the box.
 
-**Warunki startu.** Gracz dotarł do {T}; w dolinie między {V} i {T} istnieje landmark „kamienny krąg” (P) na wyspie/zakolu. Jeśli seed go nie ma — quest się nie pojawia (brak teleportu skarbu).
+**Start conditions.** The player has reached {T}; in the valley between {V} and {T} a "stone circle" landmark (P) exists on an island/bend. If the seed has none, the quest doesn't appear (treasure is never teleported).
 
-## Skarb (propozycja do kalibracji, patrz [QUEST-WORLD](QUEST-WORLD.md#kalibracja-nagród-propozycja-do-decyzji))
+## Treasure (proposal, see [calibration](QUEST-WORLD.md#reward-calibration-proposal))
 
-Okuta skrzynka (ciężka: ~15 kg): monety o łącznej wartości **~180 c** (srebro i miedź), **złoty pierścień** z rytym znakiem rodziny (80–150), **dwa szmaragdy** w woreczku (120–250 każdy), zbutwiała księga rachunkowa. Własność: spadkobierczyni Dobrosławy, czyli Radomira (dowód: znak na pierścieniu i księga). Źródło wartości: zewnętrzne (D-ECON-1 dopuszcza skarb jako jawne źródło).
+An iron-bound box (heavy, ~15 kg): coins worth **~180 c** in total (silver and copper), a **gold ring** engraved with the family mark (80–150), **two emeralds** in a pouch (120–250 each), a rotted account book. Owner: Dulcie's heir, Rosalind (proof: the mark on the ring and the book). Source of value: external (D-ECON-1 allows treasure as an explicit source).
 
-## Stan
+## State
 
-`accepted`, `oldBedFound`, `circleFound`, `firstHollowSeen`, `chestFound`, `chestBroughtBack`, `choice = unset|family|ford|keep_gems`, `settled`. Kopanie: I (łopata, ITEM-04). Ciężar: I (udźwig; dopuszczalne dwa kursy lub wózek).
+`accepted`, `oldBedFound`, `circleFound`, `firstHollowSeen`, `chestFound`, `chestBroughtBack`, `choice = unset|family|ford|keep_gem`, `settled`. Digging: I (shovel, ITEM-04). Weight: I (carrying limit; two trips or a cart allowed).
 
-## Etap 1 — A line that should be water
+## Stage 1 — A line that should be water
 
-**S1 — Radomira przy straganie w {T}**
+**S1 — Rosalind at her stall in {T}**
 
-**Radomira:** My grandmother drew this river with three bends. It has two. Przemysł says that makes it wrong.
+**Rosalind:** My grandmother drew this river with three bends. It has two. Percy says that makes it wrong.
 **Player:** Rivers move.
-**Radomira:** That's what I keep telling him. He has a newer map. Newer isn't the same as truer.
+**Rosalind:** That's what I keep telling him. He has a newer map. Newer isn't the same as truer.
 **Player:** What's at the end of it?
-**Radomira:** Her strongbox. She lost a cart and two oxen at that river the spring of the great flood and buried what she could carry. She went back and couldn't find it. Spent the rest of her life saying "the river took the road."
+**Rosalind:** Her strongbox. She lost a cart and two oxen at that river the spring of the great flood and buried what she could carry. She went back and couldn't find it. Spent the rest of her life saying "the river took the road."
 **Player [A]:** I'll go and look at the ground.
-**Radomira:** Then I'll pay for your bread and a third of whatever's in the box, if there's a box. Bring back what you see — not what makes a better story. → `accepted`
+**Rosalind:** Then I'll pay for your bread and a third of whatever's in the box, if there's a box. Bring back what you see — not what makes a better story. → `accepted`
 **Player [B]:** Why not go yourself?
-**Radomira:** Because I've a stall, a sick husband and no idea how to cross a river that eats carts. You've walked from {V}, haven't you? That's more than I've done in ten years.
+**Rosalind:** Because I've a stall, a sick husband and no idea how to cross a river that eats carts. You've walked from {V}, haven't you? That's more than I've done in ten years.
 
-**S2 — Przemysł w ratuszu (opcjonalnie)**
+**S2 — Percy at the town hall (optional)**
 
-**Przemysł:** I've had the paper in my hands. Old rag paper, oak-gall ink — it's genuinely forty years old, I'll give her that.
+**Percy:** I've had the paper in my hands. Old rag paper, oak-gall ink — it's genuinely forty years old, I'll give her that.
 **Player:** And the river?
-**Przemysł:** Wrong. Measured against the survey we did for the road, it's simply wrong. Three bends where there are two.
+**Percy:** Wrong. Measured against the survey we did for the road, it's simply wrong. Three bends where there are two.
 **Player:** Unless one dried up.
-**Przemysł:** *(zastanawia się)* …Unless one dried up. I hadn't — I've never walked that valley. I'd want to see it.
+**Percy:** *(thinks)* …Unless one dried up. I hadn't — I've never walked that valley. I'd want to see it.
 **Player:** And this mark by the circle?
-**Przemysł:** A surveyor's sign. "Measured from here." Her grandmother must have learned it from someone who knew what they were doing. Which makes the river harder to explain away, I suppose.
+**Percy:** A surveyor's sign. "Measured from here." Her grandmother must have learned it from someone who knew what they were doing. Which makes the river harder to explain away, I suppose.
 
-**S3 — Radomira przed wyjściem**
+**S3 — Rosalind before the player leaves**
 
-**Radomira:** One more thing. She always said, "not in the first hollow". I don't know what it means. Neither did she, by the end.
+**Rosalind:** One more thing. She always said, "not in the first hollow". I don't know what it means. Neither did she, by the end.
 **Player:** I'll keep it in mind.
-**Radomira:** Bring the box closed, if you find it. I'd like to open it myself. I've waited thirty years to see her handwriting in the ledger.
+**Rosalind:** Bring the box closed, if you find it. I'd like to open it myself. I've waited thirty years to see her handwriting in that book.
 
-## Etap 2 — The bend that isn't there
+## Stage 2 — The bend that isn't there
 
-**S4 — Dolina** (czynność eksploracji; mapa gracza odkrywa teren, FoW I)
+**S4 — The valley** (exploration; the player's map reveals terrain, fog of war I)
 
-Gracz porównuje mapę z terenem: rzeka ma dwa zakola, wyspa z kręgiem leży za bystrym nurtem (brodzenie: ryzyko spławienia ekwipunku i utraty staminy — I: woda/teren; N: nurt). Między zakolami wije się łuk zarośniętego, kamienistego łoża (`oldBedFound`).
+The player compares map and ground: the river has two bends; the island with the circle lies across a fast current (wading: risk of losing gear and stamina — I: water/terrain; N: current). Between the bends winds an arc of overgrown, stony bed (`oldBedFound`).
 
-**Player (myśl):** The third bend's still here. Dry. Full of willow — but you could walk it.
+**Player (thought):** The third bend's still here. Dry. Full of willow — but you could walk it.
 
-**S5 — Dorota, jeśli gracz przechodzi przez {V} i zna ją z Q02**
+**S5 — Edith, if the player passes through {V} and knows her from Q02**
 
-**Dorota:** The valley below the long bend? Water changes there every spring. Some years there's a dry channel you can walk; some years it's knee-deep.
+**Edith:** The valley below the long bend? Water changes there every spring. Some years there's a dry channel you can walk; some years it's knee-deep.
 **Player:** I'm following a map drawn before the flood.
-**Dorota:** Then use the river as it is and the map as a question. And don't cross the main current with anything you can't afford to lose.
+**Edith:** Then use the river as it is and the map as a question. And don't cross the main current with anything you can't afford to lose.
 
-## Etap 3 — Stone and soil
+## Stage 3 — Stone and soil
 
-**S6 — Kamienny krąg** (`circleFound`)
+**S6 — The stone circle** (`circleFound`)
 
-**Player (myśl):** Seven stones, one fallen. And in the middle — a hole, half filled with leaves. Someone dug here long ago and left in a hurry. (`firstHollowSeen`)
-**Player (myśl):** "Not in the first hollow." East stone, then.
+**Player (thought):** Seven stones, one fallen. And in the middle — a hole, half filled with leaves. Someone dug here long ago and left in a hurry. (`firstHollowSeen`)
+**Player (thought):** "Not in the first hollow." East stone, then.
 
-Kopanie przy wschodnim kamieniu (I: łopata) odsłania skrzynkę (`chestFound`). Jeśli gracz kopie w pierwszym dole — nic, tylko stara rdza po łopacie szabrowników.
+Digging by the eastern stone (I: shovel) uncovers the box (`chestFound`). Digging in the first hollow finds nothing but rust from an old spade.
 
-**S7 — Skrzynka** (otwarcie na miejscu jest możliwe — bez kary, ale Radomira o tym wie po powrocie, bo zamek jest wyłamany)
+**S7 — The box** (opening it on the spot is allowed — no penalty, but Rosalind will know, because the lock is broken)
 
-Transport: skrzynka ~15 kg + to, co gracz już niesie. Dwa kursy przez suche łoże albo wózek ręczny (`TRANS-01`). Przejście przez nurt z ciężarem: ryzyko utraty skrzynki w wodzie (N; skrzynka nie znika — da się ją wyłowić z płycizny poniżej).
+Transport: box ~15 kg plus whatever the player carries. Two trips along the dry bed or a handcart (`TRANS-01`). Crossing the current with a load risks dropping the box in the water (N; it doesn't vanish — it can be fished out of the shallows downstream).
 
-## Etap 4 — What the box was for
+## Stage 4 — What the box was for
 
-**S8 — Otwarcie u Radomiry** (`chestBroughtBack`)
+**S8 — Opening it at Rosalind's** (`chestBroughtBack`)
 
-**Radomira:** *(otwiera powoli)* Coins. Her ledger — the ink's run, but that's her hand, look at the loops. And — *(cisza)* — that's her ring. She was married in that ring. She told me she'd sold it.
+**Rosalind:** *(opens it slowly)* Coins. Her book — the ink's run, but that's her hand, look at the loops. And — *(silence)* — that's her ring. She was married in that ring. She told me she'd sold it.
 **Player:** And these?
-**Radomira:** Emeralds. *(przegląda księgę)* "Two green stones, for Master Halm of {T}, paid half." Halm's house died out before I was born. Nobody's coming for these.
+**Rosalind:** Emeralds. *(leafs through the book)* "Two green stones, for Master Halm of {T}, half paid." Halm's house died out before I was born. Nobody's coming for these.
 **Player:** So what now?
-**Radomira:** Now you get your third. I said a third and I meant it. But — *(waha się)* — there's the crossing, too. You found a way over that river nobody in {T} knows. That's worth something, and I don't know to whom.
+**Rosalind:** Now you get your third. I said a third and I meant it. But — *(hesitates)* — there's the crossing, too. You found a way over that river nobody in {T} knows. That's worth something, and I don't know to whom.
 
-**S9 — Przemysł (jeśli gracz z nim rozmawiał lub Radomira go wezwie)**
+**S9 — Percy (if the player spoke to him, or Rosalind sends for him)**
 
-**Przemysł:** You walked the dry bed? All the way to the island?
+**Percy:** You walked the dry bed? All the way to the island?
 **Player:** Twice. With a box on my back the second time.
-**Przemysł:** Then the survey's wrong, not her map. *(pauza)* I'll have to redraw the whole lower valley. Do you know how long since anyone has given me a reason to redraw anything?
+**Percy:** Then the survey's wrong, not her map. *(pause)* I'll have to redraw the whole lower valley. Do you know how long since anyone gave me a reason to redraw anything?
 **Player [A]:** Should it be public?
-**Przemysł:** Carters from {V} lose a day going round by the upper ford. A summer crossing would give them that day back. But it's her family's find. And yours.
+**Percy:** Carters from {V} lose a day going round by the upper ford. A summer crossing would give them that day back. But it's her family's find. And yours.
 
-**S10 — Wybór** (ustawia `choice`)
+**S10 — Choice** (sets `choice`)
 
 **Player [family]:** Keep it in the family. The coins and stones are yours; give me my third in coin. The crossing stays your grandmother's secret.
-**Radomira:** *(kiwa głową)* Then she gets to have been right, quietly. I like that.
+**Rosalind:** *(nods)* Then she gets to have been right, quietly. I like that.
 
-**Player [ford]:** Let Przemysł mark the dry crossing on the town map. Carters get their day back, and your grandmother's name goes on the bend.
-**Radomira:** "Dobrosława's Bend." *(śmieje się)* She'd have hated the fuss. She'd have loved the name.
-**Przemysł:** I'll walk it myself before I draw it. With you, if you'll show me.
+**Player [ford]:** Let Percy mark the dry crossing on the town map. Carters get their day back, and your grandmother's name goes on the bend.
+**Rosalind:** "Dulcie's Bend." *(laughs)* She'd have hated the fuss. She'd have loved the name.
+**Percy:** I'll walk it myself before I draw it. With you, if you'll show me.
 
-**Player [keep_gems]:** I'll take one of the emeralds as my share instead of coin.
-**Radomira:** One stone instead of a third? *(liczy)* That's — near enough the same, if you sell it well. Zbigniew will give you a fair price; he gives everyone a fair price, it's his only vice.
+**Player [keep_gem]:** I'll take one of the emeralds as my share instead of coin.
+**Rosalind:** One stone instead of a third? *(counts)* That's — near enough the same, if you sell it well. Silas Moneypenny will give you a fair price; he gives everyone a fair price, it's his only vice.
 
 ### E1 — Back to the family
-Warunek: `family`. Gracz otrzymuje **⅓ wartości gotówkowej skrzynki: propozycja 150–200 c** (Radomira sprzedaje jeden szmaragd Zbigniewowi, by wypłacić gracza — realny transfer z sakiewki Zbigniewa do Radomiry, potem do gracza; `if_empty`: wypłata częściowa + reszta po kolejnej wizycie).
+Condition: `family`. The player receives **a third of the box's cash value: proposed 150–200 c** (Rosalind sells one emerald to Silas to pay the player — a real transfer from Silas's purse to Rosalind, then to the player; `if_empty`: partial payment, the rest on a later visit).
 
-**Radomira:** She wore it at her wedding and on the day she lost the oxen. I'll wear it to the market. Let people ask.
+**Rosalind:** She wore it at her wedding and on the day she lost the oxen. I'll wear it to market. Let people ask.
 
-Skutek: suche łoże pozostaje nieoznaczone na mapach NPC (gracz ma je na własnej mapie — FoW I). Radomira daje graczowi stały rabat 10% (N) na swoim straganie.
+Effect: the dry bed stays off NPC maps (the player has it on their own map — fog of war I). Rosalind gives the player a lasting 10% discount (N) at her stall.
 
-### E2 — Dobrosława's Bend
-Warunek: `ford`, Przemysł przeszedł łoże z graczem (scena ruchu: Przemysł jako tymczasowy towarzysz na jedną trasę — P `COMP-01` lub prosty skrypt podążania N). Gracz otrzymuje **⅓ jak w E1** oraz renomę w {T} i {V}.
+### E2 — Dulcie's Bend
+Condition: `ford`, Percy has walked the bed with the player (movement scene: Percy as a temporary companion for one route — P `COMP-01` or a simple follow script N). The player receives **a third, as E1**, plus renown in {T} and {V}.
 
-**Przemysł:** *(zapisuje)* "Summer crossing, dry bed, knee-deep after the thaw. Found from the map of Dobrosława, trader of {T}." There. Now it's true for everyone.
-**Radomira:** And the island?
-**Przemysł:** Belongs to whoever walks to it. That's how islands are.
+**Percy:** *(writing)* "Summer crossing, dry bed, knee-deep after the thaw. Found from the map of Dulcie, trader of {T}." There. Now it's true for everyone.
+**Rosalind:** And the island?
+**Percy:** Belongs to whoever walks to it. That's how islands are.
 
-Skutek: nowy odcinek trasy V–T dla NPC i karawan (N: skrót sezonowy w grafie dróg), renoma (rozpoznawalność) +; trasa może zalać się wiosną (N: sezonowa dostępność).
+Effect: a new V–T route segment for NPCs and caravans (N: seasonal shortcut in the road graph), renown +; the crossing may flood in spring (N: seasonal availability).
 
 ### E3 — A green stone of your own
-Warunek: `keep_gems`. Gracz otrzymuje **szmaragd ×1** (120–250 przy sprzedaży) zamiast gotówki. Przejście pozostaje jak w E1, chyba że gracz osobno zaproponuje Przemysłowi oznaczenie (wtedy dodatkowo skutek E2 — dopuszczalne łączenie po rozliczeniu łupu).
+Condition: `keep_gem`. The player receives **an emerald ×1** (120–250 when sold) instead of coin. The crossing stays as in E1, unless the player separately proposes marking it to Percy (then E2's effect applies too — combining after the split is allowed).
 
-**Radomira:** Don't sell it to the first man who smiles at it.
-**Player:** Zbigniew?
-**Radomira:** Zbigniew doesn't smile. That's why you can trust his price.
+**Rosalind:** Don't sell it to the first man who smiles at it.
+**Player:** Silas?
+**Rosalind:** Silas doesn't smile. That's why you can trust his price.
 
-## Odmowa, przerwanie, pominięcia
+## Refusal, interruption, omissions
 
-- Odmowa: mapa zostaje u Radomiry; po kilku tygodniach może poprosić kogoś innego (quest wygasa bez kary).
-- Gracz zatrzymuje skrzynkę dla siebie: to kradzież mienia Radomiry — działa zwykły system reputacji (uczciwość −, jeśli ktoś się dowie: Przemysł wie o wyprawie). Quest kończy się bez zakończenia autorskiego.
-- Zgubiona mapa: jeśli gracz odkrył już łoże/krąg, wiedza zostaje na jego mapie; bez tego quest stoi do odzyskania mapy.
-- Śmierć Radomiry przed rozliczeniem: skrzynka trafia do jej household; Przemysł może jedynie poświadczyć udział gracza (⅓ wypłaca household, jeśli ma środki).
+- Refusal: the map stays with Rosalind; after a few weeks she may ask someone else (the quest lapses without penalty).
+- The player keeps the box: that's theft of Rosalind's property — ordinary reputation rules apply (honesty −, if found out: Percy knows about the trip). The quest ends without an authored ending.
+- Lost map: if the player already found the bed/circle, the knowledge stays on their map; otherwise the quest waits until the map is recovered.
+- Rosalind dies before the split: the box goes to her household; Percy can only vouch for the player's share (a third is paid by the household if it has the means).
 
-## Mechaniki
+## Mechanics
 
-I: podróż, FoW mapy, łopata/kopanie, udźwig, handel, reputacja. P: landmark kamiennego kręgu (`WORLD-11`), skrzynie i kosztowności (`LOOT-01`), towarzysz na trasę (`COMP-01`). N: nurt rzeki jako przeszkoda, sezonowy skrót w grafie dróg, rabat handlarza. **Do decyzji:** wartości kamieni i pierścienia; czy skróty sezonowe wchodzą do generatora dróg.
+I: travel, map fog of war, shovel/digging, carrying limits, trade, reputation. P: stone circle landmark (`WORLD-11`), chests and valuables (`LOOT-01`), companion for a route (`COMP-01`). N: river current as an obstacle, seasonal shortcut in the road graph, trader discount. **Author decisions:** gem and ring values; whether seasonal shortcuts enter the road generator.

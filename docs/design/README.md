@@ -7,4 +7,4 @@ Plik powinien mieć nazwę jasno określającą obszar, najlepiej z prefiksem do
 Np. `ui-combat.md`
 
 
-Questy narracyjne (trzy pakiety, wspólna obsada i mapa): [quests/README.md](quests/README.md).
+Narrative quests (three packs, shared cast and map; English): [quests/README.md](quests/README.md).

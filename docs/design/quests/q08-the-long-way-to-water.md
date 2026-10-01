@@ -1,104 +1,104 @@
 # Q08 — The Long Way to Water
 
-**Status: propozycja N; pakiet A (Codex 1), budowa/woda.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Trzy etapy, trzy zakończenia. Skala: średni quest w V.
+**Status: proposal (N); pack A (Codex round 1), building/water.** Cast: [QUEST-WORLD](QUEST-WORLD.md). Three stages, three endings. Scale: medium quest in V.
 
-## Założenie
+## Premise
 
-Pasterka Elżbieta z {V} rano i wieczorem prowadzi owce do wspólnej studni na placu, bo strumień przy pastwisku latem wysycha. Owce blokują kolejkę, ludzie się złoszczą, a ostatnio jedna z owiec wpadła pod wóz. Elżbieta ma już dość — chce koryta przy pastwisku, ale wie, że ktoś musiałby je napełniać: trzysta kroków z wiadrami, dwa razy dziennie. Małgorzata, sołtyska {V} i sąsiadka z farmy, wolałaby nową studnię przy polach — bo jej krowy też piją. Strażniczka Bogna chce tylko, żeby nic nie stało na drodze. Gracz pomaga wybrać i zbudować rozwiązanie, które ma kogoś, kto je utrzyma.
+Every morning and evening Elspeth Shepherd of {V} drives her sheep to the common well in the square, because the stream by the pasture dries up in summer. The sheep block the queue, people get cross, and lately one of them went under a cart. Elspeth has had enough — she wants a trough by the pasture, but knows someone would have to fill it: three hundred steps with buckets, twice a day. Margaret Reeve, {V}'s reeve and her neighbour from the farm, would rather have a new well by the fields — because her cows drink too. Bridget Ward, the guard, only wants nothing standing in the road. The player helps choose and build a solution that has someone to keep it working.
 
-**Wiedza NPC.** Elżbieta zna liczbę owiec i odległości. Małgorzata zna koszty i to, kto w {V} ma czas. Bogna wie, którędy jeżdżą wozy. Nikt nie sprawdził, czy przy polach jest woda pod ziemią.
+**NPC knowledge.** Elspeth knows the number of sheep and the distances. Margaret knows the costs and who in {V} has time. Bridget knows where the carts go. Nobody has checked whether there's water under the fields.
 
-**Warunki startu.** Gracz był w {V}; I: studnia, koryto, wiadro, budowa (§24.1–24.2). N: grafik napełniania, wybór lokalizacji z uzgodnieniem.
+**Start conditions.** The player has been to {V}; I: well, trough, bucket, building (VISION §24.1–24.2). N: filling rota, agreed location.
 
-## Stan
+## State
 
 `accepted`, `routeWalked`, `groundChecked`, `plan = unset|trough|well|rota`, `built`, `settled`.
 
-## Etap 1 — The queue at the well
+## Stage 1 — The queue at the well
 
-**S1 — Elżbieta przy studni, owce dookoła**
+**S1 — Elspeth at the well, sheep all around**
 
-**Elżbieta:** The sheep get to the well before I do. Then everyone's thirsty and nobody's happy.
+**Elspeth:** The sheep get to the well before I do. Then everyone's thirsty and nobody's happy.
 **Player:** How far's the pasture?
-**Elżbieta:** Three hundred steps. I've counted. Far enough that a full bucket feels like a punishment by the second trip.
-**Małgorzata:** A trough by the fence would sort it.
-**Elżbieta:** A trough that someone fills. An empty trough's just a wooden apology.
+**Elspeth:** Three hundred steps. I've counted. Far enough that a full bucket feels like a punishment by the second trip.
+**Margaret:** A trough by the fence would sort it.
+**Elspeth:** A trough that someone fills. An empty trough's just a wooden apology.
 **Player [A]:** Let me walk it and see what makes sense.
-**Elżbieta:** Please. Somebody who isn't me or her. → `accepted`
+**Elspeth:** Please. Somebody who isn't me or her. → `accepted`
 
-**S2 — Droga do pastwiska** (czynność: przejście trasy → `routeWalked`)
+**S2 — The way to the pasture** (action: walk the route → `routeWalked`)
 
 **Player:** The ground falls toward this corner. A trough here would need less carrying from the stream in spring.
-**Elżbieta:** And in summer the stream's dust. Then it's all from the well.
-**Player:** What about the low field? Małgorzata's.
-**Elżbieta:** Ask her. Rushes grow there in June. My grandfather used to say that means water underneath.
+**Elspeth:** And in summer the stream's dust. Then it's all from the well.
+**Player:** What about the low field? Margaret's.
+**Elspeth:** Ask her. Rushes grow there in June. My grandfather used to say that means water underneath.
 
-**S3 — Oględziny pola** (czynność: kopanie próbne łopatą — I → `groundChecked`)
+**S3 — Looking at the field** (action: trial dig with a shovel — I → `groundChecked`)
 
 **Player:** Damp at two spades down. There's water, not much, but there is.
-**Małgorzata:** Then a well there would serve my cows and her sheep both. And nobody walks three hundred steps.
+**Margaret:** Then a well there would serve my cows and her sheep both. And nobody walks three hundred steps.
 **Player:** It's a lot of digging and stone.
-**Małgorzata:** It is. And it'd belong to the whole village, which means it needs a turn-list or it'll be nobody's.
+**Margaret:** It is. And it'd belong to the whole village, which means it needs a turn-list or it'll be nobody's.
 
-**S4 — Bogna**
+**S4 — Bridget**
 
-**Bogna:** Don't put anything on the road. I don't care what — trough, well, stone circle.
+**Bridget:** Don't put anything on the road. I don't care what — trough, well, stone circle.
 **Player:** Where, then?
-**Bogna:** Off the turning place, where a cart can still swing round. I'm not choosing your water. I'm protecting my road.
+**Bridget:** Off the turning place, where a cart can still swing round. I'm not choosing your water. I'm protecting my road.
 
-## Etap 2 — Choose and build
+## Stage 2 — Choose and build
 
-**S5 — Wybór** (ustawia `plan`)
+**S5 — Choice** (sets `plan`)
 
-**Player [trough]:** A trough by the pasture fence. Elżbieta's household fills it.
-**Elżbieta:** Twice a day. *(pauza)* Fine. It's still less than walking the flock through the square. Write my name on it, so nobody else thinks it's theirs to empty.
-**Player [well]:** *(wymaga `groundChecked`)* A small well in the low field. Shared, with turns at keeping it.
-**Małgorzata:** I'll put it to the village. If they agree, I'll take the first month myself.
+**Player [trough]:** A trough by the pasture fence. Elspeth's household fills it.
+**Elspeth:** Twice a day. *(pause)* Fine. It's still less than walking the flock through the square. Write my name on it, so nobody else thinks it's theirs to empty.
+**Player [well]:** *(needs `groundChecked`)* A small well in the low field. Shared, with turns at keeping it.
+**Margaret:** I'll put it to the village. If they agree, I'll take the first month myself.
 **Player [rota]:** No building. Set times at the square well — animals at dawn and dusk, people the rest of the day.
-**Elżbieta:** Costs no timber. Costs everyone's patience, every single day.
-**Bogna:** I can shout at people for breaking it. I enjoy that.
+**Elspeth:** Costs no timber. Costs everyone's patience, every single day.
+**Bridget:** I can shout at people for breaking it. I enjoy that.
 
-**S6 — Budowa** (I: koryto — budowa, wiadro, transport wody; well — N/I: budowa studni §24.1, większy koszt)
+**S6 — Building** (I: trough — building, bucket, carrying water; well — N/I: building a well §24.1, larger cost)
 
-**Małgorzata:** One bucket fills a third of the trough. Not the whole pasture.
+**Margaret:** One bucket fills a third of the trough. Not the whole pasture.
 **Player:** So three trips. That's in the plan.
-**Elżbieta:** Good. Plans ought to have the tiring part written in.
+**Elspeth:** Good. Plans ought to have the tiring part written in.
 
-## Etap 3 — Zakończenia
+## Stage 3 — Endings
 
 ### E1 — The trough at the fence
-Warunek: `plan=trough`, koryto zbudowane (I) w miejscu poza drogą, napełnione pierwszy raz. Zapłata: Elżbieta daje graczowi **wełna ×3** albo **ser ×2** (z zapasów household), Małgorzata **15 c** z `treasury_V`.
+Condition: `plan=trough`, trough built (I) off the road, filled the first time. Payment: Elspeth gives the player **wool ×3** or **cheese ×2** (household stores), Margaret **15 c** from `treasury_V`.
 
-**Elżbieta:** Close enough to help, far enough not to block anyone.
-**Małgorzata:** And tomorrow you fill it.
-**Elżbieta:** Tomorrow I fill it. The day after, you remind me.
+**Elspeth:** Close enough to help, far enough not to block anyone.
+**Margaret:** And tomorrow you fill it.
+**Elspeth:** Tomorrow I fill it. The day after, you remind me.
 
-Skutek: owce nie przechodzą przez plac (N: zmiana trasy zwierząt hodowlanych), codzienna praca Elżbiety rośnie.
+Effect: sheep no longer cross the square (N: livestock route change); Elspeth's daily work grows.
 
 ### E2 — A well in the low field
-Warunek: `plan=well`, `groundChecked`, zgoda osady (Małgorzata pyta na placu — scena krótka, N), materiały (kamień, belki, lina, wiadro) i ukończona budowa. Zapłata: **35–45 c** z `treasury_V` (to inwestycja osady, największa nagroda w tym queście) + opinia osady.
+Condition: `plan=well`, `groundChecked`, the village agrees (Margaret asks in the square — short scene, N), materials (stone, beams, rope, bucket) and finished construction. Payment: **35–45 c** from `treasury_V` (it's the village's investment — the largest reward in this quest) + the village's opinion.
 
-**Małgorzata:** It's everyone's now.
-**Bogna:** Which means everyone gets a turn keeping it clean.
-**Elżbieta:** I'll take the first week. For the sheep. They've been the most trouble.
+**Margaret:** It's everyone's now.
+**Bridget:** Which means everyone gets a turn keeping it clean.
+**Elspeth:** I'll take the first week. For the sheep. They've been the most trouble.
 
-Skutek: nowa studnia (I: obiekt), lista dyżurów (N); jeśli nikt jej nie pilnuje, zużywa się szybciej.
+Effect: a new well (I: object), a duty rota (N); if nobody keeps to it, it wears faster.
 
 ### E3 — The patient queue
-Warunek: `plan=rota`, trzy dni kalendarza z przestrzeganym grafikiem (N: NPC respektują godziny). Zapłata: **10 c** z `treasury_V`.
+Condition: `plan=rota`, three calendar days of the rota being kept (N: NPCs respect the hours). Payment: **10 c** from `treasury_V`.
 
-**Elżbieta:** It works. When people keep to it.
-**Małgorzata:** Which isn't the same as easy.
-**Bogna:** I shouted at Kazimierz's lad twice. Best week I've had.
+**Elspeth:** It works. When people keep to it.
+**Margaret:** Which isn't the same as easy.
+**Bridget:** I shouted at Cedric's lad twice. Best week I've had.
 
-Skutek: brak budowy; po złamaniu grafiku problem może wrócić (quest otwiera się ponownie z wyborem `trough`/`well`).
+Effect: no building; if the rota breaks, the problem can return (the quest reopens with `trough`/`well`).
 
-## Odmowa, przerwanie, pominięcia
+## Refusal, interruption, omissions
 
-- Odmowa: bez kary; owce dalej chodzą na plac.
-- Brak wody w strumieniu i studni (susza): budowa koryta wstrzymana, nie powstaje „suche koryto” jako sukces.
-- Gracz zbuduje coś na drodze: Bogna każe to rozebrać (N), quest nie zamyka się.
+- Refusal: no penalty; the sheep keep coming to the square.
+- No water in stream or well (drought): trough building pauses; a "dry trough" never counts as success.
+- The player builds something on the road: Bridget has it taken down (N); the quest doesn't close.
 
-## Mechaniki
+## Mechanics
 
-I: studnia, koryto, wiadro, budowa, kopanie. N: grafik, zgoda osady na budowę wspólną, trasa zwierząt hodowlanych. **Do decyzji:** czy nowe studnie poza placem należą do v1 czy `SET-04`.
+I: well, trough, bucket, building, digging. N: rota, village consent for shared building, livestock route. **Author decision:** are new wells outside the square v1 or `SET-04`.
