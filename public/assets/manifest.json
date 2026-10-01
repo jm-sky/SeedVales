@@ -179,6 +179,34 @@
    "src": "UAL1_Standard.glb",
    "dst": "public/assets/characters/anims.glb",
    "kb": 2496
+  },
+  {
+   "src": "Extra_Animals/Rat.glb",
+   "dst": "public/assets/animals/Rat.glb",
+   "kb": 189,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Extra_Animals/Hare.glb",
+   "dst": "public/assets/animals/Hare.glb",
+   "kb": 81,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Extra_Animals/Boar.glb",
+   "dst": "public/assets/animals/Boar.glb",
+   "kb": 45,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Extra_Animals/Bear.glb",
+   "dst": "public/assets/animals/Bear.glb",
+   "kb": 294,
+   "ratio": 0.3,
+   "tex": 512
   }
  ]
 }

@@ -1,0 +1,18 @@
+Third-party models used under Creative Commons Attribution (CC BY).
+Converted for SeedVales (scripts/assets/build-extra-animals.mjs): reoriented, re-centred,
+compressed (meshopt), textures downscaled, bear mesh simplified, animation clips renamed/trimmed.
+
+animals/Hare.glb
+  "Rabbit" by Sherkiz, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  via Poly Pizza: https://poly.pizza/m/Km89u3twcR
+
+animals/Boar.glb
+  "Low Poly Wild Boar" (https://skfb.ly/otJ7F) by Hanabi_Map,
+  licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+animals/Bear.glb
+  "Low Poly Bear 3d Model Free" (https://skfb.ly/pMCPF) by iRahulRajput,
+  licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Public domain (CC0), no attribution required:
+animals/Rat.glb  "Rat" by Quaternius via Poly Pizza: https://poly.pizza/m/iltq5bVNaV

@@ -33,13 +33,16 @@ Konwersje: glTF → GLB, `resample` animacji, EXT_meshopt_compression (dekodowan
 | `village.glb` | Village: ściany Plaster/UnevenBrick, narożniki, dachy 4x4/6x6/6x8/8x8/8x10, komin, skrzynie, płot, wóz, drzwi, okna | domy składane w runtime (`render/structures.ts`) | 2458 KB, tekstury 512 |
 | `props.glb` | Props: Anvil(_Log), Barrel, Bench, Stall(_Cart)_Empty, Workbench, Chest, Bucket, Torch, Cauldron, FarmCrate_Carrot, Crate, Lantern | kowal, targ, magazyn | tekstury 256 |
 | `animals/*.glb` | Animal Pack | 8 gatunków ze szkieletem | skalowane do wysokości z `data/species.ts` |
+| `animals/{Rat,Hare,Boar,Bear}.glb` | `_temp/extracted/Extra_Animals/` (Poly Pizza, Sketchfab) | rat, hare (animated: Idle/Walk, rat also Gallop/Attack/Death); boar, bear static (no rig) | built by `node scripts/assets/build-extra-animals.mjs`; boar (FBX) and bear normalised in Blender first (head → +Z, feet at y=0); bear simplified 18.7k → ~9k tris (UV seams limit further simplification), texture 4096 → 512 |
 | `characters/{Male,Female}_{Peasant,Ranger}.glb` | Outfits | ciało postaci | uproszczone ~35–50% |
 | `characters/{Male,Female}_Head.glb` | Base Characters | głowa (re-bind do szkieletu stroju) | |
 | `characters/anims.glb` | UAL1 Standard | 22 klipy, bez siatek | 2.5 MB |
 | `LICENSE-Quaternius-CC0.txt` | | licencja | |
+| `CREDITS-CC-BY.txt` | | CC BY attributions (hare, boar, bear) — required by the license | |
 
 ## Do wymiany / braki (placeholdery)
 
-- Szczur, zając, dzik, niedźwiedź, owca, kura, łoś — proceduralne bryły (brak w paczkach).
+- Sheep, chicken, moose: procedural placeholders (not in the packs).
+- Boar and bear: static models (no skeleton/animations); a rig + walk/attack clips is a follow-up. The bear is a realistic fur-textured model, a style mismatch with the low-poly Quaternius animals; replace it if a better low-poly bear turns up.
 - Studnia, ognisko, tablica, pochodnie, koryto, suszarnia, palisada, most, uprawy — proceduralne low-poly.
 - Broń/narzędzia w dłoni — brak (FBX-only w RPG Items).

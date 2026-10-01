@@ -1,7 +1,7 @@
 /**
  * Actor rendering: skinned glTF characters (UBC head + outfit, UAL animations) and animals near the
- * player; cheap procedural placeholders further away or when no model exists (rat, hare, boar,
- * bear, sheep, chicken, moose). Renderer only reads simulation state.
+ * player; cheap procedural placeholders further away or when no model exists (sheep, chicken,
+ * moose). Boar and bear models are static (no rig yet). Renderer only reads simulation state.
  * @domain render
  * @subdomain actors
  */
@@ -21,6 +21,8 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 /** Scratch vector for the per-frame interpolation (no allocation per actor, review 009 F-04). */
 const SIM_POS = new THREE.Vector3()
 const PLACEHOLDER_DIST = 320
+/** Substitute clip when a model lacks the requested one (e.g. the hare has no Gallop). */
+const CLIP_FALLBACK: Record<string, string> = { Gallop: 'Walk', Attack_Headbutt: 'Attack' }
 
 interface Visual {
   id: number
@@ -213,7 +215,7 @@ export class Actors {
 
   private play(v: Visual, name: string, fade = 0.2, once = false) {
     if (!v.actions || v.current === name) return
-    const next = v.actions.get(name) ?? v.actions.get('Idle_Loop') ?? v.actions.get('Idle')
+    const next = v.actions.get(name) ?? v.actions.get(CLIP_FALLBACK[name] ?? '') ?? v.actions.get('Idle_Loop') ?? v.actions.get('Idle')
     if (!next) return
     const prev = v.current ? v.actions.get(v.current) : undefined
     next.reset()
