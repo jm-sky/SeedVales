@@ -38,7 +38,7 @@ interface Visual {
 }
 
 type CharKey = `${'Male' | 'Female'}_${CharOutfit}`
-const CHAR_OUTFITS: CharOutfit[] = ['Peasant', 'Ranger', 'Ranger_NoHood', 'Knight', 'Wizard']
+const CHAR_OUTFITS: CharOutfit[] = ['Peasant', 'Ranger', 'Ranger_NoHood', 'Knight', 'Wizard', 'Peasant_Boots', 'Blacksmith', 'Herbalist']
 
 const phCache = new Map<string, THREE.BufferGeometry>()
 const phMat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })

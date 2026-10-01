@@ -84,6 +84,19 @@ Readings:
 - Static scenes: `render.prep` median ≤ 1.8 ms, p95 ≤ 8.5 ms; programs 10–18, lights 9 (sun + hemisphere + 6 pooled fire lights + the player torch light).
 - Teleport hitch: p95 23–51 ms (loading/respawn only).
 
+## Character variants A/B (render--005, 2026-10-01, WSL)
+
+`d8d7d12` (before outfits) vs HEAD (Knight/Ranger_NoHood/Wizard + Blacksmith/Herbalist/Peasant_Boots wired), medium, same machine, one run each. Baseline taken with `--update-baseline` in a worktree of `d8d7d12` and passed via `--baseline=`.
+
+| Scene | prep p95 before → after | verdict | draw calls before → after |
+|---|---|---|---|
+| small-settlement | 2.62 → 2.62 | ok +0% | 375 → 379 |
+| crowded-settlement | 3.6 → 3.97 | inconclusive +10% | 491 → 495 |
+| night-campfires | 2.42 → 2.52 | ok +4% | 479 → 479 |
+| landmark-estate | 0.61 → 0.8 | +31% (no actors, sub-ms noise) | 120 → 120 |
+
+Startup (3 runs): HUD 5220 → 5249 ms median; asset files 17 → 21 (16.7 → 20.2 MB); render.cpu max 1474 → 1268 ms. Result: no measurable regression.
+
 ## Cloud container (session 5, reference only — D-PERF-5)
 
 Machine: Intel Xeon @ 2.80 GHz ×4 (Anthropic cloud session). **Not comparable with the WSL baselines above** — `bench:render` now refuses that comparison (machine fingerprint in the baseline). Official gates (step-1 confirmation, 4a exit gate) run on the WSL laptop (❓ user). One run each on `915771d` + bench fix (render--002 step 1 code):
