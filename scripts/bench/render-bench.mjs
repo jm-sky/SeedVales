@@ -96,16 +96,23 @@ const collect = (name) => sv(page, (n) => {
   }
 }, name)
 
-/** Warm-up until terrain streaming is done (chunks.pending = 0 for 1 s, max 25 s) — steady state. */
+/**
+ * Warm-up until terrain streaming is done (chunks.pending = 0 for 1 s) — steady state. Waits up to 90 s of wall
+ * time (SwiftShader medium drains a teleport's ~110 chunks in 20–25 s); a scene that never settles is marked
+ * `unsettled` in the report instead of silently measuring streaming as steady state (session 8: the old
+ * 50-poll cap cut off the slower terrain path mid-stream in dense-forest/rain).
+ */
 async function settle() {
   await page.waitForTimeout(2000)
+  const t0 = Date.now()
   let calm = 0
-  for (let i = 0; i < 50 && calm < 4; i++) {
+  while (calm < 4 && Date.now() - t0 < 90_000) {
     const pending = await sv(page, () => window.__sv.perf.report().gauges['chunks.pending'] ?? 0)
     calm = pending === 0 ? calm + 1 : 0
     await page.waitForTimeout(250)
   }
   await page.waitForTimeout(1000)
+  return calm >= 4
 }
 
 /**
@@ -137,10 +144,10 @@ for (const [name, setup] of scenes) {
   await resetScene()
   const ok = await sv(page, (src) => new Function('sv', `return (${src})(sv)`)(window.__sv), setup.toString())
   if (ok === false) throw new Error(`bench:render — scene "${name}": locator found no place (seed changed?)`)
-  await settle() // warm-up: chunk streaming, asset instancing, shader compilation
+  const settled = await settle() // warm-up: chunk streaming, asset instancing, shader compilation
   await sv(page, () => window.__sv.perf.reset())
   await measureFrames()
-  results.push(await collect(name))
+  results.push({ ...(await collect(name)), ...(settled ? {} : { unsettled: true }) })
   await shot(page, `bench-${quality}-${name}`)
 }
 
@@ -208,6 +215,7 @@ const sameMachine = !!base && base.machine === MACHINE
 const verdict = (r) => {
   const b = base?.scenes?.[r.scene]
   if (b && !sameMachine) return 'n/a (other machine)'
+  if (r.unsettled) return 'unsettled (streaming did not finish in 90 s)'
   if (!b || !r.prep) return '—'
   if (r.prep.samples < 20) return `inconclusive (n=${r.prep.samples})`
   const d = (r.prep.p95 - b.prepP95) / Math.max(0.1, b.prepP95)

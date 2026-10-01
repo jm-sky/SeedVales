@@ -2,11 +2,13 @@
  * Terrain shader path (render--002 step 3, behind `sv-visual` flags): season/snow no longer rebuild chunks,
  * normals do not depend on the LOD.
  */
+import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { perf } from '../diag/perf'
 import { testSim } from '../sim/testWorld'
 import { QUALITY } from './quality'
 import { TerrainChunks } from './terrainChunks'
+import { VISUAL_DEFAULTS } from './visualFlags'
 
 const builds = () => perf.report().timers.find((t) => t.name === 'chunks.build')?.samples ?? 0
 
@@ -63,6 +65,26 @@ describe('render: terrain shading (RENDER-04)', () => {
     // Skirt vertex = copy of its edge vertex.
     const sk = nF * nF
     expect(Array.from(fine.normal!.array.slice(sk * 3, sk * 3 + 3))).toEqual(Array.from(fine.normal!.array.slice(0, 3)))
+    tc.dispose()
+  })
+
+  it('RENDER-04 (D-REN-13): the defaults use the shader path; a quality switch toggles the detail texture without rebuilding chunks', () => {
+    expect(VISUAL_DEFAULTS).toMatchObject({ tintUniforms: true, smooth: true, detail: true })
+    const sim = testSim()
+    const p = sim.player
+    const tc = new TerrainChunks(sim.terrain, QUALITY.medium, VISUAL_DEFAULTS)
+    expect(tc.detailActive).toBe(true)
+    settle(tc, p.x, p.z)
+    const before = builds()
+    tc.setQuality(QUALITY.low)
+    expect(tc.detailActive).toBe(false)
+    const meshes = tc.group.children.filter((o): o is THREE.Mesh => o instanceof THREE.Mesh && o !== tc.ocean && o.material !== tc.waterMat)
+    expect(meshes.length).toBeGreaterThan(0)
+    const mat = meshes[0]!.material
+    expect(meshes.every((m) => m.material === mat)).toBe(true)
+    tc.setQuality(QUALITY.medium)
+    expect(tc.detailActive).toBe(true)
+    expect(builds() - before).toBe(0)
     tc.dispose()
   })
 })

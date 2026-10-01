@@ -1,32 +1,37 @@
-# Kick-off: session 8 (Opus) — decisions for `render--002` step 3, 4a exit gate, plan `render--001`
+# Kick-off: session 9 (Sonnet) — `render--001` fire (1a → 1b), decals (8), English first names, then `world--001` LOOT-01
 
-You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State on 2026-10-01 (end of session 7): v1 complete; waves 1–3 done; `survival--001` done (FIRE-01/02/03, review 010 triaged, `SAVE_VERSION` 8); `diag--002` step 1 done (`pnpm bench:startup`); wave 4a `render--002` steps 0–2 done, **step 3 (terrain) implemented behind `sv-visual` flags with defaults unchanged — waiting for your decision**. Formats: `SAVE_VERSION` 8, `GEN_VERSION` 8. **This session runs on Opus (D-PLAN-7): it sets direction and controls quality; Sonnet implements afterwards.**
+*Written 2026-10-01 by the session-8 Opus run (the previous Opus-only kick-off is in git history, `5ae03e3`).*
+
+You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State at the end of session 8: v1 complete; waves 1–3 and 4s (`survival--001`) done; **4a `render--002` done** (terrain tint uniforms + smooth normals + ground detail are the default — D-REN-13; PBR pilot dropped; WSL gate numbers are a non-blocking user step); **4b `render--001` planned** — that is your main job. Formats: `SAVE_VERSION` 8, `GEN_VERSION` 8. **This session runs on Sonnet (D-PLAN-7):** implement to the plan; leave look/keep-drop calls marked "opus" or "❓ user" as notes in the plan's "Result" and PROGRESS — do not block on them.
 
 **Language: English everywhere (D-LANG-1).** No save migrations before the first release (D-SAVE-7): a format change bumps `SAVE_VERSION` and older saves are rejected.
 
 ## 1. Start (brief)
 
-1. Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 7"), `docs/roadmap/v1-closure-and-appendix.md`, `docs/design/DECISIONS.md` (D-PLAN-7, D-PERF-2…5, D-REN-5/9/10/11/12, D-FIRE-1), `docs/plans/render--002*.md` (esp. "Wynik", step 3), `docs/plans/render--001*.md`, `docs/plans/survival--001*.md` (render hand-off notes), `docs/state/PERF.md`.
-2. `git status`, `git log --oneline | head -20`, `git fetch origin main` and merge (other sessions push asset/world work to main). A new review on main is triaged first (skill `wave-review` §3).
-3. `pnpm install --frozen-lockfile` if there is no `node_modules`. Verify: `pnpm check` (expect 216+ tests), `pnpm e2e:run` (smoke 3/3, acceptance 32/32, mobile 11/11, 0 console errors). Anything red is task one — "flaky" is not a diagnosis.
+1. Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 8"), roadmap "Schedule (session 8)" in `docs/roadmap/v1-closure-and-appendix.md`, `docs/plans/render--001--weather-variety-effects.md` (whole plan; steps 1a, 1b, 8 in detail), `docs/design/DECISIONS.md` (D-REN-5, D-REN-7, D-REN-13, D-FIRE-1, D-PERF-2/3/5), `src/game/render/dynamics.ts`, `src/game/sim/fire.ts`.
+2. `git status`, `git log --oneline | head -20`, `git fetch origin main` and merge. A new review on main is triaged first (skill `wave-review` §3) — if it needs judgement calls, record them for Opus and fix only the clear bugs.
+3. `pnpm install --frozen-lockfile` if there is no `node_modules`. Verify: `pnpm check` (expect 217+ tests), `pnpm e2e:run` (smoke 3/3, acceptance 32/32, mobile 11/11, 0 console errors). Anything red is task one — "flaky" is not a diagnosis.
 
-## 2. Work order (all `opus`)
+## 2. Work order (all `sonnet`)
 
-1. **`render--002` step 3 — keep/drop.** Evidence is in the plan's "Wynik" (snow/season rebuilds 19 → 0, smooth normals LOD-independent, chunk build +46% in the cloud, A/B montages on seeds 1337/42/777 with no seams). Re-run `node scripts/e2e/ab.mjs medium 'before={}' 'step3={"tintUniforms":true,"smooth":true,"detail":true}'` (`SV_SEED=<n>` for other seeds) and look at the montages yourself, including a summer/autumn frame (the A/B frames start in winter). Decide: (a) make `tintUniforms` + `smooth` the default (`VISUAL_DEFAULTS`), (b) keep or drop `detail`, (c) whether the +0.6 ms per chunk build needs mitigation (reuse the height grid) before the default flips. Record in DECISIONS (D-REN-13) and the plan. Pure taste calls that need the user go under ❓ in PROGRESS; do not block on them.
-2. **4a exit gate.** Read the gate in the plan. Official `bench:render` numbers run on the user's WSL laptop (D-PERF-5, ❓ user); in the cloud only same-container before/after comparisons are valid. Decide what can be closed now and what waits for the user; update plan status honestly.
-3. **`render--001` (4b) — take it from draft to planned.** It consumes what the sim now exposes: `fireLevel(b)` and `Building.hearth` (flame size, light pool), `Trace.kind === 'ash'` (decals, step 8), `GroundItem.planted/lit/burnH` (upright torch with the flame at the tip), campfire vs hearth looks. Split it into steps with `**Model:**` per step (Sonnet for implementation), name acceptance checks and which need the user's eyes. Check D-REN-5 quality profiles and the 7-light pool budget.
-4. **Schedule, do not start:** `world--001` steps 2–3 (LOOT-01; its save bump is now 8 → 9), `diag--002` tiers B/C (only when triggered), `render--004` step 3+ follow-ups, MAP-02, quest packs, English name pools.
+1. **`render--001` step 1a — exact first step:** create `src/game/render/fireSources.ts` (pure emitter selection from `sim.buildingsNear` / `sim.groundNear` / `sim.actors.query`, `kind` campfire|hearth|torchpost|planted|held, `level` from `fireLevel(b)`, stable per-id `phase`, planted-torch tip position) with `render/fireSources.test.ts` written first (pool size per profile low 1 / medium 3 / high 4 incl. the player torch with priority; weaker light at `fireLevel` 0.2; planted emitter at the tip; distinct phases). Then switch `Dynamics` to it: light pool per profile (rebuilt only in `setQuality`), multi-sine + smoothed-noise flicker per fire, upright planted-torch mesh, hearth stone ring (`render/structures.ts`). Measure: cloud `bench:render medium` before/after in the same container (`--update-baseline --baseline=<scratch file>` on the base commit, then `--baseline=<file>`), lights gauge drop on low.
+2. **Step 1b — particle fire** (user requirement, D-REN-13 d): stateless GPU particle layers (flames with a canvas-generated flipbook, white rising sparks, low red embers, smoke on medium/high), counts by source × `level`, distance cut-offs and instance caps per profile, render seconds (never the ×24 calendar), `renderer.compile` warm-up. Add the A/B frames `fire-campfire-night`, `fire-hearth-dusk`, `fire-torches-night` + 4-shot frame strips to `scripts/e2e/ab.mjs`; run it before/after and leave the montages for the Opus keep/drop (❓ user for the final look on WSL).
+3. **Step 8 — blood/ash decals** (`Trace.kind`), bounded instanced quads, test + acceptance frame.
+4. **English first-name pools** (`src/game/data/professions.ts` `FIRST_M`/`FIRST_F`; English, medieval-plausible, no fantasy): picked in `sim/newGame.ts`, stored as strings → no `GEN_VERSION`/`SAVE_VERSION` bump. Check tests/e2e that match names by text (logic must not depend on labels).
+5. **`world--001` steps 2–3** (LOOT-01 treasure + valuables pricing; `SAVE_VERSION` 8 → 9 with a rejection test) — if the session still has room; otherwise leave it first in the next kick-off.
+
+After each item: skill `verify`, skill `handoff` (FEATURES evidence, plan "Result", PROGRESS), commit + push to `main`.
 
 ## 3. Rules
 
-Standing rules: `CLAUDE.md` (layering, save/`GEN_VERSION`, fog of war, no weakened tests/budgets, subagents only with `isolation: "worktree"` and no `git checkout/switch/reset/stash`, `pnpm e2e:run`). Skills: `verify`, `wave-review`, `handoff`. Do not end a turn with a plan or a "shall I continue?" question; ask the user only for vision-changing decisions and record blocked areas in PROGRESS.
+Standing rules: `CLAUDE.md` (layering — render may import sim, sim never imports render; save/`GEN_VERSION`; fog of war; no weakened tests/budgets/baselines; subagents only with `isolation: "worktree"` and no `git checkout/switch/reset/stash`; `pnpm e2e:run`). Benchmarks in the cloud: only same-container before/after comparisons are valid (D-PERF-5); a `bench:render` scene marked `unsettled` is not a result. Do not end a turn with a plan or a "shall I continue?" question.
 
 ## 4. End of session
 
-Skill `verify`, skill `handoff`; up-to-date PROGRESS (decisions made, what Sonnet does next and in which order, ❓ user items); commit + push to `main`; short report. **Then write the Sonnet kick-off** for the implementation items you made `planned` (a new dated section here, with the exact first step).
+Skill `verify`, skill `handoff`; PROGRESS up to date (what was done, the Opus keep/drop items with the montage paths, ❓ user items); commit + push to `main`; short report. Write the next kick-off here (a new dated section): Opus if a keep/drop or wave review is due (1b fire look), otherwise Sonnet with the next steps from the roadmap schedule.
 
 ---
 
-**Start message (paste, Opus session):**
+**Start message (paste, Sonnet session):**
 
-> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state (merge main; a new review on main is triaged first), then work through the `opus` items in the order of §2. Don't stop at a plan or a question about continuing. Finish with a Sonnet kick-off for the next implementation session, then commit and push to `main`.
+> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state (merge main; a new review on main is triaged first), then work through §2 in order, starting with `render--001` step 1a. Don't stop at a plan or a question about continuing. Finish with the next kick-off, then commit and push to `main`.

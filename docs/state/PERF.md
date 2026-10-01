@@ -162,6 +162,27 @@ pnpm bench:render low              # own Vite server; 2× to confirm
 pnpm bench:render medium
 ```
 
+## render--002 step 3 default flip — cloud before/after (session 8, reference only — D-PERF-5)
+
+Same container (Intel Xeon @ 2.10 GHz ×4), same commit `5ae03e3` + session-8 working tree, only `VISUAL_DEFAULTS` differs (legacy baked/flat terrain vs `tintUniforms` + `smooth` + `detail`). Medium, `bench:render --baseline=<before file>`.
+
+**Harness fix first:** `settle()` gave up after 50 polls (~15–25 s); a teleport on SwiftShader medium needs 20 s (legacy) to 25 s (shader path, +46 % per chunk build) to drain ~110 chunks, so the first comparison measured streaming as steady state on the new path only (dense-forest/rain "+100 %/+51 %", terrain p95 0 → 6 ms). The session-5 note "static scenes still build terrain chunks after `chunks.pending` = 0" was the same cap. `settle()` now waits up to 90 s of wall time and marks a scene `unsettled` instead of measuring it.
+
+| Scene | before prep med/p95 | after prep med/p95 | verdict |
+|---|---|---|---|
+| small-settlement | 1.6 / 3.2 | 1.51 / 3.39 | ok +6 % |
+| crowded-settlement | 1.7 / 4.66 | 1.7 / 4.84 | ok +4 % |
+| dense-forest | 0.61 / 2.67 | 0.61 / 2.78 | ok +4 % |
+| night-campfires | 1.31 / 3.82 | 1.1 / 2.62 | ok −31 % |
+| water-shore | 0.5 / 1.8 | 0.4 / 0.9 | ok −50 % |
+| landmark-estate | 0.4 / 0.9 | 0.4 / 0.9 | ok +0 % |
+| rain | 1.1 / 3.39 | 0.9 / 3.32 | ok −2 % |
+| snow | 1.31 / 3.97 | 1.31 / 2.28 | ok −43 % (no terrain rebuild wave) |
+| march-10mps | 6.92 / 9.88 | 7.06 / 13.04 | inconclusive — see below |
+| teleport-hitch | 9.69 / 31.1 | 9.88 / 29.95 | n = 9–10, hitch test only |
+
+March (n ≈ 32 frames per run) across all five same-container runs of the day: before p95 13.84 / 9.88, after 11.13 / 11.35 / 13.04 — the ranges overlap, `chunks.build` p95 4.2–5.8 ms in both. Cloud cannot resolve it; the WSL 4a gate run decides (❓ user). Startup (`bench:startup`, 3 runs): medium HUD 9103 → 8934 ms, worst first-frame `render.prep` 362 → 396 ms (+9 %); low HUD 4465 → 4658 ms, `render.prep` max 227 → 239 ms (+5 %) — within noise of a shared container, no mitigation needed before the flip (D-REN-13).
+
 ## Startup (diag--002 step 1; `pnpm bench:startup [low|medium|high] [--runs=3]`)
 
 A result class of its own (not the steady-state gate). Fresh browser process per run, empty cache and IndexedDB (world generated, not cached), "New game" click → first HUD frame, then 4 s of frames. Cloud container (4-core Xeon, SwiftShader) — **cloud-only, comparable only within this environment**; the tool is the deliverable, WSL numbers are a user step (D-PERF-5).

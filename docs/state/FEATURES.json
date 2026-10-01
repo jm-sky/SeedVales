@@ -898,8 +898,8 @@
    "scope": "v2",
    "behavior": "Naturalniejsze światło i podłoże przy zachowanym budżecie: jeden zestaw parametrów pory dnia/pogody (słońce, hemisfera, mgła, niebo, ekspozycja, tone mapping), gładkie normalne terenu bez szwów między chunkami/LOD, detal gruntu z masek (nie z RGB), selektywny PBR+IBL po pilotażu A/B (D-REN-6)",
    "verify": "zrzuty A/B tych samych kadrów (dzień/zachód/noc, 3 seedy na szwy) + bench:render ≤10% regresji p95 (render.cpu − render.draw) vs baseline (D-PERF-2)",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--002--visual-foundation-and-render-metrics.md"
+   "status": "implemented_unverified",
+   "evidence": "plan render--002 (done 2026-10-01): dome sky + shadow snapping (D-REN-9), terrain tint uniforms + smooth normals + ground detail default (D-REN-13), tests render/terrain.test.ts + shadowSnap.test.ts, A/B montages 3 seeds + summer/autumn; selective PBR+IBL dropped (D-REN-13). Unverified: WSL bench:render gate and device performance (❓ user, D-PERF-2/5)"
   },
   {
    "id": "RENDER-05",

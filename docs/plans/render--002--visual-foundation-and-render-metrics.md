@@ -1,12 +1,12 @@
 # Render: fundament wizualny (światło, niebo, teren, materiały) i metryki renderu
 
-**Status:** in_progress  
+**Status:** done  
 **Model:** sonnet for step 3 (terrain material, normals, tint uniforms — draft code in "Wynik") and step 4 implementation; opus for keep/drop decisions, the exit gate and the wave review  
 **Domain:** render  
 **Sub domains:** lighting, sky, terrain, materials, diag, assets  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 4a — przed `render--001`)  
 **Created:** 2026-10-01  
-**Finished:** —
+**Finished:** 2026-10-01 (session 8, Opus: step 3 keep + default, step 4 dropped, step 5 deferred, exit gate closed in the cloud; WSL confirmation ❓ user — see "Exit gate" in the result)
 
 ---
 
@@ -236,4 +236,21 @@ export function disposeTerrainMaterial(m: THREE.MeshLambertMaterial) {
 - Browser, medium, seed 1337 (cloud-only numbers): winter+snow switch = **19 terrain rebuilds (legacy) → 0**, thaw 19 → 0; `chunks.build` median **1.31 → 1.91 ms** per chunk (+46%, the analytic normals: 4 `heightAt` per vertex; streaming is budgeted per frame, vertex count at coarse LODs is small). Startup (`bench:startup`) not re-measured with the flags (defaults unchanged).
 - A/B montages (`scripts/e2e/ab.mjs`, new `SV_SEED` env and a winter-snow frame) on seeds 1337, 42, 777: `test-results/ab*/ab-*.png` (gitignored). Looked at meadow-hills ×2 seeds, winter settlement and mountain river: smooth normals remove the faceting, **no seams at LOD borders or chunk edges seen**, snow cover and palette identical to the baked path. (Frames start in winter, so the "season" fade itself was exercised by the thaw count only; detail texture is subtle at 1280×720.)
 - ❓ **Opus keep/drop** (hand-off): (1) make `tintUniforms` + `smooth` the default (evidence above: no rebuild wave on snow, nicer shading, +0.6 ms per chunk build), (2) whether `detail` is worth keeping (aesthetic, user look), (3) the rebuild cost of smooth normals vs the `render.prep` gate on the WSL laptop (❓ user).
+
+**Step 3 — decision (session 8, Opus, D-REN-13): keep, default on.**
+- Re-ran the A/B (`ab.mjs medium before / step3 / nodetail`, seed 1337) with two new frames, `summer-meadow` (day 20) and `autumn-meadow` (day 35, tint 0.6) — the earlier frames never showed the season fade itself. Looked at all 9 montages: autumn/winter tint from the shader is indistinguishable from the baked colours, no seams at chunk or LOD borders, smooth normals remove the faceting on hills and soften rock faces (still reads as rock; matches D-REN-10 "realistic where cheap"). The detail texture adds a fine grain that breaks up large flat meadows and snow fields without moiré (fades by 110 m).
+- (a) `tintUniforms` + `smooth` are the default on every profile (smooth adds no per-pixel work; the tint is two `mix` per fragment — allowed on low per D-PERF-2 correction 1). (b) `detail` **kept**, default on, active only on profiles with shadows (medium/high); a runtime quality switch now swaps the material in place (the detail texture is shared and created once; no chunk rebuild — test). (c) The +0.6 ms per chunk build needs **no mitigation before the flip**: same-container `bench:startup` is within noise (medium worst first-frame `render.prep` +9 %, low +5 %, HUD time unchanged), static `bench:render` scenes ok, snow −43 % (no rebuild wave). The height-grid reuse for coarse-LOD normals stays a ready mitigation if the WSL gate shows streaming cost (halve `heightAt` calls by sharing the half-step samples between neighbouring vertices).
+- Found on the way: `bench:render` `settle()` cut off streaming after 50 polls, so the slower path was measured mid-stream (fixed: waits up to 90 s, marks `unsettled`; PERF.md "render--002 step 3 default flip").
+- Tests: `render/terrain.test.ts` +1 (defaults use the shader path; quality switch toggles detail without rebuilding chunks). The legacy path stays reachable with `sv-visual` `{"tintUniforms":false,"smooth":false,"detail":false}` for A/B.
+
+**Step 4 — PBR + IBL pilot: dropped from 4a (session 8, Opus).** Reasons: tone mapping was dropped as default (D-REN-9), and `MeshStandardMaterial` + PMREM without tone mapping clips highlights and sits apart from the Lambert world; the pilot would add full-screen per-pixel cost on the largest surface for a style that is low-poly by decision; and WEATHER-02 (the main consumer of roughness) is specified Lambert-only (darkening, review R7). Re-entry trigger (→ `render--003`): a concrete asset class that looks wrong under Lambert in an A/B, measured on WSL. `assets.ts` material policy per class is not needed until then.
+
+**Step 5 — ground contact: not triggered, deferred to `render--003`.** Medium/high frames show shadow contact; on low (no shadow map) actors can look detached — blob shadows stay a conditional item there, triggered by the user's low-profile look.
+
+**Exit gate (session 8):**
+- Steps 0–3 keep/drop recorded ✅; step 4 dropped with reasons ✅; step 5 deferred ✅.
+- `pnpm check` 217/217, `pnpm e2e:run` green, 0 console errors ✅ (see PROGRESS session 8).
+- Shader programs: +1 (terrain variant), compiled at load; no combinatorial growth ✅.
+- Headless ≤ 10 % `render.prep` p95: in the cloud only a same-container before/after is valid (D-PERF-5) — all static scenes ok, march inconclusive (overlapping runs) ⚠️. The official comparison against the step-0 WSL baseline is a **user step (❓)**: `pnpm bench:render low` and `medium` on WSL vs the committed baselines. If it shows > 10 % on march, apply the normal-sampling mitigation above as a `render--003` item; it does not block 4b (fire/decals do not touch terrain).
+- Device checklist: PERF.md "Device measurement checklist" ✅ (❓ user).
 

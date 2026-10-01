@@ -56,6 +56,8 @@ export class TerrainChunks {
   /** Shader path (render--002 step 3): season/snow as uniforms, smooth normals, ground detail. Null = legacy baked path. */
   private shading: TerrainShading | null = null
   private smooth = false
+  private wantDetail = false
+  private hasDetail = false
   waterMat: THREE.MeshLambertMaterial
   ocean: THREE.Mesh
   private patch: Noise2D
@@ -77,10 +79,12 @@ export class TerrainChunks {
     this.viewDist = q.viewDist
     if (flags && (flags.tintUniforms || flags.smooth || flags.detail)) {
       // Detail texture only where there is headroom (medium/high: the profiles with shadows, D-PERF-2).
-      const m = createTerrainMaterial({ smooth: flags.smooth, detail: flags.detail && q.shadows })
+      this.smooth = flags.smooth
+      this.wantDetail = flags.detail
+      this.hasDetail = flags.detail && q.shadows
+      const m = createTerrainMaterial({ smooth: flags.smooth, detail: this.hasDetail })
       this.mat = m.material
       this.shading = m.shading
-      this.smooth = flags.smooth
     } else {
       this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
     }
@@ -99,6 +103,22 @@ export class TerrainChunks {
     this.lods = q.lods.map((d, i) => ({ maxDist: d, step: STEPS[i]! }))
     this.viewDist = q.viewDist
     this.lastX = -1e9 // re-evaluate the wanted chunks on the next update
+    // The detail texture follows the profile (medium/high only): swap the material in place, geometry stays.
+    if (this.shading && this.hasDetail !== (this.wantDetail && q.shadows)) {
+      this.hasDetail = !this.hasDetail
+      const m = createTerrainMaterial({ smooth: this.smooth, detail: this.hasDetail })
+      m.shading.season.value = this.shading.season.value
+      m.shading.snow.value = this.shading.snow.value
+      this.mat.dispose()
+      this.mat = m.material
+      this.shading = m.shading
+      this.chunks.forEach((c) => (c.mesh.material = this.mat))
+    }
+  }
+
+  /** Whether the ground detail texture is active (tests, diagnostics). */
+  get detailActive() {
+    return this.hasDetail
   }
 
   markDirty(key: string) {

@@ -21,6 +21,9 @@ export interface TerrainShading {
 }
 
 /** Small tiling value-noise texture (R fine grain, G coarse blotches), generated once — no asset needed. */
+/** Created once and shared by every terrain material (quality switches swap materials, not the texture). */
+let sharedDetail: THREE.DataTexture | null = null
+
 function detailTexture(): THREE.DataTexture {
   const N = 256
   const data = new Uint8Array(N * N * 4)
@@ -67,7 +70,7 @@ function detailTexture(): THREE.DataTexture {
 export function createTerrainMaterial(opts: { smooth: boolean; detail: boolean }): { material: THREE.MeshLambertMaterial; shading: TerrainShading } {
   const shading: TerrainShading = { season: { value: 0 }, snow: { value: 0 } }
   const material = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !opts.smooth })
-  const detail = opts.detail ? detailTexture() : null
+  const detail = opts.detail ? (sharedDetail ??= detailTexture()) : null
   material.onBeforeCompile = (sh) => {
     sh.uniforms.uSeason = shading.season
     sh.uniforms.uSnow = shading.snow
