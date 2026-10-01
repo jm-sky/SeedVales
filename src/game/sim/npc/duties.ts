@@ -23,22 +23,22 @@ function homeReturn(sim: Sim, h: Human): AiStep[] {
   const house = houseOf(sim, h)
   if (!house) return []
   const d = doorOf(house)
-  return [go(d.x, d.z, 1.5), work('deposit_carry', 3, 'Odkłada zbiory', undefined, 'interact')]
+  return [go(d.x, d.z, 1.5), work('deposit_carry', 3, 'Storing the harvest', undefined, 'interact')]
 }
 
 function farmer(sim: Sim, h: Human, eff: number): DutyPlan {
   const field = householdBuilding(sim, h, 'field')
   if (!field?.field) return null
   const f = field.field
-  if (f.growth >= 1) return { label: 'Zbiera plony', steps: [go(field.x, field.z, 4), work('harvest_field', 30 / eff, 'Zbiera plony', field.id, 'kneel'), ...homeReturn(sim, h)] }
+  if (f.growth >= 1) return { label: 'Harvesting', steps: [go(field.x, field.z, 4), work('harvest_field', 30 / eff, 'Harvesting', field.id, 'kneel'), ...homeReturn(sim, h)] }
   if (seasonOf(sim.state.time.cal) === 'winter') return null
   if (f.moisture < 0.3 && sim.weather.wetness < 0.3 && countItem(h.inv, 'bucket') > 0) {
     const well = householdBuilding(sim, h, 'well') ?? settlementBuildings(sim, h.settlementId, 'well')[0]
-    if (well) return { label: 'Podlewa pole', steps: [go(well.x, well.z, 1.8), work('fill_bucket', 3, 'Nabiera wodę', undefined, 'interact'), go(field.x, field.z, 4), work('water_field', 15, 'Podlewa pole', field.id, 'interact')] }
+    if (well) return { label: 'Watering the field', steps: [go(well.x, well.z, 1.8), work('fill_bucket', 3, 'Drawing water', undefined, 'interact'), go(field.x, field.z, 4), work('water_field', 15, 'Watering the field', field.id, 'interact')] }
   }
   const px = field.x + (sim.rng.next() - 0.5) * field.hw * 1.6
   const pz = field.z + (sim.rng.next() - 0.5) * field.hd * 1.6
-  return { label: 'Pracuje w polu', steps: [go(px, pz, 1.5), work('tend_field', 50, 'Pracuje w polu', field.id, 'kneel')] }
+  return { label: 'Working the field', steps: [go(px, pz, 1.5), work('tend_field', 50, 'Working the field', field.id, 'kneel')] }
 }
 
 function woodcutter(sim: Sim, h: Human, eff: number): DutyPlan {
@@ -49,8 +49,8 @@ function woodcutter(sim: Sim, h: Human, eff: number): DutyPlan {
   if (!tree) return null
   const a = Math.atan2(h.x - tree.x, h.z - tree.z)
   return {
-    label: 'Ścina drzewo',
-    steps: [go(tree.x + Math.sin(a) * 1.2, tree.z + Math.cos(a) * 1.2, 0.6), work('fell', 30 / eff, 'Ścina drzewo', tree.id, 'chop'), ...homeReturn(sim, h)],
+    label: 'Felling a tree',
+    steps: [go(tree.x + Math.sin(a) * 1.2, tree.z + Math.cos(a) * 1.2, 0.6), work('fell', 30 / eff, 'Felling a tree', tree.id, 'chop'), ...homeReturn(sim, h)],
   }
 }
 
@@ -60,7 +60,7 @@ function deliverSurplus(sim: Sim, h: Human): DutyPlan {
   if (!house || !wh) return null
   const d = doorOf(house)
   const wd = doorOf(wh)
-  return { label: 'Oddaje nadwyżki do magazynu', steps: [go(d.x, d.z), work('pickup_surplus', 3, 'Pakuje nadwyżki', undefined, 'interact'), go(wd.x, wd.z, 2), work('deposit_warehouse', 4, 'Oddaje do magazynu', wh.id, 'interact')] }
+  return { label: 'Taking surplus to the warehouse', steps: [go(d.x, d.z), work('pickup_surplus', 3, 'Packing surplus', undefined, 'interact'), go(wd.x, wd.z, 2), work('deposit_warehouse', 4, 'Delivering to the warehouse', wh.id, 'interact')] }
 }
 
 const HUNTED_GAME: SpeciesId[] = ['deer', 'stag', 'hare']
@@ -69,9 +69,9 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   const s = sim.world.settlements[h.settlementId]!
   // Butcher an existing fresh corpse nearby first.
   const corpse = sim.corpsesNear(h.x, h.z, 200).find((c) => !c.butchered && sim.state.time.cal - c.diedAt < 5 * 3600 && SPECIES[c.species].corpse.meat > 0)
-  if (corpse) return { label: 'Oprawia zwierzynę', steps: [go(corpse.x, corpse.z, 1.2), work('butcher', 12, 'Oprawia zwierzynę', String(corpse.id), 'kneel'), ...homeReturn(sim, h), work('dry_meat', 8, 'Suszy mięso')] }
+  if (corpse) return { label: 'Butchering game', steps: [go(corpse.x, corpse.z, 1.2), work('butcher', 12, 'Butchering game', String(corpse.id), 'kneel'), ...homeReturn(sim, h), work('dry_meat', 8, 'Drying meat')] }
   const house = houseOf(sim, h)
-  if (house?.inv && countItem(house.inv, 'raw_meat') >= 2) return { label: 'Suszy mięso', steps: [work('dry_meat', 10, 'Suszy mięso', undefined, 'interact')] }
+  if (house?.inv && countItem(house.inv, 'raw_meat') >= 2) return { label: 'Drying meat', steps: [work('dry_meat', 10, 'Drying meat', undefined, 'interact')] }
   // Predator control first, then game (only if population is healthy).
   const cands: Animal[] = []
   for (const a of sim.actors.query(s.x, s.z, 1500)) if (a.kind === 'animal' && !a.vitals.dead && a.householdId === undefined) cands.push(a as Animal)
@@ -87,11 +87,11 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   }
   if (!target) {
     // No healthy game around: secondary duty — make arrows at home (vision: hunter makes bows/arrows).
-    return house ? { label: 'Struga strzały', steps: [go(doorOf(house).x, doorOf(house).z, 1.5), work('fletch', 40, 'Struga strzały', undefined, 'kneel')] } : null
+    return house ? { label: 'Fletching arrows', steps: [go(doorOf(house).x, doorOf(house).z, 1.5), work('fletch', 40, 'Fletching arrows', undefined, 'kneel')] } : null
   }
   return {
-    label: `Poluje: ${SPECIES[target.species].name}`,
-    steps: [go(target.x, target.z, 28, { run: false }), work('shoot', 2, 'Strzela', String(target.id), 'bow')],
+    label: `Hunting: ${SPECIES[target.species].name}`,
+    steps: [go(target.x, target.z, 28, { run: false }), work('shoot', 2, 'Shooting', String(target.id), 'bow')],
   }
 }
 
@@ -99,24 +99,24 @@ function guard(sim: Sim, h: Human): DutyPlan {
   const posts = settlementBuildings(sim, h.settlementId, 'torchpost')
   const night = isNight(sim.state.time.cal) || daylight(sim.state.time.cal) < 0.4
   const toLight = posts.find((p) => night && !p.lit)
-  if (toLight) return { label: 'Zapala pochodnie', steps: [go(toLight.x, toLight.z, 1.2), work('light_torch', 3, 'Zapala pochodnię', toLight.id, 'interact')] }
+  if (toLight) return { label: 'Lighting torches', steps: [go(toLight.x, toLight.z, 1.2), work('light_torch', 3, 'Lighting a torch', toLight.id, 'interact')] }
   const toDouse = posts.find((p) => !night && p.lit && daylight(sim.state.time.cal) > 0.8)
-  if (toDouse) return { label: 'Gasi pochodnie', steps: [go(toDouse.x, toDouse.z, 1.2), work('douse_torch', 2, 'Gasi pochodnię', toDouse.id, 'interact')] }
+  if (toDouse) return { label: 'Putting out torches', steps: [go(toDouse.x, toDouse.z, 1.2), work('douse_torch', 2, 'Putting out a torch', toDouse.id, 'interact')] }
   if (!posts.length) return null
   const a = sim.rng.pick(posts)
   const b = sim.rng.pick(posts)
-  return { label: night ? 'Patroluje nocą' : 'Patroluje', steps: [go(a.x, a.z, 3), work('look', 6, 'Rozgląda się'), go(b.x, b.z, 3), work('look', 6, 'Rozgląda się')] }
+  return { label: night ? 'Patrolling at night' : 'Patrolling', steps: [go(a.x, a.z, 3), work('look', 6, 'Looking around'), go(b.x, b.z, 3), work('look', 6, 'Looking around')] }
 }
 
 function herbalist(sim: Sim, h: Human, eff: number): DutyPlan {
   const garden = householdBuilding(sim, h, 'herbgarden')
   const house = houseOf(sim, h)
   if (garden && house?.inv && countItem(house.inv, 'mint') + countItem(house.inv, 'chamomile') < 8 && sim.rng.chance(0.5)) {
-    return { label: 'Pielęgnuje ogródek', steps: [go(garden.x, garden.z, 2), work('herb_garden', 40 / eff, 'Pielęgnuje zioła', garden.id, 'kneel')] }
+    return { label: 'Tending the herb garden', steps: [go(garden.x, garden.z, 2), work('herb_garden', 40 / eff, 'Tending herbs', garden.id, 'kneel')] }
   }
   const herb = nearestAvailableNode(sim, h.x, h.z, 400, (n) => n.kind === 'herb' && n.herb !== 'hemlock' && n.herb !== 'nightshade', 20)
   if (!herb) return null
-  return { label: 'Zbiera zioła', steps: [go(herb.x, herb.z, 1), work('gather', 6, 'Zbiera zioła', herb.id, 'kneel'), ...homeReturn(sim, h)] }
+  return { label: 'Gathering herbs', steps: [go(herb.x, herb.z, 1), work('gather', 6, 'Gathering herbs', herb.id, 'kneel'), ...homeReturn(sim, h)] }
 }
 
 /** Max calendar seconds an expedition may stay outbound before giving up and returning. */
@@ -147,7 +147,7 @@ function caravan(sim: Sim, h: Human): DutyPlan {
     return null
   }
   const pts = routeVia(sim, h.x, h.z, home.x, home.z)
-  return { label: h.trip ? `Wraca z ${other.name}` : 'Wraca do domu', steps: pts.map((p) => go(p.x, p.z, 4)) }
+  return { label: h.trip ? `Returning from ${other.name}` : 'Heading home', steps: pts.map((p) => go(p.x, p.z, 4)) }
 }
 
 function caravanOutbound(sim: Sim, h: Human, other: { id: number; name: string }, depart: boolean): DutyPlan {
@@ -155,8 +155,8 @@ function caravanOutbound(sim: Sim, h: Human, other: { id: number; name: string }
   if (!wh) return null
   const d = doorOf(wh)
   const pts = routeVia(sim, h.x, h.z, d.x, d.z)
-  const pack = depart ? [work('caravan_depart', 3, 'Pakuje prowiant', undefined, 'interact')] : []
-  return { label: `Karawana do ${other.name}`, steps: [...pack, ...pts.map((p) => go(p.x, p.z, 4)), go(d.x, d.z, 2), work('caravan_trade', 30, 'Handluje w magazynie', wh.id, 'interact')] }
+  const pack = depart ? [work('caravan_depart', 3, 'Packing provisions', undefined, 'interact')] : []
+  return { label: `Caravan to ${other.name}`, steps: [...pack, ...pts.map((p) => go(p.x, p.z, 4)), go(d.x, d.z, 2), work('caravan_trade', 30, 'Trading at the warehouse', wh.id, 'interact')] }
 }
 
 function trader(sim: Sim, h: Human): DutyPlan {
@@ -165,13 +165,13 @@ function trader(sim: Sim, h: Human): DutyPlan {
   const market = settlementBuildings(sim, h.settlementId, 'market')[0]
   const spot = market ? doorOf(market) : houseOf(sim, h) ? doorOf(houseOf(sim, h)!) : null
   if (!spot) return null
-  return { label: 'Handluje', steps: [go(spot.x, spot.z, 1.2), work('trade_stand', 90, 'Handluje')] }
+  return { label: 'Trading', steps: [go(spot.x, spot.z, 1.2), work('trade_stand', 90, 'Trading')] }
 }
 
 function blacksmith(sim: Sim, h: Human): DutyPlan {
   const anvil = householdBuilding(sim, h, 'anvil') ?? houseOf(sim, h)
   if (!anvil) return null
-  return { label: 'Kuje', steps: [go(anvil.x + 1.5, anvil.z, 1.2), work('smith', 40, 'Kuje przy kowadle', anvil.id, 'hammer')] }
+  return { label: 'Forging', steps: [go(anvil.x + 1.5, anvil.z, 1.2), work('smith', 40, 'Forging at the anvil', anvil.id, 'hammer')] }
 }
 
 function shepherd(sim: Sim, h: Human): DutyPlan {
@@ -181,14 +181,14 @@ function shepherd(sim: Sim, h: Human): DutyPlan {
   const trough = householdBuilding(sim, h, 'trough')
   if (trough && (trough.water ?? 0) < 4) {
     const well = householdBuilding(sim, h, 'well')
-    if (well) return { label: 'Napełnia koryto', steps: [go(well.x, well.z, 1.8), work('fill_bucket', 3, 'Nabiera wodę'), go(trough.x, trough.z, 1.5), work('fill_trough', 4, 'Napełnia koryto', trough.id, 'interact')] }
+    if (well) return { label: 'Filling the trough', steps: [go(well.x, well.z, 1.8), work('fill_bucket', 3, 'Drawing water'), go(trough.x, trough.z, 1.5), work('fill_trough', 4, 'Filling the trough', trough.id, 'interact')] }
   }
-  if (hr > 16) return { label: 'Zagania owce', steps: [go(pen.x, pen.z, 3), work('herd', 20, 'Zagania owce')] }
-  if (sim.rng.chance(0.08)) return { label: 'Strzyże owce', steps: [go(pen.x, pen.z, 3), work('shear', 30, 'Strzyże owce', undefined, 'kneel')] }
+  if (hr > 16) return { label: 'Penning the sheep', steps: [go(pen.x, pen.z, 3), work('herd', 20, 'Penning the sheep')] }
+  if (sim.rng.chance(0.08)) return { label: 'Shearing sheep', steps: [go(pen.x, pen.z, 3), work('shear', 30, 'Shearing sheep', undefined, 'kneel')] }
   const s = sim.world.settlements[h.settlementId]!
   const ang = Math.atan2(pen.z - s.z, pen.x - s.x) + (sim.rng.next() - 0.5)
   const r = s.radius + 40
-  return { label: 'Wypasa owce', steps: [go(s.x + Math.cos(ang) * r, s.z + Math.sin(ang) * r, 3), work('herd', 120, 'Pilnuje stada')] }
+  return { label: 'Grazing the sheep', steps: [go(s.x + Math.cos(ang) * r, s.z + Math.sin(ang) * r, 3), work('herd', 120, 'Watching the flock')] }
 }
 
 /** Helpers (spouse, child, elder) and fallback chores. */
@@ -201,11 +201,11 @@ export function chores(sim: Sim, h: Human, eff: number): DutyPlan {
   const house = houseOf(sim, h)
   if (house?.inv && countItem(house.inv, 'branch') < 15) {
     const bush = nearestAvailableNode(sim, house.x, house.z, 200, (n) => n.kind === 'bush')
-    if (bush) return { label: 'Zbiera chrust', steps: [go(bush.x, bush.z, 1.2), work('gather', 8 / eff, 'Zbiera chrust', bush.id, 'kneel'), ...homeReturn(sim, h)] }
+    if (bush) return { label: 'Gathering brushwood', steps: [go(bush.x, bush.z, 1.2), work('gather', 8 / eff, 'Gathering brushwood', bush.id, 'kneel'), ...homeReturn(sim, h)] }
   }
   const berry = nearestAvailableNode(sim, h.x, h.z, 250, (n) => n.kind === 'bush_berry' || n.kind === 'mushroom')
   if (berry && seasonOf(sim.state.time.cal) !== 'winter') {
-    return { label: 'Zbiera jagody', steps: [go(berry.x, berry.z, 1.2), work('gather', 8 / eff, 'Zbiera', berry.id, 'kneel'), ...homeReturn(sim, h)] }
+    return { label: 'Picking berries', steps: [go(berry.x, berry.z, 1.2), work('gather', 8 / eff, 'Picking', berry.id, 'kneel'), ...homeReturn(sim, h)] }
   }
   return null
 }

@@ -199,7 +199,7 @@ export function fleeHome(sim: Sim, a: Animal, threat: P) {
   }
   a.fleeFrom = undefined
   a.ai.goal = 'flee_home'
-  a.ai.label = 'Ucieka do domu'
-  a.ai.steps = [{ op: 'goto', x: target.x, z: target.z, run: true, range: 2.5 }, { op: 'work', act: 'rest', dur: 15, label: 'Chowa się' }]
+  a.ai.label = 'Fleeing home'
+  a.ai.steps = [{ op: 'goto', x: target.x, z: target.z, run: true, range: 2.5 }, { op: 'work', act: 'rest', dur: 15, label: 'Hiding' }]
   a.ai.stepT = 0
 }

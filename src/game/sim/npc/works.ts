@@ -231,7 +231,7 @@ export const WORK_ACTS: Record<string, Act> = {
     // Fulfil player orders first.
     const order = sim.state.px.orders.find((o) => o.npcId === h.id && o.status === 'waiting' && sim.state.time.cal >= o.readyAt)
     if (order && forgeOrder(sim, h, inv, order)) {
-      sim.message(`${h.name}: zamówienie gotowe do odbioru.`, 'quest')
+      sim.message(`${h.name}: your order is ready for collection.`, 'quest')
       train(h, 'blacksmith', 0.5, 2)
       return true
     }

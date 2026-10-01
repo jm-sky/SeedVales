@@ -42,30 +42,30 @@ export function sellPrice(sim: Sim, npc: Human, s: ItemStack): number {
 
 export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): ActionResult {
   const inv = tradeInventory(sim, npc)
-  if (!inv || !inv.items.includes(stack)) return { ok: false, msg: 'Towar niedostępny.' }
+  if (!inv || !inv.items.includes(stack)) return { ok: false, msg: 'Item unavailable.' }
   const q = Math.min(qty, stack.qty)
   const price = buyPrice(sim, npc, stack) * q
-  if (sim.player.money < price) return { ok: false, msg: 'Za mało pieniędzy.' }
-  if (fitQty(sim.player, { ...stack, qty: q }) < q) return { ok: false, msg: 'Nie uniesiesz tego — za ciężkie.' }
+  if (sim.player.money < price) return { ok: false, msg: 'Not enough coins.' }
+  if (fitQty(sim.player, { ...stack, qty: q }) < q) return { ok: false, msg: 'You can\'t carry that — too heavy.' }
   const taken = removeStack(inv, stack, q)!
   sim.player.money -= price
   npc.money += price
   addItem(sim.player.inv, taken)
   npc.opinion = Math.min(100, npc.opinion + 1)
   train(sim.player, 'trade', 0.3)
-  return { ok: true, msg: `Kupiono: ${itemDef(taken.id).name} ×${q} za ${price} m` }
+  return { ok: true, msg: `Bought: ${itemDef(taken.id).name} ×${q} for ${price} c` }
 }
 
 export function sellToNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): ActionResult {
   const inv = tradeInventory(sim, npc)
-  if (!inv || !sim.player.inv.items.includes(stack)) return { ok: false, msg: 'Nie masz tego.' }
+  if (!inv || !sim.player.inv.items.includes(stack)) return { ok: false, msg: 'You don\'t have that.' }
   const q = Math.min(qty, stack.qty)
   const price = sellPrice(sim, npc, stack) * q
-  if (npc.money < price) return { ok: false, msg: `${npc.name} nie ma tyle pieniędzy.` }
+  if (npc.money < price) return { ok: false, msg: `${npc.name} doesn't have that much money.` }
   const given = removeStack(sim.player.inv, stack, q)!
   npc.money -= price
   sim.player.money += price
   addItem(inv, given)
   train(sim.player, 'trade', 0.3)
-  return { ok: true, msg: `Sprzedano: ${itemDef(given.id).name} ×${q} za ${price} m` }
+  return { ok: true, msg: `Sold: ${itemDef(given.id).name} ×${q} for ${price} c` }
 }

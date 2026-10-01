@@ -29,17 +29,17 @@ export function canOrder(sim: Sim, smith: Human, recipeId: string): boolean {
 export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
   const r = recipeById(recipeId)
   if (!r) return ''
-  if (!canOrder(sim, smith, recipeId)) return `${smith.name} nie ma teraz materiałów na to zamówienie.`
+  if (!canOrder(sim, smith, recipeId)) return `${smith.name} doesn't have the materials for this order right now.`
   const price = orderPrice(recipeId)
   const dep = Math.ceil(price / 2)
-  if (sim.player.money < dep) return 'Za mało na zaliczkę.'
+  if (sim.player.money < dep) return 'Not enough coins for the deposit.'
   sim.player.money -= dep
   smith.money += dep
   const store = houseOf(sim, smith)!.inv!
   const reserved = r.inputs.flatMap((inp) => removeItem(store, inp.item, inp.qty))
   const id = r.output.item
   sim.state.px.orders.push({ id: `ord-${sim.nextId()}`, npcId: smith.id, recipeId: r.id, itemId: id, paid: dep, price, readyAt: sim.state.time.cal + 10 * 3600, status: 'waiting', reserved })
-  return `Zamówiono: ${itemDef(id).name}. Gotowe za ok. 10 godzin.`
+  return `Ordered: ${itemDef(id).name}. Ready in about 10 hours.`
 }
 
 /**
@@ -62,19 +62,19 @@ export function forgeOrder(sim: Sim, smith: Human, store: Inventory, o: Order): 
 
 export function collectOrder(sim: Sim, orderId: string): string {
   const o = sim.state.px.orders.find((x) => x.id === orderId)
-  if (!o || o.status !== 'ready' || !o.item) return 'Zamówienie niegotowe.'
+  if (!o || o.status !== 'ready' || !o.item) return 'The order isn\'t ready yet.'
   const rest = o.price - o.paid
-  if (sim.player.money < rest) return 'Za mało pieniędzy na dopłatę.'
+  if (sim.player.money < rest) return 'Not enough coins to pay the balance.'
   const smith = sim.human(o.npcId)
-  if (!smith) return 'Kowala już nie ma — nie ma komu zapłacić.'
-  if (fitQty(sim.player, o.item) < o.item.qty) return 'Nie uniesiesz tego — zrób miejsce w ekwipunku.'
+  if (!smith) return 'The blacksmith is gone — there is no one to pay.'
+  if (fitQty(sim.player, o.item) < o.item.qty) return 'You can\'t carry that — make room in your inventory.'
   sim.player.money -= rest
   smith.money += rest
   const item = o.item
   // Collected orders leave the list (no unbounded growth).
   sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
   addItem(sim.player.inv, item)
-  return `Odebrano: ${itemDef(item.id).name} (jakość: ${['niska', 'średnia', 'wysoka', 'wyjątkowa'][item.q ?? 1]}).`
+  return `Collected: ${itemDef(item.id).name} (quality: ${['poor', 'average', 'good', 'exceptional'][item.q ?? 1]}).`
 }
 
 /** Cancels an order: deposit back from the smith's purse, materials/forged item back to the store. */
@@ -91,5 +91,5 @@ export function cancelOrder(sim: Sim, orderId: string): string {
   if (smith) smith.money -= refund
   sim.player.money += refund
   sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
-  return refund < o.paid ? `Anulowano — zwrot tylko ${refund} z ${o.paid} m.` : `Anulowano zamówienie, zwrot zaliczki ${refund} m.`
+  return refund < o.paid ? `Order cancelled — only ${refund} of ${o.paid} c refunded.` : `Order cancelled, deposit of ${refund} c refunded.`
 }

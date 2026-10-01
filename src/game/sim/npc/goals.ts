@@ -48,7 +48,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
     const cornered = armed && threat.aggroId === h.id && SPECIES[threat.species].run > RUN_SPEED_MPS
     const brave = isGuard || h.profession === 'hunter' || cornered || (armed && b5.n < 0.35 && b5.a < 0.6)
     if (brave) {
-      opts.push({ id: 'fight', score: 0.97, plan: () => ({ label: 'Walczy!', steps: [] }) })
+      opts.push({ id: 'fight', score: 0.97, plan: () => ({ label: 'Fighting!', steps: [] }) })
     } else {
       opts.push({
         id: 'flee',
@@ -60,7 +60,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
           const away = go(h.x + (ax / d) * 35, h.z + (az / d) * 35, 2, true)
           // Near home: run inside; on the road: just get away and continue.
           const nearHome = Math.hypot(door.x - h.x, door.z - h.z) < 150
-          return { label: 'Ucieka!', steps: nearHome ? [away, go(door.x, door.z, 1.5, true), work('shelter', 20, 'Chowa się')] : [away, work('rest', 5, 'Łapie oddech')] }
+          return { label: 'Fleeing!', steps: nearHome ? [away, go(door.x, door.z, 1.5, true), work('shelter', 20, 'Hiding')] : [away, work('rest', 5, 'Catching breath')] }
         },
       })
     }
@@ -69,7 +69,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const downed = sim.actors.query(h.x, h.z, 150).find((o): o is Human => o.kind === 'npc' && o !== h && !!o.vitals.ko && !o.vitals.dead && (o as Human).callForHelpAt !== undefined)
   if (downed && h.age === 'adult') {
     const s = isGuard ? 0.92 : h.profession === 'herbalist' ? 0.85 : 0.35 + b5.a * 0.4
-    opts.push({ id: 'help', score: s, plan: () => ({ label: `Pomaga: ${downed.name}`, steps: [go(downed.x, downed.z, 1.2, true), work('help_downed', 5, 'Opatruje rannego', String(downed.id), 'kneel')] }) })
+    opts.push({ id: 'help', score: s, plan: () => ({ label: `Helping ${downed.name}`, steps: [go(downed.x, downed.z, 1.2, true), work('help_downed', 5, 'Tending the wounded', String(downed.id), 'kneel')] }) })
   }
 
   // --- Basic needs ---
@@ -79,12 +79,12 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       id: 'drink',
       score: thirstU,
       plan: () => {
-        if (h.inv.items.some((s) => (s.water ?? 0) > 0)) return { label: 'Pije z bukłaka', steps: [work('drink_skin', 2, 'Pije')] }
+        if (h.inv.items.some((s) => (s.water ?? 0) > 0)) return { label: 'Drinking from a waterskin', steps: [work('drink_skin', 2, 'Drinking')] }
         const src = waterSources(sim, h)[0]
         if (!src) return null
         return src.wellId
-          ? { label: 'Idzie do studni', steps: [go(src.x, src.z, 1.8), work('drink_well', 4, 'Pije wodę', src.wellId, 'interact')] }
-          : { label: 'Idzie po wodę', steps: [go(src.x, src.z, 1.2), work('drink_water', 4, 'Pije z rzeki', `${src.x},${src.z}`, 'kneel')] }
+          ? { label: 'Going to the well', steps: [go(src.x, src.z, 1.8), work('drink_well', 4, 'Drinking water', src.wellId, 'interact')] }
+          : { label: 'Fetching water', steps: [go(src.x, src.z, 1.2), work('drink_water', 4, 'Drinking from the river', `${src.x},${src.z}`, 'kneel')] }
       },
     })
   }
@@ -94,14 +94,14 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       id: 'eat',
       score: hungerU,
       plan: () => {
-        if (findFood(h.inv)) return { label: 'Je', steps: [work('eat_inv', 4, 'Je posiłek', undefined, 'eat')] }
-        if (house && householdFoodCount(sim, h) > 0) return { label: 'Idzie na posiłek', steps: [go(door.x, door.z), work('eat_store', 6, 'Je w domu', house.id, 'eat')] }
+        if (findFood(h.inv)) return { label: 'Eating', steps: [work('eat_inv', 4, 'Having a meal', undefined, 'eat')] }
+        if (house && householdFoodCount(sim, h) > 0) return { label: 'Going for a meal', steps: [go(door.x, door.z), work('eat_store', 6, 'Eating at home', house.id, 'eat')] }
         // Buy from a trader/household with food.
         if (h.money >= 6) {
           const seller = sim.npcsOf(h.settlementId).find((o) => (o.profession === 'trader' || o.profession === 'farmer') && o.householdId !== h.householdId && !o.vitals.dead)
           if (seller) {
             const sh = houseOf(sim, seller)
-            if (sh?.inv && findFood(sh.inv)) return { label: 'Kupuje jedzenie', steps: [go(seller.x, seller.z, 2), work('buy_food', 5, 'Kupuje jedzenie', String(seller.id))] }
+            if (sh?.inv && findFood(sh.inv)) return { label: 'Buying food', steps: [go(seller.x, seller.z, 2), work('buy_food', 5, 'Buying food', String(seller.id))] }
           }
         }
         // Last resort: warehouse of the settlement the NPC is in (home or visited).
@@ -109,7 +109,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
         const wh = sim.building(sim.state.settlements[here]?.warehouseId)
         if (wh?.inv && findFood(wh.inv) && (v.hunger < 35 || b5.a < 0.4)) {
           const wd = doorOf(wh)
-          return { label: 'Bierze z magazynu', steps: [go(wd.x, wd.z, 2), work('eat_warehouse', 5, 'Je z zapasów osady', wh.id, 'eat')] }
+          return { label: 'Taking from the warehouse', steps: [go(wd.x, wd.z, 2), work('eat_warehouse', 5, 'Eating from the settlement stores', wh.id, 'eat')] }
         }
         return null
       },
@@ -126,8 +126,8 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
         const wake = isGuard ? 16 : 6
         const hrsLeft = ((wake - hr + 24) % 24) || 8
         const dur = Math.min(8, Math.max(1, hrsLeft)) * 150 // calendar h → gameplay s (150 s/h)
-        if (onTrip) return { label: 'Nocuje przy drodze', steps: [work('camp', dur, 'Nocuje przy drodze')] }
-        return { label: 'Śpi', steps: [go(door.x, door.z, 1.2), work('sleep', dur, 'Śpi', house.id, 'sleep')] }
+        if (onTrip) return { label: 'Camping by the road', steps: [work('camp', dur, 'Camping by the road')] }
+        return { label: 'Sleeping', steps: [go(door.x, door.z, 1.2), work('sleep', dur, 'Sleeping', house.id, 'sleep')] }
       },
     })
   }
@@ -144,7 +144,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
         score: v.social > 90 ? 0.05 : s,
         plan: () => {
           const a = sim.rng.range(0, Math.PI * 2)
-          return { label: 'Spotkanie przy ognisku', steps: [go(spot.x + Math.cos(a) * 3.5, spot.z + Math.sin(a) * 3.5, 0.8), work('socialize', 90 + b5.e * 90, 'Rozmawia', undefined, 'talk')] }
+          return { label: 'Gathering at the campfire', steps: [go(spot.x + Math.cos(a) * 3.5, spot.z + Math.sin(a) * 3.5, 0.8), work('socialize', 90 + b5.e * 90, 'Talking', undefined, 'talk')] }
         },
       })
     }
@@ -155,7 +155,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
     const inside = Math.hypot(h.x - door.x, h.z - door.z) < 3
     if (!inside) {
       const s = 0.4 + b5.n * 0.25 + (sim.weather.kind === 'storm' ? 0.2 : 0) - (isGuard ? 0.25 : 0)
-      opts.push({ id: 'shelter', score: s, plan: () => ({ label: 'Chroni się przed deszczem', steps: [go(door.x, door.z, 1.2, true), work('shelter', 60, 'Przeczekuje')] }) })
+      opts.push({ id: 'shelter', score: s, plan: () => ({ label: 'Sheltering from the rain', steps: [go(door.x, door.z, 1.2, true), work('shelter', 60, 'Waiting it out')] }) })
     }
   }
 
@@ -167,7 +167,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   }
   // Repair own buildings when worn (conscientious NPCs care more).
   if (house && house.durability < 55 && h.age === 'adult') {
-    opts.push({ id: 'repair', score: 0.2 + b5.c * 0.35, plan: () => ({ label: 'Naprawia dom', steps: [go(door.x, door.z, 1.5), work('repair', 20, 'Naprawia', house.id, 'hammer')] }) })
+    opts.push({ id: 'repair', score: 0.2 + b5.c * 0.35, plan: () => ({ label: 'Repairing the house', steps: [go(door.x, door.z, 1.5), work('repair', 20, 'Repairing', house.id, 'hammer')] }) })
   }
   // Surplus to warehouse (agreeableness).
   if (house?.inv && h.age === 'adult' && householdFoodCount(sim, h) > 30 + (1 - b5.a) * 20 && countItem(h.inv, 'bread') < 20) {
@@ -180,7 +180,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
     plan: () => {
       const r = 6 + b5.o * 20
       const a = sim.rng.range(0, Math.PI * 2)
-      return { label: 'Odpoczywa', steps: [go(door.x + Math.cos(a) * r, door.z + Math.sin(a) * r, 1), work('rest', 20 + sim.rng.next() * 30, 'Odpoczywa')] }
+      return { label: 'Resting', steps: [go(door.x + Math.cos(a) * r, door.z + Math.sin(a) * r, 1), work('rest', 20 + sim.rng.next() * 30, 'Resting')] }
     },
   })
   return opts

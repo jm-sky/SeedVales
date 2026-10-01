@@ -198,7 +198,7 @@ export function createNewGame(world: WorldData): GameState {
   const sz = world.spawn.z
   const player = makeHuman(rng, nextId++, sx, sz, h(sx, sz), true, 'adult')
   player.kind = 'player'
-  player.name = 'Wędrowiec'
+  player.name = 'Wanderer'
   player.attrs = { str: 5, per: 5, end: 5, cha: 5, int: 5, agi: 5 }
   player.vitals = newVitals(100)
   player.money = 150
@@ -230,7 +230,7 @@ export function createNewGame(world: WorldData): GameState {
     dens,
     quests: [],
     terrainEdits: {},
-    messages: [{ t: START_CALENDAR_S, text: `Przybywasz do osady ${home.name}.`, kind: 'info' }],
+    messages: [{ t: START_CALENDAR_S, text: `You arrive in ${home.name}.`, kind: 'info' }],
     nextId,
     rng: rng.state,
   }

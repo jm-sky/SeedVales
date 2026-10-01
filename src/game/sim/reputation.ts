@@ -15,10 +15,10 @@ const SPREAD_FRACTION = 0.3
 const FAST_MARCH_MPS = 2.2
 
 export const REP_NAMES: Record<RepDim, string> = {
-  honesty: 'Uczciwość',
-  helpfulness: 'Uczynność',
-  renown: 'Rozpoznawalność',
-  courage: 'Odwaga',
+  honesty: 'Honesty',
+  helpfulness: 'Helpfulness',
+  renown: 'Renown',
+  courage: 'Courage',
 }
 
 export function settlementAt(sim: Sim, x: number, z: number, margin = 250): number | null {
@@ -81,10 +81,10 @@ export interface BadgeDef {
 }
 
 export const BADGES: BadgeDef[] = [
-  { id: 'rat_catcher', name: 'Tępiciel szczurów', positive: true, stat: 'ratsKilled', threshold: 8, rep: { helpfulness: 6, renown: 3 } },
-  { id: 'beast_slayer', name: 'Pogromca bestii', positive: true, stat: 'dangerousKilled', threshold: 3, rep: { courage: 8, renown: 6 } },
-  { id: 'gravedigger', name: 'Grabarz', positive: true, stat: 'buried', threshold: 3, rep: { helpfulness: 3 } },
-  { id: 'thief', name: 'Złodziej', positive: false, stat: 'caughtStealing', threshold: 1, rep: { honesty: -15 } },
+  { id: 'rat_catcher', name: 'Rat catcher', positive: true, stat: 'ratsKilled', threshold: 8, rep: { helpfulness: 6, renown: 3 } },
+  { id: 'beast_slayer', name: 'Beast slayer', positive: true, stat: 'dangerousKilled', threshold: 3, rep: { courage: 8, renown: 6 } },
+  { id: 'gravedigger', name: 'Gravedigger', positive: true, stat: 'buried', threshold: 3, rep: { helpfulness: 3 } },
+  { id: 'thief', name: 'Thief', positive: false, stat: 'caughtStealing', threshold: 1, rep: { honesty: -15 } },
 ]
 
 export function addStat(sim: Sim, stat: string, n = 1) {
@@ -95,7 +95,7 @@ export function addStat(sim: Sim, stat: string, n = 1) {
     if (st[stat]! >= b.threshold) {
       sim.state.px.badges[b.id] = { at: sim.state.time.cal, count: st[stat]! }
       const sid = settlementAt(sim, sim.player.x, sim.player.z, 3000) ?? 0
-      addRep(sim, sid, b.rep, `Odznaka: ${b.name}`)
+      addRep(sim, sid, b.rep, `Badge: ${b.name}`)
     }
   }
 }
@@ -104,12 +104,12 @@ export function addStat(sim: Sim, stat: string, n = 1) {
 export function tryApologize(sim: Sim, badgeId: string): string {
   const b = sim.state.px.badges[badgeId]
   const def = BADGES.find((d) => d.id === badgeId)
-  if (!b || !def || def.positive) return 'Nie ma za co przepraszać.'
-  if (sim.state.time.cal - b.at < 3 * 86400) return 'Ludzie jeszcze pamiętają. Odczekaj kilka dni.'
-  if (sim.player.money < 20) return 'Przeprosiny wymagają zadośćuczynienia (20 m).'
+  if (!b || !def || def.positive) return 'There is nothing to apologize for.'
+  if (sim.state.time.cal - b.at < 3 * 86400) return 'People still remember. Wait a few days.'
+  if (sim.player.money < 20) return 'An apology requires amends (20 c).'
   // Penance goes to the nearest settlement's treasury (home settlement when in the wild).
   payToTreasury(sim, settlementAt(sim, sim.player.x, sim.player.z, 400) ?? sim.world.homeSettlement, sim.player, 20)
   delete sim.state.px.badges[badgeId]
   sim.state.px.stats[def.stat] = 0
-  return 'Przeprosiny przyjęte — odznaka zdjęta.'
+  return 'Apology accepted — the badge is removed.'
 }
