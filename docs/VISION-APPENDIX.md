@@ -214,3 +214,31 @@ W takich sytuacjach zwierzęta mogą stawać się bardziej agresywne.
   - handel.
 - NPC powinien następnie faktycznie używać otrzymanego wyposażenia.
 - NPC powinien wybierać swoją lepszą broń.
+
+## Follow-up — 2026-10-01 (survival: waterskins, campfires, torches)
+
+> Ideas to expand and verify against the current codebase, plans, and vision. No fixed priority — scheduling left open (e.g. Opus / planner).
+
+### Waterskins
+
+- Waterskins should be **craftable from hide/leather** — add an explicit crafting recipe (S/M/L variants already exist as items; recipe is missing).
+
+### Campfires
+
+- A campfire should burn for **X time** at **L light strength**.
+- Lighting a fire by default needs **starter fuel** (e.g. **3× branches**).
+- Players can **add fuel** to increase burn time and light strength.
+- Cap may be high so a very large fire is achievable.
+- As fuel burns down, the fire can shrink back toward a baseline size.
+- When the fire goes out, it should leave a **trace** (ash pile / scorched ground) that fades after rain or after e.g. **~12 hours**.
+- Optional: **“Build a stone hearth”** (e.g. **3–5 stones**) if not already present:
+  - does not despawn on its own; can be dismantled to recover materials;
+  - faster re-lighting;
+  - may shelter the fire from rain (loose idea);
+  - better base for a grill / faster grill build.
+
+### Torches
+
+- Actions: **light / extinguish**.
+- Burn duration e.g. **4–6 hours**.
+- **v2:** require fuel or a fresh torch. Candidate fuels (to design): cloth/fabric, wool/yarn, resin, tar — TBD.
