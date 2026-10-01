@@ -146,7 +146,7 @@ describe('more features', () => {
     sim.terrain.applyEdit(pt.x, pt.z, 5, { kind: 'level', target: sim.terrain.heightAt(pt.x, pt.z) })
     const res = placeSite(sim, 'trough', pt.x, pt.z, 0)
     expect(res.ok).toBe(true)
-    expect(sim.state.messages.some((m) => m.text.includes('drodze'))).toBe(true)
+    expect(sim.state.messages.some((m) => m.text.includes('on the road'))).toBe(true)
   })
 
   it('FAUNA-02: thirsty wild animals walk to a bank to drink (never into deep water)', () => {

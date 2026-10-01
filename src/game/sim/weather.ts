@@ -46,9 +46,9 @@ export function updateWeather(w: WeatherState, cal: number, dtCalS: number, rng:
 export const isBadWeather = (w: WeatherState) => (w.kind === 'rain' && w.intensity > 0.5) || w.kind === 'storm' || (w.kind === 'snow' && w.intensity > 0.7)
 
 export const WEATHER_NAMES: Record<WeatherKind, string> = {
-  clear: 'Słonecznie',
-  overcast: 'Pochmurno',
-  rain: 'Deszcz',
-  storm: 'Burza',
-  snow: 'Śnieg',
+  clear: 'Clear',
+  overcast: 'Overcast',
+  rain: 'Rain',
+  storm: 'Storm',
+  snow: 'Snow',
 }

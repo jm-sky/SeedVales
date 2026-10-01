@@ -4,7 +4,7 @@
  */
 import type { Capability } from '../data/items'
 import type { Human, Inventory, ItemStack } from './types'
-import { itemDef, MATERIAL_MULT, QUALITY_MULT } from '../data/items'
+import { itemDef, MATERIAL_MULT, QUALITY_MULT, QUALITY_NAMES } from '../data/items'
 import { SPECIES } from '../data/species'
 
 export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): ItemStack {
@@ -165,7 +165,7 @@ export function stackLabel(s: ItemStack): string {
   const d = itemDef(s.id)
   let label = d.name
   if (s.sp) label += ` (${(SPECIES as Record<string, { name: string }>)[s.sp]?.name.toLowerCase() ?? s.sp})`
-  if (s.q !== undefined && s.q !== 1) label += ` (${['niska', 'śr.', 'wysoka', 'wyjątkowa'][s.q]})`
+  if (s.q !== undefined && s.q !== 1) label += ` (${QUALITY_NAMES[s.q]})`
   if (s.qty > 1) label += ` ×${s.qty}`
   return label
 }

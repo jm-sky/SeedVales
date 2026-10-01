@@ -282,7 +282,7 @@ describe('construction', () => {
     addItem(sim.player.inv, newStack('bucket'))
     sim.state.buildings.push({ ...trough, id: 'w-test', kind: 'well', x: trough.x + 3 })
     sim.rebuildBuildingIndex()
-    expect(runOption(sim, { type: 'building', id: trough.id }, 'fill_trough')).toContain('studni')
+    expect(runOption(sim, { type: 'building', id: trough.id }, 'fill_trough')).toContain('well')
     expect(trough.water).toBe(12)
   })
 })

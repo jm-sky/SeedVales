@@ -26,7 +26,7 @@ export function setPrimary(sim: Sim, kind: WeaponKind, id: string | undefined): 
   if (id && weaponKindOf(id) !== kind) return ''
   const px = sim.state.px
   px.primary = { ...px.primary, [kind]: id }
-  return id ? `Podstawowa broń ${kind === 'melee' ? 'wręcz' : 'dystansowa'}: ${itemDef(id).name}` : ''
+  return id ? `Primary ${kind === 'melee' ? 'melee' : 'ranged'} weapon: ${itemDef(id).name}` : ''
 }
 
 function bestStack(sim: Sim, id: string): ItemStack | undefined {
@@ -52,7 +52,7 @@ export function switchWeapon(sim: Sim, kind?: WeaponKind): string {
       if (w?.kind === want && (!s || w.damage > itemDef(s.id).weapon!.damage)) s = it
     }
   }
-  if (!s) return want === 'melee' ? 'Brak broni do walki wręcz.' : 'Brak broni dystansowej.'
+  if (!s) return want === 'melee' ? 'No melee weapon.' : 'No ranged weapon.'
   equipToMain(p, s)
-  return `W ręce: ${itemDef(s.id).name}`
+  return `In hand: ${itemDef(s.id).name}`
 }

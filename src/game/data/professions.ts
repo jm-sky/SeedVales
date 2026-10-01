@@ -21,37 +21,37 @@ export interface ProfessionDef {
 
 export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
   farmer: {
-    id: 'farmer', name: 'Rolnik', weapon: 'staff', money: [20, 60], workHours: [6, 18], shirt: 0x8a7a4a,
+    id: 'farmer', name: 'Farmer', weapon: 'staff', money: [20, 60], workHours: [6, 18], shirt: 0x8a7a4a,
     kit: [{ item: 'shovel', qty: 1 }, { item: 'knife', qty: 1 }, { item: 'bucket', qty: 1 }],
     skills: { farming: 45, survival: 15 },
     store: [{ item: 'carrot', qty: 10 }, { item: 'cabbage', qty: 5 }, { item: 'grain', qty: 12 }, { item: 'bread', qty: 3 }],
   },
   woodcutter: {
-    id: 'woodcutter', name: 'Drwal', weapon: 'axe', money: [20, 50], workHours: [7, 17], shirt: 0x6b3b2a,
+    id: 'woodcutter', name: 'Woodcutter', weapon: 'axe', money: [20, 50], workHours: [7, 17], shirt: 0x6b3b2a,
     kit: [{ item: 'axe', qty: 1 }, { item: 'knife', qty: 1 }, { item: 'waterskin_m', qty: 1 }],
     skills: { woodcutting: 50, construction: 20, melee: 15 },
     store: [{ item: 'log', qty: 4 }, { item: 'branch', qty: 12 }, { item: 'bread', qty: 3 }, { item: 'dried_meat', qty: 2 }],
   },
   hunter: {
-    id: 'hunter', name: 'Myśliwy', weapon: 'short_bow', money: [25, 70], workHours: [5, 15], shirt: 0x3e5a32,
+    id: 'hunter', name: 'Hunter', weapon: 'short_bow', money: [25, 70], workHours: [5, 15], shirt: 0x3e5a32,
     kit: [{ item: 'knife', qty: 1 }, { item: 'arrow', qty: 20 }, { item: 'waterskin_m', qty: 1 }],
     skills: { ranged: 45, survival: 35, sneak: 30, traps: 20 },
     store: [{ item: 'dried_meat', qty: 6 }, { item: 'hide', qty: 2 }, { item: 'arrow', qty: 20 }],
   },
   guard: {
-    id: 'guard', name: 'Strażnik', weapon: 'spear', money: [30, 80], workHours: [0, 24], shirt: 0x5a2a2a,
+    id: 'guard', name: 'Guard', weapon: 'spear', money: [30, 80], workHours: [0, 24], shirt: 0x5a2a2a,
     kit: [{ item: 'short_sword', qty: 1 }, { item: 'torch', qty: 3 }, { item: 'bandage', qty: 2 }, { item: 'flint', qty: 1 }],
     skills: { melee: 40, medicine: 10 },
     store: [{ item: 'bread', qty: 4 }, { item: 'dried_meat', qty: 3 }, { item: 'torch', qty: 6 }],
   },
   herbalist: {
-    id: 'herbalist', name: 'Zielarz', weapon: 'staff', money: [30, 70], workHours: [7, 16], shirt: 0x4d6b5a,
+    id: 'herbalist', name: 'Herbalist', weapon: 'staff', money: [30, 70], workHours: [7, 16], shirt: 0x4d6b5a,
     kit: [{ item: 'knife', qty: 1 }, { item: 'bandage', qty: 4 }, { item: 'salve', qty: 2 }],
     skills: { medicine: 45, survival: 25 },
     store: [{ item: 'mint', qty: 6 }, { item: 'chamomile', qty: 6 }, { item: 'yarrow', qty: 3 }, { item: 'bread', qty: 3 }, { item: 'carrot', qty: 4 }],
   },
   trader: {
-    id: 'trader', name: 'Handlarz', weapon: 'dagger', money: [200, 400], workHours: [8, 18], shirt: 0x2f4a78,
+    id: 'trader', name: 'Trader', weapon: 'dagger', money: [200, 400], workHours: [8, 18], shirt: 0x2f4a78,
     kit: [{ item: 'knife', qty: 1 }],
     skills: { trade: 50 },
     store: [
@@ -63,13 +63,13 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
     ],
   },
   blacksmith: {
-    id: 'blacksmith', name: 'Kowal', weapon: 'war_hammer', money: [60, 150], workHours: [7, 17], shirt: 0x333333,
+    id: 'blacksmith', name: 'Blacksmith', weapon: 'war_hammer', money: [60, 150], workHours: [7, 17], shirt: 0x333333,
     kit: [{ item: 'hammer', qty: 1 }, { item: 'knife', qty: 1 }],
     skills: { blacksmith: 55, melee: 25 },
     store: [{ item: 'iron_ingot', qty: 8 }, { item: 'iron_ore', qty: 6 }, { item: 'coal', qty: 8 }, { item: 'branch', qty: 6 }, { item: 'bread', qty: 3 }],
   },
   shepherd: {
-    id: 'shepherd', name: 'Pasterz', weapon: 'staff', money: [15, 40], workHours: [6, 18], shirt: 0x9a8c70,
+    id: 'shepherd', name: 'Shepherd', weapon: 'staff', money: [15, 40], workHours: [6, 18], shirt: 0x9a8c70,
     kit: [{ item: 'sling', qty: 1 }, { item: 'sling_stone', qty: 15 }, { item: 'bucket', qty: 1 }, { item: 'waterskin_m', qty: 1 }, { item: 'bandage', qty: 1 }, { item: 'blanket', qty: 1 }, { item: 'rope', qty: 1 }, { item: 'knife', qty: 1 }],
     skills: { survival: 30, ranged: 25 },
     store: [{ item: 'wool', qty: 6 }, { item: 'milk', qty: 2 }, { item: 'bread', qty: 3 }, { item: 'carrot', qty: 3 }],

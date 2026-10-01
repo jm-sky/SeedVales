@@ -27,7 +27,7 @@ describe('UI-06 target cycling', () => {
     dropItem(sim, p.x, p.z + 2.5, { id: 'stone', qty: 1 })
     dropItem(sim, p.x + 0.2, p.z + 1, { id: 'branch', qty: 1 })
     const list = findTargets(sim, 0).filter((x) => x.ref.type === 'ground')
-    expect(list.map((x) => x.label)).toEqual(['Gałąź', 'Kamień'])
+    expect(list.map((x) => x.label)).toEqual(['Branch', 'Stone'])
     const all = findTargets(sim, 0)
     expect(new Set(all.map((x) => targetKey(x.ref))).size).toBe(all.length)
     const first = all[0]!

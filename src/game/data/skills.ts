@@ -17,28 +17,28 @@ export type SkillId =
   | 'trade'
 
 export const SKILL_NAMES: Record<SkillId, string> = {
-  medicine: 'Medycyna',
-  sneak: 'Skradanie',
+  medicine: 'Medicine',
+  sneak: 'Sneaking',
   survival: 'Survival',
-  traps: 'Pułapki',
-  melee: 'Broń biała',
-  ranged: 'Broń dystansowa',
-  construction: 'Budownictwo',
-  blacksmith: 'Kowalstwo',
-  woodcutting: 'Drwalstwo',
-  farming: 'Rolnictwo',
-  trade: 'Handel',
+  traps: 'Trapping',
+  melee: 'Melee',
+  ranged: 'Ranged',
+  construction: 'Construction',
+  blacksmith: 'Blacksmithing',
+  woodcutting: 'Woodcutting',
+  farming: 'Farming',
+  trade: 'Trading',
 }
 
 export type AttrId = 'str' | 'per' | 'end' | 'cha' | 'int' | 'agi'
 
 export const ATTR_NAMES: Record<AttrId, string> = {
-  str: 'Siła',
-  per: 'Percepcja',
-  end: 'Wytrzymałość',
-  cha: 'Charyzma',
-  int: 'Inteligencja',
-  agi: 'Zręczność',
+  str: 'Strength',
+  per: 'Perception',
+  end: 'Endurance',
+  cha: 'Charisma',
+  int: 'Intelligence',
+  agi: 'Agility',
 }
 
 export type Skills = Record<SkillId, number>

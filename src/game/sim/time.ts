@@ -6,8 +6,8 @@ import { DAYS_PER_MONTH, DAYS_PER_SEASON, DAYS_PER_YEAR } from '../config/calibr
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
 export const SEASONS: Season[] = ['spring', 'summer', 'autumn', 'winter']
-export const SEASON_NAMES: Record<Season, string> = { spring: 'Wiosna', summer: 'Lato', autumn: 'Jesień', winter: 'Zima' }
-const MONTHS = ['Przedwiośnie', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień', 'Styczeń', 'Luty']
+export const SEASON_NAMES: Record<Season, string> = { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter' }
+const MONTHS = ['March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February']
 
 export const dayIndex = (cal: number) => Math.floor(cal / 86400)
 export const hourOf = (cal: number) => (cal % 86400) / 3600
@@ -44,7 +44,7 @@ export function formatClock(cal: number): string {
 
 export function formatDate(cal: number): string {
   const d = (dayOfYear(cal) % DAYS_PER_MONTH) + 1
-  return `${d}. ${monthName(cal)}, rok ${yearOf(cal)}`
+  return `${d} ${monthName(cal)}, year ${yearOf(cal)}`
 }
 
 /** Seasonal growth factor for crops/forage. */

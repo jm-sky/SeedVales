@@ -9,7 +9,7 @@ import type { Sim } from './sim'
 import type { Building, ConstructionSite } from './types'
 import { ACCEL, CALENDAR_SPEED } from '../config/calibration'
 import { distToSegment } from '../core/math'
-import { itemDef } from '../data/items'
+import { CAPABILITY_NAMES, itemDef } from '../data/items'
 import { blueprintById } from '../data/recipes'
 import { train } from './actions'
 import { countItem, findTool, removeItem } from './inventory'
@@ -18,7 +18,7 @@ import { addRep, settlementAt } from './reputation'
 
 export function canPlace(sim: Sim, bp: Blueprint, x: number, z: number): { ok: boolean; reason?: string } {
   const t = sim.terrain
-  if (t.waterDepthAt(x, z) > 0.1) return { ok: false, reason: 'Nie można budować w wodzie.' }
+  if (t.waterDepthAt(x, z) > 0.1) return { ok: false, reason: 'You cannot build in water.' }
   const r = Math.max(bp.hw, bp.hd)
   let hmin = Infinity
   let hmax = -Infinity
@@ -27,18 +27,18 @@ export function canPlace(sim: Sim, bp: Blueprint, x: number, z: number): { ok: b
     hmin = Math.min(hmin, h)
     hmax = Math.max(hmax, h)
   }
-  if (bp.kind !== 'campfire' && hmax - hmin > 0.6 + r * 0.05) return { ok: false, reason: 'Teren nierówny — wyrównaj łopatą (Teren → Wyrównaj).' }
+  if (bp.kind !== 'campfire' && hmax - hmin > 0.6 + r * 0.05) return { ok: false, reason: 'The ground is uneven — level it with a shovel (Terrain → Level).' }
   for (const b of sim.buildingsNear(x, z, r + 10)) {
     if (b.kind === 'field' || b.kind === 'bridge') continue
-    if (Math.hypot(b.x - x, b.z - z) < Math.max(b.hw, b.hd) + r + 0.5) return { ok: false, reason: 'Za blisko innego budynku.' }
+    if (Math.hypot(b.x - x, b.z - z) < Math.max(b.hw, b.hd) + r + 0.5) return { ok: false, reason: 'Too close to another building.' }
   }
-  if (sim.state.sites.some((s) => Math.hypot(s.x - x, s.z - z) < r + 2)) return { ok: false, reason: 'Tu już jest plac budowy.' }
+  if (sim.state.sites.some((s) => Math.hypot(s.x - x, s.z - z) < r + 2)) return { ok: false, reason: 'There is already a building site here.' }
   return { ok: true }
 }
 
 export function placeSite(sim: Sim, bpId: string, x: number, z: number, rot: number): ActionResult {
   const bp = blueprintById(bpId)
-  if (!bp) return { ok: false, msg: 'Nieznany projekt.' }
+  if (!bp) return { ok: false, msg: 'Unknown blueprint.' }
   const c = canPlace(sim, bp, x, z)
   if (!c.ok) return { ok: false, msg: c.reason! }
   const sid = settlementAt(sim, x, z, 60)
@@ -49,10 +49,10 @@ export function placeSite(sim: Sim, bpId: string, x: number, z: number, rot: num
   const nearPlaza = sid !== null && Math.hypot(sim.world.settlements[sid]!.x - x, sim.world.settlements[sid]!.z - z) < 14
   if ((onRoad || nearPlaza) && bp.kind !== 'campfire') {
     const guard = sid !== null ? sim.npcsOf(sid).find((n) => n.profession === 'guard') : undefined
-    sim.message(`${guard?.name ?? 'Strażnik'}: „Budujesz na ${onRoad ? 'drodze' : 'placu'}? To się nikomu nie spodoba!”`, 'bad')
+    sim.message(`${guard?.name ?? 'Guard'}: "Building on the ${onRoad ? 'road' : 'square'}? Nobody will like that!"`, 'bad')
     if (sid !== null) addRep(sim, sid, { honesty: -3, helpfulness: -2 })
   }
-  return { ok: true, msg: `Plac budowy: ${bp.name}. Dostarcz materiały i pracuj (E).` }
+  return { ok: true, msg: `Building site: ${bp.name}. Deliver the materials and work (E).` }
 }
 
 /** Deliver from inventory and items lying on the ground within 6 m. Returns missing list. */
@@ -87,20 +87,20 @@ export function deliverMaterials(sim: Sim, site: ConstructionSite): { item: stri
 export function startBuildWork(sim: Sim, site: ConstructionSite): ActionResult {
   const bp = blueprintById(site.blueprint)!
   const missing = deliverMaterials(sim, site)
-  if (missing.length) return { ok: false, msg: 'Brakuje: ' + missing.map((m) => `${itemDef(m.item).name} ×${m.qty}`).join(', ') }
+  if (missing.length) return { ok: false, msg: 'Missing: ' + missing.map((m) => `${itemDef(m.item).name} ×${m.qty}`).join(', ') }
   const stage = bp.stages[site.stage]!
-  if (!findTool(sim.player, stage.tool)) return { ok: false, msg: `Etap „${stage.name}” wymaga narzędzia: ${stage.tool}` }
+  if (!findTool(sim.player, stage.tool)) return { ok: false, msg: `The "${stage.name}" stage needs a tool: ${CAPABILITY_NAMES[stage.tool]}` }
   const speed = 1 + sim.player.skills.construction / 100
   const remainingH = Math.max(0, stage.hours - site.progressH) / speed
   const playS = (remainingH * 3600) / CALENDAR_SPEED
   startActivity(sim, { kind: 'build', ref: site.id, label: `${bp.name}: ${stage.name}`, total: playS, accel: playS > 60 ? ACCEL.longWork : 1 })
-  return { ok: true, msg: `Pracujesz: ${stage.name}` }
+  return { ok: true, msg: `Working: ${stage.name}` }
 }
 
 /** Adds progress (called on completion or cancellation of a build activity). */
 export function applyBuildProgress(sim: Sim, siteId: string, playS: number): ActionResult {
   const site = sim.state.sites.find((s) => s.id === siteId)
-  if (!site) return { ok: false, msg: 'Plac budowy zniknął.' }
+  if (!site) return { ok: false, msg: 'The building site is gone.' }
   const bp = blueprintById(site.blueprint)!
   const speed = 1 + sim.player.skills.construction / 100
   site.progressH += ((playS * CALENDAR_SPEED) / 3600) * speed
@@ -108,10 +108,10 @@ export function applyBuildProgress(sim: Sim, siteId: string, playS: number): Act
   const stage = bp.stages[site.stage]!
   const tool = findTool(sim.player, stage.tool)
   if (tool?.dur !== undefined) tool.dur = Math.max(0, tool.dur - playS / 60)
-  if (site.progressH + 1e-6 < stage.hours) return { ok: true, msg: `Postęp: ${Math.round((site.progressH / stage.hours) * 100)}%` }
+  if (site.progressH + 1e-6 < stage.hours) return { ok: true, msg: `Progress: ${Math.round((site.progressH / stage.hours) * 100)}%` }
   site.stage++
   site.progressH = 0
-  if (site.stage < bp.stages.length) return { ok: true, msg: `Etap ukończony. Następny: ${bp.stages[site.stage]!.name}` }
+  if (site.stage < bp.stages.length) return { ok: true, msg: `Stage complete. Next: ${bp.stages[site.stage]!.name}` }
   // Completed.
   sim.state.sites.splice(sim.state.sites.indexOf(site), 1)
   const b: Building = {
@@ -125,5 +125,5 @@ export function applyBuildProgress(sim: Sim, siteId: string, playS: number): Act
   sim.rebuildBuildingIndex()
   sim.state.px.stats.built = (sim.state.px.stats.built ?? 0) + 1
   if (site.settlementId >= 0 && bp.kind !== 'campfire') addRep(sim, site.settlementId, { renown: 2 })
-  return { ok: true, msg: `Ukończono budowę: ${bp.name}!` }
+  return { ok: true, msg: `Construction complete: ${bp.name}!` }
 }
