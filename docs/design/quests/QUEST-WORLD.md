@@ -1,114 +1,118 @@
-# Quest world — wspólna obsada, miejsca i powiązania
+# Quest world — shared cast, places and links
 
-**Status:** propozycja N (2026-10-01), wspólna dla trzech pakietów questów. Nie jest kanonem gry ani implementacją. Gdy plik scenariusza i ten plik się różnią, wygrywa ten plik — scenariusze zostały do niego dopasowane w review 2026-10-01 ([REVIEW-2026-10-01](REVIEW-2026-10-01.md)).
+**Status:** proposal (N), shared by all three quest packs. Not game canon and not implemented. Where a scenario file and this file disagree, this file wins — the scenarios were aligned to it in the 2026-10-01 review ([REVIEW-2026-10-01](REVIEW-2026-10-01.md)).
 
-## Zasady obsady
+## Casting rules
 
-1. **Rola, nie imię, jest kluczem.** Generator (`src/game/world/gen/settlements.ts`, `centres.ts`) tworzy osadę domową **SM**, sąsiednią **MD** (~1 dzień marszu) i miasteczko **LG** (kolejne 1–2 dni). Gospodarstwa SM: farmer, woodcutter, hunter, guard, herbalist, shepherd, trader (bez kowala). MD dodaje drugiego farmera i kowala; LG — po dwóch farmerów/drwali/handlarzy/strażników.
-2. **Imiona w scenariuszach to uchwyty projektowe.** Przy obsadzaniu quest wybiera istniejącego NPC o danej profesji/household i wyświetla jego wygenerowane imię. Uchwyty dobrano w stylu puli `NAMES` z `src/game/data/professions.ts` (polskie imiona); nie wymagają zmiany puli. Imiona historyczne (zmarli, przodkowie) są zwykłym tekstem.
-3. **Jeden slot = jedna osoba we wszystkich pakietach.** Jeśli dwa pakiety opisywały tę samą rolę w tej samej osadzie, postacie zostały scalone (tabela niżej). Żaden NPC nie ma sprzecznych ról.
-4. **Nazwy osad w dialogach:** `{H}`, `{V}`, `{T}` — podstawiane nazwą wygenerowanej osady. Stare uchwyty Groka: Domowice = H, Brzeżyna = V. Landmarki questowe mają angielskie nazwy (UI po angielsku): Blackwater Chapel, Pinewatch, Ash House, Split Hazel itd.
-5. **Brak NPC/slotu:** jeśli seed nie ma pasującego household (np. brak dorosłego syna drwala), quest nie startuje; nie doklejamy profesji i nie teleportujemy postaci.
+1. **The role, not the name, is the key.** The generator (`src/game/world/gen/settlements.ts`, `centres.ts`) creates a home settlement **SM**, a neighbour **MD** (~1 day's walk) and a town **LG** (another 1–2 days). SM households: farmer, woodcutter, hunter, guard, herbalist, shepherd, trader (no blacksmith). MD adds a second farmer and a blacksmith. LG has two farmers, woodcutters, traders and guards.
+2. **Names are English: first name + an occupational surname** that hints at the person's trade (author decision, 2026-10-01). Family members share the household surname. Fixed by the author: the H guard is **Mark Hornblower**. Historical figures (the dead, ancestors) may have a plain first name.
+3. **One slot = one person across all packs.** Where two packs described the same role in the same settlement, the characters were merged (table below). No NPC has conflicting roles.
+4. **Settlement names in dialog:** `{H}`, `{V}`, `{T}` — replaced by the generated settlement name. Old Grok handles: Domowice = H, Brzeżyna = V. Quest landmarks have English names (Blackwater Chapel, Pinewatch, Ash House, the split hazel, Dulcie's Bend).
+5. **Missing NPC/slot:** if the seed has no matching household (e.g. no grown son in the woodcutter's house), the quest doesn't start; professions are not bolted on and characters are not teleported.
+6. **Implementation follow-up (N, not done):** the in-game name pool (`NAMES` in `src/game/data/professions.ts`) and settlement names (`settlements.ts`) are still Polish. To match these quests they should switch to English names; with occupational surnames the quest casting can either rename the cast NPC at first exposure (before the player meets them) or pick the generated name and keep the surname rule. Author/implementer decision.
 
-## Obsada
+## Cast
 
-### H — osada domowa (SM)
+### H — home settlement (SM)
 
-| Household (profesja) | Osoby (uchwyt) | Questy | Scalone z |
+| Household (profession) | People | Quests | Merged from (old handles) |
 |---|---|---|---|
-| farmer + **sołtys** (village head) | **Radosław** | G02 (trzyma zapłatę za lemiesz), G05 (mediator), G06, G08 (zleceniodawca), Q03 (wspólny magazyn), Q09 (zboże) | — |
-| woodcutter | **Mirosław**; żona **Ludmiła**; matka **Jadwiga**; dorosły syn **Mieszko** | G05, Q03, Q06, Q07, Q09 | Codex: Bram, Lina, Edda, Rowan |
-| hunter | **Jarosław**; żona **Marta**; córka **Halina** (dziecko); pies Szarik (zginął przed startem gry) | Q01, Q02 (opcjonalnie), G03 (Marta, Halina), G07 | Codex: Mara |
-| guard | **Wojciech** | G01, G03, G07, Q07 | Codex: Ada (rola w H) |
-| herbalist | **Dobrawa**; syn **Maciej** (dziecko) | G04, G07, G08 | — |
-| shepherd | **Mira**; mąż **Tomasz** (warzy cienkie piwo); dorosły syn **Leszek** (uczeń Jarosława); jagnię Miki | G01, G08 (beczka Tomasza), Q01 (Leszek) | Codex: Kit → Leszek |
-| trader | **Stanisław** | Q01, Q09, G06 | Codex: Oren |
+| farmer + **reeve** (village head) | **Ralph Fieldman**; his wife (unnamed) | G02 (holds the plowshare money), G05 (mediator), G06, G08 (giver), Q03 (common store), Q09 (grain) | Radosław |
+| woodcutter | **Miles Hewer**; wife **Lucy Hewer**; mother **Joan Hewer**; grown son **Matthew Hewer** | G05, Q03, Q06, Q07, Q09 | Mirosław / Bram; Lina; Edda; Rowan / Mieszko |
+| hunter | **Jacob Bowman**; wife **Martha Bowman**; daughter **Hazel Bowman** (child); dog Patch (killed before the game starts) | Q01, Q02 (optional), G03 (Martha, Hazel), G07 | Jarosław / Mara; Marta; Halina; Szarik |
+| guard | **Mark Hornblower** | G01, G03, G07, Q07 | Wojciech / Ada (H role) |
+| herbalist | **Dora Herbert**; son **Toby Herbert** (child) | G04, G07, G08 | Dobrawa; Maciej |
+| shepherd | **Molly Lambert**; husband **Tom Lambert** (brews small beer); grown son **Luke Lambert** (Jacob's apprentice); lamb Pip | G01, G08 (Tom's barrel), Q01 (Luke), Q07 (Luke) | Mira; Tomasz; Kit / Leszek; Miki |
+| trader | **Stephen Chapman** | Q01, Q09, G06 | Stanisław / Oren |
 
-### V — osada sąsiednia (MD)
+### V — neighbouring settlement (MD)
 
-| Household | Osoby | Questy | Scalone z |
+| Household | People | Quests | Merged from |
 |---|---|---|---|
-| blacksmith | **Bogdan** (stary kowal); córka **Zofia** (prowadzi kuźnię) | G02, Q04, Q06 | Grok: Bogdan (przeniesiony z H — SM nie ma kowala); Codex: Tobin, Nessa |
-| farmer + **sołtys V** | **Małgorzata** | Q08, Q11 (zarządza wspólnym skarbcem), G05/G06/G08 (gdy rozmowa toczy się w V) | Codex: Dena; Halvar (Q11) |
-| farmer | **Kazimierz** | G05 | — |
-| hunter | **Dorota** | Q02, Q05 (wzmianka) | Codex: Sella |
-| shepherd | **Elżbieta** | Q08, G05 (świadek pastwiska) | Codex: Wren; Grok: Wanda (rola świadka) |
-| guard | **Bogna** | Q02, Q08 | Codex: Ada (rola w V) |
-| trader | **Janko** | G06 | — |
-| woodcutter | **Ewa** (szkutniczka i przewoźniczka sezonowa w household drwala) | Q11 | — |
-| herbalist | **Świętosława** (starsza; trzyma odpis księgi kaplicy) | Q11 | Codex: Anika (Q11) |
+| blacksmith | **Bernard Smith** (old smith); daughter **Sophie Smith** (runs the forge) | G02, Q04, Q06 | Bogdan (moved from H — SM has no smith); Tobin; Nessa / Zofia |
+| farmer + **reeve of V** | **Margaret Reeve** | Q02, Q08, Q11 (common funds), G05/G06/G08 (when the talk happens in V) | Dena; Halvar (Q11); Małgorzata |
+| farmer | **Cedric Hogg** (keeps pigs) | G05, Q08 (his lad) | Kazimierz |
+| hunter | **Edith Fowler** | Q02, Q05 (mention) | Sella / Dorota |
+| shepherd | **Elspeth Shepherd** | Q08, G05 (pasture witness) | Wren; Wanda (witness role); Elżbieta |
+| guard | **Bridget Ward** | Q02, Q08 | Ada (V role) / Bogna |
+| trader | **Jack Mercer** | G06 | Janko |
+| woodcutter | **Eve Boatwright** (boat-builder, seasonal ferry in the woodcutter household) | Q11 | Ewa |
+| herbalist | **Winifred Sage** (elderly; keeps a copy of the chapel book) | Q11 | Anika (Q11) / Świętosława |
 
-### T — miasteczko (LG)
+### T — town (LG)
 
-| Rola | Osoba | Questy | Scalone z |
+| Role | Person | Quests | Merged from |
 |---|---|---|---|
-| trader | **Radomira** (wnuczka autorki mapy) | Q05 | Codex: Iven |
-| pisarz/archiwista ratusza (N) | **Przemysł** | Q05, Q12 (rejestr straży), Q13 (księga cmentarna) | Codex: Pell; Olek (Q12); Anika (Q13) |
-| trader, kupiec-inwestor | **Zbigniew** | Q10, Q11, Q12, Q13 (kupiec przy zakończeniach sprzedażowych) | Codex: Corvin, Soren, Olek (Q11) |
-| guard | **Wisława** (dowodzi strażą drogi) | Q12 | Codex: Nela |
-| hunter / przewodniczka górska | **Milena** | Q12 | Codex: Vika |
-| były strażnik drogi (senior w household strażnika) | **Dobromir** | Q12 (zleceniodawca) | nowa postać zamiast „kamienia cmentarnego” jako źródła tropu |
-| woodcutter-cieśla | **Sławomir** | Q13 | Codex: Tomas |
-| górniczka (D: `NPC-06`) | **Agnieszka** | Q10 | Codex: Ysra |
-| sołtys/wójt T (rola) | **Bolesław** | Q10 | Codex: Bram jako przedstawiciel (zastąpiony — H jest za daleko na outpost) |
-| szwaczka | **Irena** | Q13 | — |
+| trader | **Rosalind Marchant** (granddaughter of the mapmaker Dulcie) | Q05 | Iven / Radomira |
+| town scribe/archivist (N role) | **Percy Clark** | Q05, Q12 (guard register), Q13 (parish book) | Pell; Olek (Q12); Anika (Q13); Przemysł |
+| trader, merchant-investor | **Silas Moneypenny** | Q05 (fair buyer), Q10, Q11, Q12, Q13 (buyer in sale endings) | Corvin, Soren, Olek (Q11); Zbigniew |
+| guard (commands the road patrol) | **Willa Shields** | Q12 | Nela / Wisława |
+| retired road guard (elder in the guard household) | **Duncan Wakeman** | Q12 (giver) | new; Dobromir |
+| hunter / mountain guide | **Mabel Ranger** | Q12 | Vika / Milena |
+| woodcutter-carpenter | **Samuel Carpenter** | Q13 | Tomas / Sławomir |
+| miner (D: `NPC-06`) | **Agnes Collier** | Q10 | Ysra / Agnieszka |
+| alderman of T (role) | **Baldwin Alderman** | Q10 | Bram as delegate; Bolesław |
+| seamstress | **Irene Taylor** | Q13 | Irena |
 
-### Poza osadami
+### Outside settlements
 
-| Postać | Gdzie | Quest |
+| Figure | Where | Quest |
 |---|---|---|
-| **Piotr**, wędrowiec | droga lokalna przy H | G01 |
-| Siwy — stary wilk z obciętym palcem lewej przedniej łapy | legowisko pod wywróconą sosną na północ od H | G07 |
-| locha z warchlakami | wykrot przy dolnej drodze V | Q02 |
-| biały zając (albinos, `FAUNA-09` P) | leszczyny na skraju lasu H | Q01 |
-| stary łoś byk | bagno Blackwater | Q11 |
-| niedźwiedź „prime” | piwnica wieży Pinewatch | Q12 |
-| jeleń na rykowisku | sad przy Ash House | Q13 |
+| **Piers Walker**, wanderer | local road near H | G01 |
+| Greybeard — old lone wolf missing the outer toe of the left forepaw | den under a wind-thrown pine north of H | G07 |
+| sow with farrow | hollow by the lower V road | Q02 |
+| white hare (albino, `FAUNA-09` P) | hazels at the H forest edge | Q01 |
+| old bull moose | Blackwater marsh | Q11 |
+| prime bear | Pinewatch cellar | Q12 |
+| rutting stag | Ash House orchard | Q13 |
+| Historical: Dulcie (Q05), Captain Martin (Q12), Hester Ash and the winter hands Bartholomew, John, Walter (Q13), Master Halm (Q05) | — | — |
 
-## Mapa miejsc (proponowana topologia)
+## Map of places (proposed topology)
 
 ```
-           [Pinewatch ruins]   [old adit]           (góry za T)
+           [Pinewatch ruins]   [old adit]           (mountains beyond T)
                     \            /
- [Ash House] ---- {T} miasteczko ---- [stone circle, river valley]
-                    |  1–2 dni
-                  {V} sąsiednia: kuźnia, studnia i pastwisko, dolna droga (wykrot lochy)
-                    |  ~1 dzień
-   [boundary oak] --+-- [marsh: zioła; Blackwater Chapel i stara grobla]
+ [Ash House] ---- {T} town ---- [stone circle, river valley]
+                    |  1–2 days
+                  {V} neighbour: smithy, well and pasture, lower road (sow's hollow)
+                    |  ~1 day
+   [boundary oak] --+-- [marsh: herbs; Blackwater Chapel and the old causeway]
                     |
-                  {H} dom: leszczyny, słupy z pochodniami, beczka Tomasza, legowisko Siwego
+                  {H} home: hazels, torch posts, Tom's barrel, Greybeard's den
 ```
 
-## Powiązania między questami
+## Cross-quest links
 
-Wszystkie powiązania są **miękkie** (dodatkowa kwestia, opcja lub informacja), chyba że zaznaczono inaczej. Żaden quest nie wymaga konkretnego zakończenia innego questu.
+All links are **soft** (an extra line, option or piece of information) unless marked otherwise. No quest requires a specific ending of another quest.
 
-| Z → Do | Rodzaj | Opis |
+| From → To | Kind | Description |
 |---|---|---|
-| Q01 → Q02 | miękkie | Leszek/Jarosław znają gracza; Jarosław dodaje radę w Q02 |
-| G04 → G07 | **bramka opcji** | Trucizna dla Siwego tylko po ukończonym G04 i relacji Dobrawy ≥10 |
-| G03 ↔ G07 | miękkie | Szarik był psem Jarosława; Halina boi się wilków, jej ojciec poluje na Siwego |
-| Q04 ↔ G02 | miękkie | Zła sprężystość starego młota tłumaczy wadę lemiesza; po Q04 Zofia mówi to wprost |
-| Q04 → Q06 | brak | Q06 odbiera **klin i obuch siekiery** Mirosława, nie młot z Q04 |
-| G05 ↔ Q03 | miękkie | Belki: wspólny magazyn albo drewno z rozstrzygnięcia sporu o dąb |
-| Q09 ↔ G06 | miękkie | Stanisław ma gotówkę w towarze i boi się złego roku — tło listu do Janka |
-| Q05 ↔ Q13 | miękkie | Przemysł pamięta gracza; zakres jego wiedzy tylko z rozmów |
-| Q10/Q11/Q12/Q13 | miękkie | Zbigniew pamięta wcześniejsze transakcje z graczem (ton, nie cena) |
-| G01, G08 | miękkie | Household Miry: jagnię (G01), beczka Tomasza (G08) |
+| Q01 → Q02 | soft | Luke/Jacob know the player; Jacob adds advice in Q02 |
+| G04 → G07 | **option gate** | Poison for Greybeard only after G04 is done and Dora's opinion ≥10 |
+| G03 ↔ G07 | soft | Patch was Jacob's dog; Hazel fears wolves, her father hunts Greybeard |
+| G01 → G04 | soft | Molly's "Pip says get well" line only if the lamb is home |
+| Q04 ↔ G02 | soft | The hammer's crack explains the plowshare flaw; after Q04 Sophie says so outright |
+| Q04 → Q06 | none | Q06 collects Miles's **axe head and wedges**, not the Q04 hammer |
+| G05 ↔ Q03 | soft | Beams: common store, or timber from the oak settlement |
+| Q09 ↔ G06 | soft | Stephen's money is tied up in stock and he fears a bad year — background to the letter to Jack |
+| Q05 ↔ Q13 | soft | Percy remembers the player; knows only what he was told |
+| Q08 → Q11 | soft | "The well Elspeth keeps asking for" line only if Q08 didn't end with a well |
+| Q10/Q11/Q12/Q13 | soft | Silas remembers earlier deals with the player (tone, not price) |
+| G01, G08 | soft | Molly's household: the lamb (G01), Tom's barrel (G08) |
 
-## Zasada równoległości (zastępuje `roadActive`)
+## Parallel quests (replaces `roadActive`)
 
-Wcześniejszy pakiet Groka używał globalnego mutexu `roadActive`, który blokował pięć questów nawzajem, a pakiety Codexa nie znały tej reguły. To tworzyło przypadkowe blokady między pakietami. **Propozycja N:** brak globalnego mutexu. Questy mogą być aktywne równolegle; tylko questy z terminem (G04: 2 dni, Q06: umowa na dni) pokazują przy przyjęciu ostrzeżenie o kolidującym terminie. Fizyczna podróż i czas same ograniczają gracza. Flaga `roadActive` znika ze scenariuszy.
+The Grok pack used a global `roadActive` mutex that blocked five quests against each other, while the Codex packs didn't know the rule — accidental blocks between packs. **Decision (2026-10-01, made by the reviewer when the author left it open):** no global mutex. Quests can be active in parallel; only quests with a deadline (G04: 2 days, Q06: a hire of several days, Q11: low water season) show a warning on acceptance if another timed quest is running. Physical travel and time limit the player on their own.
 
-## Kalibracja nagród (propozycja do decyzji)
+## Reward calibration (proposal)
 
-Źródła: `TREASURY_START` SM 150 / MD 300 / LG 600; sakiewki NPC z `professions.ts` (pasterz 15–40, drwal 20–50, myśliwy 25–70, strażnik 30–80, zielarz 30–70, kowal 60–150, handlarz 200–400); ceny `items.ts` (chleb 6, bandaż 6, maść 20, miecz 120, longsword 200, kolczuga 240, napierśnik płytowy 420, kusza 180); questy symulacyjne płacą 30–60 (`quests.ts`). D-ECON-1: brak kreacji monet — skarb jest jawnym źródłem zewnętrznym (jak ITEM-04).
+Sources: `TREASURY_START` SM 150 / MD 300 / LG 600; NPC purses from `professions.ts` (shepherd 15–40, woodcutter 20–50, hunter 25–70, guard 30–80, herbalist 30–70, blacksmith 60–150, trader 200–400); prices in `items.ts` (bread 6, bandage 6, salve 20, sword 120, longsword 200, mail shirt 240, plate cuirass 420, crossbow 180); sim quests pay 30–60 (`quests.ts`). D-ECON-1: no minting — treasure is an explicit external source (like ITEM-04).
 
-| Skala | Przykłady | Gotówka dla gracza | Wartość przedmiotów |
+| Scale | Examples | Cash for the player | Item value |
 |---|---|---|---|
-| Mały lokalny (H) | G01, G03, Q01, Q03, Q07, Q09 | 10–35 z sakiewki/skarbca SM | drobne: wełna, chleb, pochodnie |
-| Średni / droga H↔V | G02, G04, G05, G06, G07, G08, Q02, Q04, Q06, Q08 | 20–70 | do ~60 (skóra wilka, maści) |
-| Wyprawa ze skarbem (V/T i dalej) | Q05, Q11, Q12, Q13 | 150–600 realnie do zdobycia | 200–800 (pierścienie, kamienie, broń mistrzowska) |
-| Wielki projekt | Q10 | 300–900 jednorazowo **albo** udział 10–20% z rzeczywistych dostaw | — |
+| Small local (H) | G01, G03, Q01, Q03, Q07, Q09 | 10–35 from an SM purse/treasury | small: wool, bread, torches |
+| Medium / H↔V road | G02, G04, G05, G06, G07, G08, Q02, Q04, Q06, Q08 | 20–70 | up to ~60 (wolf pelt, salves) |
+| Treasure expedition (V/T and beyond) | Q05, Q11, Q12, Q13 | 150–600 realistically obtainable | 200–800 (rings, gems, masterwork weapon) |
+| Large project | Q10 | 300–900 once **or** a 10–20% share of real loads | — |
 
-Wartości proponowanych przedmiotów (do zatwierdzenia w `items.ts`/LOOT-01): złoty pierścień 80–150, rubin/szmaragd szlifowany 120–250, srebrna sztaba handlowa 60–90, dzwon srebrzony (sprzedaż na metal i rzemiosło) 300–450, **Pinewatch Longsword** (longsword klasy mistrzowskiej) 450–600, wzmacniany kaftan skórzany wysokiej jakości 120–180. Wypłata ze skarbca osady nie może przekroczyć jego stanu (wypłata częściowa jak w `quests.ts`).
+Proposed item values (to approve in `items.ts`/LOOT-01): gold ring 80–150, cut ruby/emerald 120–250, silver trade bar 60–90, silver-clad bell (sale for metal and craft) 300–450, **Pinewatch Longsword** (masterwork longsword) 450–600, fine reinforced leather cuirass 120–180. A settlement treasury payout can never exceed its balance (partial payment, as in `quests.ts`).

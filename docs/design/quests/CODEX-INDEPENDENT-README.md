@@ -1,70 +1,60 @@
-# Quest pack — Roads, Work, and What We Keep
+# Quest pack A — Roads, Work, and What We Keep
 
-**Status: autorska propozycja narracyjna, nie zatwierdzony kanon i nie implementacja.** Przerobione w review 2026-10-01 ([REVIEW-2026-10-01](REVIEW-2026-10-01.md)); obsada, miejsca, powiązania i kalibracja nagród są teraz wspólne dla wszystkich pakietów: [QUEST-WORLD](QUEST-WORLD.md) (wygrywa przy sprzeczności).  
-Data: 2026-09-30. Brief i ograniczenia tematyczne: Jan. Dialogi: English; dokumentacja projektowa: polski.  
-Źródła odczytane na `8e891fcbffa06ea2ae65cbafddab2aa7c58b23e1`.
+**Status: authored narrative proposal, not approved canon and not an implementation.** Reworked in the 2026-10-01 review ([REVIEW-2026-10-01](REVIEW-2026-10-01.md)) and translated to English. Cast, places, links and reward calibration are shared by all packs: [QUEST-WORLD](QUEST-WORLD.md) (wins on conflict). Index of all quests: [README](README.md).
 
-## Źródła i zakres pewności
+Originally written 2026-09-30 by Codex from a brief by Jan (themes and constraints). Sources read then: [VISION](../../VISION.md) in full (esp. §4–5 travel/time, §7–14 settlements/NPCs/skills, §15–19 fauna/resources, §23–26 work/quests), [VISION-APPENDIX](../../VISION-APPENDIX.md) in full, [DECISIONS](../DECISIONS.md), [FEATURES](../../state/FEATURES.json), [PROGRESS](../../state/PROGRESS.md), the [roadmap](../../roadmap/v1-closure-and-appendix.md), and plans [sim--001](../../plans/sim--001--ai-cadence-and-animal-threat.md), [npc--001](../../plans/npc--001--trade-gifts-companions.md), [economy--001](../../plans/economy--001--gathering-cooking-transport.md), [world--001](../../plans/world--001--landmarks-and-treasure.md). Code check: `src/game/sim/quests.ts` and `interact.ts` — current quests count kills/repairs; this pack needs new narrative support.
 
-- [VISION](../../VISION.md), w całości; szczególnie §4–5 (podróż/czas), §7–14 (osady/NPC/skills), §15–19 (fauna/zasoby), §23–26 (praca/zadania).
-- [VISION-APPENDIX](../../VISION-APPENDIX.md), w całości: landmarki, ślady, reakcje zwierząt, gotowanie, towarzysze.
-- [DECISIONS](../DECISIONS.md), [FEATURES](../../state/FEATURES.json), [PROGRESS](../../state/PROGRESS.md), [roadmap](../../roadmap/v1-closure-and-appendix.md).
-- Przeczytane plany: [sim--001](../../plans/sim--001--ai-cadence-and-animal-threat.md), [npc--001](../../plans/npc--001--trade-gifts-companions.md), [economy--001](../../plans/economy--001--gathering-cooking-transport.md), [world--001](../../plans/world--001--landmarks-and-treasure.md).
-- Kontrola kodu: `src/game/sim/quests.ts` i `interact.ts`. Obecne questy liczą zabicia/naprawę; napis „przegoń albo ubij” nie dowodzi działającego niebojowego zakończenia. Pakiet wymaga nowej obsługi narracji.
+## Status codes
 
-### Współistnienie z pakietem Groka i pakietem skarbów
-
-Pierwotnie pakiety istniały obok siebie bez integracji, co dawało sprzeczne obsady tych samych slotów w H. Od 2026-10-01 wszystkie trzy pakiety dzielą jedną obsadę i mapę ([QUEST-WORLD](QUEST-WORLD.md)), a globalny mutex `roadActive` z pakietu Groka został usunięty. Indeks wszystkich questów: [README](README.md).
-
-Oznaczenia we wszystkich plikach:
-
-| Kod | Znaczenie |
+| Code | Meaning |
 |---|---|
-| **I** | Istniejąca funkcja, opisana jako verified w FEATURES; nie oznacza ponownego przetestowania jej w tej sesji |
-| **P** | Wymaganie wizji z istniejącym planem planned, jeszcze nie działająca funkcja |
-| **D** | Zatwierdzony kierunek wizji, odłożony/deferred; brak obietnicy realizacji w v1/v2 |
-| **N** | Nowa propozycja tego pakietu, wymagająca decyzji i osobnego projektu implementacji |
+| **I** | Existing feature, `verified` in FEATURES (not re-tested in this session) |
+| **P** | Vision requirement with a `planned` plan, not yet working |
+| **D** | Approved direction, `deferred`; no promise for v1/v2 |
+| **N** | New proposal of this pack, needs a decision and its own implementation design |
 
-I: potrzeby, fizyczne podróże, profesje bazowe, zbieranie, crafting/zamówienia, naprawy budynków, konstrukcje, handel, oprawianie, świeżość, walka ze zwierzętami, legowiska, opinia/reputacja. P: towarzysze/prezenty, gotowanie w slotach, wózki ręczne, zachowania strachu, landmarki i skarby. D: wieloetapowe questy (`QUEST-03`), jaskinie (`WORLD-05`), outposty (`SET-04`), górnik i pozostałe nowe profesje (`NPC-06`), jazda/wozy (`WORLD-09`). **Każdy scenariusz wymaga D:QUEST-03 oraz N: dialogów warunkowych, pamięci dowodów i rezerwacji obsady. Żaden nie jest dziś gotową zawartością wykonywalną.**
+I: needs, physical travel, base professions, gathering, crafting/orders, building repairs, construction, trade, skinning, freshness, combat with animals, dens, opinion/reputation. P: companions/gifts, cooking slots, handcarts, fear behaviours, landmarks and treasure. D: multi-stage quests (`QUEST-03`), caves (`WORLD-05`), outposts (`SET-04`), miner and other new professions (`NPC-06`), riding/wagons (`WORLD-09`). **Every scenario needs D:QUEST-03 plus N: conditional dialog, evidence memory and cast reservation. None is runnable content today.**
 
-Nie zmieniamy statusów FEATURES ani harmonogramu implementacji. Przy sprzeczności bieżący status FEATURES ma pierwszeństwo przed historycznym akapitem PROGRESS. Nowe postacie, miejsca, receptury, prawa własności i liczby w tym katalogu mają status N.
+FEATURES statuses and the implementation schedule are not changed by this pack. On conflict, the current FEATURES status wins over historical PROGRESS text. New characters, places, recipes, ownership rules and numbers here are N.
 
-## Zestaw (po review 2026-10-01)
+## The set (after the 2026-10-01 review)
 
-| Quest | Konflikt, postacie | Aktywności i kluczowy wybór | Zakończenia / ton |
+| Quest | Conflict, characters | Activities and key choice | Endings / tone |
 |---|---|---|---|
-| [Q01 A Hare Out of Place](q01-a-hare-out-of-place.md) | Myśliwy Jarosław, jego uczeń Leszek, handlarz Stanisław: futro, zwierzyna czy obserwacja? | Tropienie, obserwacja z ukrycia, polowanie | Białe futro; zwykła zwierzyna; zając zostaje. Ciekawość, mała duma |
-| [Q02 The Hollow Below the Road](q02-the-hollow-below-the-road.md) | Myśliwa Dorota i strażniczka Bogna (V): locha z warchlakami przy drodze | Rozpoznanie wykrotu, ocena ryzyka | Usunięcie; objazd; warta do odejścia lochy. Odpowiedzialność |
-| [Q03 A Roof Before Rain](q03-a-roof-before-rain.md) | Drwal Mirosław, Ludmiła, Jadwiga, Mieszko: belka nad izbą matki | Oględziny, pożyczka z magazynu, budowa | Wymiana belki; dobudówka; podpora. Przywiązanie i zmiana |
-| [Q04 The Handle Remembers](q04-the-handle-remembers.md) | Kowalka Zofia i jej ojciec Bogdan (V): pęknięty młot | Próba narzędzia, odkrycie pęknięcia | Przekucie; nowy młot; pamiątka. Intymny |
-| [Q05 The Map That Missed the River](q05-the-map-that-missed-the-river.md) | Handlarka Radomira i archiwista Przemysł (T): mapa babki | Wyprawa, suche łoże rzeki, kopanie, skrzynia | Rodzina; publiczny bród; szmaragd dla gracza. Odkrycie |
-| [Q06 Room for One More](q06-room-for-one-more.md) | Mieszko chce iść do V; matka potrzebuje go w polu | Podróż z towarzyszem, obóz, odbiór zamówienia | Płatny; „someday that I mean”; solo. Pierwsza samodzielność |
-| [Q07 Six Bowls, One Pan](q07-six-bowls-one-pan.md) | Ludmiła organizuje posiłek; Wojciech ma obchód | Świeżość, gotowanie, zastępstwo na warcie | Jeden stół; dwie zmiany; na progu. Ciepło i humor |
-| [Q08 The Long Way to Water](q08-the-long-way-to-water.md) | Pasterka Elżbieta, sołtyska Małgorzata, Bogna (V) | Trasa, próbny wykop, budowa | Koryto; studnia; grafik. Sąsiedzkość |
-| [Q09 Goods on the Ground](q09-goods-on-the-ground.md) | Stanisław ma narzędzia, domy H mają ciężkie dobra | Potrzeby, barter, noszenie | Wymiana; komis; lista potrzeb. Lekka negocjacja |
-| [Q10 What the Mountain Owes](q10-what-the-mountain-owes.md) | Górniczka Agnieszka, kupiec Zbigniew, wójt Bolesław (T) | Sztolnia, złe powietrze, próbka, outpost | Sprzedaż; udział; sezon. Ambicja i koszt |
+| [Q01 A Hare Out of Place](q01-a-hare-out-of-place.md) | Hunter Jacob Bowman, his apprentice Luke Lambert, trader Stephen Chapman: hide, game or observation? | Tracking, watching from cover, hunting | White hide; ordinary game; the hare stays. Curiosity, small pride |
+| [Q02 The Hollow Below the Road](q02-the-hollow-below-the-road.md) | Hunter Edith Fowler and guard Bridget Ward (V): a sow with farrow by the road | Scouting the hollow, weighing risk | Clear it; detour; watch until she leaves. Responsibility |
+| [Q03 A Roof Before Rain](q03-a-roof-before-rain.md) | Woodcutter Miles Hewer, Lucy, Joan, Matthew: the beam over Joan's room | Inspection, loan from the store, building | New beam; lean-to; prop. Attachment and change |
+| [Q04 The Handle Remembers](q04-the-handle-remembers.md) | Smith Sophie Smith and her father Bernard (V): a cracked hammer | Tool test, finding the crack | Reforge; new hammer; keepsake. Intimate |
+| [Q05 The Map That Missed the River](q05-the-map-that-missed-the-river.md) | Trader Rosalind Marchant and scribe Percy Clark (T): a grandmother's map | Expedition, dry riverbed, digging, strongbox | Family; public crossing; an emerald for the player. Discovery |
+| [Q06 Room for One More](q06-room-for-one-more.md) | Matthew wants to go to V; his mother needs him in the field | Travel with a companion, camp, collecting an order | Paid; "a someday that I mean"; solo. First independence |
+| [Q07 Six Bowls, One Pan](q07-six-bowls-one-pan.md) | Lucy organises a meal; Mark Hornblower has his rounds | Freshness, cooking, standing in on the watch | One table; two sittings; the doorstep. Warmth and humour |
+| [Q08 The Long Way to Water](q08-the-long-way-to-water.md) | Shepherd Elspeth, reeve Margaret, Bridget (V) | Route, trial dig, building | Trough; well; rota. Neighbourliness |
+| [Q09 Goods on the Ground](q09-goods-on-the-ground.md) | Stephen has tools, H households have heavy goods | Needs, barter, carrying | Swap; commission; list of needs. Light negotiation |
+| [Q10 What the Mountain Owes](q10-what-the-mountain-owes.md) | Miner Agnes Collier, merchant Silas Moneypenny, alderman Baldwin (T) | Adit, bad air, sample, outpost | Sale; share; one season. Ambition and cost |
 
-## Obsada, miejsca i powiązania
+No quest requires killing people, profanity, betrayal or fantasy. Inspirations (Fallout 2/3, Gothic, Skyrim) are a creative direction — many practical solutions, returning consequences, trust earned by work and knowledge of places — not copied characters, scenes or cynicism.
 
-Przeniesione do [QUEST-WORLD](QUEST-WORLD.md). Zasada pozostaje: imiona to uchwyty projektowe, quest obsadza istniejącego NPC o danej roli; brak pasującego household oznacza, że quest się nie pojawia.
+## Cast, places and links
 
-## Wspólny kontrakt scen i stanu (N)
+Moved to [QUEST-WORLD](QUEST-WORLD.md). The rule stays: names are design handles; a quest casts an existing NPC of the right role; no matching household means the quest doesn't appear. Do not rename NPCs the player has already met or rewrite marriages in an existing save.
 
-Każdy plik definiuje własne flagi w przestrzeni `Qxx`. Flagi logiczne startują jako false, wyliczenia jako `unset`; rzeczy wykonane fizycznie mają ID encji/zdarzenia. Zapis „X + Y” w warunku oznacza AND; `A / B` w opisie wariantu to wybór, nie losowanie. Każdy wiersz `Player [A/B/…]` jest osobną wybieralną odpowiedzią; następująca po nim wypowiedź NPC jest jej reakcją. Po reakcji wracamy do wspólnej części albo wskazanego przejścia. Gracz nie wypowiada wszystkich wariantów.
+## Shared scene and state contract (N)
 
-1. **Wiedza:** NPC zna zdarzenie tylko jako świadek, uczestnik przekazania dowodu lub odbiorca wskazanej rozmowy. Dziennik gracza i globalna flaga nie są telepatią. Raport ustny pozwala reagować na raport, nie udaje oględzin. Wariant relacyjny oparty na `npc.opinion ≥ 25` dotyczy tonu/dodatkowej opcji, nigdy obowiązkowego przejścia; wartości są N do kalibracji. Domyślna wersja zawsze istnieje.
-2. **Przebieg:** rozmowy pomocnicze są opcjonalne, chyba że warunek przejścia wymaga ich wyniku. Oględziny/praca pozostają czynnościami gracza. Przewidziane świadectwo NPC może zastąpić zręcznościowy/skillowy wąski gardło kosztem jego czasu i materiałów. Brak EXP i poziomów postaci. Trening wynika z praktyki, nie z magicznej premii po dialogu.
-3. **Zakończenie:** wyłącznie przy jawnym potwierdzeniu dostępnej gałęzi; sprawdzić wszystkie warunki ponownie, zastosować jednorazowo. Zmiana świata, rozmowa epilogowa i wypłata są osobnymi skutkami jednego zapisanego wyniku. Wyjście z rozmowy nie wybiera zakończenia. Konsekwencje są zakresem tej propozycji, nie gotowymi bonusami silnika.
-4. **Czas:** zapowiedź deszczu/wyjazdu nie uruchamia ukrytego zegara porażki. Termin pojawia się dopiero po podaniu go w dzienniku i świadomym umówieniu. Potrzeby i praca liczone w kalendarzu; walka w sekundach rozgrywki. Nie zatrzymujemy całego świata dla questa. Gdy sytuację rozwiąże NPC, uznajemy rzeczywisty wynik i wykonany wkład gracza; nie odtwarzamy uszkodzeń/zwierząt.
-5. **Ekonomia:** każdy pieniądz i przedmiot ma właściciela, płatnika oraz źródło. Ceny pozostają do kalibracji; przed transakcją pokazać konkretną ofertę i dostępne środki. D-ECON-1 zabrania kreacji monet. Nie przyznawać za chwilę pracy więcej niż skarb osady. Brak pieniędzy daje jawnie zaproponowaną zapłatę rzeczową lub odroczenie decyzji, nie ukryty dług bez końca. Zapłata za pracę nie zmienia fabularnego wyniku.
-6. **Przerwanie:** odmowa przed przyjęciem nie daje kary. Wstrzymanie zapisuje postęp i przywraca NPC obowiązki; wznowienie sprawdza świat. KO gracza nie kasuje dowodów, po powrocie należy ponownie ocenić ryzyko. Niedostępny NPC: czekanie/leczenie; po śmierci brak automatycznego zastępcy pamiętającego prywatne rozmowy. Dziennik wskazuje faktyczne zamknięcie lub możliwą wskazaną sukcesję. To nie czwarty autorski epilog.
-7. **Przedmioty:** nie zużywać unikatowych dowodów przy zwykłym handlu/craftingu bez ostrzeżenia; przechowują je gracz albo nazwany depozyt. Utracona mapa może być odtworzona z już sporządzonej kopii; nieodczytany zniszczony dokument nie odtwarza się magicznie. Udźwig i świeżość obowiązują też w questach; dopuszczalne kilka kursów.
-8. **Zależności:** tylko Q02 jest kontynuacją Q01, ale ma wejście niezależne. Mapa miękkich powiązań między pakietami: [QUEST-WORLD](QUEST-WORLD.md#powiązania-między-questami). Pozostałe nie wymagają konkretnego zakończenia wcześniejszego questu. Pamięć o wyniku daje lokalny callback wyłącznie świadkom lub po przekazaniu informacji. Nie wymagamy wspólnego „najlepszego zakończenia” wszystkich questów.
+Each file defines its own flags in a `Qxx` namespace. Booleans start false, enums `unset`; physically performed things carry an entity/event ID. "X + Y" in a condition means AND; `A / B` in a variant description is a choice, not a random roll. Each `Player [A/B/…]` line is a separate selectable reply; the NPC line after it is the reaction. After the reaction, the conversation returns to the shared part or the named transition. The player doesn't say every variant.
 
-## Wymagania wspólne pozostawione implementatorowi
+1. **Knowledge:** an NPC knows an event only as a witness, a participant in handing over evidence, or the recipient of a named conversation. The player's journal and global flags are not telepathy. A spoken report lets an NPC react to the report, not pretend to have inspected anything. Relationship variants based on `npc.opinion ≥ 25` change tone or add an option, never gate a mandatory transition; values are N, to calibrate. A default version always exists.
+2. **Flow:** helper conversations are optional unless a transition needs their result. Inspection and work stay player actions. A planned NPC testimony can replace a dexterity/skill bottleneck at the cost of that NPC's time and materials. No XP or character levels. Training comes from practice, not a magic bonus after dialog.
+3. **Endings:** only on explicit confirmation of an available branch; re-check all conditions, apply once. World change, epilogue conversation and payout are separate effects of one recorded result. Leaving a conversation never picks an ending. Consequences are this proposal's scope, not ready engine bonuses.
+4. **Time:** mention of rain or departure starts no hidden failure clock. A deadline exists only once it's in the journal and consciously agreed. Needs and work run on the calendar; combat in gameplay seconds. The world isn't paused for a quest. If an NPC resolves the situation, the real result and the player's actual contribution are acknowledged; damage/animals are not restored.
+5. **Economy:** every coin and item has an owner, a payer and a source. Prices are to be calibrated; before a transaction show the concrete offer and available funds. D-ECON-1 forbids minting coins. Never pay more for a moment's work than the settlement treasury holds. Lack of money leads to an explicit offer of payment in kind or a deferred decision, never an endless hidden debt. Pay for work doesn't change the story outcome.
+6. **Interruption:** refusing before acceptance has no penalty. Pausing saves progress and returns NPCs to their duties; resuming re-checks the world. Player KO doesn't erase evidence; risk is reassessed on return. Unavailable NPC: wait/heal; after death there's no automatic replacement who remembers private conversations. The journal shows the actual closure or a named succession. That is not a fourth authored epilogue.
+7. **Items:** unique evidence isn't consumed by ordinary trade/crafting without a warning; it's kept by the player or a named depository. A lost map can be restored from a copy already made; an unread destroyed document doesn't magically come back. Carrying limits and freshness apply in quests; several trips are fine.
+8. **Dependencies:** only Q02 follows Q01, and it has an independent entry. Map of soft links between packs: [QUEST-WORLD](QUEST-WORLD.md#cross-quest-links). Other quests don't need a particular earlier ending. Remembered results give local callbacks only to witnesses or after the information is passed on. No shared "best ending" across all quests is required.
 
-N: trwałe ID obsady i rekwizytów, flagi świadectw, wielogałęziowe rozmowy, jednostkowe zakończenia, obsługa przerw i odmienionego świata, harmonogramy bez blokowania AI, własność i zgoda na użycie zasobów. Stany sprawdzać przy zdarzeniach/rozmowie, nie pełnym skanem świata co klatkę. Zapis/odczyt, jednorazowość transferów i migracje mają objąć całość. To wymagania zachowania; nie narzucamy schematu danych ani architektury silnika.
+## Shared requirements left to the implementer
 
-## Status pracy
+N: persistent IDs for cast and props, testimony flags, branching conversations, unit endings, handling interruptions and a changed world, schedules that don't block AI, ownership and consent to use resources. Check state on events/conversations, not with a full world scan every frame. Save/load, one-time transfers and migrations must cover all of it. These are behaviour requirements; no data schema or engine architecture is imposed.
 
-Pierwotny zestaw i autoreview: [REVIEW](REVIEW.md) (historyczne). Przeróbka 2026-10-01 (trzy rundy na quest, scalenie obsady, kalibracja): [REVIEW-2026-10-01](REVIEW-2026-10-01.md). Pakiet pozostaje propozycją do decyzji autora gry; nie oznacza implementacji mechanik P/D/N.
+## Work status
+
+Original set and self-review: [REVIEW](REVIEW.md) (historical, Polish). 2026-10-01 rework (three rounds per quest, merged cast, calibration, English): [REVIEW-2026-10-01](REVIEW-2026-10-01.md). The pack remains a proposal for the game author's decision; it does not mean the P/D/N mechanics are implemented.

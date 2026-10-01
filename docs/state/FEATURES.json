@@ -935,7 +935,7 @@
    "behavior": "Handel możliwy z każdym NPC (nadwyżki); mechanizm handlu służy też do przekazywania przedmiotów",
    "verify": "vitest + e2e",
    "status": "verified",
-   "evidence": "vitest appendix-npc.test.ts \"TRADE-02: every adult offers a surplus…\", \"TRADE-02: buying from a non-trader…\", \"TRADE-02: talking, trading, gifts and hiring are offered…\"; panel handlu z przyciskiem Give (e2e acceptance 4a/4d/17)"
+   "evidence": "vitest appendix-npc.test.ts \"TRADE-02: every adult offers a surplus…\", \"TRADE-02: buying from a non-trader…\", \"TRADE-02: talking, trading, gifts and hiring are offered…\"; trade panel with Give button (e2e acceptance 4a/4d/17)"
   },
   {
    "id": "SOC-01",
@@ -944,7 +944,7 @@
    "behavior": "Osobny system prezentów podnoszący relację (npc.opinion); NPC wyrażają preferencje przedmiotów",
    "verify": "vitest",
    "status": "verified",
-   "evidence": "vitest appendix-npc.test.ts \"SOC-01: a gift raises opinion with diminishing returns…\", \"SOC-01: the wanted item is revealed…\"; e2e acceptance 17 (prezent przez UI podnosi opinion)"
+   "evidence": "vitest appendix-npc.test.ts \"SOC-01: a gift raises opinion with diminishing returns…\", \"SOC-01: the wanted item is revealed…\"; e2e acceptance 17 (gift through the UI raises opinion)"
   },
   {
    "id": "UI-03",
@@ -1016,7 +1016,7 @@
    "behavior": "Najem towarzysza na czas, za kwotę, z zadaniem i poziomem ryzyka; wspólna podróż buduje relację",
    "verify": "vitest + e2e",
    "status": "verified",
-   "evidence": "vitest appendix-npc.test.ts \"COMP-01: hiring pays the NPC 1:1, the companion follows and the contract ends…\", \"COMP-01: risk raises the wage…\"; e2e acceptance 17 (najem przez UI)"
+   "evidence": "vitest appendix-npc.test.ts \"COMP-01: hiring pays the NPC 1:1, the companion follows and the contract ends…\", \"COMP-01: risk raises the wage…\"; e2e acceptance 17 (hiring through the UI)"
   },
   {
    "id": "COMP-02",

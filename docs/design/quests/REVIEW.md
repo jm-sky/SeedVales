@@ -1,6 +1,6 @@
 # Rejestr review i stan pracy
 
-> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+> **Historical (before the 2026-10-01 rework).** Refers to an earlier version of the scenario and uses old (Polish) character names; it is not evidence of the current version's quality. Current log: [REVIEW-2026-10-01](REVIEW-2026-10-01.md); name mapping: [QUEST-WORLD](QUEST-WORLD.md#cast).
 
 **2026-09-30.** Review autorskie, bez niezależnego recenzenta. Nie jest testem implementacji ani testem grywalności z graczem.
 

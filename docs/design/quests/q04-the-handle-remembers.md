@@ -1,136 +1,137 @@
 # Q04 — The Handle Remembers
 
-**Status: propozycja N; pakiet A (Codex 1), kowalstwo.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Trzy etapy, trzy zakończenia. Skala: mały, intymny quest w V.
+**Status: proposal (N); pack A (Codex round 1), smithing.** Cast: [QUEST-WORLD](QUEST-WORLD.md). Three stages, three endings. Scale: small, intimate quest in V.
 
-## Założenie
+## Premise
 
-W kuźni {V} pęka trzonek starego młota Bogdana. Kuźnię od dwóch lat prowadzi jego córka Zofia, ale Bogdan wciąż przychodzi do drobnej roboty — kucie ostrzy, nity, cienkie blachy — i robi to tym jednym młotem. Zofia chce zrobić mu nowy, lżejszy, bo widzi, że stary „oddaje” w nadgarstek. Bogdan twierdzi, że młot jest dobry, tylko trzonek się zestarzał. Ma po trochu rację: głowa ma mikropęknięcie przy obuchu, przez które młot drży przy odbiciu — ta sama robota, ten sam nadgarstek, gorsze odkuwki. Gracz pomaga przeprowadzić próbę i rodzina decyduje: przekuć głowę, zrobić nowy młot, czy powiesić stary na ścianie.
+In the {V} smithy the handle of old Bernard Smith's hammer cracks. His daughter Sophie has run the forge for two years, but Bernard still comes in for the fine work — blade edges, rivets, thin plate — and always with that one hammer. Sophie wants to make him a new, lighter one, because she can see it jars his wrist. Bernard says the hammer's fine, only the handle got old. Both are partly right: the head has a hairline crack by the poll that makes it shiver on the rebound — same work, same wrist, worse forgings. The player helps run a test, and the family decides: reforge the head, make a new hammer, or hang the old one on the wall.
 
-**Wiedza NPC.** Zofia wie, że ojciec ma bóle nadgarstka. Bogdan wie, że ostatnie lemiesze wychodziły gorsze, i nikomu tego nie powiedział (powiązanie z G02). Żadne nie wie o pęknięciu głowy przed próbą.
+**NPC knowledge.** Sophie knows her father's wrist hurts. Bernard knows his last plowshares came out worse and has told nobody (link to G02). Neither knows about the crack before the test.
 
-**Warunki startu.** V ma household kowala z co najmniej dwiema osobami. I: kowal, zamówienia z zaliczką (`CRAFT-02`), durability, materiały. N: próba narzędzia, przedmiot-pamiątka.
+**Start conditions.** V has a blacksmith household with at least two people. I: smith, orders with deposit (`CRAFT-02`), durability, materials. N: tool test, keepsake item.
 
-## Stan
+## State
 
-`accepted`, `bogdanTold`, `testDone`, `crackFound`, `choice = unset|reforge|new|keepsake`, `orderPlaced`, `settled`.
+`accepted`, `bernardTold`, `testDone`, `crackFound`, `choice = unset|reforge|new|keepsake`, `orderPlaced`, `settled`.
 
-## Etap 1 — A cracked handle
+## Stage 1 — A cracked handle
 
-**S1 — Zofia przy kowadle**
+**S1 — Sophie at the anvil**
 
-**Zofia:** Cracked along the grain. Right where his hand goes. That's not the place you want a crack.
+**Sophie:** Cracked along the grain. Right where his hand goes. That's not the place you want a crack.
 **Player:** Can it be fixed?
-**Zofia:** I can put a new handle on it in an afternoon. Or I can make him a new hammer, which he'll hate. Those aren't the same job.
+**Sophie:** I can put a new handle on it in an afternoon. Or I can make him a new hammer, which he'll hate. Those aren't the same job.
 **Player [A]:** Let your father show me how he uses it.
-**Zofia:** Yes. Please. He'll be insulted, and then he'll show you everything. → `accepted`
+**Sophie:** Yes. Please. He'll be insulted, and then he'll show you everything. → `accepted`
 **Player [B]:** Just make a new one.
-**Zofia:** You tell him. I've tried three times.
+**Sophie:** You tell him. I've tried three times.
 
-**S2 — Bogdan na ławie przed kuźnią**
+**S2 — Bernard on the bench outside the smithy**
 
-**Bogdan:** I had this hammer before she could lift the bellows.
+**Bernard:** I had this hammer before she could lift the bellows.
 **Player:** Then you know its balance better than anyone.
-**Bogdan:** I know *my* balance. The hammer's changed less than my knees have.
+**Bernard:** I know *my* balance. The hammer's changed less than my knees have.
 **Player:** What work does it do best?
-**Bogdan:** Edges. Thin work. Not the heavy drawing-out, I leave that to her now. — Ask her the numbers. I just know when it feels wrong.
+**Bernard:** Edges. Thin work. Not the heavy drawing-out, I leave that to her now. — Ask her the numbers. I just know when it feels wrong.
 **Player [A]:** And lately? Does it feel wrong?
-**Bogdan:** *(długa pauza)* The last few shares I did came out — not bad. Not like they used to. I put it down to the iron. → `bogdanTold`
+**Bernard:** *(long pause)* The last few shares I did came out — not bad. Not like they used to. I put it down to the iron. → `bernardTold`
 
-**S3 — Próba na zimnym żelazie** (czynność: gracz trzyma pręt, Bogdan uderza; albo gracz uderza sam — I: crafting/skill kowalstwa nie jest wymagany)
+**S3 — Test on cold iron** (action: the player holds a bar while Bernard strikes, or strikes themselves — no smithing skill required)
 
-**Zofia:** One test. Cold iron. No showing off.
+**Sophie:** One test. Cold iron. No showing off.
 **Player:** Why cold?
-**Zofia:** Heat hides a bad hammer. Cold shows you where the blow goes.
-**Bogdan:** It goes into my wrist.
-**Zofia:** Exactly.
+**Sophie:** Heat hides a bad hammer. Cold shows you where the blow goes.
+**Bernard:** It goes into my wrist.
+**Sophie:** Exactly.
 
-## Etap 2 — Two kinds of good
+## Stage 2 — Two kinds of good
 
-**S4 — Po próbie** (`testDone`; jeśli gracz obejrzy głowę z bliska → `crackFound`)
+**S4 — After the test** (`testDone`; looking at the head closely → `crackFound`)
 
 **Player:** It lands true. But it shivers on the way back up.
-**Bogdan:** It didn't do that last winter.
+**Bernard:** It didn't do that last winter.
 **Player [crackFound]:** There's a hairline crack by the poll. It's in the head, not the handle.
-**Zofia:** *(bierze młot, ogląda pod światło)* …There. There it is. Father, that's been in there months.
-**Bogdan:** *(cicho)* The shares.
-**Zofia:** What about the shares?
-**Bogdan:** Nothing. Later.
+**Sophie:** *(takes the hammer, turns it to the light)* …There. There it is. Father, that's been in there months.
+**Bernard:** *(quietly)* The shares.
+**Sophie:** What about the shares?
+**Bernard:** Nothing. Later.
 
-Bez `crackFound` Zofia podejrzewa pęknięcie, ale nie ma pewności; opcja `reforge` jest wtedy niedostępna (nie przekuwa się czegoś, czego nie zbadano).
+Without `crackFound` Sophie suspects a crack but can't be sure; `reforge` is unavailable (you don't reforge what you haven't examined).
 
-**S5 — Co dalej**
+**S5 — What next**
 
-**Zofia:** Three ways. New handle on the old head — no, not now, not with that crack. Reforge the head: I draw it out again, it comes out shorter, maybe a little lighter. Or a new hammer from new iron.
+**Sophie:** Three ways. New handle on the old head — no, not now, not with that crack. Reforge the head: I draw it out again, it comes out shorter, maybe a little lighter. Or a new hammer from new iron.
 **Player:** Which would you choose?
-**Zofia:** For a tool? Whatever survives the work. Tell me what work he's going to do.
-**Bogdan:** Whatever I like. And changing my mind.
+**Sophie:** For a tool? Whatever survives the work. Tell me what work he's going to do.
+**Bernard:** Whatever I like. And changing my mind.
 
-**S6 — Bogdan sam**
+**S6 — Bernard alone**
 
-**Bogdan:** If she reforges it, there's no old hammer left. It's just a smaller one with the same name.
+**Bernard:** If she reforges it, there's no old hammer left. It's just a smaller one with the same name.
 **Player:** Is that what bothers you?
-**Bogdan:** That's what I said. What bothers me is a different word.
+**Bernard:** That's what I said. What bothers me is a different word.
 **Player [A]:** You could keep the old head and have a new one made.
-**Bogdan:** Two hammers. Like a rich man.
+**Bernard:** Two hammers. Like a rich man.
 **Player [B]:** It might be time to let it rest.
-**Bogdan:** Hm. Maybe it's earned that. Maybe I have.
+**Bernard:** Hm. Maybe it's earned that. Maybe I have.
+**Bernard [G02 `bernardAdmits`]:** You were right about that share, you know. I'd rather have heard it from the hammer.
 
-## Etap 3 — Wybór i zakończenia
+## Stage 3 — Choice and endings
 
-**S7 — Wybór** (ustawia `choice`)
+**S7 — Choice** (sets `choice`)
 
 **Player [reforge]:** Reforge the head. Keep the old handle on the wall.
-**Bogdan:** That's keeping it and losing it at once.
-**Zofia:** That's what it is, yes.
+**Bernard:** That's keeping it and losing it at once.
+**Sophie:** That's what it is, yes.
 
 **Player [new]:** A new hammer. The old one stays as it is.
-**Zofia:** That's iron and charcoal I'd rather not spend this month. If you can bring the iron, I'll do the work for nothing.
-**Bogdan:** For nothing. Listen to her.
+**Sophie:** That's iron and charcoal I'd rather not spend this month. If you can bring the iron, I'll do the work for nothing.
+**Bernard:** For nothing. Listen to her.
 
 **Player [keepsake]:** Hang it up. He uses yours until he wants his own.
-**Bogdan:** Hers is too heavy.
-**Zofia:** Then I'll make you a light one when you ask. Not before.
+**Bernard:** Hers is too heavy.
+**Sophie:** Then I'll make you a light one when you ask. Not before.
 
-Materiały: `reforge` — węgiel ×4 (gracz lub zapasy kuźni); `new` — sztaba żelaza ×2 + węgiel ×4 (I: `iron_ingot`, `coal`; gracz przynosi albo kupuje — zamówienie `CRAFT-02` z zaliczką płaconą przez gracza, jeśli materiały są z kuźni). Czas pracy: zgodnie z istniejącym systemem zamówień.
+Materials: `reforge` — coal ×4 (player or forge stock); `new` — iron ingot ×2 + coal ×4 (I: `iron_ingot`, `coal`; the player brings or buys them — a `CRAFT-02` order with a deposit paid by the player if forge materials are used). Work time per the existing order system.
 
 ### E1 — The same hammer, shorter
-Warunek: `reforge`, `crackFound`, materiały, zamówienie ukończone.
+Condition: `reforge`, `crackFound`, materials, order complete.
 
-**Bogdan:** It feels wrong.
-**Zofia:** New things do.
-**Bogdan:** *(drugie uderzenie)* …It feels honest. — The old handle?
-**Zofia:** On the wall, over the door.
-**Bogdan:** Good. It can watch.
+**Bernard:** It feels wrong.
+**Sophie:** New things do.
+**Bernard:** *(second strike)* …It feels honest. — The old handle?
+**Sophie:** On the wall, over the door.
+**Bernard:** Good. It can watch.
 
-Skutek: Bogdan pracuje dalej; jakość jego drobnych wyrobów wraca do normy (N: modyfikator jakości NPC-kowala). Zapłata: Zofia oferuje graczowi **naprawę jednej broni lub narzędzia do pełnej durability** za darmo (usługa, nie gotówka).
+Effect: Bernard keeps working; his fine work returns to normal quality (N: NPC smith quality modifier). Payment: Sophie repairs **one weapon or tool to full durability** for the player for free (a service, not coin).
 
 ### E2 — Two hammers
-Warunek: `new`, zamówienie odebrane.
+Condition: `new`, order collected.
 
-**Zofia:** New handle, new head, same purpose.
-**Bogdan:** Same purpose is enough. *(waży w dłoni)* Lighter. I'll get used to it.
+**Sophie:** New handle, new head, same purpose.
+**Bernard:** Same purpose is enough. *(weighs it in his hand)* Lighter. I'll get used to it.
 **Player:** And the old one?
-**Bogdan:** For teaching. Where not to put your thumb.
+**Bernard:** For teaching. Where not to put your thumb.
 
-Skutek: nowy przedmiot o pełnej durability; stary młot zostaje (jako przedmiot, oznaczony „damaged — do not use”, N). Jeśli gracz przyniósł żelazo, Zofia nie bierze zapłaty za robociznę i daje graczowi **gwoździe/ćwieki ×20** lub **nóż** (wartość ~8 c) „z resztek”.
+Effect: a new item at full durability; the old hammer remains (marked "damaged — do not use", N). If the player brought the iron, Sophie charges nothing for labour and gives the player **nails ×20** or **a knife** (~8 c) "from the offcuts".
 
 ### E3 — The quiet hook
-Warunek: `keepsake`, młot powieszony; Bogdan nie używa go po ostrzeżeniu.
+Condition: `keepsake`, hammer hung up; Bernard doesn't use it after the warning.
 
-**Bogdan:** It's done enough.
-**Zofia:** I'll make it a proper hook.
+**Bernard:** It's done enough.
+**Sophie:** I'll make it a proper hook.
 **Player:** No new hammer?
-**Bogdan:** Later. Today I know what I'm keeping.
+**Bernard:** Later. Today I know what I'm keeping.
 
-Skutek: Bogdan pracuje mniej (N: mniejsza wydajność kuźni do czasu, aż poprosi o nowy młot — Zofia robi go sama po ok. 2 tygodniach). Zapłata: posiłek i opinia rodziny (+15), bez gotówki — gracz niczego nie kupił ani nie przyniósł.
+Effect: Bernard works less (N: lower smithy output until he asks for a new hammer — Sophie makes one herself after ~2 weeks). Payment: a meal and the family's opinion (+15), no coin — the player didn't buy or bring anything.
 
-## Odmowa, przerwanie, pominięcia
+## Refusal, interruption, omissions
 
-- Odmowa S1: młot leży w kuźni, Zofia osadza nowy trzonek na pękniętej głowie; drżenie i słabsze wyroby trwają (N), co podtrzymuje tło G02.
-- Zerwanie zamówienia: reguły `CRAFT-02` (zwrot niezużytych materiałów).
-- Niedostępna Zofia: zamówienie czeka, nie kończy się zaocznie.
-- Powiązanie z G02 (miękkie): po S4 z `crackFound` Bogdan w G02 może sam przyznać, że lemiesz był gorszy (dodatkowa opcja dialogowa, nie warunek).
+- Refusing S1: Sophie fits a new handle on the cracked head; the shivering and weaker work continue (N), keeping G02's background true.
+- Cancelled order: `CRAFT-02` rules (unused materials returned).
+- Sophie unavailable: the order waits; it never completes in absentia.
+- Link to G02 (soft): after S4 with `crackFound`, Bernard in G02 can admit the share was his fault (extra dialog option, not a condition).
 
-## Mechaniki
+## Mechanics
 
-I: kowal, zamówienia, durability, materiały. N: próba narzędzia, oznaczenie przedmiotu jako uszkodzonego/pamiątki, modyfikator jakości wyrobów NPC. **Do decyzji:** czy narzędzia mają stan „unsafe”; czy pamiątki mogą być dekoracją w budynku.
+I: smith, orders, durability, materials. N: tool test, marking an item as damaged/keepsake, NPC work-quality modifier. **Author decisions:** do tools have an "unsafe" state; can keepsakes be decorations in buildings.

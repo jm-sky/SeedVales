@@ -1,159 +1,159 @@
 # Q03 — A Roof Before Rain
 
-**Status: propozycja N; pakiet A (Codex 1), budowa/naprawa.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Cztery etapy, trzy zakończenia. Skala: mały, prywatny quest w H.
+**Status: proposal (N); pack A (Codex round 1), building/repair.** Cast: [QUEST-WORLD](QUEST-WORLD.md). Four stages, three endings. Scale: small private quest in H.
 
-## Założenie
+## Premise
 
-Drwal Mirosław od miesięcy łata dach domu, w którym mieszka z żoną Ludmiłą, matką Jadwigą i dorosłym synem Mieszkiem. Ostatnia burza pokazała, że to nie jedna dziura: nad izbą Jadwigi spróchniała belka. Mirosław chce naprawić wszystko sam, „po sezonie”, bo teraz jest czas ścinki i każdy dzień przy dachu to dzień bez drewna na sprzedaż. Ludmiła chce, żeby matka spała w suchym miejscu już teraz. Gracz pomaga ocenić szkodę i doprowadzić rodzinę do decyzji: wymiana belki, mała dobudówka albo podparcie na przeczekanie.
+Miles Hewer, the woodcutter, has been patching the roof of the house he shares with his wife Lucy, his mother Joan and their grown son Matthew for months. The last storm showed it isn't one hole: the beam over Joan's room has rotted. Miles wants to fix it all himself "after the season", because this is felling time and every day on the roof is a day without wood to sell. Lucy wants her mother-in-law sleeping somewhere dry now. The player helps judge the damage and brings the family to a decision: replace the beam, build a small dry room on the side, or prop it up until spring.
 
-**Wiedza NPC.** Jadwiga zauważyła, że drzwi szafy się zacinają — nikt jej o to nie pytał. Mirosław wie, że belka jest zła, ale nie wie, jak bardzo. Radosław (sołtys) zarządza wspólnym magazynem drewna i wie, co w nim jest.
+**NPC knowledge.** Joan has noticed her cupboard door sticking — nobody asked her. Miles knows the beam is bad, not how bad. Ralph Fieldman (the reeve) manages the common timber store and knows what's in it.
 
-**Warunki startu.** Dom household drwala ma `durability < 60` (I: stan budynków). I: naprawa, budowa, udźwig, czas pracy, pomoc NPC. N: oględziny konstrukcji, zgoda household, wydanie materiału ze wspólnego magazynu.
+**Start conditions.** The woodcutter household's house has `durability < 60` (I: building condition). I: repair, building, carrying limits, work time, NPC help. N: structural inspection, household consent, lending from the common store.
 
-## Stan
+## State
 
-`accepted`, `beamInspected`, `cupboardHeard`, `plan = unset|repair|lean_to|prop`, `storeAsked`, `storeGranted`, `workComplete`, `settled`. Zapowiedź deszczu nie uruchamia ukrytego licznika; deszcz w świecie przyspiesza jedynie zwykłe zużycie budynku (I).
+`accepted`, `beamInspected`, `cupboardHeard`, `plan = unset|repair|lean_to|prop`, `storeAsked`, `storeGranted`, `workComplete`, `settled`. Talk of rain starts no hidden timer; rain in the world only speeds normal building wear (I).
 
-## Etap 1 — The room that drips
+## Stage 1 — The room that drips
 
-**S1 — Mirosław na drabinie**
+**S1 — Miles on the ladder**
 
-**Mirosław:** If you've come to tell me the roof leaks, you've got good eyes and bad timing.
-**Player:** Ludmiła asked if I could lend a hand.
-**Mirosław:** Ludmiła asked for a second pair of eyes, I'd bet. Hands come after we've measured.
+**Miles:** If you've come to tell me the roof leaks, you've got good eyes and bad timing.
+**Player:** Lucy asked if I could lend a hand.
+**Miles:** Lucy asked for a second pair of eyes, I'd bet. Hands come after we've measured.
 **Player [A]:** Show me the damage.
-**Mirosław:** Roof first. Then the beam over Mother's room. If I start telling you it's one job, stop me. → `accepted`
+**Miles:** Roof first. Then the beam over Mother's room. If I start telling you it's one job, stop me. → `accepted`
 **Player [B]:** I could bring timber right away.
-**Mirosław:** Bring a measuring cord instead. I've cut enough wood to the wrong length this year.
+**Miles:** Bring a measuring cord instead. I've cut enough wood to the wrong length this year.
 
-**S2 — Ludmiła przy palenisku**
+**S2 — Lucy at the hearth**
 
-**Ludmiła:** Her bed's dry when the wind's from the east. That's not what I call dry.
-**Player:** Mirosław says the beam needs a look.
-**Ludmiła:** Mirosław says a lot of things after he's lifted a beam. I want the thing he says before.
+**Lucy:** Her bed's dry when the wind's from the east. That's not what I call dry.
+**Player:** Miles says the beam needs a look.
+**Lucy:** Miles says a lot of things after he's lifted a beam. I want the thing he says before.
 **Player:** What do you need first?
-**Ludmiła:** One dry room for his mother. And a plan that doesn't eat next month's flour.
+**Lucy:** One dry room for his mother. And a plan that doesn't eat next month's flour.
 
-**S3 — Jadwiga w swojej izbie**
+**S3 — Joan in her room**
 
-**Jadwiga:** The drip lands in the same bowl every time. I've become very good at moving a bowl.
+**Joan:** The drip lands in the same bowl every time. I've become very good at moving a bowl.
 **Player:** Has anything else changed in here?
-**Jadwiga:** The cupboard door sticks. It didn't last spring. I thought it was the damp. → `cupboardHeard`
-**Player:** I'll tell Mirosław.
-**Jadwiga:** Tell him before he climbs up there. He doesn't listen to me once he's on a ladder.
+**Joan:** The cupboard door sticks. It didn't last spring. I thought it was the damp. → `cupboardHeard`
+**Player:** I'll tell Miles.
+**Joan:** Tell him before he climbs up there. He doesn't listen to me once he's on a ladder.
 
-## Etap 2 — Measure twice
+## Stage 2 — Measure twice
 
-**S4 — Oględziny belki** (czynność: wejście na strych z lampą/pochodnią → `beamInspected`)
+**S4 — Inspecting the beam** (action: climb into the loft with a lamp/torch → `beamInspected`)
 
-**Mirosław:** Outer boards are bad. The beam's worse — look, the knife goes in like it's cheese.
-**Player [cupboardHeard]:** Your mother's cupboard door sticks since spring. The wall's moving.
-**Mirosław:** *(milczy chwilę)* …Then it's sagging, not just rotting. Right. That's not a patch job.
+**Miles:** Outer boards are bad. The beam's worse — look, the knife goes in like it's cheese.
+**Player [cupboardHeard]:** Your mother's cupboard door has stuck since spring. The wall's moving.
+**Miles:** *(silent a moment)* …Then it's sagging, not just rotting. Right. That's not a patch job.
 **Player [A]:** Then we replace the beam.
-**Mirosław:** Two straight pieces, four paces long, and three people to lift. That's a proper repair. Three days, maybe four.
+**Miles:** Two straight pieces, four paces long, and three people to lift. That's a proper repair. Three days, maybe four.
 **Player [B]:** Or build a small dry room on the side for her.
-**Mirosław:** Quicker. Smaller. And we shut the old room till next year. It's not a failure — it's a different cost.
+**Miles:** Quicker. Smaller. And we shut the old room till next year. It's not a failure — it's a different cost.
 
-Bez `cupboardHeard` Mirosław uważa, że wystarczy podpora na sezon, i opcja `prop` jest jego pierwszą propozycją; gracz może i tak zaproponować wymianę.
+Without `cupboardHeard`, Miles thinks a prop for the season will do, and `prop` is his first suggestion; the player can still propose replacement.
 
-**S5 — Mieszko**
+**S5 — Matthew**
 
-**Mieszko:** If Grandmother moves to a lean-to, I could have the small room.
+**Matthew:** If Grandmother moves to a lean-to, I could have the small room.
 **Player:** Is that what you want?
-**Mieszko:** I want a door that shuts. I'd also like to know the roof won't come down while I'm asleep under it.
+**Matthew:** I want a door that shuts. I'd also like to know the roof won't come down while I'm asleep under it.
 **Player:** You'd be lifting the beam if we replace it.
-**Mieszko:** I know. I'm asking which week I lose, that's all.
+**Matthew:** I know. I'm asking which week I lose, that's all.
 
-**S6 — Mirosław i Ludmiła razem**
+**S6 — Miles and Lucy together**
 
-**Ludmiła:** We can buy timber or we can buy extra grain for winter. Not both, not this month.
-**Mirosław:** I'll take a felling job after the repair. That pays it back.
-**Ludmiła:** And who fetches the water and splits the kindling while you're up there?
+**Lucy:** We can buy timber or we can buy extra grain for winter. Not both, not this month.
+**Miles:** I'll take a felling job after the repair. That pays it back.
+**Lucy:** And who fetches the water and splits the kindling while you're up there?
 **Player:** I can bring the first load. The rest is for the two of you to decide.
-**Mirosław:** Fair. Nobody counts a promise as timber.
+**Miles:** Fair. Nobody counts a promise as timber.
 
-## Etap 3 — A household decision
+## Stage 3 — A household decision
 
-**S7 — Wybór** (ustawia `plan`; każda odpowiedź potwierdzana przez obie strony)
+**S7 — The choice** (sets `plan`; both of them must agree)
 
 **Player [repair]:** Replace the beam. The room goes back to your mother when it's done.
-**Mirosław:** Then Mieszko lifts with me, and you fetch only the pieces I've marked.
-**Ludmiła:** If the flour stays above the winter line, yes.
-**Jadwiga:** And if you all stop calling that room "almost fine".
+**Miles:** Then Matthew lifts with me, and you fetch only the pieces I've marked.
+**Lucy:** If the flour stays above the winter line, yes.
+**Joan:** And if you all stop calling that room "almost fine".
 
 **Player [lean_to]:** Build a small dry room on the south side and close the old one.
-**Ludmiła:** That gives us room, not the old house.
-**Mirosław:** It gives us till spring.
-**Jadwiga:** Put my chair by the window. The old room never had a decent one.
+**Lucy:** That gives us room, not the old house.
+**Miles:** It gives us till spring.
+**Joan:** Put my chair by the window. The old room never had a decent one.
 
 **Player [prop]:** Prop the beam now, move her bed to the main room, fix it properly after the felling season.
-**Mirosław:** That I can do in a day.
-**Ludmiła:** And sleep next to your mother's snoring till spring.
-**Jadwiga:** I heard that.
+**Miles:** That I can do in a day.
+**Lucy:** And sleep next to your mother's snoring till spring.
+**Joan:** I heard that.
 
-**S8 — Wspólny magazyn** (tylko `repair`, jeśli household nie ma dwóch belek)
+**S8 — The common store** (only `repair`, if the household lacks two beams)
 
-**Radosław:** Two straight beams? There are three in the common store. They're there for the next roof that falls in — which, by the sound of it, is yours.
-**Player:** Can Mirosław have two?
-**Radosław:** He can borrow two. He brings back two before the first snow, felled and squared. Same length.
+**Ralph:** Two straight beams? There are three in the common store. They're there for the next roof that falls in — which, by the sound of it, is yours.
+**Player:** Can Miles have two?
+**Ralph:** He can borrow two. He brings back two before the first snow, felled and squared. Same length.
 **Player [A]:** Agreed — I'll help him fell them. → `storeGranted`
-**Player [B]:** Couldn't the settlement just give them?
-**Radosław:** And if the herbalist's roof goes in a month? I'll lend, not give. That's the best I've got. → `storeGranted`
-**Player [C, jeśli G05 zakończony `peace` lub `home`]:** There's oak from the boundary settlement coming in.
-**Radosław:** Then that's his payback sorted, isn't it. Take them. → `storeGranted`, zwrot zaliczony
+**Player [B]:** Couldn't the village just give them?
+**Ralph:** And if the herbalist's roof goes in a month? I'll lend, not give. That's the best I've got. → `storeGranted`
+**Player [C, if G05 ended `shared` or `for_h`]:** There's oak from the boundary coming in.
+**Ralph:** Then that's his payback sorted, isn't it. Take them. → `storeGranted`, repayment counted
 
-Bez zgody gracz może kupić drewno od innego drwala (I: handel) albo zmienić plan.
+Without consent the player can buy timber from another woodcutter (I: trade) or change the plan.
 
-**S9 — Przed rozpoczęciem pracy**
+**S9 — Before work starts**
 
-**Ludmiła:** It hasn't started raining. That's not a reason to rush.
+**Lucy:** It hasn't started raining. That's not a reason to rush.
 **Player:** The wood's here and we've all agreed.
-**Mirosław:** Then let's start. If the wall so much as creaks, everyone stops.
-**Mieszko:** And if I say stop?
-**Mirosław:** Say it twice and loud. I'm half deaf on a roof.
+**Miles:** Then let's start. If the wall so much as creaks, everyone stops.
+**Matthew:** And if I say stop?
+**Miles:** Say it twice and loud. I'm half deaf on a roof.
 
-Praca: aktywność budowy (I: plac budowy, pomoc NPC). Udział gracza skraca czas; przerwanie zostawia częściowy postęp w świecie.
+Work: building activity (I: construction site, NPC help). The player's help shortens it; interruption leaves partial progress in the world.
 
-## Etap 4 — Zakończenia
+## Stage 4 — Endings
 
 ### E1 — The old house holds
-Warunek: `plan=repair`, belki na miejscu, praca ukończona (durability domu wraca do ≥ 90). Jadwiga wraca do izby. Zapłata: Ludmiła daje graczowi **bochen chleba ×2 i ser** albo **10 c** z sakiewki household (wybór gracza); dług wobec magazynu pozostaje długiem Mirosława.
+Condition: `plan=repair`, beams in place, work done (house durability back to ≥ 90). Joan returns to her room. Payment: Lucy gives the player **bread ×2 and a cheese** or **10 c** from the household purse (player's choice); the store debt remains Miles's.
 
-**Jadwiga:** The bowl's empty.
-**Mirosław:** The roof isn't. Mostly.
-**Ludmiła:** We still owe the store two beams.
+**Joan:** The bowl's empty.
+**Miles:** The roof isn't. Mostly.
+**Lucy:** We still owe the store two beams.
 **Player:** I'll help bring them back.
-**Mirosław:** You'll be welcome. Don't let me call it a favour — I'll owe you a load of firewood.
+**Miles:** You'll be welcome. Don't let me call it a favour — I'll owe you a load of firewood.
 
-Skutek: trwała naprawa; opinia całego household +15 (N); Mirosław oferuje graczowi później darmowy ładunek drewna opałowego (jednorazowy transfer z jego stosu).
+Effect: lasting repair; whole household's opinion +15 (N); Miles later gives the player a free load of firewood (one-off transfer from his pile).
 
 ### E2 — A smaller dry room
-Warunek: `plan=lean_to`, dobudówka ukończona (I/N: mała konstrukcja przy domu). Stary pokój zamknięty. Zapłata jak w E1.
+Condition: `plan=lean_to`, lean-to finished (I/N: small structure by the house). The old room is closed. Payment as E1.
 
-**Ludmiła:** It's small.
-**Jadwiga:** So was the old room, once the cupboard moved in.
-**Mieszko:** I can carry your chair.
-**Jadwiga:** You can visit first. We'll talk about who sleeps where some other day.
+**Lucy:** It's small.
+**Joan:** So was the old room, once the cupboard moved in.
+**Matthew:** I can carry your chair.
+**Joan:** You can visit first. We'll talk about who sleeps where some other day.
 
-Skutek: nowa mała konstrukcja, stary budynek pozostaje uszkodzony; Mieszko wciąż śpi we wspólnej izbie (może wrócić w Q06 jako powód, by chciał ruszyć w drogę — miękkie powiązanie).
+Effect: new small structure; the old building stays damaged; Matthew still sleeps in the common room (a soft reason he wants to travel in Q06).
 
 ### E3 — Propped till spring
-Warunek: `plan=prop`, podpora postawiona (N: tymczasowa akcja „podeprzyj”), łóżko Jadwigi przeniesione. Brak udawanej naprawy: durability nie wraca, dom zużywa się wolniej do wiosny.
+Condition: `plan=prop`, prop placed (N: temporary "prop up" action), Joan's bed moved. No pretend repair: durability doesn't recover; the house wears more slowly until spring.
 
-**Mirosław:** It isn't fixed.
+**Miles:** It isn't fixed.
 **Player:** No. It's held up until you can fix it.
-**Ludmiła:** I like that better than "almost fine".
-**Jadwiga:** Write it on the board in the square, then. So people know where not to stand.
+**Lucy:** I like that better than "almost fine".
+**Joan:** Write it on the board in the square, then. So people know where not to stand.
 
-Skutek: quest można później otworzyć ponownie jako `repair` (ta sama rodzina, nowe sceny nie są wymagane — S7/S8/S9 wystarczą).
+Effect: the quest can be reopened later as `repair` (same family; S7/S8/S9 suffice).
 
-## Odmowa, przerwanie, pominięcia
+## Refusal, interruption, omissions
 
-- Odmowa S1: bez kary; household naprawia dach sam w swoim tempie.
-- KO/atak/brak materiałów: praca stoi, niezużyte materiały zostają na placu, częściowa naprawa jest stanem budynku.
-- Jeśli rodzina naprawi dach sama, quest kończy się epilogiem „the family finished it”; gracz nie dostaje zapłaty za cudzą pracę, ale dostaje podziękowanie, jeśli coś przyniósł.
-- Śmierć Mirosława: Ludmiła może prowadzić plan, jeśli brała udział w S6/S7; inaczej quest wygasa.
+- Refusing S1: no penalty; the household repairs at its own pace.
+- KO/attack/missing materials: work stops, unused materials stay on site, partial repair is a building state.
+- If the family finishes the roof alone, the quest ends with "the family finished it"; the player isn't paid for others' work but is thanked if they brought anything.
+- Miles dies: Lucy can lead the plan if she took part in S6/S7; otherwise the quest lapses.
 
-## Mechaniki
+## Mechanics
 
-I: budynki i durability, plac budowy, pomoc NPC, udźwig, handel drewnem. N: oględziny konstrukcji, wspólny magazyn z pożyczką w naturze, tymczasowa podpora, dobudówka. **Do decyzji:** czy podpora ma być osobnym obiektem budowy; reguła pożyczek z magazynu osady.
+I: buildings and durability, construction site, NPC help, carrying limits, timber trade. N: structural inspection, common store with in-kind loans, temporary prop, lean-to. **Author decisions:** should a prop be a separate building object; rules for borrowing from a settlement store.

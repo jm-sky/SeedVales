@@ -1,112 +1,112 @@
 # Q07 — Six Bowls, One Pan
 
-**Status: propozycja N/P; pakiet A (Codex 1), jedzenie/społeczny.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Lekki quest bez zagrożenia; trzy zakończenia. Skala: mały quest w H.
+**Status: proposal (N/P); pack A (Codex round 1), food/social.** Cast: [QUEST-WORLD](QUEST-WORLD.md). A light quest with no threat; three endings. Scale: small quest in H.
 
-## Założenie
+## Premise
 
-Po tygodniu ścinki Ludmiła chce wreszcie zjeść jeden porządny posiłek z całym domem i z sąsiadami, którym są coś winni. Ma sześć misek, jedną patelnię, mięso w różnym stanie świeżości i za mało rąk. Strażnik Wojciech ma obchód, Mirosław musi pilnować ognia pod smołą do dachu, Jadwiga nie lubi tłoku, a Mieszko zaprosił kogoś, nie pytając. Gracz pomaga ułożyć kolejność — nie „wygrywa” kolacji. Wybory zmieniają, kto je razem i co zostaje na później.
+After a week of felling, Lucy Hewer wants one proper meal with the whole house and with the neighbours they owe. She has six bowls, one pan, meat of varying freshness and too few hands. Mark Hornblower the guard has his rounds, Miles has to mind the pitch fire for the roof, Joan doesn't like crowds, and Matthew has invited someone without asking. The player helps put things in order — nobody "wins" a supper. Choices change who eats together and what is left for later.
 
-**Wiedza NPC.** Ludmiła zna swoje zapasy. Wojciech zna swój grafik. Nikt nie wie, kogo zaprosił Mieszko (Leszka — syna Miry; jeśli Leszek nie istnieje w seedzie, dowolnego rówieśnika z H).
+**NPC knowledge.** Lucy knows her stores. Mark knows his rota. Nobody knows whom Matthew has invited (Luke — Molly's son; if Luke doesn't exist in the seed, any young man of H).
 
-**Warunki startu.** Household drwala istnieje; gracz ma z nim opinię ≥ 10 (np. po Q03) albo przyniósł mu kiedyś jedzenie. I: świeżość, ognisko, jedzenie. P: pojemność patelni/rusztu (`FOOD-03`), prezenty/relacje. N: plan posiłku, zastępstwo na warcie.
+**Start conditions.** The woodcutter household exists; the player has opinion ≥ 10 with it (e.g. after Q03) or once brought them food. I: freshness, campfire, food. P: pan/grill capacity (`FOOD-03`), gifts/relations. N: meal plan, standing in on the watch.
 
-## Stan
+## State
 
-`accepted`, `freshnessChecked`, `guests = unset|together|shifts|doorstep`, `wojciechCovered`, `cooked`, `settled`. Porcje: 6 (lub 7 z gościem Mieszka). Pojemność: patelnia = 2 kawałki na raz (APPENDIX), ognisko bez naczynia = 1, ruszt (P) = 4+.
+`accepted`, `freshnessChecked`, `guests = unset|together|shifts|doorstep`, `markCovered`, `cooked`, `settled`. Portions: 6 (or 7 with Matthew's guest). Capacity: pan = 2 pieces at a time (APPENDIX), bare fire = 1, grill (P) = 4+.
 
-## Sceny
+## Scenes
 
-**S1 — Ludmiła przy skrzyni z zapasami**
+**S1 — Lucy at the food chest**
 
-**Ludmiła:** Six bowls and one pan. That's enough if nobody expects the pan to do miracles.
+**Lucy:** Six bowls and one pan. That's enough if nobody expects the pan to do miracles.
 **Player:** Who's coming?
-**Ludmiła:** Mirosław, his mother, Mieszko, you, me — and Wojciech, if his rounds let him. He split our kindling all last week when Mirosław was laid up. I owe him a hot meal.
-**Mieszko:** I asked Leszek, too.
-**Ludmiła:** *(odwraca się powoli)* You asked.
-**Mieszko:** He's bringing a hare.
-**Ludmiła:** …Then he's welcome. And you're washing seven bowls. → `accepted`
+**Lucy:** Miles, his mother, Matthew, you, me — and Mark, if his rounds let him. He split our kindling all last week when Miles was laid up. I owe him a hot meal.
+**Matthew:** I asked Luke, too.
+**Lucy:** *(turns slowly)* You asked.
+**Matthew:** He's bringing a hare.
+**Lucy:** …Then he's welcome. And you're washing seven bowls. → `accepted`
 
-**S2 — Zapasy** (czynność: obejrzenie mięsa → `freshnessChecked`)
+**S2 — The stores** (action: examine the meat → `freshnessChecked`)
 
 **Player:** This piece won't last till tomorrow. That one's fine for days.
-**Ludmiła:** Then the old one goes in first, and nobody hides it under the onions.
-**Jadwiga:** In my mother's house we'd have salted it and pretended.
-**Ludmiła:** Your mother's house had stronger stomachs.
+**Lucy:** Then the old one goes in first, and nobody hides it under the onions.
+**Joan:** In my mother's house we'd have salted it and pretended.
+**Lucy:** Your mother's house had stronger stomachs.
 **Player:** One pan, two pieces at a time.
-**Ludmiła:** Then we count pieces, then people, then how long the fire lasts. In that order.
+**Lucy:** Then we count pieces, then people, then how long the fire lasts. In that order.
 
-**S3 — Wojciech przy bramie**
+**S3 — Mark at the gate**
 
-**Wojciech:** A meal? Ludmiła's? *(wzdycha)* I've the dusk round and the night round, and nobody to take either.
+**Mark:** A meal? Lucy's? *(sighs)* I've the dusk round and the night round, and nobody to take either.
 **Player:** How long could you sit down?
-**Wojciech:** Long enough to burn my tongue.
+**Mark:** Long enough to burn my tongue.
 **Player [A]:** I'll walk the dusk round for you. You eat with everyone.
-**Wojciech:** You'd do the gate and the posts? All six of them, and light the two by the pens? *(gracz potwierdza)* …Then I'll come. Bring the torch back lit. → po wykonaniu obchodu (N: krótki obchód z zapaleniem pochodni, I: pochodnie) `wojciechCovered`
+**Mark:** You'd do the gate and the posts? All six of them, and light the two by the pens? *(the player confirms)* …Then I'll come. Bring the torch back lit. → after the round is done (N: short round lighting torches, I: torches) `markCovered`
 **Player [B]:** Eat first, go after. We'll keep a bowl hot for later.
-**Wojciech:** That I can manage.
+**Mark:** That I can manage.
 **Player [C]:** We'll eat by the door, so you can come and go.
-**Wojciech:** On the step? I've eaten in worse places. The gatehouse, for one.
+**Mark:** On the step? I've eaten in worse places. The gatehouse, for one.
 
-**S4 — Mirosław przy kotle ze smołą**
+**S4 — Miles at the pitch kettle**
 
-**Mirosław:** I can't leave the pitch. If it boils over, the roof's done for another month.
-**Ludmiła:** Then you'll eat standing up, like a horse.
+**Miles:** I can't leave the pitch. If it boils over, the roof's done for another month.
+**Lucy:** Then you'll eat standing up, like a horse.
 **Player:** I can watch the pan while you two sort the pitch.
-**Ludmiła:** You can. If you burn it, it's your bowl that gets the burnt bit.
+**Lucy:** You can. If you burn it, it's your bowl that gets the burnt bit.
 
-**S5 — Jadwiga w kącie**
+**S5 — Joan in the corner**
 
-**Jadwiga:** Seven people round one fire. I'll be the one with smoke in her eyes.
+**Joan:** Seven people round one fire. I'll be the one with smoke in her eyes.
 **Player:** Where would you like to sit?
-**Jadwiga:** Somewhere I can hear the talk without having to join it. I'm old, not unfriendly.
+**Joan:** Somewhere I can hear the talk without having to join it. I'm old, not unfriendly.
 
-**S6 — Gotowanie** (czynność: pieczenie partiami — I: gotowanie przy ognisku; P: patelnia na 2)
+**S6 — Cooking** (action: frying in batches — I: cooking at a fire; P: pan of 2)
 
-**Ludmiła:** Cooked on the board, raw in the bowl — don't let them touch.
-**Jadwiga:** I'm amazed anyone needs telling that.
-**Ludmiła:** You'd be amazed what Mirosław needs telling.
-**Leszek (jeśli przyszedł):** I skinned the hare myself. Jarosław only fixed one edge.
-**Ludmiła:** Then you'll eat a piece of it yourself first, in case.
+**Lucy:** Cooked on the board, raw in the bowl — don't let them touch.
+**Joan:** I'm amazed anyone needs telling that.
+**Lucy:** You'd be amazed what Miles needs telling.
+**Luke (if he came):** I skinned the hare myself. Jacob only fixed one edge.
+**Lucy:** Then you'll eat a piece of it yourself first, in case.
 
-**S7 — Wybór** (ustawia `guests`; wymaga `freshnessChecked`)
+**S7 — Choice** (sets `guests`; needs `freshnessChecked`)
 
-**Player [together]:** *(wymaga `wojciechCovered`)* Everyone at one table. I've walked Wojciech's round.
-**Wojciech:** I'll take the end seat. I can see the path from there. Habit.
+**Player [together]:** *(needs `markCovered`)* Everyone at one table. I've walked Mark's round.
+**Mark:** I'll take the end seat. I can see the path from there. Habit.
 **Player [shifts]:** Two sittings. The first lot eats, the second takes over the fire and the gate.
-**Mirosław:** I could eat sitting down for once. I'd like that.
-**Player [doorstep]:** We eat on the doorstep, so Wojciech and Mirosław can come and go.
-**Jadwiga:** Less cosy. More honest. I'll have the bench by the wall.
+**Miles:** I could eat sitting down for once. I'd like that.
+**Player [doorstep]:** We eat on the doorstep, so Mark and Miles can come and go.
+**Joan:** Less cosy. More honest. I'll have the bench by the wall.
 
-**S8 — Posiłek**
+**S8 — The meal**
 
-**Ludmiła:** No speeches.
-**Mieszko:** I'd got one ready.
-**Ludmiła:** Eat it instead.
-**Wojciech:** The sauce is better than the gatehouse.
-**Mirosław:** The gatehouse isn't edible.
-**Wojciech:** You've never been that hungry.
+**Lucy:** No speeches.
+**Matthew:** I'd got one ready.
+**Lucy:** Eat it instead.
+**Mark:** The sauce is better than the gatehouse.
+**Miles:** The gatehouse isn't edible.
+**Mark:** You've never been that hungry.
 
-## Zakończenia
+## Endings
 
-**E1 — One table.** Warunek: `guests=together`, `wojciechCovered`, wszystkie porcje upieczone w terminie świeżości. Skutek: potrzeba społeczna NPC zaspokojona (I: potrzeby), opinia Ludmiły, Mirosława i Wojciecha o graczu +10 (N), Wojciech od tej pory pozwala graczowi brać pochodnie ze stojaka przy bramie (N). Zużyte zapasy household. Brak gotówki — gracz je razem z nimi.
+**E1 — One table.** Condition: `guests=together`, `markCovered`, all portions cooked within freshness. Effect: NPC social need met (I: needs); Lucy's, Miles's and Mark's opinion of the player +10 (N); Mark from now on lets the player take torches from the rack by the gate (N). Household stores used. No coin — the player eats with them.
 
-**Jadwiga (epilog):** Seven at one table. The last time was Mirosław's wedding, and half of them were drunk.
+**Joan (epilogue):** Seven at one table. The last time was Miles's wedding, and half of them were drunk.
 
-**E2 — Two sittings.** Warunek: `guests=shifts`, dwie partie, bezpieczna porcja odłożona dla drugiej zmiany. Skutek: wszyscy najedzeni, mniej wspólnego czasu (opinia +5), zużycie opału i jedzenia widoczne w zapasach.
+**E2 — Two sittings.** Condition: `guests=shifts`, two batches, a safe portion kept back for the second shift. Effect: everyone fed, less time together (opinion +5), fuel and food use visible in the stores.
 
-**Mirosław (epilog):** I ate it sitting down. Warm. Don't tell anyone, they'll expect it.
+**Miles (epilogue):** I ate it sitting down. Warm. Don't tell anyone, they'll expect it.
 
-**E3 — On the doorstep.** Warunek: `guests=doorstep`, posiłek zakończony przy wejściu. Skutek: Wojciech nie traci obchodu; sąsiedzi przechodzący obok dostają po kawałku (N: opinia osady o household rośnie trochę), relacje z domownikami rosną mniej.
+**E3 — On the doorstep.** Condition: `guests=doorstep`, meal finished at the door. Effect: Mark doesn't miss his round; passing neighbours each get a bite (N: the village's opinion of the household rises a little); relations with the household grow less.
 
-**Jadwiga (epilog):** We fed half the street and nobody had to pretend the house was bigger than it is. That'll do.
+**Joan (epilogue):** We fed half the street and nobody had to pretend the house was bigger than it is. That'll do.
 
-## Odmowa, przerwanie, pominięcia
+## Refusal, interruption, omissions
 
-- Odmowa: Ludmiła gotuje dla domu sama; brak skutków.
-- Przerwanie gotowania: surowiec psuje się tylko w normalnym tempie (I).
-- Zepsute mięso podane gościom: ryzyko choroby jak w normalnym systemie (I: `illnessChance`), Ludmiła wie, kto pilnował patelni (opinia −).
-- Wojciech wezwany do realnego zagrożenia: zakończenie E1 niedostępne tego dnia; posiłek przechodzi w E2 lub E3.
+- Refusal: Lucy cooks for the house herself; no effects.
+- Interrupted cooking: food spoils only at the normal rate (I).
+- Spoiled meat served: normal illness risk (I: `illnessChance`); Lucy knows who was minding the pan (opinion −).
+- Mark called away to a real threat: E1 unavailable that day; the meal becomes E2 or E3.
 
-## Mechaniki
+## Mechanics
 
-I: świeżość, ognisko, jedzenie, potrzeby, pochodnie. P: pojemność patelni/rusztu (`FOOD-03`), relacje i prezenty. N: zastępstwo na obchodzie, plan posiłku, uprawnienia do pochodni. **Do decyzji:** czy posiłek wspólny ma osobny efekt potrzeby „społecznej”.
+I: freshness, campfire, food, needs, torches. P: pan/grill capacity (`FOOD-03`), relations and gifts. N: standing in on a watch round, meal plan, torch permissions. **Author decision:** does a shared meal have its own "social" need effect.

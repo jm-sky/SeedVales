@@ -5,8 +5,9 @@ terms consistent across `data/`, `sim/` messages, `Game.ts` and `ui/`. Tone: pla
 archaic; sentence case for labels and buttons ("Save game", not "Save Game"); messages are short sentences
 ending with a period; 2nd person for the player ("You need an axe.").
 
-**Proper nouns stay as they are**: settlement names (Jaworzno, Głogów Dolny, Wrzosowo…), NPC names, the game
-name. They are names of places/people in the world, not UI text.
+**Proper nouns are English too** (D-LANG-1, 2026-10-01 — supersedes the earlier "proper nouns stay as they are"): NPCs get
+English first names + occupational surnames (e.g. the home guard *Mark Hornblower*), settlements and landmarks get English
+names. The current Polish name pools in code (`professions.ts`, `settlements.ts`) are pending migration. The game name stays.
 
 ## Items (`data/items.ts`)
 
@@ -67,5 +68,5 @@ Den / Lair, Rat nest. Settlement sizes: SM/MD/LG/XL shown as-is.
 | obrażenia: cięte / kłute / obuchowe | damage: cut / pierce / blunt |
 | Skill names | Medicine, Sneaking, Survival, Trapping, Melee, Ranged, Construction, Blacksmithing, Woodcutting, Farming, Trading |
 | Professions | Farmer, Woodcutter, Hunter, Blacksmith, Trader, Herbalist, Shepherd, Guard (match ids in `data/professions.ts`) |
-| Towarzysz / Najmij / Eskorta / Ochrona / Ryzyko | Companion / Hire / Escort / Protection / Risk (Low risk / Some risk / Dangerous) |
-| Prezent / Daj / Zakończ umowę / Rozstań się | Gift / Give / End the contract / Part ways |
+| Companions (npc--001) | Companion / Hire / Escort / Protection / Risk (Low risk / Some risk / Dangerous) |
+| Gifts / contracts (npc--001) | Gift / Give / End the contract / Part ways |

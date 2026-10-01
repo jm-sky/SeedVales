@@ -1,6 +1,6 @@
 # Review — 05 Disputed Oak
 
-> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+> **Historical (before the 2026-10-01 rework).** Refers to an earlier version of the scenario and uses old (Polish) character names; it is not evidence of the current version's quality. Current log: [REVIEW-2026-10-01](REVIEW-2026-10-01.md); name mapping: [QUEST-WORLD](QUEST-WORLD.md#cast).
 
 ## Overall
 
@@ -11,7 +11,7 @@ The current version needs a **major evidence/authority pass**. At present, the p
 ## What works
 
 - A boundary tree is a believable source of local conflict.
-- Mirosław and Kazimierz have understandable interests.
+- Miles Hewer and Cedric Hogg have understandable interests.
 - Keeping the oak standing is a useful non-zero-sum possibility.
 - The quest does not require combat.
 - The dispute can affect wood prices and settlement relations, which is a good simulation link.
@@ -50,7 +50,7 @@ Then:
 
 Current:
 
-> "Carved line runs closer to Brzeżyna's claim than Kazimierz likes to admit — or the other way, if you squint."
+> "Carved line runs closer to Brzeżyna's claim than Cedric likes to admit — or the other way, if you squint."
 
 This is humorous but unusable as evidence.
 
@@ -65,7 +65,7 @@ That creates uncertainty for a real reason: **the landscape changed**, not becau
 Tree age can disprove "my father planted it" or "we planted it after the ditch was dug," but it cannot determine a boundary by itself.
 
 Use it only if tied to a claim:
-- Kazimierz says his father planted it;
+- Cedric says his father planted it;
 - Survival shows the oak is much older;
 - that specific claim loses credibility.
 
@@ -73,11 +73,11 @@ Evidence should rebut statements, not fill a generic counter.
 
 ### 4. Who has authority to settle a two-village boundary?
 
-The current mediation can be hosted by either village's sołtys, who then "writes a verdict." Why would the other village accept it?
+The current mediation can be hosted by either village's reeve, who then "writes a verdict." Why would the other village accept it?
 
 Better:
 - both parties voluntarily accept the player as mediator; or
-- both sołtys figures attend/ratify the settlement; or
+- both reeve figures attend/ratify the settlement; or
 - the player gathers evidence and brings it to a joint boundary meeting.
 
 For a starter-scale implementation, this can still be one scene with two representatives. It does not need a diplomacy system.
@@ -103,29 +103,29 @@ Then the outcome solves both the symbolic dispute and the actual need for timber
 
 Treasury payments can make sense if both villages formally commissioned mediation, but establish that in the opening or joint meeting.
 
-If this is only Mirosław's private request, treasury_home paying 20 copper is not automatically justified.
+If this is only Miles's private request, treasury_home paying 20 copper is not automatically justified.
 
 ### 7. Theft needs a more believable close
 
-If the player fells the oak at night and then immediately tells Mirosław:
+If the player fells the oak at night and then immediately tells Miles:
 
 > "The oak's already down. Here's the wood."
 
-Mirosław's reaction should depend on whether he wanted or authorized that act. The current universal relation penalty makes the branch feel detached from character motivation.
+Miles's reaction should depend on whether he wanted or authorized that act. The current universal relation penalty makes the branch feel detached from character motivation.
 
 A cleaner dirty path:
-- Mirosław explicitly refuses illegal felling;
+- Miles explicitly refuses illegal felling;
 - player can still do it independently;
 - both sides become angry when evidence points to the player;
 - wood price/trade friction rises.
 
 ## Dialog review
 
-### Mirosław opening
+### Miles opening
 
 Suggested:
 
-> **Mirosław:** "Kazimierz says the old oak is on Brzeżyna land. I say the ditch put it on ours long before either of us held an axe. Before somebody cuts first and argues later, walk the boundary with me."
+> **Miles:** "Cedric says the old oak is on Brzeżyna land. I say the ditch put it on ours long before either of us held an axe. Before somebody cuts first and argues later, walk the boundary with me."
 
 This gives history and urgency without sounding like a quest brief.
 
@@ -137,13 +137,13 @@ Suggested:
 
 This supports the central ambiguity.
 
-### Kazimierz
+### Cedric
 
 Current line about "short memories and long axes" is memorable but slightly theatrical.
 
 Suggested:
 
-> **Kazimierz:** "My family has treated that ditch as the line for as long as I remember. Mirosław knows that. If Domowice has better proof, show it."
+> **Cedric:** "My family has treated that ditch as the line for as long as I remember. Miles knows that. If Domowice has better proof, show it."
 
 Player:
 - "The stone does not sit where either of you says."
@@ -154,15 +154,15 @@ Player:
 
 Suggested:
 
-> **Sołtys:** "Nobody cuts the oak today. Put the marks, the stone, and the witness on the table. Then we decide what both villages can actually stand behind."
+> **Reeve:** "Nobody cuts the oak today. Put the marks, the stone, and the witness on the table. Then we decide what both villages can actually stand behind."
 
 This makes the scene about evidence, not a menu.
 
-### Mirosław close — peace
+### Miles close — peace
 
 Suggested:
 
-> **Mirosław:** "So the oak stays as the marker, and we take replacement timber from clear ground. I can live with that."
+> **Miles:** "So the oak stays as the marker, and we take replacement timber from clear ground. I can live with that."
 
 ## Recommended revision direction
 

@@ -1,6 +1,6 @@
 # Review — 04 Root by the Stream
 
-> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+> **Historical (before the 2026-10-01 rework).** Refers to an earlier version of the scenario and uses old (Polish) character names; it is not evidence of the current version's quality. Current log: [REVIEW-2026-10-01](REVIEW-2026-10-01.md); name mapping: [QUEST-WORLD](QUEST-WORLD.md#cast).
 
 ## Overall
 
@@ -14,7 +14,7 @@ The current design is **too mechanically artificial in several places**. questTa
 - No scripted death is a good fit for an early quest.
 - Gathering, barter, purchase, and theft are meaningfully different acquisition styles.
 - Advance vs final payment is explicitly accounted for.
-- The quest links naturally to Dobrawa and later herbal knowledge.
+- The quest links naturally to Dora Herbert and later herbal knowledge.
 - Late delivery still matters without invalidating the whole quest.
 
 ## Major issues
@@ -23,7 +23,7 @@ The current design is **too mechanically artificial in several places**. questTa
 
 The current rule says only units obtained after quest start count.
 
-This is strongly gamey. If the player already owns fresh yarrow, mint, and chamomile, Dobrawa should not reject them because they predate the quest flag.
+This is strongly gamey. If the player already owns fresh yarrow, mint, and chamomile, Dora should not reject them because they predate the quest flag.
 
 Better rule:
 - any valid items in acceptable condition count;
@@ -72,21 +72,21 @@ Simpler:
 
 No special "return advance first" interaction is needed unless it has narrative value.
 
-### 7. Frame the illness treatment as Dobrawa's belief
+### 7. Frame the illness treatment as Dora's belief
 
 The quest can remain grounded without presenting the exact herb mix as objective medical truth.
 
 Prefer:
 
-> Dobrawa believes the herbs will ease his fever and breathing.
+> Dora believes the herbs will ease his fever and breathing.
 
 ## Dialog review
 
-### Dobrawa opening
+### Dora opening
 
 Suggested:
 
-> **Dobrawa:** "Maciej's fever is worse this morning. I'm short on yarrow, mint, and chamomile. I can stay with him, or I can go gathering — not both. Can you bring me the herbs by the end of tomorrow?"
+> **Dora:** "Toby Herbert's fever is worse this morning. I'm short on yarrow, mint, and chamomile. I can stay with him, or I can go gathering — not both. Can you bring me the herbs by the end of tomorrow?"
 
 This explains why she needs the player.
 
@@ -94,7 +94,7 @@ This explains why she needs the player.
 
 Suggested:
 
-> **Dobrawa:** "Two yarrow, two mint, one chamomile. Fresh or properly dried is fine. The stream marsh usually has all three."
+> **Dora:** "Two yarrow, two mint, one chamomile. Fresh or properly dried is fine. The stream marsh usually has all three."
 
 Options:
 - "I'll bring them."
@@ -117,20 +117,20 @@ Suggested:
 
 Suggested on-time:
 
-> **Dobrawa:** "Let me see. Yarrow, mint... good. Chamomile too. That's everything."
+> **Dora:** "Let me see. Yarrow, mint... good. Chamomile too. That's everything."
 
 Suggested late:
 
-> **Dobrawa:** "You're late, but I can still use these. Maciej had a rough night. Give them here."
+> **Dora:** "You're late, but I can still use these. Toby had a rough night. Give them here."
 
-No need to say "Maciej still lives"; the design already guarantees that.
+No need to say "Toby still lives"; the design already guarantees that.
 
 ## Failure design
 
-"Incomplete after deadline" should not necessarily hard-fail instantly if the player is standing in front of Dobrawa with four of five units.
+"Incomplete after deadline" should not necessarily hard-fail instantly if the player is standing in front of Dora with four of five units.
 
 Consider:
-- Dobrawa accepts useful partial herbs;
+- Dora accepts useful partial herbs;
 - quest fails as a contract but relation penalty is smaller;
 - she sources the missing ingredient herself/NPC simulation does.
 

@@ -8,7 +8,7 @@
 - Dialogue in English; settlement names as `{H}`, `{V}`, `{T}` (generated).
 - A "big animal" is an unusually large or dangerous ordinary animal (prime bear, bull moose, rutting stag). It can be avoided, waited out, driven off or fought.
 - Treasure is an explicit external source of value (D-ECON-1 allows found coin, as with ITEM-04 digging). Every payout names its purse or treasury.
-- The three quests are expeditions with **real, large rewards** — see the table below and [calibration](QUEST-WORLD.md#kalibracja-nagród-propozycja-do-decyzji).
+- The three quests are expeditions with **real, large rewards** — see the table below and [calibration](QUEST-WORLD.md#reward-calibration-proposal).
 
 ## Quests
 
@@ -23,7 +23,7 @@
 - **Leads differ:** an exposed landmark (11), a living witness (12), a family saying plus a scribe's margin note (13). The earlier version used a cemetery record in all three.
 - **Terrain and danger differ:** wetland and deep water (11), climb and a sleeping predator (12), a structure that can collapse (13).
 - **Decisions differ:** public infrastructure and an investment (11); public safety vs a personal weapon (12); debts across generations and what a ruin should become (13).
-- **One recurring buyer** (Zbigniew of {T}) appears in 11–13 and Q10; he is a consistent character, not a new "rich buyer" each time.
+- **One recurring buyer** (Silas Moneypenny of {T}) appears in 11–13 and Q10; he is a consistent character, not a new "rich buyer" each time.
 - Paperwork, licences and witnessed counts were cut back to single lines where they matter.
 
 ## Open author decisions
