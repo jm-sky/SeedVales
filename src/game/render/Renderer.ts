@@ -14,6 +14,7 @@ import { CameraRig } from './cameraRig'
 import { Carts } from './carts'
 import { Dynamics } from './dynamics'
 import { GpuTimer } from './gpuTimer'
+import { Landmarks } from './landmarks'
 import { QUALITY, type QualityProfile } from './quality'
 import { snapShadowCenter } from './shadowSnap'
 import { SkyDome } from './sky'
@@ -38,6 +39,7 @@ export class Renderer {
   terrain: TerrainChunks
   vegetation: Vegetation
   structures: Structures
+  landmarks: Landmarks
   actors: Actors
   dynamics: Dynamics
   marker: TargetMarker
@@ -86,6 +88,7 @@ export class Renderer {
     this.terrain = new TerrainChunks(sim.terrain, q)
     this.vegetation = new Vegetation(sim, q)
     this.structures = new Structures(sim)
+    this.landmarks = new Landmarks(sim)
     this.actors = new Actors(sim, q)
     this.dynamics = new Dynamics(sim)
     this.marker = new TargetMarker(sim.terrain)
@@ -94,12 +97,13 @@ export class Renderer {
       this.skyDome = new SkyDome()
       this.scene.add(this.skyDome.mesh)
     }
-    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
+    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.landmarks.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
     onProgress?.('Buildings…')
     await this.structures.load()
+    await this.landmarks.load()
     onProgress?.('Vegetation…')
     await this.vegetation.load()
     onProgress?.('Characters…')
@@ -140,6 +144,7 @@ export class Renderer {
    */
   dispose() {
     this.terrain.dispose()
+    this.landmarks.dispose()
     this.scene.clear()
   }
 
@@ -225,6 +230,7 @@ export class Renderer {
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)
     this.carts.update()
+    perf.measure('render.landmarks', () => this.landmarks.update(p.x, p.z))
     // Render preparation = render.cpu without draw submission (D-PERF-2 headless gate metric).
     perf.record('render.prep', performance.now() - t0)
     this.gpu.poll()

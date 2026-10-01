@@ -11,8 +11,8 @@ import { idx, nearestCell, sampleGrid } from '../grid'
 import { Biome, CELL_M, GRID_N, SEA_LEVEL, WORLD_SIZE_M } from '../types'
 
 const NAMES = [
-  'Dębowa Wola', 'Olszyn', 'Kamienny Bród', 'Wrzosowo', 'Lipnica', 'Zagórze', 'Brzezina', 'Modrzewo',
-  'Grabowiec', 'Jaworzno', 'Sośnica', 'Bukowiec', 'Wierzbno', 'Jesionka', 'Głogów Dolny', 'Kalinówka',
+  'Oakwold', 'Alderford', 'Stonebrook', 'Heatherby', 'Lindham', 'Highmoor', 'Birchwick', 'Larchmere',
+  'Hazelhurst', 'Maplewick', 'Pinecombe', 'Beechholt', 'Willowdene', 'Ashby Vale', 'Hollowgate', 'Wrenfield',
 ]
 
 export const HOUSEHOLDS_BY_SIZE: Record<SettlementSize, ProfessionId[]> = {

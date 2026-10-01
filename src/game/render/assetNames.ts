@@ -35,6 +35,9 @@ export const NATURE_MODEL: Record<string, { models: string[]; baseH: number }> =
   reed: { models: ['Grass_Common_Tall'], baseH: 1 },
 }
 
+export { LANDMARK_NODES } from '../world/landmarkLayout'
+import { LANDMARK_NODES } from '../world/landmarkLayout'
+
 /** Pack file -> node names that must exist in it. */
 export function packNodeNames(): Record<string, string[]> {
   const village: string[] = [HOUSE_CORNER, HOUSE_CHIMNEY, ...Object.values(ROOFS), ...Object.values(VILLAGE_PROPS)]
@@ -43,5 +46,6 @@ export function packNodeNames(): Record<string, string[]> {
     'village.glb': village,
     'props.glb': Object.values(PROPS_NODES),
     'nature.glb': Object.values(NATURE_MODEL).flatMap((d) => d.models),
+    'landmarks.glb': Object.values(LANDMARK_NODES).flat(),
   }
 }

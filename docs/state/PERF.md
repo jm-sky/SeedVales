@@ -114,6 +114,10 @@ Headless cannot judge GPU cost or real frame pacing. To measure on a laptop and 
 6. On the phone, additionally play normally for **10–15 min** (walk out of the settlement, night with campfires, rain if possible) and note heat/throttling and the last `pacing()` result.
 7. Note the device, browser and battery saver state. Send the notes back; they go into this file under "Device results".
 
+## Asset audit (2026-10-01, render--004 step 1)
+
+`node scripts/assets/inspect-pack.mjs --audit --md` over `public/assets/`: **26 files, 18.64 MB, 168 372 unique triangles** (animals 0.5–4 k each, characters 2–13 k, packs: nature 27 k, props 29 k, village 25 k, `landmarks.glb` 15 k / 419 KB). Per-file table, class budgets (D-REN-11) and "candidates if a problem is measured" are in `docs/assets/README.md` ("Audit"). The audit changed no asset. The scene join (which assets are on screen per `bench:render` scene) and startup decode time wait for `diag--002` step 1. New bench scene `landmark-estate` (largest landmark, ~28 k tris merged) has no baseline yet — first run on the WSL laptop (❓ user).
+
 ## Known bottlenecks
 
 1. **Snow (and season tint) rebuilds terrain** — the tint is baked into vertex colours, so a weather/season change marks chunks dirty and rebuilds them (medium snow: `render.terrain` median ~5 ms every frame during the rebuild wave). `render--002` step 3 moves the tint to uniforms.

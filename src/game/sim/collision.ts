@@ -4,8 +4,8 @@
  * @subdomain collision
  */
 import type { ResNode } from '../world/nodes'
+import type { BoxSolid } from './landmarkSolids'
 import type { Sim } from './sim'
-import type { Building } from './types'
 import { perf } from '../diag/perf'
 import { isTree } from '../world/nodes'
 
@@ -28,7 +28,7 @@ export function groundHeight(sim: Sim, x: number, z: number): number {
   return h
 }
 
-function pushOutOfBox(b: Building, x: number, z: number, r: number): [number, number] | null {
+export function pushOutOfBox(b: BoxSolid, x: number, z: number, r: number): [number, number] | null {
   const c = Math.cos(b.rot)
   const s = Math.sin(b.rot)
   const lx = x - b.x
@@ -96,6 +96,27 @@ export function moveWithCollision(
       if (p) {
         nx = p[0]
         nz = p[1]
+      }
+    }
+    const lm = sim.landmarkSolids.at(nx, nz)
+    if (lm) {
+      for (const ci of lm.circles) {
+        const ddx = nx - ci.x
+        const ddz = nz - ci.z
+        const d = Math.hypot(ddx, ddz)
+        const min = ci.r + radius
+        if (d < min) {
+          // Dead centre (spawned inside): push along +x so the actor is never stuck on the spot.
+          nx = ci.x + (d > 1e-4 ? ddx / d : 1) * min
+          nz = ci.z + (d > 1e-4 ? ddz / d : 0) * min
+        }
+      }
+      for (const b of lm.boxes) {
+        const p = pushOutOfBox(b, nx, nz, radius)
+        if (p) {
+          nx = p[0]
+          nz = p[1]
+        }
       }
     }
     for (const s of sim.state.sites) {

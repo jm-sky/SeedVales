@@ -1,6 +1,6 @@
 # Świat: landmarki i skarby
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — generator + sim work; batch the `GEN_VERSION` bump with the English name pools  
 **Domain:** world  
 **Sub domains:** world-gen, items, loot, render  
@@ -22,3 +22,12 @@ FEATURES: `WORLD-11`, `LOOT-01`.
 ## Weryfikacja
 
 vitest: determinizm landmarków (ten sam seed → te same), reguły rozmieszczenia na ≥ 8 seedach, loot nie odradza się po save/load. e2e/tour: zrzuty każdego typu landmarku. Render landmarków przez istniejące szablony scalane + instancing (D-REN-2) i materiały wg polityki z `render--002` krok 4; `bench:render` w scenie z landmarkiem w zasięgu (draw calls, `render.cpu`, `render.vegetationRebuild` przy marszu) — przekroczenie budżetu → redukcja kosztu przed kolejnymi krokami (zasady przekrojowe roadmapy).
+
+## Wynik
+
+**Step 1 (WORLD-11) implemented 2026-10-01** — `implemented_unverified` until the screenshots/bench run on WSL.
+
+- Generator: `world/gen/landmarks.ts` (`GenLandmark` in `WorldData.landmarks`, rules in `LANDMARK_RULES`, English unique names, D-WORLD-8). 5 stone circles, 8 house ruins, 3 estate ruins, 4 shipwrecks, 5 boat wrecks on every seed tested; nearest landmark to home 200–750 m. `GEN_VERSION` 8 — batched with the English settlement names (D-LANG-1); NPC names are English too (`SURNAMES`), which only affects new games.
+- Render: `render/landmarks.ts` (pieces from `landmarks.glb`, merged per material within 420 m, procedural fallback), node names in `render/assetNames.ts` (guard test covers them). Map: discovered (explored cell) landmarks as labelled diamonds on the map panel — no new saved state, so no `SAVE_VERSION` bump (comes with LOOT-01).
+- Tests: `landmarks.test.ts` (determinism + placement rules on 8 seeds, English names) and `render/landmarks.test.ts` (layout piece names). `pnpm check` green.
+- Not done / next: **no collision** for walls and stones (walkable-through), minimap marker, ❓ bench scene `landmark-estate` baseline + `tour.mjs` stops 09–13 on WSL (no e2e/bench on Windows), then steps 2–3 (LOOT-01, valuables trade).

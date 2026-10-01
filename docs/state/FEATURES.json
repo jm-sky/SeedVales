@@ -916,8 +916,8 @@
    "scope": "v2",
    "behavior": "Landmarki w losowych lokalizacjach: kamienny krąg, ruiny domu, ruiny posiadłości, wrak statku, wrak łodzi (deterministyczne z seeda)",
    "verify": "vitest determinizm + reguły na ≥8 seedach; screenshot",
-   "status": "planned",
-   "evidence": "plan: docs/plans/world--001--landmarks-and-treasure.md"
+   "status": "implemented_unverified",
+   "evidence": "world/gen/landmarks.ts + landmarks.test.ts (8 seeds), render/landmarks.ts + landmarks.test.ts, landmarks.glb (build-landmarks.mjs); sim/landmarkSolids.test.ts (collision: stones, walls, wrecks); render look and bench scene landmark-estate pending on WSL (no e2e/bench on Windows); plan: docs/plans/world--001--landmarks-and-treasure.md"
   },
   {
    "id": "LOOT-01",

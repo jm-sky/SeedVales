@@ -7,8 +7,8 @@ import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { ProfessionId, WorldData } from '../world/types'
 import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, Kin, SettlementState } from './types'
 import { FIRE, START_CALENDAR_S, TREASURY_START } from '../config/calibration'
-import { Rng } from '../core/rng'
-import { NAMES, PROFESSIONS } from '../data/professions'
+import { hashString, Rng } from '../core/rng'
+import { NAMES, PROFESSIONS, SURNAMES } from '../data/professions'
 import { emptySkills } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { sampleGrid } from '../world/grid'
@@ -19,7 +19,7 @@ import { initialWeather } from './weather'
 
 export const newAi = (): AiState => ({ goal: null, label: '', steps: [], stepIdx: 0, stepT: 0, replanAt: 0, cooldowns: {}, stuckT: 0 })
 
-function makeHuman(rng: Rng, id: number, x: number, z: number, y: number, male: boolean, age: AgeGroup): Human {
+function makeHuman(rng: Rng, id: number, x: number, z: number, y: number, male: boolean, age: AgeGroup, surname: string): Human {
   const attr = () => rng.int(3, 7)
   const attrs = { str: attr(), per: attr(), end: attr(), cha: attr(), int: attr(), agi: attr() }
   if (age === 'child') attrs.str = Math.max(1, attrs.str - 3)
@@ -30,12 +30,15 @@ function makeHuman(rng: Rng, id: number, x: number, z: number, y: number, male: 
     id, kind: 'npc', x, y, z, rot: rng.range(0, Math.PI * 2), vx: 0, vz: 0,
     vitals: newVitals(80 + attrs.end * 4),
     lastUpdate: 0, nextUpdate: 0, moving: 'idle', attackReadyAt: 0,
-    name: rng.pick(names), male, age, attrs, skills: emptySkills(),
+    name: `${rng.pick(names)} ${surname}`, male, age, attrs, skills: emptySkills(),
     big5: { o: b5(), c: b5(), e: b5(), a: b5(), n: b5() },
     money: 0, inv: { items: [] }, eq: { armor: {} }, settlementId: 0, householdId: 0,
     ai: newAi(), opinion: 0, combat: false, strTrain: 0,
   }
 }
+
+/** Household family name from the head's trade; hash-picked so the sim RNG stream is unchanged. */
+const familyName = (seed: number, hid: number, prof: ProfessionId) => SURNAMES[prof][hashString(`${seed}:${hid}`) % SURNAMES[prof].length]!
 
 export function makeAnimal(id: number, species: SpeciesId, variant: AnimalVariant, x: number, z: number, y: number, rng: Rng): Animal {
   const sp = SPECIES[species]
@@ -126,6 +129,8 @@ export function createNewGame(world: WorldData): GameState {
       addItem(house.inv!, newStack('branch', 4))
       const hh: Household = { id: hid, settlementId: s.id, profession: gh.profession, houseId: house.id, memberIds: [] }
       households.push(hh)
+      // Family name from the head's trade; picked by hash so the sim RNG stream is unchanged.
+      const surname = familyName(world.seed, hid, gh.profession)
       const roles: { male: boolean; age: AgeGroup; main: boolean; kin: Kin }[] = [{ male: rng.chance(0.75), age: 'adult', main: true, kin: 'head' }]
       if (gh.members >= 2) roles.push({ male: !roles[0]!.male, age: 'adult', main: false, kin: 'spouse' })
       if (gh.members >= 3) roles.push({ male: rng.chance(0.5), age: 'child', main: false, kin: 'child' })
@@ -134,7 +139,7 @@ export function createNewGame(world: WorldData): GameState {
         const ang = rng.range(0, Math.PI * 2)
         const px = house.x + Math.cos(ang) * 6
         const pz = house.z + Math.sin(ang) * 6
-        const npc = makeHuman(rng, nextId++, px, pz, h(px, pz), r.male, r.age)
+        const npc = makeHuman(rng, nextId++, px, pz, h(px, pz), r.male, r.age, surname)
         npc.settlementId = s.id
         npc.householdId = hid
         npc.kin = r.kin
@@ -210,7 +215,7 @@ export function createNewGame(world: WorldData): GameState {
     const ang = srng.range(0, Math.PI * 2)
     const px = house.x + Math.cos(ang) * 6
     const pz = house.z + Math.sin(ang) * 6
-    const son = makeHuman(srng, nextId++, px, pz, h(px, pz), true, 'adult')
+    const son = makeHuman(srng, nextId++, px, pz, h(px, pz), true, 'adult', familyName(world.seed, fam.id, fam.profession))
     son.settlementId = s.id
     son.householdId = fam.id
     son.kin = 'son'
@@ -228,7 +233,7 @@ export function createNewGame(world: WorldData): GameState {
   const home = world.settlements[world.homeSettlement]!
   const sx = world.spawn.x
   const sz = world.spawn.z
-  const player = makeHuman(rng, nextId++, sx, sz, h(sx, sz), true, 'adult')
+  const player = makeHuman(rng, nextId++, sx, sz, h(sx, sz), true, 'adult', '')
   player.kind = 'player'
   player.name = 'Wanderer'
   player.attrs = { str: 5, per: 5, end: 5, cha: 5, int: 5, agi: 5 }

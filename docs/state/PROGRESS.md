@@ -6,11 +6,12 @@
 
 - **D-LANG-1 (2026-10-01): English everywhere** — UI, proper names (English first name + occupational surname; home guard = Mark Hornblower), docs, plans, comments. Polish docs are legacy. Open follow-up: switch NPC/settlement name pools in code to English (`GEN_VERSION` bump).
 - Verification (latest, 2026-10-01, session 5): `pnpm check` 175/175 (after merging render--004 step 2 from main), `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors. Earlier (session 4 checkpoint): `pnpm check` 167/167, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
-- Formats: `SAVE_VERSION` 7, `GEN_VERSION` 7.
+- Formats: `SAVE_VERSION` 8 (fire fuel, hearth, standing torch, ash — older saves rejected, no migrations, D-SAVE-7), `GEN_VERSION` 8 (landmarks + English settlement names).
+- Latest check (2026-10-01, session 6, Windows — no e2e/bench there): `pnpm check` 195/195.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
 - Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (steps 0–1 done, step 2 scaffolding behind flags), 4s `survival--001` (planned: campfire fuel/hearth/ash, standing torch, waterskin recipe — VISION-APPENDIX follow-up, D-PLAN-6), 4b `render--001`, 5, 6 — not started. Side tracks (roadmap update 2026-10-01, D-PERF-4 / D-SAVE-7 / D-REN-8): `diag--002` tier A (startup before `render--002` step 3; real travel before `render--001` step 6), tier B before wave 6, tier C conditional; `save--001` closed (no save compatibility before the first release — D-SAVE-7: a format bump rejects older saves, no migrations); `render--004` (planned: asset audit + node-name guard during 4b, models for wave 5, optimisation only via `render--003`).
-- Next step (**Sonnet session**, D-PLAN-7): `survival--001` steps 2–4 (FIRE-01 fuel/ash, FIRE-02 hearth + guard/fallback duty, FIRE-03 standing torch; one `SAVE_VERSION` bump 7 → 8); then `diag--002` step 1 (startup tooling), then `render--002` step 3 (terrain: draft material in the plan's notes; startup re-measured), step 4. Step 2 done (dome sky default, no tone mapping — D-REN-9; shadow texel snapping). Step-1 confirmation and the 4a exit gate benchmarks run on the user's WSL laptop (D-PERF-5) — ❓ user.
-- ❓ dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping); pomiar na urządzeniu (D-PERF-2).
+- Next step (**Sonnet session**, D-PLAN-7): wave review of `survival--001` (Opus reviewer, `wave-review`), then `diag--002` step 1 (startup tooling), then `render--002` step 3 (terrain: draft material in the plan's notes; startup re-measured), step 4. Step 2 done (dome sky default, no tone mapping — D-REN-9; shadow texel snapping). Step-1 confirmation and the 4a exit gate benchmarks run on the user's WSL laptop (D-PERF-5) — ❓ user.
+- ❓ dla użytkownika: ocena wyglądu klasy fauny po zrzutach (`tour.mjs` na WSL) i `bench:render` landmark-estate; akceptacja wyglądu po A/B (gładki teren, tone mapping); pomiar na urządzeniu (D-PERF-2).
 - Starsze sekcje (sesja przygotowawcza, stan po sesji 1): [progress-log.md](progress-log.md).
 
 ## Sesja 2
@@ -67,3 +68,18 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **survival--001 step 1 (CRAFT-03) done:** waterskin recipes S/M/L (sewing kit, hide/rope), no value creation (D-ECON-5). `pnpm check` 171/171, e2e 3/3 · 30/30 · 10/10, 0 console errors.
 - **Model split (D-PLAN-7, user):** plans carry `**Model:**`; the rest of `survival--001` (steps 2–4) is Sonnet work and moves to the next session (kick-off prompt updated). This session (Opus) stops here.
 
+### Session 6 (Windows, Blender MCP)
+
+- **render--004 step 1 done:** `inspect-pack.mjs --audit [--md]`; dated "Audit" table + class budgets (D-REN-11) in `docs/assets/README.md`, totals in PERF.md. No asset changed by the audit.
+- **world--001 step 1 (WORLD-11) implemented:** `world/gen/landmarks.ts` (5 stone circles, 8 house ruins, 3 estate ruins, 4 shipwrecks, 5 boat wrecks), `GEN_VERSION` 8, English settlement + NPC names (occupational surnames, D-LANG-1 follow-up), `render/landmarks.ts` + `landmarks.glb` (poly.pizza CC0 downloads from `_temp/`, built by `scripts/assets/build-landmarks.mjs`), explored landmarks on the map. Blender MCP used to inspect sources and render the final pieces/layouts (scene left clean). D-WORLD-8, D-REN-11. FEATURES WORLD-11 `implemented_unverified`.
+- Found on the way: meshopt quantisation puts a scale on the mesh node and `mergeTemplate` drops the looked-up node's transform → pieces need an identity wrapper node (README).
+- Later in session 6: fauna class finished (D-REN-12) and landmark collision (D-WORLD-9, `sim/landmarkSolids.ts`); `rig-boar-bear.py` → `rig-fauna.py`.
+- Open: NPC pathing around ruins; minimap marker; bench/tour on WSL; steps 2–3 of world--001 (LOOT-01, SAVE_VERSION bump there); quest casting by fixed names (Mark Hornblower) not implemented.
+
+### Session 7 (cloud container, Sonnet)
+
+- **survival--001 steps 2–4 done (FIRE-01/02/03, D-FIRE-1):** `sim/fire.ts`, ash in `traces.ts`, burn-down in `ecology`, hearth blueprint (`kind: 'campfire'` + `hearth` flag), guard "Feeding the fire" + fallback goal `tend_fire` (reservation `Building.tender`), standing torch (`GroundItem.planted/burnH`, remaining life kept on the stack's `dur`), quick-panel buttons (also in the touch menu "Actions"). `SAVE_VERSION` 8, **no migration**: `migrate()` now rejects every older format cleanly and the old migrations/tests were removed (D-SAVE-7). Note for `world--001` step 3 (LOOT-01): its save bump is now 8 → 9.
+- Verified: `pnpm check` 187/187 before merging main; e2e smoke 3/3, acceptance 32/32 (new 18a/18b), mobile 11/11 (M10), 0 console errors; `bench:sim` same container before/after: no regression (cloud-only numbers in the plan's "Wynik").
+- Simplifications: no spit discount next to a hearth, no cleaner profession, burning torches scanned in the existing ground loop. FIRE-04 stays design-only. `fireLevel` and ash traces are exposed read-only (`sim/fire.ts`, `Trace.kind`) for `render--001` steps 1 and 8 — render code was not touched.
+- Unexplained once: one acceptance run lost step 18b's campfire (no building appeared); the next two runs were green. The step now throws a descriptive error with the sim state if it recurs.
+- Open `opus` items: wave review of `survival--001` (see below if done), keep/drop for `render--002` step 3 once built.

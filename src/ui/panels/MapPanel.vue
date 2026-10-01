@@ -39,6 +39,23 @@ function draw() {
     ctx.fillStyle = s.visited ? '#fff' : '#ddd'
     ctx.fillText(`${s.name}${s.visited ? '' : ' ?'}`, s.x * sc + 6, s.z * sc - 6)
   }
+  // Landmarks (WORLD-11) appear once their cell is explored (fog of war, MAP-01).
+  ctx.font = '11px sans-serif'
+  for (const l of w.landmarks) {
+    if (!isExplored(sim, l.x, l.z)) continue
+    const lx = l.x * sc
+    const lz = l.z * sc
+    ctx.fillStyle = '#9ec5d8'
+    ctx.beginPath()
+    ctx.moveTo(lx, lz - 5)
+    ctx.lineTo(lx + 5, lz)
+    ctx.lineTo(lx, lz + 5)
+    ctx.lineTo(lx - 5, lz)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#d6e6ee'
+    ctx.fillText(l.name, lx + 8, lz + 4)
+  }
   for (const q of view.value.quests) {
     ctx.fillStyle = '#ff5a3c'
     ctx.font = 'bold 16px sans-serif'
