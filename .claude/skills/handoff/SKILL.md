@@ -12,7 +12,7 @@ Rules (save/generator versioning, evidence discipline): `CLAUDE.md` → "Standin
 1. `docs/state/FEATURES.json` — set `status` for each touched requirement (`planned|in_progress|implemented_unverified|verified|blocked|deferred`) and fill `evidence` with real proof only (test names, e2e suite, bench file). No proof → `implemented_unverified`. Never weaken criteria without a `DECISIONS.md` entry (see its `$comment`).
 2. The plan in `docs/plans/<domain>--ID--slug.md` — write the "Wynik" section (what was done, what was found already present, simplifications), set `Status:` and, when finished, `Finished: YYYY-MM-DD`.
 3. `docs/state/PROGRESS.md` — update "Teraz" (verification counts, wave status, next step, ❓ items) and add a short entry below. Older history belongs in `docs/state/progress-log.md`.
-4. `docs/design/DECISIONS.md` — add an entry for every significant decision (new `D-…` id, context, choice, consequence).
+4. `docs/design/DECISIONS.md` — add a bullet under the matching domain section for every significant decision, in the form `- **D-<DOMAIN>-<n> — <decision>.** <why / consequence>` (next free number in that domain).
 5. Roadmap `docs/roadmap/v1-closure-and-appendix.md` — only when a wave's status changed.
 
 ## 2. Format versions
