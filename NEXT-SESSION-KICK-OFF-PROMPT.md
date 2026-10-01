@@ -6,8 +6,8 @@ Kontynuujesz pracę nad grą SeedVales (Vue 3 + TypeScript + Three.js, pnpm). St
 
 1. Przeczytaj: `CLAUDE.md`, `docs/state/PROGRESS.md` (handoff — sekcja „Sesja 2” i „Następny krok”), `docs/roadmap/v1-closure-and-appendix.md` (kolejność fal), `docs/design/DECISIONS.md`, **`docs/IMPORTANT-PRODUCT-NOTES.md`** (wymagania przekrojowe: język UI, mgła wojny, widoczność wg zmysłów) i `docs/design/ui-english-glossary.md`. `docs/IMPLEMENTATION-PROMPT.md` nadal obowiązuje (§3, §6 diagnostyka, §8 weryfikacja, §10). `docs/VISION.md` / `docs/VISION-APPENDIX.md` tylko w sekcjach potrzebnych do bieżącego planu.
 2. `git status`, `git log --oneline | head -20`, `git fetch origin main` — na `main` równolegle pojawiają się commity z dokumentacją (np. `docs/design/quests/`); scal je przed pracą.
-3. Środowisko: brak `node_modules` → `pnpm install --frozen-lockfile`. Chromium: `export CHROME_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome` (nie uruchamiaj `playwright install`); headless = SwiftShader (FPS niereprezentatywne, CPU tak). `_temp/` (paczki Quaternius) prawdopodobnie nie istnieje — pracuj na `public/assets/` i placeholderach.
-4. Weryfikacja stanu: `pnpm check` (oczekiwane **131/131**), `node scripts/check-layers.mjs`; serwer dev w tle z długim limitem (`pnpm dev --port 5199`, timeout ≥ 2 h — krótszy zabija serwer w trakcie e2e), potem `smoke` 3/3, `acceptance` **29/29**, `mobile` **10/10**, 0 błędów konsoli. Jeśli coś pada — to jest pierwsze zadanie.
+3. Środowisko: brak `node_modules` → `pnpm install --frozen-lockfile`. Chromium wykrywany automatycznie (`scripts/e2e/lib.mjs`; nadpisanie przez `CHROME_PATH`, nie uruchamiaj `playwright install`); headless = SwiftShader (FPS niereprezentatywne, CPU tak). `_temp/` (paczki Quaternius) prawdopodobnie nie istnieje — pracuj na `public/assets/` i placeholderach.
+4. Weryfikacja stanu: `pnpm check` (oczekiwane **131/131**), `node scripts/check-layers.mjs`; `pnpm e2e:run` (sam stawia serwer bez HMR): `smoke` 3/3, `acceptance` **29/29**, `mobile` **10/10**, 0 błędów konsoli. Jeśli coś pada — to jest pierwsze zadanie.
 
 ## 2. Kolejność pracy
 
@@ -15,7 +15,7 @@ Kontynuujesz pracę nad grą SeedVales (Vue 3 + TypeScript + Three.js, pnpm). St
 
 **Fala 3 (dokończyć):**
 1. `npc--001` — handel z każdym NPC, prezenty i preferencje, towarzysze (najem na czas/za kwotę/z zadaniem i ryzykiem; darmowe dołączenie), przekazanie i użycie ekwipunku. Relacja = `npc.opinion` (D-PLAN-3).
-2. **Review fali 3** (subagent, izolowany worktree): `economy--001` (RES-07, FOOD-03, TRANS-01 — `sim/actions.ts`, `sim/cooking.ts`, `sim/cart.ts`, `render/carts.ts`, migracja `SAVE_VERSION` 6) + `npc--001` → `docs/reviews/YYYY-MM-DD--006--wave3-review.md` (005 zajęte przez review renderingu), popraw potwierdzone uwagi z testami regresji.
+2. **Review fali 3** (skill `wave-review`): `economy--001` (RES-07, FOOD-03, TRANS-01 — `sim/actions.ts`, `sim/cooking.ts`, `sim/cart.ts`, `render/carts.ts`, migracja `SAVE_VERSION` 6) + `npc--001` → `docs/reviews/YYYY-MM-DD--006--wave3-review.md` (005 zajęte przez review renderingu).
 
 **Fala 4** (kolejność = zależność techniczna, D-REN-7; przeczytaj research `docs/research/2026-10-01--002--realistic-visuals-practical-roadmap.md` §4–§8 i review `docs/reviews/2026-10-01--005--…`):
 - **4a `render--002`** — najpierw metryki renderu (PERF-02: RAF pacing, GPU timer, spójne okna kwantyli, sceny noc/woda/deszcz/śnieg/marsz, baseline w PERF.md), potem światło/tone mapping/niebo, gładki teren + detal gruntu (tint przez uniformy), pilot PBR+IBL na jednym assecie. Każdy krok: timebox, fallback, keep/drop, zrzuty przed/po z tych samych kadrów.
@@ -29,7 +29,7 @@ Kontynuujesz pracę nad grą SeedVales (Vue 3 + TypeScript + Three.js, pnpm). St
 
 **Poza falami (nie zaczynaj bez planu):** MAP-02 (widoczność NPC/zwierząt wg zmysłów, v2 — model TBD w IMPORTANT-PRODUCT-NOTES; jeśli zostanie czas, najpierw plan + decyzja); pakiety zadań fabularnych w `docs/design/quests/` (tylko dokumentacja projektowa — wdrożenie wymaga osobnego planu i uzgodnienia z użytkownikiem).
 
-Po każdej fali: review subagentem, wpis w `docs/reviews/`, poprawki, aktualizacja roadmapy/planów (`Status: done`, `Finished:`).
+Po każdej fali: skill `wave-review` (review, wpis w `docs/reviews/`, poprawki z testami regresji), potem skill `handoff` (roadmapa/plany: `Status: done`, `Finished:`).
 
 ## 3. Pętla robocza (powtarzaj dla każdej pozycji planu)
 
@@ -37,30 +37,19 @@ Po każdej fali: review subagentem, wpis w `docs/reviews/`, poprawki, aktualizac
 2. Zweryfikuj w kodzie, czy luka nadal istnieje. Nie → zapisz w „Wynik” planu i dalej.
 3. Test, który opisuje nowe zachowanie (vitest; ID z FEATURES w nazwie) — ma najpierw paść.
 4. Implementuj minimalnie wg §4.
-5. Weryfikacja: `pnpm check` + `check-layers`; przy UI/integracji — e2e (rozszerz `scripts/e2e/acceptance.mjs` / `mobile.mjs`, interakcja przez UI, selektory przez `data-testid`, nie tekst); przy nowym systemie per-tick — `pnpm bench:sim` przed/po; przy zmianach wizualnych — zrzuty i obejrzyj je.
-6. Aktualizuj: `docs/state/FEATURES.json` (status + `evidence`, tylko rzeczywiste dowody), „Wynik” planu, `PROGRESS.md` (krótko), `DECISIONS.md` przy istotnych decyzjach.
-7. Commit (mały, opisowy) i push: na gałąź sesji **oraz** na `main` (`git push origin HEAD:main` po `git fetch` + merge `origin/main`). Push po każdej ukończonej pozycji — kontener jest ulotny.
-8. Wróć do 1.
+5. Weryfikacja: skill `verify` (check, e2e, bench, zrzuty).
+6. Stan i commit: skill `handoff` (FEATURES + evidence, „Wynik” planu, PROGRESS, DECISIONS, bumpy wersji, commit + push na gałąź sesji **oraz** `main`). Push po każdej ukończonej pozycji — kontener jest ulotny.
+7. Wróć do 1.
 
 **Nie kończ tury planem ani pytaniem „czy kontynuować?”.** Pytaj użytkownika tylko przy decyzji zmieniającej wizję; blokadę jednego obszaru zapisz w PROGRESS.md i przejdź do niezależnej pracy.
 
-## 4. Zasady (skrót — pełne w CLAUDE.md i IMPLEMENTATION-PROMPT.md)
+## 4. Zasady
 
-- **Cały tekst widoczny dla gracza po angielsku** (D-UI-4, bez warstwy i18n), terminy wg `docs/design/ui-english-glossary.md` (dopisuj nowe terminy). Nazwy własne (osady, NPC) bez zmian. Dokumentacja i komentarze mogą być po polsku. Logika nie może zależeć od treści etykiet (było: `label.includes('owce')`) — używaj id/pól.
-- Dwie domeny czasu: kalendarz (potrzeby, produkcja — np. pieczenie D-FOOD-3, psucie, pogoda, zanikanie śladów) vs sekundy rozgrywki (ruch, walka, stamina). Ruchu nie mnożyć ×24.
-- Sim/world/data/config/core/save bez three/vue/render/ui/audio; UI zmienia stan tylko przez metody `Game`.
-- Nowy zmienny stan → do zapisu; zmiana formatu → bump `SAVE_VERSION` (obecnie **6**) + migracja w `save/migrate.ts` + test. Zmiana generatora → bump `GEN_VERSION` (obecnie 7).
-- Tylko zapytania przestrzenne w systemach per-tick (PERF-01). Konserwacja zasobów i pieniędzy: każdy przepływ ma źródło i cel.
-- Mapa: mgła wojny (MAP-01) — nowe elementy mapy/minimapy ukrywaj w nieodkrytych komórkach (`isExplored`).
-- Nie osłabiaj kryteriów, nie wyłączaj testów, nie zmieniaj budżetów/baseline, by ukryć regresję. „Flaky” to nie diagnoza — szukaj przyczyny (np. krok e2e ze szczurami ujawnił realny błąd zadania).
-- Małe pliki/moduły z jedną odpowiedzialnością; bez budowania „silnika” na zapas.
+Stałe zasady (język UI, warstwy, zapis/`SAVE_VERSION`, mgła wojny, testy/budżety itd.): `CLAUDE.md`, sekcja „Standing rules”. Bieżące wersje formatów: `docs/state/PROGRESS.md`, „Teraz”.
 
-## 5. Praca z subagentami i e2e (lekcje z sesji 2)
+## 5. Subagenci i e2e
 
-- Subagentów (review, równoległe duże zadania jak tłumaczenie) uruchamiaj **zawsze z `isolation: "worktree"`** i zakazem `git checkout/switch/reset/stash` — subagent bez izolacji przełączył kiedyś repo na stary commit.
-- Przed uruchomieniem subagentów zacommituj pliki, których potrzebują (worktree powstaje z commita). Po scaleniu ich gałęzi usuń worktree (`git worktree remove`, `git branch -D`) — inaczej vitest/eslint zbierają kopie z `.claude/worktrees/` (było 508 testów zamiast 127). `.claude/worktrees/` dodaj do `.git/info/exclude`.
-- W trakcie `pnpm e2e` nie edytuj `src/`, nie uruchamiaj vitest ani `pnpm install` w worktree pod katalogiem repo — HMR Vite przeładowuje stronę („Execution context was destroyed”).
-- Zmienne `window.__*` w e2e giną po przeładowaniu strony (krok 9 robi reload) — przekazuj id przez zmienne w skrypcie Node.
+Zasady pracy z subagentami (worktree, zakaz checkout/switch/reset/stash) i e2e: `CLAUDE.md`, „Standing rules”; procedura review: skill `wave-review`.
 
 ## 6. Oszczędność kontekstu i ciągłość
 
@@ -70,7 +59,7 @@ Po każdej fali: review subagentem, wpis w `docs/reviews/`, poprawki, aktualizac
 
 ## 7. Zakończenie sesji
 
-`pnpm check`, e2e (smoke, acceptance, mobile), aktualny `PROGRESS.md` (co działa, jak sprawdzone, uproszczenia, braki, znane błędy, dokładny następny krok), commit + push (gałąź sesji i `main`), krótki raport: co zrobiono (plany/FEATURES), wyniki testów, ograniczenia, jak daleko zaszły fale dodatku.
+skill `verify` (check + wszystkie e2e), skill `handoff`; aktualny `PROGRESS.md` (co działa, jak sprawdzone, uproszczenia, braki, znane błędy, dokładny następny krok), commit + push (gałąź sesji i `main`), krótki raport: co zrobiono (plany/FEATURES), wyniki testów, ograniczenia, jak daleko zaszły fale dodatku.
 
 ---
 
