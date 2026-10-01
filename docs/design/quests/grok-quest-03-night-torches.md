@@ -70,7 +70,7 @@ Since Szarik died, Halina has slipped out after her mother sleeps and smothered 
 
 > **Marta:** Soot on our stool. And a cup from my shelf with black on the rim. *(she sits down heavily)* Halina. It's Halina, isn't it. She hasn't slept right since Szarik.
 > **Player:** I'd like to talk to her. Gently.
-> **Marta:** Please. And — not in front of the square. Jarosław's out every night after that wolf. I can't do this one alone too.
+> **Marta:** Please. And — not in front of the square. *(if 07 is not finished)* Jarosław's out every night after that wolf. I can't do this one alone too.
 
 → Halina dialog (by the woodpile behind the house).
 

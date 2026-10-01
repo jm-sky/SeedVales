@@ -80,7 +80,7 @@ Sources (mix freely):
 
 **Mira (mint)**
 
-> **Mira:** For Dobrawa's boy? Take what you need — not the roots, mind, or I'll have none next year. *(she picks it herself, faster)* Tell him Miki says get well. She doesn't, she's a sheep. Tell him anyway.
+> **Mira:** For Dobrawa's boy? Take what you need — not the roots, mind, or I'll have none next year. *(she picks it herself, faster)* *(if Miki is home — G01 done)* Tell him Miki says get well. She doesn't, she's a sheep. Tell him anyway.
 
 → gain mint×2.
 

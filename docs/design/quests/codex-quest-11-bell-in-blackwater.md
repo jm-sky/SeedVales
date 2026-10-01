@@ -126,7 +126,7 @@ At Małgorzata's barn, with Ewa and Świętosława present.
   > **Ewa:** I'd need timber for the broken stretch — thirty posts — and the boat mended. I'd pay a share of every toll back to the village.
   > **Małgorzata:** The chest covers the posts. The bars cover Ewa's boat. And you get your share for fetching it.
 - **sale** — "Sell the bell and bars to Zbigniew. The village gets the money now."
-  > **Małgorzata:** Three hundred and fifty and the bars… that's a new granary, or the well Elżbieta keeps asking for.
+  > **Małgorzata:** Three hundred and fifty and the bars… that's a new granary. *(if Q08 didn't end with a well)* Or the well Elżbieta keeps asking for.
   > **Ewa:** And no crossing.
   > **Małgorzata:** And no crossing. *(to Ewa)* I'm sorry.
   > **Ewa:** Don't be. It's a lot of granary.
