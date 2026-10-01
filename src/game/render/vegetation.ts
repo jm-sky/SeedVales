@@ -7,7 +7,6 @@
  */
 import * as THREE from 'three'
 import type { Sim } from '../sim/sim'
-import type { ResNode } from '../world/nodes'
 import type { QualitySettings } from './quality'
 import { perf } from '../diag/perf'
 import { rockPieces } from '../sim/actions'
@@ -16,6 +15,8 @@ import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
 import { loadGltf, mergeTemplate, part, type TemplatePart } from './assets'
 
+/** Per-frame budget of a vegetation rebuild job (ms); terrain chunk builds have their own 5 ms. */
+const VEG_BUDGET_MS = 2.5
 
 /** Model per node kind + variant (heights normalised to node.scale for trees). */
 const MODEL: Record<string, { models: string[]; baseH: number }> = {
@@ -93,19 +94,65 @@ export class Vegetation {
     this.dirty = true
   }
 
-  update(px: number, pz: number) {
+  /** True while a time-sliced rebuild is in progress (the previous instances stay visible meanwhile). */
+  get rebuilding() {
+    return this.job !== null
+  }
+
+  /**
+   * Rebuilds when the player's half-chunk changes or nodes changed. The first build is synchronous; later
+   * ones run as a job spread over frames within `budgetMs` and commit at once (render--002 step 1, review
+   * 009 F-01). Idle frames prefetch one missing node chunk around the view ring.
+   */
+  update(px: number, pz: number, budgetMs = VEG_BUDGET_MS) {
     const ck = `${Math.floor(px / (CHUNK_M / 2))},${Math.floor(pz / (CHUNK_M / 2))}`
-    if (ck === this.lastChunk && !this.dirty) return
-    this.lastChunk = ck
-    this.dirty = false
-    perf.measure('render.vegetationRebuild', () => this.rebuild(px, pz))
+    if (ck !== this.lastChunk || this.dirty) {
+      this.lastChunk = ck
+      this.dirty = false
+      this.job = this.rebuildJob(px, pz)
+      this.prefetchDone = ''
+    }
+    if (this.job) {
+      const first = this.meshes.length === 0
+      const job = this.job
+      perf.measure('render.vegetationRebuild', () => {
+        const t0 = performance.now()
+        // At least one step per frame; the first build (empty world) runs to completion.
+        do {
+          if (job.next().done) {
+            this.job = null
+            break
+          }
+        } while (first || performance.now() - t0 < budgetMs)
+      })
+      return
+    }
+    this.prefetch(px, pz, ck)
+  }
+
+  /** Generates at most one missing node chunk per frame in the ring just beyond `vegFar`. */
+  private prefetch(px: number, pz: number, ck: string) {
+    if (this.prefetchDone === ck) return
+    const r = this.farM + CHUNK_M
+    const nodes = this.sim.nodes
+    for (let cz = Math.floor((pz - r) / CHUNK_M); cz <= Math.floor((pz + r) / CHUNK_M); cz++) {
+      for (let cx = Math.floor((px - r) / CHUNK_M); cx <= Math.floor((px + r) / CHUNK_M); cx++) {
+        if (nodes.has(cx, cz)) continue
+        perf.measure('render.vegetationPrefetch', () => nodes.getChunk(cx, cz))
+        return
+      }
+    }
+    this.prefetchDone = ck
   }
 
   /** Pooled InstancedMesh per (set key, template part); grown only when capacity is exceeded. */
   private pool = new Map<string, THREE.InstancedMesh[]>()
   private scratch = { m: new THREE.Matrix4(), p: new THREE.Vector3(), q: new THREE.Quaternion(), s: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }
+  private job: Generator<void, void> | null = null
+  private prefetchDone = ''
 
-  private rebuild(px: number, pz: number) {
+  /** Rebuild as small steps: gather per node chunk, compose matrices in slices, then commit at once. */
+  private *rebuildJob(px: number, pz: number): Generator<void, void> {
     const sim = this.sim
     const winter = seasonOf(sim.state.time.cal) === 'winter'
     // Compact instance data: [x, y, z, rot, scale]*.
@@ -115,44 +162,72 @@ export class Vegetation {
       if (!a) sets.set(key, (a = []))
       a.push(x, y, z, rot, sc)
     }
-    const nodes: ResNode[] = []
-    sim.nodes.query(px, pz, this.farM, nodes)
     const treeNear = this.nearM * 0.6
+    const r = this.farM
+    const r2 = r * r
     let count = 0
-    for (const n of nodes) {
-      const tree = isTree(n.kind)
-      const st = sim.state.nodes[n.id]
-      const d = Math.hypot(n.x - px, n.z - pz)
-      if (tree && st?.kind === 'felled') {
-        if (d < this.nearM * 1.5) push('far:stump', n.x, n.y, n.z, n.rot, 1)
-        continue
-      }
-      if (!tree && (n.kind === 'herb' || n.kind === 'mushroom' || n.kind === 'stone') && st) continue
-      if (n.kind === 'rock' && st?.kind === 'depleted') continue
-      if (winter && n.kind === 'herb') continue
-      const def = MODEL[n.kind]!
-      // A mined rock shrinks with the pieces taken (RES-07).
-      const sc = n.kind === 'rock' && st?.kind === 'harvested' ? n.scale * (0.45 + 0.55 * (st.left ?? 0) / rockPieces(n)) : n.scale
-      const nearR = tree ? treeNear : n.kind === 'rock' ? this.nearM : this.nearM * 1.4
-      if (d < nearR) {
-        const vi = n.variant % def.models.length
-        const key = this.near.has(`${n.kind}#${vi}`) ? `${n.kind}#${vi}` : `${n.kind}#0`
-        push(`near:${key}`, n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, tree ? n.scale / def.baseH : sc)
-        count++
-      } else if (tree || n.kind === 'rock') {
-        push(`far:${n.kind}`, n.x, n.y - 0.2, n.z, n.rot, sc)
-        count++
+    for (let cz = Math.floor((pz - r) / CHUNK_M); cz <= Math.floor((pz + r) / CHUNK_M); cz++) {
+      for (let cx = Math.floor((px - r) / CHUNK_M); cx <= Math.floor((px + r) / CHUNK_M); cx++) {
+        for (const n of sim.nodes.getChunk(cx, cz)) {
+          if ((n.x - px) ** 2 + (n.z - pz) ** 2 > r2) continue
+          const tree = isTree(n.kind)
+          const st = sim.state.nodes[n.id]
+          const d = Math.hypot(n.x - px, n.z - pz)
+          if (tree && st?.kind === 'felled') {
+            if (d < this.nearM * 1.5) push('far:stump', n.x, n.y, n.z, n.rot, 1)
+            continue
+          }
+          if (!tree && (n.kind === 'herb' || n.kind === 'mushroom' || n.kind === 'stone') && st) continue
+          if (n.kind === 'rock' && st?.kind === 'depleted') continue
+          if (winter && n.kind === 'herb') continue
+          const def = MODEL[n.kind]!
+          // A mined rock shrinks with the pieces taken (RES-07).
+          const sc = n.kind === 'rock' && st?.kind === 'harvested' ? n.scale * (0.45 + 0.55 * (st.left ?? 0) / rockPieces(n)) : n.scale
+          const nearR = tree ? treeNear : n.kind === 'rock' ? this.nearM : this.nearM * 1.4
+          if (d < nearR) {
+            const vi = n.variant % def.models.length
+            const key = this.near.has(`${n.kind}#${vi}`) ? `${n.kind}#${vi}` : `${n.kind}#0`
+            push(`near:${key}`, n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, tree ? n.scale / def.baseH : sc)
+            count++
+          } else if (tree || n.kind === 'rock') {
+            push(`far:${n.kind}`, n.x, n.y - 0.2, n.z, n.rot, sc)
+            count++
+          }
+        }
+        yield
       }
     }
     if (!this.far.stump) this.far.stump = mergeTemplate([part(new THREE.CylinderGeometry(0.3, 0.38, 0.5, 7).translate(0, 0.25, 0), 0x6a4a2e)])
+    // Compose matrices into staging buffers (the visible meshes are untouched until the commit).
     const { m, p, q, s: sc, up } = this.scratch
+    const staged = new Map<string, Float32Array>()
+    for (const [key, data] of sets) {
+      const n = data.length / 5
+      const buf = new Float32Array(n * 16)
+      for (let i = 0; i < n; i++) {
+        const o = i * 5
+        p.set(data[o]!, data[o + 1]!, data[o + 2]!)
+        q.setFromAxisAngle(up, data[o + 3]!)
+        sc.setScalar(data[o + 4]!)
+        m.compose(p, q, sc)
+        m.toArray(buf, i * 16)
+        if ((i & 255) === 255) yield
+      }
+      staged.set(key, buf)
+      yield
+    }
+    this.commit(staged, count)
+  }
+
+  /** Swaps the staged instance matrices into the pooled meshes in one go. */
+  private commit(staged: Map<string, Float32Array>, count: number) {
     const used = new Set<string>()
     let drawCalls = 0
-    for (const [key, data] of sets) {
+    for (const [key, buf] of staged) {
       const [kind, id] = key.split(':') as [string, string]
       const parts = kind === 'near' ? this.near.get(id) : this.far[id]
       if (!parts) continue
-      const n = data.length / 5
+      const n = buf.length / 16
       let meshes = this.pool.get(key)
       if (!meshes || meshes[0]!.instanceMatrix.count < n) {
         for (const old of meshes ?? []) {
@@ -169,15 +244,8 @@ export class Vegetation {
         })
         this.pool.set(key, meshes)
       }
-      for (let i = 0; i < n; i++) {
-        const o = i * 5
-        p.set(data[o]!, data[o + 1]!, data[o + 2]!)
-        q.setFromAxisAngle(up, data[o + 3]!)
-        sc.setScalar(data[o + 4]!)
-        m.compose(p, q, sc)
-        for (const im of meshes) im.setMatrixAt(i, m)
-      }
       for (const im of meshes) {
+        ;(im.instanceMatrix.array as Float32Array).set(buf)
         im.count = n
         im.visible = n > 0
         im.instanceMatrix.needsUpdate = true

@@ -99,7 +99,7 @@ Headless cannot judge GPU cost or real frame pacing. To measure on a laptop and 
 ## Known bottlenecks
 
 1. **Snow (and season tint) rebuilds terrain** — the tint is baked into vertex colours, so a weather/season change marks chunks dirty and rebuilds them (medium snow: `render.terrain` median ~5 ms every frame during the rebuild wave). `render--002` step 3 moves the tint to uniforms.
-2. **Vegetation rebuild during the march** (`render.vegetationRebuild`): see the march row — decides `render--002` step 1 (threshold p95 > 8 ms at march speed).
+2. **Vegetation rebuild during the march** — fixed by `render--002` step 1 (time-sliced rebuild + node chunk prefetch): medium march vegetation rebuild p95 24–38.7 → 3.8 ms, march `render.prep` p95 20.97 → 7.95 ms (one run; low + second medium run pending).
 3. **Characters: 7–12 draw calls per person** (skinned parts not merged) — dominate draw calls in settlements. Fix: atlas + merged parts (`render--001` / `tools--001` / `render--003`).
 4. **Teleport hitch** (loading/respawn only — travel is physical): many chunks at once; acceptable behind a loading screen.
 5. **No GPU / phone measurement** — checklist above.

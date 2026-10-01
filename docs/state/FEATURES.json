@@ -799,8 +799,8 @@
    "scope": "v2",
    "behavior": "Metryki renderu: RAF pacing p50/p95/p99 i udział długich klatek, opcjonalny GPU timer (brak rozszerzenia = brak danych), kwantyle i średnie z tego samego okna, liczba programów/świateł; sceny A/B noc/woda/deszcz/śnieg/marsz; checklista pomiaru na urządzeniu",
    "verify": "bench:render raportuje nowe metryki; PERF.md z baseline headless i instrukcją pomiaru urządzeń",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--002--visual-foundation-and-render-metrics.md (krok 0)"
+   "status": "in_progress",
+   "evidence": "render--002 steps 0–1: whole-run quantiles (diag/perf.test.ts incl. nearest-rank + exact pacing thresholds), RAF pacing/GPU timer/render.prep, bench:render ≥60 frames with render-baseline-{low,medium}.json verdict (D-PERF-3), PERF.md baselines; vegetation streaming render/vegetation.test.ts; dynamics spatial queries render/dynamics.test.ts. Device measurement pending (❓ user, D-PERF-2)."
   },
   {
    "id": "AI-01",

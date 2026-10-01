@@ -79,6 +79,11 @@ export class NodeCache {
     return nodes
   }
 
+  /** Whether a chunk's nodes are already generated (render prefetch, review 009 F-01). */
+  has(cx: number, cz: number): boolean {
+    return this.cache.has(`${cx},${cz}`)
+  }
+
   /** All nodes within radius (by chunk scan). */
   query(x: number, z: number, r: number, out: ResNode[] = []): ResNode[] {
     const c0x = Math.floor((x - r) / CHUNK_M)

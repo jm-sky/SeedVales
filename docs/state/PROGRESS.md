@@ -5,11 +5,11 @@
 ## Teraz
 
 - **D-LANG-1 (2026-10-01): English everywhere** — UI, proper names (English first name + occupational surname; home guard = Mark Hornblower), docs, plans, comments. Polish docs are legacy. Open follow-up: switch NPC/settlement name pools in code to English (`GEN_VERSION` bump).
-- Verification (latest, 2026-10-01, session 4 after reviews 006/008/009 triage): `pnpm check` 165/165, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
+- Verification (latest, 2026-10-01, session 4 checkpoint): `pnpm check` 167/167, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
 - Formats: `SAVE_VERSION` 7, `GEN_VERSION` 7.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
-- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (step 0 code done, step 2 started), 4b `render--001`, 5, 6 — not started.
-- Next step: `render--002` — step 0 clean baselines + PERF.md in English, then step 2 A/B review.
+- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (steps 0–1 done, step 2 scaffolding behind flags), 4b `render--001`, 5, 6 — not started. Side plans: `diag--002` (planned, review 009 tooling), `save--001` (draft, historical fixtures).
+- Next step: confirm step 1 with `bench:render low` + a second `medium` run, then `render--002` step 2 (A/B review, palette, shadow texel snapping), step 3 (terrain: draft material in the plan's notes), step 4.
 - ❓ dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping); pomiar na urządzeniu (D-PERF-2).
 - Starsze sekcje (sesja przygotowawcza, stan po sesji 1): [progress-log.md](progress-log.md).
 
@@ -55,4 +55,6 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **render--002 step 0 done:** clean baselines (PERF.md in English, device checklist ❓ user); `bench:render` measures ≥ 60 frames; render baseline files + verdict (D-PERF-3). March vegetation rebuild p95 9.8–38.7 ms > 8 ms → step 1 needed.
 - **Review 008 (save/load, arrived on main) triaged:** SAVE-07-1 fixed (structural validation after migration, D-SAVE-4), SAVE-07-2 fixed (collision-proof slot ids, D-SAVE-5), SAVE-07-3 deferred to plan `save--001` (D-SAVE-6); Grok's extra notes fixed via the same validator.
 - **Review 009 (render performance, arrived on main as `docs/review/…`, filed as 009) triaged:** F-03/F-04/F-05/F-10/F-11 fixed, F-01 → render--002 step 1, the measurement-tooling rest → plan `diag--002`; F-06/F-07/F-16 conditional / user step.
+- **render--002 step 1 done:** time-sliced vegetation rebuild (2.5 ms/frame, old instances visible until commit) + node chunk prefetch; medium march veg rebuild p95 3.8 ms (was 24–38.7), `render.prep` p95 −62% vs baseline (one run). e2e harness: acceptance 4e now pins the blacksmith as target (same bug class as step 17).
+- **Checkpoint (user request):** session stopped after step 1; kick-off for session 5 in `NEXT-SESSION-KICK-OFF-PROMPT.md`.
 

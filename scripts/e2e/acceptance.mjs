@@ -157,13 +157,18 @@ try {
   await clickTest('panel-close')
 
   // 4e. Order at the blacksmith through the UI, then cancel it (deposit refunded).
+  let smithRef = ''
   await S(() => {
     const sv = window.__sv
     const smith = sv.game.sim.state.npcs.find((n) => n.profession === 'blacksmith')
     window.__smith = smith.id
     sv.approach(smith.x, smith.z, 1.4)
-  })
-  await waitTarget((t) => t.opts.includes('orders'))
+    sv.face(smith.x, smith.z)
+    // Another villager may stand closer; pin the smith as the target (like Tab cycling).
+    sv.game.pinnedTarget = `npc:${smith.id}`
+    return smith.id
+  }).then((id) => (smithRef = `npc:${id}`))
+  await waitTarget((t) => t.ref === smithRef && t.opts.includes('orders'))
   await key('KeyE')
   await clickTest('opt-orders')
   const om0 = await S(() => window.__sv.game.sim.player.money)

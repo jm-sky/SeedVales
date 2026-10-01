@@ -109,8 +109,118 @@ Low (bez shadow map): blob shadows pod graczem i bliskimi aktorami (limit liczby
 - *(superseded)* Not done yet: a clean baseline (the only run so far overlapped with the reviewer subagent → CPU contention, not usable); PERF.md rewrite in English with the baseline + device checklist; `bench:sim` baseline refresh (quantile method changed from last-512 ring to whole run — rerun twice, then `--update-baseline` with this justification).
 - First (noisy) observations: snow triggers vegetation rebuilds (n=3, ~24 ms) and terrain rebuilds (season/snow tint baked into vertex colours — step 3 moves it to uniforms); march p95 veg rebuild ~20 ms in the noisy run → re-measure before deciding step 1.
 
+**Step 1 — vegetation streaming (done, session 4, keep):**
+- Measured first (step 0 baseline): march at 10 m/s vegetation rebuild p95 9.8–38.7 ms > 8 ms → needed.
+- `Vegetation.update`: the first build is synchronous; later rebuilds run as a generator job (gather per node chunk → compose matrices into staging `Float32Array`s in slices of 256 → commit with one typed-array copy per set), budget `VEG_BUDGET_MS` = 2.5 ms per frame, at least one step per frame. The previous instances stay fully visible until the commit (no half-updated forest). Idle frames prefetch one missing node chunk in the ring `vegFar + 128 m` (`NodeCache.has`, timer `render.vegetationPrefetch`). `render.vegetationRebuild` now measures the per-frame slice.
+- Tests: `render/vegetation.test.ts` (sliced rebuild keeps old instances and ends equal to a full rebuild; prefetch one chunk per frame).
+- `bench:render medium` (one run, vs baseline): march `render.prep` p95 7.95 ms (−62%), vegetation rebuild p95 3.8 ms (max 3.8, was 24–38.7); all static scenes ok (−13…−61%, partly from the review 009 allocation/scan fixes). Crowded-settlement showed one 14.8 ms slice right after its teleport (node chunks not prefetched there — teleport case). **Not yet done:** `bench:render low` and a second medium run to confirm (session interrupted before them).
+
 **Step 2 — light/sky (in progress, uncommitted work landed in the checkpoint commit behind flags; defaults = old look):**
 - `render/visualFlags.ts` (localStorage `sv-visual` overrides: tone none/aces/agx/neutral, exposure, sky flat/dome, smooth, detail), `render/atmosphere.ts` (one parameter set: zenith/horizon/fog/sun/hemisphere/sun direction), `render/sky.ts` (gradient dome + sun disc, tone mapped). `Renderer.lighting()` keeps the old path verbatim for `sky: flat`.
 - A/B tool `scripts/e2e/ab.mjs [quality] 'label={flags}' …` → `test-results/ab/ab-<frame>.png` montages (6 frames: settlement noon/dusk/night, overcast, meadow hills, mountain river). First run done (before / dome / dome+ACES / dome+AgX×1.2) but **not yet reviewed**; it logged one 404 console error (unknown resource — check).
 - Next: review montages, tune exposure/palette (correction 5), pick defaults, keep/drop; shadow texel snapping.
 
+
+**Step 3 — draft (session 4, not wired in, not verified):** planned approach — keep vertex colours for biome/patch/road/rock/beach, write per-vertex masks `aTint` (x = grass share that fades with season = grass biome × (1 − rock) × (1 − road) × (1 − beach) weights from `colorAt`; y = slope < 0.9 for snow) at chunk build, apply season/snow in the shader from uniforms (then `tintChanged` no longer dirties all chunks — medium snow showed terrain p95 11.8 ms from that rebuild wave). Smooth normals: analytic central differences of `heightAt` with a fixed 2 m step for every LOD (LOD-independent → no seams; reuse the height grid when step = 2), skirts copy edge normals, `flatShading` off behind `visual.smooth`. Detail: procedural 256² value-noise `DataTexture` in world metres (no asset), fade 25–110 m, medium/high only. Draft material module:
+
+```ts
+/**
+ * Terrain material (render--002 step 3): Lambert with the season and snow tint as uniforms — a season or
+ * weather change no longer rebuilds chunks — and an optional world-space ground detail texture
+ * (medium/high, D-PERF-2). Per-vertex masks (`aTint`: x = grass share that fades in autumn/winter,
+ * y = surface flat enough to hold snow) are written at chunk build time; the ground type is never
+ * reconstructed from the final colour.
+ * @domain render
+ * @subdomain terrain
+ */
+import * as THREE from 'three'
+
+/** Colours the tint fades towards (linear, like the vertex colours). */
+const DRY = new THREE.Color(0xb3a55a)
+const SNOW = new THREE.Color(0xf0f4f8)
+
+export interface TerrainShading {
+  /** 0 = summer, up to ~0.8 = faded autumn/winter grass. */
+  season: { value: number }
+  /** 0..1 snow cover. */
+  snow: { value: number }
+}
+
+/** Small tiling value-noise texture (R fine grain, G coarse blotches), generated once — no asset needed. */
+function detailTexture(): THREE.DataTexture {
+  const N = 256
+  const data = new Uint8Array(N * N * 4)
+  let s = 0x9e3779b9
+  const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)
+  const lattice = (cells: number) => {
+    const g = Float32Array.from({ length: cells * cells }, rnd)
+    return (x: number, y: number) => {
+      const fx = (x / N) * cells
+      const fy = (y / N) * cells
+      const i = Math.floor(fx)
+      const j = Math.floor(fy)
+      const tx = fx - i
+      const ty = fy - j
+      const sx = tx * tx * (3 - 2 * tx)
+      const sy = ty * ty * (3 - 2 * ty)
+      const at = (a: number, b: number) => g[((b % cells) * cells + (a % cells)) % (cells * cells)]!
+      const a = at(i, j) + (at(i + 1, j) - at(i, j)) * sx
+      const b = at(i, j + 1) + (at(i + 1, j + 1) - at(i, j + 1)) * sx
+      return a + (b - a) * sy
+    }
+  }
+  const fine = lattice(64)
+  const mid = lattice(16)
+  const coarse = lattice(4)
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const k = (y * N + x) * 4
+      data[k] = Math.round((fine(x, y) * 0.65 + mid(x, y) * 0.35) * 255)
+      data[k + 1] = Math.round(coarse(x, y) * 255)
+      data[k + 2] = 0
+      data[k + 3] = 255
+    }
+  }
+  const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.magFilter = THREE.LinearFilter
+  t.minFilter = THREE.LinearMipmapLinearFilter
+  t.generateMipmaps = true
+  t.needsUpdate = true
+  return t
+}
+
+export function createTerrainMaterial(opts: { smooth: boolean; detail: boolean }): { material: THREE.MeshLambertMaterial; shading: TerrainShading } {
+  const shading: TerrainShading = { season: { value: 0 }, snow: { value: 0 } }
+  const material = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !opts.smooth })
+  const detail = opts.detail ? detailTexture() : null
+  material.onBeforeCompile = (sh) => {
+    sh.uniforms.uSeason = shading.season
+    sh.uniforms.uSnow = shading.snow
+    sh.uniforms.uDry = { value: DRY }
+    sh.uniforms.uSnowC = { value: SNOW }
+    if (detail) sh.uniforms.uDetail = { value: detail }
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute vec2 aTint;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTint = aTint;\nvGroundXZ = position.xz;')
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>\nuniform float uSeason;\nuniform float uSnow;\nuniform vec3 uDry;\nuniform vec3 uSnowC;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;${detail ? '\nuniform sampler2D uDetail;' : ''}`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+diffuseColor.rgb = mix(diffuseColor.rgb, uDry, uSeason * 0.45 * vTint.x);
+diffuseColor.rgb = mix(diffuseColor.rgb, uSnowC, uSnow * 0.85 * vTint.y);${detail ? `
+{
+  // Ground detail in world metres: fine grain every ~3 m, blotches every ~40 m; fades out with distance (no moiré).
+  float fine = texture2D(uDetail, vGroundXZ / 3.2).r;
+  float blot = texture2D(uDetail, vGroundXZ / 41.0).g;
+  float fade = 1.0 - smoothstep(25.0, 110.0, length(vViewPosition));
+  diffuseColor.rgb *= 1.0 + ((fine - 0.5) * 0.22 * fade + (blot - 0.5) * 0.12);
+}` : ''}`)
+  }
+  material.customProgramCacheKey = () => `terrain:${opts.detail ? 1 : 0}`
+  return { material, shading }
+}
+
+export function disposeTerrainMaterial(m: THREE.MeshLambertMaterial) {
+  m.dispose()
+}
+```
