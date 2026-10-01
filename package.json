@@ -15,6 +15,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "bench:sim": "node --expose-gc --import tsx scripts/bench/sim-bench.ts",
+    "e2e:run": "node scripts/e2e/run.mjs",
     "e2e": "node scripts/e2e/smoke.mjs && node scripts/e2e/acceptance.mjs && node scripts/e2e/mobile.mjs",
     "bench:render": "node scripts/bench/render-bench.mjs",
     "check": "pnpm type-check && pnpm lint && node scripts/check-layers.mjs && pnpm test"

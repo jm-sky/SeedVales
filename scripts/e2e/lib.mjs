@@ -3,6 +3,7 @@
  * SwiftShader WebGL — correctness only; not representative of real GPU performance.
  */
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { chromium } from 'playwright-core'
 
@@ -10,7 +11,18 @@ export const BASE = process.env.SV_URL ?? 'http://localhost:5199/'
 export const OUT = path.resolve(import.meta.dirname, '../../test-results/e2e')
 fs.mkdirSync(OUT, { recursive: true })
 
-const CHROME = process.env.CHROME_PATH ?? '/usr/bin/google-chrome'
+/** CHROME_PATH → bundled Playwright chromium (/opt/pw-browsers, ~/.cache/ms-playwright) → system Chrome. */
+function findChrome() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH
+  for (const root of ['/opt/pw-browsers', path.join(os.homedir(), '.cache/ms-playwright')]) {
+    if (!fs.existsSync(root)) continue
+    const dir = fs.readdirSync(root).filter((d) => d.startsWith('chromium-')).sort().reverse()
+      .find((d) => fs.existsSync(path.join(root, d, 'chrome-linux/chrome')))
+    if (dir) return path.join(root, dir, 'chrome-linux/chrome')
+  }
+  return '/usr/bin/google-chrome'
+}
+const CHROME = findChrome()
 
 export async function launch({ mobile = false } = {}) {
   const browser = await chromium.launch({

@@ -11,6 +11,7 @@ Główny indeks dokumentacji.
 | [IMPLEMENTATION-PROMPT.md](IMPLEMENTATION-PROMPT.md) | stały brief dla autonomicznych sesji implementacyjnych |
 | [../NEXT-SESSION-KICK-OFF-PROMPT.md](../NEXT-SESSION-KICK-OFF-PROMPT.md) | brief na najbliższą sesję (długa pętla) |
 | [state/PROGRESS.md](state/PROGRESS.md) | handoff między sesjami — czytaj najpierw |
+| [state/progress-log.md](state/progress-log.md) | archiwum starszych sekcji PROGRESS |
 | [state/FEATURES.json](state/FEATURES.json) | wymagania, kryteria odbioru, statusy |
 | [design/DECISIONS.md](design/DECISIONS.md) | decyzje i uproszczenia |
 | [roadmap/v1-closure-and-appendix.md](roadmap/v1-closure-and-appendix.md) | kolejność: domknięcie v1 → fale dodatku |

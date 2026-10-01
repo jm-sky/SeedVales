@@ -49,3 +49,6 @@ _temp
 
 # E2E/bench artefacts (reports kept via docs)
 test-results/
+
+# Claude Code agent worktrees
+.claude/worktrees/
