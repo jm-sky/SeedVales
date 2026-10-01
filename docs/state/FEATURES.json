@@ -1094,7 +1094,7 @@
    "id": "FIRE-02",
    "vision": "APPX: Follow-up 2026-10-01 (survival)",
    "scope": "v2",
-   "behavior": "Stone hearth (3-5 stones): permanent, dismantle returns the stones, faster relighting, better base for a spit; settlement hearths fed by an NPC duty",
+   "behavior": "Stone hearth (3-5 stones): permanent, dismantle returns the stones, faster relighting, better base for a spit; settlement fires and torches kept by the guard, optionally a cleaner, fallback any NPC who feels the need (fuel from warehouse branches)",
    "verify": "vitest + e2e",
    "status": "planned",
    "evidence": "plan survival--001"
