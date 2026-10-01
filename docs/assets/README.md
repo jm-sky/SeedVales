@@ -38,6 +38,7 @@ Konwersje: glTF → GLB, `resample` animacji, EXT_meshopt_compression (dekodowan
 | `characters/{Male,Female}_Head.glb` | Base Characters | głowa (re-bind do szkieletu stroju) | |
 | `characters/anims.glb` | UAL1 Standard | 22 klipy, bez siatek | 2.5 MB |
 | `landmarks.glb` | poly.pizza downloads in `_temp/` (Quaternius Modular Ruins Pack, Rocks, Sail Boat; Kenney Ship Wreck — all CC0) | WORLD-11 landmark pieces: `Ruin_*`, `Stone_1..5`, `Wreck_Ship`, `Wreck_Boat` (names in `render/assetNames.ts`) | built by `node scripts/assets/build-landmarks.mjs` (scale baked into vertices, origin at XZ centre / base, textures 512, meshopt; identity wrapper node above each mesh node because quantisation puts a scale on the mesh node and `mergeTemplate` drops the looked-up node's transform) |
+| `assets-src/{graveyard,signs,food}.glb` (**not shipped**) | Halloween Bits (Kay Lousberg), Signs pack (iPoly3D), Ultimate Food Pack (Quaternius) — all CC0 via Poly Pizza, `_temp/extracted/` | kept pieces of research 006 (churchyard/graveyard kit, 13 wooden signs, 14 medieval-plausible food/cookware pieces), scaled to 1 unit = 1 m | built by `node scripts/assets/build-pack-pieces.mjs`; 1–2 materials per file, textures ≤ 512 px, stable node names. **No consumer plan yet** (so not in `public/assets/`, no `assetNames.ts` entry): copy the file to `public/assets/`, add the requested node names to `assetNames.ts` and the file to `packNodeNames()`, then wire it in the consuming plan. Keep/drop list: [research 006](../research/2026-10-01--006--halloween-signs-food-pack-index.md) |
 | `LICENSE-Quaternius-CC0.txt` | | licencja | |
 | `CREDITS-CC-BY.txt` | | CC BY attributions (hare, boar, bear, moose, chicken) — required by the license | |
 
@@ -48,6 +49,7 @@ Konwersje: glTF → GLB, `resample` animacji, EXT_meshopt_compression (dekodowan
 - Landmarks (WORLD-11): stone circle, ruins, wrecks come from `landmarks.glb`; if it fails to load, `render/landmarks.ts` falls back to boxes/cylinders with the same footprint.
 - Studnia, ognisko, tablica, pochodnie, koryto, suszarnia, palisada, most, uprawy — proceduralne low-poly.
 - Broń/narzędzia w dłoni — brak (FBX-only w RPG Items).
+- Food item meshes, signs and graveyard/churchyard pieces: ready in `assets-src/` (see the table above), waiting for a consuming plan.
 
 ## Audit (2026-10-01, render--004 step 1; refreshed after the step-3 fauna class and the render--005 outfit variants, 2026-10-01)
 
@@ -100,6 +102,16 @@ Measurement only — no asset file changed by the audit. Reproduce: `node script
 
 **Total:** 42 files, 29.75 MB, 302790 unique tris (the largest single files: `nature.glb` 3.3 MB, `anims.glb` 2.5 MB, `village.glb` 2.4 MB).
 
+Prepared but **not shipped** (`assets-src/`, 2026-10-01, render--004 step 3 verification; see research 006): same script, same columns.
+
+| file | KB | tris (unique) | tris (scene) | nodes | meshes/prims | mats | textures | anims | skin |
+|---|---|---|---|---|---|---|---|---|---|
+| assets-src/food.glb | 133 | 6426 | 6426 | 28 | 14/14 | 2 | 64x4 png | — | no |
+| assets-src/graveyard.glb | 282 | 9976 | 9976 | 62 | 31/31 | 1 | 512x512 png | — | no |
+| assets-src/signs.glb | 128 | 6968 | 6968 | 26 | 13/13 | 1 | 16x4 png | — | no |
+
+Against D-REN-11: every piece ≤ 1.1 k tris (largest: the widest signs ≈ 1.05 k, `Crypt` 952) — inside the props/landmark class; the packs are 0.13–0.28 MB (pack ≤ 0.5 MB landmark / ≤ 3.5 MB props class); 1 shared material per file (food: 2 identical-look palette materials), textures ≤ 512 px. Not counted in the shipped totals above.
+
 ### Budgets per model class (D-REN-10, D-REN-11)
 
 Derived from the table; a new or replacement model stays inside its class or goes behind a quality profile / is rejected (the `bench:render` before/after + `tour.mjs` screenshots still decide).
@@ -122,7 +134,7 @@ Derived from the table; a new or replacement model stays inside its class or goe
 
 ## Workflow and rules (render--004 step 2)
 
-- **Where things live:** third-party sources in `_temp/` (not committed); committed output only in `public/assets/`. Build scripts: `scripts/assets/build-assets.mjs` (packs, characters), `build-extra-animals.mjs` (rat/hare/boar/bear/moose/sheep/chicken), `normalize-fauna.py` + `rig-fauna.py` (Blender MCP normalising and rigging). Source and licence per asset: `LICENSE-Quaternius-CC0.txt`, `CREDITS-CC-BY.txt` (CC-BY credit is mandatory).
+- **Where things live:** third-party sources in `_temp/` (not committed); committed output only in `public/assets/`. Build scripts: `scripts/assets/build-assets.mjs` (packs, characters), `build-extra-animals.mjs` (rat/hare/boar/bear/moose/sheep/chicken), `build-pack-pieces.mjs` (graveyard/signs/food → `assets-src/`, Node only: scale/pivot baking, palette merge, 512 px), `normalize-fauna.py` + `rig-fauna.py` (Blender MCP normalising and rigging). Source and licence per asset: `LICENSE-Quaternius-CC0.txt`, `CREDITS-CC-BY.txt` (CC-BY credit is mandatory).
 - **Character outfit variants (render--005):** `build-characters.mjs` (Node: `VARIANTS` lines from the pack glTFs, `--raw` for Blender-authored `assets-src/characters/*.raw.glb`, `--tex` for the colour-variant maps in `public/assets/characters/tex/`); `blender-character-variants.py` (Blender MCP, dev-only: Peasant_Boots, Blacksmith, Herbalist; scene restored afterwards, no .blend committed). Wired by `ProfessionDef.outfit` in `data/professions.ts`.
 - **Stable node names:** render code looks parts up by name. All requested names live in `src/game/render/assetNames.ts`; `assetNames.test.ts` (part of `pnpm check`) fails with the file and name if a re-export drops one, and checks that every species/character GLB exists and parses. Adding a looked-up node = add it to `assetNames.ts` first.
 - **Model direction (D-REN-10):** realistic where the CPU/GPU cost is small; replace a whole class together; budget = triangle/texture class of comparable assets (audit table), before/after `bench:render` + `tour.mjs` screenshots per model.
