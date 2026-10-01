@@ -14,6 +14,7 @@ import { CameraRig } from './cameraRig'
 import { Carts } from './carts'
 import { Dynamics } from './dynamics'
 import { GpuTimer } from './gpuTimer'
+import { Grass } from './grass'
 import { Landmarks } from './landmarks'
 import { QUALITY, type QualityProfile } from './quality'
 import { snapShadowCenter } from './shadowSnap'
@@ -39,6 +40,7 @@ export class Renderer {
   rig: CameraRig
   terrain: TerrainChunks
   vegetation: Vegetation
+  grass: Grass | null
   structures: Structures
   landmarks: Landmarks
   actors: Actors
@@ -90,6 +92,7 @@ export class Renderer {
     this.scene.add(this.sun, this.sun.target, this.hemi)
     this.terrain = new TerrainChunks(sim.terrain, q, this.visual)
     this.vegetation = new Vegetation(sim, q)
+    this.grass = this.visual.grass ? new Grass(sim, quality) : null
     this.structures = new Structures(sim)
     this.landmarks = new Landmarks(sim)
     this.actors = new Actors(sim, q)
@@ -100,7 +103,7 @@ export class Renderer {
       this.skyDome = new SkyDome()
       this.scene.add(this.skyDome.mesh)
     }
-    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.landmarks.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
+    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.landmarks.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
@@ -131,6 +134,7 @@ export class Renderer {
     this.fogFar = q.fogFar
     this.terrain.setQuality(q)
     this.vegetation.setQuality(q)
+    this.grass?.setQuality(quality)
     this.actors.setQuality(q)
     if (shadowsChanged) {
       this.scene.traverse((o) => {
@@ -147,6 +151,7 @@ export class Renderer {
    */
   dispose() {
     this.terrain.dispose()
+    this.grass?.dispose()
     this.landmarks.dispose()
     this.scene.clear()
   }
@@ -159,9 +164,15 @@ export class Renderer {
 
   private handleEvents() {
     for (const e of this.sim.events) {
-      if (e.type === 'terrain') this.terrain.markDirty(e.chunk)
-      else if (e.type === 'nodes') this.vegetation.markDirty()
-      else if (e.type === 'buildings') this.structures.rebuild()
+      if (e.type === 'terrain') {
+        this.terrain.markDirty(e.chunk)
+        const [cx, cz] = e.chunk.split(',').map(Number) as [number, number]
+        this.grass?.markDirty({ cx, cz })
+      } else if (e.type === 'nodes') this.vegetation.markDirty()
+      else if (e.type === 'buildings') {
+        this.structures.rebuild()
+        this.grass?.markDirty()
+      }
     }
   }
 
@@ -209,6 +220,7 @@ export class Renderer {
     const season = seasonOf(cal)
     this.terrain.seasonTint = season === 'autumn' ? 0.6 : season === 'winter' ? 0.8 : 0
     this.terrain.snowCover = season === 'winter' && (w.kind === 'snow' || w.wetness > 0.2) ? 0.8 : 0
+    this.grass?.setSeason(this.terrain.seasonTint, this.terrain.snowCover)
   }
 
   private lightCount(): number {
@@ -231,6 +243,7 @@ export class Renderer {
     perf.measure('render.terrain', () => this.terrain.update(p.x, p.z, this.first ? 4000 : 5))
     this.first = false
     perf.measure('render.vegetation', () => this.vegetation.update(p.x, p.z))
+    this.grass?.update(p.x, p.z)
     perf.measure('render.actors', () => this.actors.update(dt, this.rig.camera))
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)

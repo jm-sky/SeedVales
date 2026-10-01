@@ -17,9 +17,11 @@ export interface VisualFlags {
   smooth: boolean
   /** Ground detail texture (medium/high only, D-PERF-2). */
   detail: boolean
+  /** Grass rings (render--007 step 2); false = the pre-grass look for A/B. */
+  grass: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true }
 
 export function readVisualFlags(): VisualFlags {
   try {

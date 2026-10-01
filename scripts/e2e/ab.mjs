@@ -62,6 +62,18 @@ const FRAMES = [
     sv.game.renderer.rig.pitch = 0.45
   }],
   // Season fade (autumn tint 0.6) and a summer reference, same meadow view, clear weather.
+  // Grass at normal camera height over a meadow (render--007 step 2), summer noon.
+  ['meadow-grass', (sv) => {
+    const sim = sv.game.sim
+    const cal = sim.state.time.cal
+    sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 20 * 86400 + 11 * 3600
+    Object.assign(sim.state.weather, { kind: 'clear', intensity: 0, temp: 14, wetness: 0.1, fog: 0.05, until: sim.state.time.cal + 30 * 86400 })
+    const s = sim.world.settlements[1]
+    sv.teleport(s.x + 260, s.z + 140)
+    sv.face(s.x, s.z)
+    sv.game.renderer.rig.distance = 6
+    sv.game.renderer.rig.pitch = 0.18
+  }],
   ...[['summer-meadow', 20], ['autumn-meadow', 35]].map(([name, day]) => [name, new Function('sv', `
     const sim = sv.game.sim
     const cal = sim.state.time.cal
@@ -75,6 +87,8 @@ const FRAMES = [
   `)]),
 ]
 
+const only = process.env.SV_FRAMES?.split(',')
+if (only) FRAMES.splice(0, FRAMES.length, ...FRAMES.filter(([n]) => only.includes(n)))
 const { browser, page, logs } = await launch()
 const shots = {}
 for (const v of variants) {

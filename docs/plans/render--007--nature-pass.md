@@ -1,6 +1,6 @@
 # Render: nature pass — grass with LOD and wind, real trees (leaf cards + impostors), water
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — implementation of every step; opus — asset choice keep/drop (step 3a), look keep/drop per step, exit-gate review (`wave-review`)  
 **Domain:** render  
 **Sub domains:** vegetation, terrain, water, assets, perf  
@@ -97,4 +97,10 @@ Sparse flower/fern accents in the grass tiles (same system, a few species, seaso
 
 ## Result
 
-*(empty — filled per step)*
+
+### Session 9 (Sonnet, cloud)
+
+- **Step 0:** only the `meadow-grass` frame was added to `scripts/e2e/ab.mjs` (+ `SV_FRAMES=a,b` to render a subset); `diag--002` step 5 and the `forest-edge`/`lake-shore`/`river-bank` frames are **not done** (next).
+- **Step 1 done — shared wind** (`render/wind.ts`, test `wind.test.ts`): weather-derived strength (clear 0.3 … storm 1.2, derived, nothing saved), direction drifting with the calendar, render-seconds clock, `applyWind(material, {amplitude, heightScale})` injects the sway after `begin_vertex` (instance-aware, works on colour/depth/distance materials); strength 0 ⇒ zero offset. Wired in `Renderer.render`. Used by grass now; trees/reeds/bushes later.
+- **Step 2 done (first pass) — grass** (RENDER-06 `implemented_unverified`): `render/grassPlacement.ts` (pure: data masks biome/road/slope/water/footprints → density, 16 m tiles, deterministic jittered grid, caps) + `render/grass.ts` (two instanced rings: LOD0 7-blade curved clumps, 21 tris; LOD1 crossed quads with a generated alpha blade texture, 4 tris; tile cache, per-frame budget 2.5 ms, shader fade by distance — no ring line —, wind, season dry tint + sparser, hidden under snow, flat up-normal so blades are lit like the ground). Rings/density: low far 24 m ×0.4 (clump ring only), medium 20 m blades + 65 m clumps, high 36/90 m (`GRASS_RINGS`; caps in `grassPlacement.test.ts`). Flag `sv-visual {"grass":false}` = old look. **User feedback during the session: first version far too sparse → densities raised to 3 / 2 clumps per m² (LOD0/LOD1)**. Frames: `docs/state/frames/render--007/` (`ab.mjs medium 'nograss={"grass":false}' 'grass={}'`). Cloud SwiftShader fps (same container, not GPU numbers): mobile/low 4.2 → 3.8 (after the low reduction; before it 4.6 → 2.8, which broke mobile test M1 — fixed by shrinking the low ring, no test change), desktop medium 1.4 → 1.2 with 34.5 k instances. **Opus/❓ user:** look (colour vs the ground tint — steppe ground is yellow, blades are green; terrain colour under grass not yet tuned; blade shapes), wildflowers/clover variety, whether medium/high are too heavy on a real GPU (WSL measurement is the next step — see the kick-off).
+- **Reference direction (user, 2026-10-01, two Three.js screenshots):** `docs/research/refs/2026-10-01--threejs-ref-meadow-broadleaf.jpg` (broadleaf trees with real branches + alpha leaf cards, layered grass with small flowers and stones, distance fog) and `…-conifer-grass-godrays.jpg` (conifers with drooping needle-card branches, dense long grass blades with strong sun light shafts). The user wants to go in this direction; **forest/trees and the extras (flowers, light shafts) are to be planned later, not now** — step 3 gets re-planned from these references (leaf-card branch clusters instead of blob canopies, bark texture, flower sprites in the grass tiles, god rays as a post/billboard effect on high).
