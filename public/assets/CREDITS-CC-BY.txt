@@ -16,3 +16,10 @@ animals/Bear.glb
 
 Public domain (CC0), no attribution required:
 animals/Rat.glb  "Rat" by Quaternius via Poly Pizza: https://poly.pizza/m/iltq5bVNaV
+
+landmarks.glb (CC0, public domain — no attribution required, listed for provenance), via Poly Pizza:
+  Modular Ruins Pack by Quaternius  https://poly.pizza/m/F2LAK03B0r  (Ruin_* pieces)
+  Rocks by Quaternius               https://poly.pizza/m/gYhoEOKItJ  (Stone_1..5)
+  Sail Boat by Quaternius           https://poly.pizza/m/BgSZXwmm7k  (Wreck_Boat, hull only)
+  Ship Wreck by Kenney              https://poly.pizza/m/4qia78IBmZ  (Wreck_Ship)
+  Not used: Ship, Small Ship by Quaternius (kept in _temp/ for a future living ship).

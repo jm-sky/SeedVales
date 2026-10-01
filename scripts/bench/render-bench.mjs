@@ -59,6 +59,8 @@ const scenes = [
     }
     return false
   }],
+  // WORLD-11: the largest landmark (estate ruin, ~28k tris merged) in view; no baseline until measured on the user's machine.
+  ['landmark-estate', (sv) => { const l = sv.game.sim.world.landmarks.find((x) => x.kind === 'estate_ruin'); sv.setHour(12); sv.approach(l.x, l.z, 30); return !!l }],
   ['rain', (sv) => {
     const s = sv.game.sim
     const st = s.world.settlements[0]

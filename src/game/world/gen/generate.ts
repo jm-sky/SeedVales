@@ -13,6 +13,7 @@ import { planCentres } from './centres'
 import { placeDens, placeDeposits } from './features'
 import { generateBaseFields } from './heightfield'
 import { generateHydrology } from './hydrology'
+import { placeLandmarks } from './landmarks'
 import { carveRoad, smoothPath } from './roads'
 import { flattenStructures, layoutSettlement, scoreSites } from './settlements'
 
@@ -69,6 +70,7 @@ export function generateWorld(seed: number): WorldData {
   const dens = t('dens', () => placeDens(seed, { height, biome, mountain }, settlements, 0))
   const deposits = t('deposits', () => placeDeposits(seed, { height, biome, mountain }))
   const homeS = settlements[0]!
+  const landmarks = t('landmarks', () => placeLandmarks(seed, { height, biome, waterKind: hydro.waterKind, water: hydro.water }, settlements, roads, homeS))
   return {
     version: GEN_VERSION,
     seed,
@@ -87,6 +89,7 @@ export function generateWorld(seed: number): WorldData {
     roads,
     dens,
     deposits,
+    landmarks,
     homeSettlement: 0,
     spawn: { x: homeS.x + 4, z: homeS.z + 12 },
     genMs: performance.now() - t0,

@@ -207,6 +207,12 @@
    "kb": 393,
    "ratio": 0.3,
    "tex": 512
+  },
+  {
+   "src": "_temp/*.glb (poly.pizza: Quaternius ruins/rocks/sail boat, Kenney ship wreck)",
+   "dst": "public/assets/landmarks.glb",
+   "kb": 419,
+   "tex": 512
   }
  ]
 }

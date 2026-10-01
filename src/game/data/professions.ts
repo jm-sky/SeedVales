@@ -79,3 +79,15 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
 const FIRST_M = ['Bogdan', 'Mirosław', 'Wojciech', 'Jarosław', 'Zbigniew', 'Stanisław', 'Kazimierz', 'Radosław', 'Bolesław', 'Mieszko', 'Przemysł', 'Dobromir', 'Sławomir', 'Leszek', 'Janko', 'Maciej', 'Tomasz', 'Piotr']
 const FIRST_F = ['Dobrawa', 'Jadwiga', 'Bogna', 'Wanda', 'Radomira', 'Zofia', 'Małgorzata', 'Agnieszka', 'Dorota', 'Świętosława', 'Ludmiła', 'Halina', 'Marta', 'Anna', 'Elżbieta']
 export const NAMES = { male: FIRST_M, female: FIRST_F }
+
+/** Occupational surnames per household profession (D-LANG-1): the head's trade shows in the family name. */
+export const SURNAMES: Record<ProfessionId, string[]> = {
+  farmer: ['Plowman', 'Harrow', 'Sheaf', 'Barleycorn', 'Fieldman'],
+  woodcutter: ['Axeman', 'Woodward', 'Sawyer', 'Hewer', 'Faller'],
+  hunter: ['Fowler', 'Bowman', 'Tracker', 'Forester', 'Hawker'],
+  guard: ['Hornblower', 'Warden', 'Spearman', 'Watcher', 'Shieldman'],
+  herbalist: ['Wortman', 'Gatherer', 'Simpler', 'Brewster', 'Herber'],
+  trader: ['Chapman', 'Mercer', 'Packer', 'Monger', 'Merchant'],
+  blacksmith: ['Smith', 'Hammerman', 'Ironside', 'Farrier', 'Anvil'],
+  shepherd: ['Shepherd', 'Herder', 'Wooler', 'Flockman', 'Fold'],
+}

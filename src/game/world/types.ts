@@ -4,7 +4,7 @@
  * @subdomain world-gen
  */
 
-export const GEN_VERSION = 7
+export const GEN_VERSION = 8
 export const WORLD_SIZE_M = 8192
 export const CELL_M = 8
 export const GRID_N = WORLD_SIZE_M / CELL_M + 1 // vertices per side
@@ -124,6 +124,22 @@ export interface GenDeposit {
   richness: number
 }
 
+export type LandmarkKind = 'stone_circle' | 'house_ruin' | 'estate_ruin' | 'shipwreck' | 'boat_wreck'
+
+/** Static point of interest (WORLD-11); rendered from `landmarks.glb`, discovered through the map. */
+export interface GenLandmark {
+  id: string
+  kind: LandmarkKind
+  /** English proper name, e.g. "The Hollow Stones". */
+  name: string
+  x: number
+  z: number
+  /** Rotation around Y (radians). */
+  rot: number
+  /** Footprint radius (m): where the pieces lie and the discovery distance. */
+  radius: number
+}
+
 export interface WorldData {
   version: number
   seed: number
@@ -147,6 +163,7 @@ export interface WorldData {
   roads: GenRoad[]
   dens: GenDen[]
   deposits: GenDeposit[]
+  landmarks: GenLandmark[]
   homeSettlement: number
   spawn: { x: number; z: number }
   /** Wall-clock generation time of THIS run (not stored in the cache; 0 on cache hit). */
