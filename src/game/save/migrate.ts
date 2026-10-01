@@ -14,9 +14,9 @@ import { SaveError } from './errors'
  * generator version it was created with. Mismatch → explicit rejection (no silent mount).
  */
 export function checkWorldCompat(st: GameState, world: Pick<WorldData, 'version' | 'seed'>): void {
-  if (st.seed !== world.seed) throw new SaveError(`Zapis dotyczy innego świata (seed ${st.seed}, wczytany ${world.seed}).`)
+  if (st.seed !== world.seed) throw new SaveError(`The save belongs to a different world (seed ${st.seed}, loaded ${world.seed}).`)
   if (st.genVersion !== world.version) {
-    throw new SaveError(`Zapis powstał dla innej wersji generatora świata (v${st.genVersion}, gra: v${world.version}). Świata nie da się wiernie odtworzyć — zapis odrzucony.`)
+    throw new SaveError(`The save was made with a different world generator version (v${st.genVersion}, game: v${world.version}). The world cannot be faithfully recreated — save rejected.`)
   }
 }
 
@@ -56,10 +56,10 @@ const MIGRATIONS: Record<number, Migration> = {
 }
 
 export function migrate(st: GameState): GameState {
-  if (st.saveVersion > SAVE_VERSION) throw new SaveError('Zapis pochodzi z nowszej wersji gry.')
+  if (st.saveVersion > SAVE_VERSION) throw new SaveError('The save comes from a newer version of the game.')
   for (let v = st.saveVersion; v < SAVE_VERSION; v++) {
     const m = MIGRATIONS[v]
-    if (!m) throw new SaveError(`Nieobsługiwana wersja zapisu (v${st.saveVersion}).`)
+    if (!m) throw new SaveError(`Unsupported save version (v${st.saveVersion}).`)
     m(st)
   }
   st.saveVersion = SAVE_VERSION

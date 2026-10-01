@@ -19,11 +19,11 @@ export interface NavGoal {
 /** Distance (m) from a settlement's edge within which it counts as visited. */
 const DISCOVER_M = 60
 
-export function setWaypoint(sim: Sim, x: number, z: number, label = 'Znacznik'): string {
+export function setWaypoint(sim: Sim, x: number, z: number, label = 'Marker'): string {
   if (!Number.isFinite(x) || !Number.isFinite(z)) return ''
   const size = sim.world.size
   sim.state.px.waypoint = { x: Math.max(0, Math.min(size, x)), z: Math.max(0, Math.min(size, z)), label }
-  return `Wyznaczono cel: ${label}`
+  return `Waypoint set: ${label}`
 }
 
 export function clearWaypoint(sim: Sim) {
@@ -104,7 +104,7 @@ export function navigationSystem(sim: Sim) {
     if (Math.hypot(s.x - p.x, s.z - p.z) < s.radius + DISCOVER_M) (px.visited ??= []).push(s.id)
   }
   if (px.waypoint && Math.hypot(px.waypoint.x - p.x, px.waypoint.z - p.z) < 12) {
-    sim.message(`Dotarłeś do celu: ${px.waypoint.label}.`)
+    sim.message(`You have reached your destination: ${px.waypoint.label}.`)
     px.waypoint = undefined
   }
 }

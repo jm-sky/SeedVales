@@ -28,8 +28,8 @@ export function questSystem(sim: Sim) {
       const q: Quest = {
         id: `q-rats-${b.id}-${Math.floor(s.time.cal)}`,
         kind: 'rats',
-        title: `Szczury w osadzie ${sett.name}`,
-        desc: `${guard.name} (strażnik): „${b.kind === 'warehouse' ? 'Magazyn' : 'Budynek'} od dawna nienaprawiany — szczury zrobiły gniazdo. Wybij je i napraw ściany (młotek + gałęzie), zanim zjedzą zapasy.”`,
+        title: `Rats in ${sett.name}`,
+        desc: `${guard.name} (guard): "The ${b.kind === 'warehouse' ? 'warehouse' : 'building'} hasn't been repaired in ages — rats have made a nest. Kill them and repair the walls (hammer + branches) before they eat our stores."`,
         settlementId: b.settlementId,
         giverId: guard.id,
         buildingId: b.id,
@@ -40,7 +40,7 @@ export function questSystem(sim: Sim) {
         kills: 0,
       }
       s.quests.push(q)
-      sim.message(`Na tablicy ogłoszeń: ${q.title}`, 'quest')
+      sim.message(`On the notice board: ${q.title}`, 'quest')
     }
   }
   // Wolves threatening a settlement.
@@ -53,8 +53,8 @@ export function questSystem(sim: Sim) {
       s.quests.push({
         id: `q-wolves-${sett.id}-${Math.floor(s.time.cal)}`,
         kind: 'wolves',
-        title: `Wilki pod ${sett.name}`,
-        desc: `${giver.name}: „Wataha podchodzi pod zagrody. Przegoń albo ubij wilki.”`,
+        title: `Wolves near ${sett.name}`,
+        desc: `${giver.name}: "A wolf pack is prowling around the pens. Drive the wolves off or kill them."`,
         settlementId: sett.id,
         giverId: giver.id,
         status: 'available',
@@ -63,7 +63,7 @@ export function questSystem(sim: Sim) {
         killsNeeded: Math.min(3, wolves.length),
         kills: 0,
       })
-      sim.message(`Nowe ogłoszenie: Wilki pod ${sett.name}`, 'quest')
+      sim.message(`New notice: Wolves near ${sett.name}`, 'quest')
     }
   }
   // Resolution / expiry.
@@ -77,7 +77,7 @@ export function questSystem(sim: Sim) {
         if (q.status === 'active' && q.kills > 0) completeQuest(sim, q)
         else {
           q.status = 'expired'
-          sim.message(`${q.title}: problem rozwiązali mieszkańcy.`, 'quest')
+          sim.message(`${q.title}: the villagers dealt with the problem themselves.`, 'quest')
         }
       }
     }
@@ -88,20 +88,20 @@ export function questSystem(sim: Sim) {
 
 export function acceptQuest(sim: Sim, id: string): string {
   const q = sim.state.quests.find((qq) => qq.id === id)
-  if (!q || q.status !== 'available') return 'Zadanie niedostępne.'
+  if (!q || q.status !== 'available') return 'Quest unavailable.'
   q.status = 'active'
-  sim.message(`Przyjęto zadanie: ${q.title}`, 'quest')
-  return 'Przyjęto zadanie.'
+  sim.message(`Quest accepted: ${q.title}`, 'quest')
+  return 'Quest accepted.'
 }
 
 export function completeQuest(sim: Sim, q: Quest) {
   q.status = 'done'
   // Reward is paid by the settlement treasury (never minted); a poor settlement pays what it has.
   const paid = payFromTreasury(sim, q.settlementId, sim.player, q.reward)
-  if (paid < q.reward) sim.message(`Skarbiec osady jest pusty — wypłacono tylko ${paid} z ${q.reward} m.`, 'bad')
+  if (paid < q.reward) sim.message(`The settlement treasury is empty — you were paid only ${paid} of ${q.reward} c.`, 'bad')
   const giver = sim.human(q.giverId)
   if (giver) giver.opinion = Math.min(100, giver.opinion + 25)
-  addRep(sim, q.settlementId, q.kind === 'rats' ? { helpfulness: 12, renown: 5 } : { courage: 10, renown: 8, helpfulness: 5 }, `Ukończono: ${q.title}. Nagroda ${paid} m`)
+  addRep(sim, q.settlementId, q.kind === 'rats' ? { helpfulness: 12, renown: 5 } : { courage: 10, renown: 8, helpfulness: 5 }, `Completed: ${q.title}. Reward ${paid} c`)
 }
 
 /** Called on kills by the player to advance quests. */

@@ -54,7 +54,7 @@ export function killNpc(sim: Sim, h: Human) {
   if (h.vitals.dead) return
   h.vitals.dead = true
   sim.emit({ type: 'death', id: h.id })
-  sim.message(`${h.name} nie żyje.`, 'bad')
+  sim.message(`${h.name} is dead.`, 'bad')
 }
 
 export function isDown(sim: Sim, a: Actor) {
@@ -91,7 +91,7 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
     if (target.kind === 'animal' && sim.rng.chance(0.2)) (target as Animal).rabid = true
     else if (target.kind !== 'animal' && sim.rng.chance(0.12)) {
       makeIll(target.vitals, 'rabies', 60)
-      if (target.kind === 'player') sim.message('Ugryzienie wściekłego zwierzęcia… Potrzebny zielarz!', 'bad')
+      if (target.kind === 'player') sim.message('Bitten by a rabid animal… You need a herbalist!', 'bad')
     }
   }
   const h = hp(target.vitals)
@@ -109,7 +109,7 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
       heal(target.vitals, target.vitals.maxHp * 0.2 - h)
       target.vitals.convalescenceH = 12
       target.vitals.bleeding = 0
-      sim.message('Tracisz przytomność… Wrogowie tracą tobą zainteresowanie (120 s ochrony).', 'bad')
+      sim.message('You lose consciousness… Enemies lose interest in you (120 s of protection).', 'bad')
       sim.interruptReason = 'ko'
     }
     return false
@@ -117,14 +117,14 @@ export function applyDamage(sim: Sim, target: Actor, raw: number, type: DamageTy
   if (target.kind === 'npc') {
     if (h <= COMBAT.npcDeathHp) {
       killNpc(sim, target)
-      if (attacker?.kind === 'player') addRep(sim, target.settlementId, { honesty: -40, helpfulness: -20 }, 'Zabójstwo mieszkańca')
+      if (attacker?.kind === 'player') addRep(sim, target.settlementId, { honesty: -40, helpfulness: -20 }, 'Murdered a villager')
       return true
     }
     if (!target.vitals.ko || target.vitals.ko.until < sim.state.time.play) {
       target.vitals.ko = { until: sim.state.time.play + 60, protectUntil: sim.state.time.play + 60 }
       target.callForHelpAt = sim.state.time.play
       alertAround(sim, target.x, target.z, DECISION.alertHelpM)
-      sim.message(`${target.name} pada ranny i woła o pomoc!`, 'bad')
+      sim.message(`${target.name} falls wounded and calls for help!`, 'bad')
     }
     return false
   }
@@ -176,11 +176,11 @@ export function killAnimal(sim: Sim, a: Animal, killer?: Actor) {
     if (sp.dangerous) {
       addStat(sim, 'dangerousKilled')
       const sid = settlementAt(sim, a.x, a.z, 1500)
-      if (sid !== null) addRep(sim, sid, { courage: a.variant === 'alpha' || a.variant === 'strong' ? 4 : 2, renown: 1 }, `Zabito: ${sp.name}`)
+      if (sid !== null) addRep(sim, sid, { courage: a.variant === 'alpha' || a.variant === 'strong' ? 4 : 2, renown: 1 }, `Killed: ${sp.name}`)
     }
     if (a.householdId !== undefined) {
       const hh = sim.state.households[a.householdId]
-      if (hh) addRep(sim, hh.settlementId, { honesty: -10 }, 'Zabito cudze zwierzę')
+      if (hh) addRep(sim, hh.settlementId, { honesty: -10 }, 'Killed someone else\'s animal')
     }
     questOnKill(sim, a.species, a.x, a.z, a.denId)
   }
@@ -257,7 +257,7 @@ export function fireRanged(sim: Sim, h: Human, yaw: number, pitch: number, drawF
   if (now < h.attackReadyAt) return false
   const ammo = h.inv.items.find((s) => itemDef(s.id).ammoKind === w.ammo)
   if (!ammo) {
-    if (h.kind === 'player') sim.message('Brak amunicji.', 'bad')
+    if (h.kind === 'player') sim.message('Out of ammunition.', 'bad')
     return false
   }
   const ammoId = ammo.id

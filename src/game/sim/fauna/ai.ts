@@ -58,14 +58,14 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
     const d = Math.hypot(dx, dz) || 1
     steerTo(sim, a, a.x + (dx / d) * 20, a.z + (dz / d) * 20, sp.run * speedMul, dt, 0.5, full, 0.3)
     a.moving = 'run'
-    ai.label = 'Ucieka'
+    ai.label = 'Fleeing'
     return
   }
   // 2) Aggro target (attack).
   const aggro = a.aggroUntil && a.aggroUntil > now ? sim.actor(a.aggroId) : undefined
   if (aggro && !isDown(sim, aggro) && !(aggro.kind === 'player' && isProtected(sim, aggro))) {
     const reach = sp.attackRange + 0.5
-    ai.label = 'Atakuje'
+    ai.label = 'Attacking'
     if (steerTo(sim, a, aggro.x, aggro.z, sp.run * speedMul, dt, reach, full, 0.3) === 'arrived') {
       a.rot = Math.atan2(aggro.x - a.x, aggro.z - a.z)
       meleeAttack(sim, a, 120, aggro.id)
@@ -142,11 +142,11 @@ function chaseValid(sim: Sim, a: Animal): boolean {
 function scavenge(sim: Sim, a: Animal) {
   const g = sim.groundNear(a.x, a.z, 2).find((gi) => itemDef(gi.stack.id).food)
   if (g) {
-    a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.lureEatS, label: 'Je', ref: `g${g.id}` })
+    a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.lureEatS, label: 'Eating', ref: `g${g.id}` })
     return
   }
   const c = sim.corpsesNear(a.x, a.z, 2.5).find((cc) => cc.meat > 0)
-  if (c) a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.eatS, label: 'Je padlinę', ref: `c${c.id}` })
+  if (c) a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.eatS, label: 'Eating carrion', ref: `c${c.id}` })
 }
 
 /** One portion eaten at the end of an 'eat' step; keeps eating while hungry and food is left. */
@@ -165,7 +165,7 @@ function eatPortion(sim: Sim, a: Animal, ref: string | undefined) {
   c.meat--
   a.hungerH = Math.max(0, a.hungerH - CARRION.hungerPerMeat)
   perf.count('fauna.carrionPortions')
-  if (a.hungerH > 5 && c.meat > 0) a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.eatS, label: 'Je padlinę', ref })
+  if (a.hungerH > 5 && c.meat > 0) a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.eatS, label: 'Eating carrion', ref })
 }
 
 function planAnimal(sim: Sim, a: Animal) {
@@ -189,7 +189,7 @@ function planAnimal(sim: Sim, a: Animal) {
         return
       }
     }
-    if (owner && (a.species === 'dog' || (a.species === 'sheep' && owner.ai.label.includes('owce')))) {
+    if (owner && (a.species === 'dog' || (a.species === 'sheep' && owner.ai.label.includes('sheep')))) {
       ai.goal = 'follow'
       go({ x: owner.x + sim.rng.range(-5, 5), z: owner.z + sim.rng.range(-5, 5) }, false, 2)
       return
@@ -198,7 +198,7 @@ function planAnimal(sim: Sim, a: Animal) {
     ai.goal = 'graze'
     const r = pen ? Math.max(1, pen.hw - 1) : 6
     go({ x: base.x + sim.rng.range(-r, r), z: base.z + sim.rng.range(-r, r) }, false, 0.8)
-    ai.steps.push({ op: 'work', act: 'graze', dur: sim.rng.range(8, 25), label: 'Pasie się' })
+    ai.steps.push({ op: 'work', act: 'graze', dur: sim.rng.range(8, 25), label: 'Grazing' })
     if (a.thirstH > sp.drinkEveryH * 1.5) a.thirstH = 0 // household water abstracted when no trough
     return
   }
@@ -206,7 +206,7 @@ function planAnimal(sim: Sim, a: Animal) {
   if (isBadWeather(sim.weather) && sim.rng.chance(0.6)) {
     ai.goal = 'shelter'
     go({ x: a.homeX + sim.rng.range(-10, 10), z: a.homeZ + sim.rng.range(-10, 10) })
-    ai.steps.push({ op: 'work', act: 'rest', dur: 40, label: 'Chroni się' })
+    ai.steps.push({ op: 'work', act: 'rest', dur: 40, label: 'Taking shelter' })
     return
   }
   // Drink: walk to shallow bank point (never into deep water).
@@ -215,7 +215,7 @@ function planAnimal(sim: Sim, a: Animal) {
     if (w) {
       ai.goal = 'drink'
       go(w, false, 1.5)
-      ai.steps.push({ op: 'work', act: 'drink', dur: 6, label: 'Pije' })
+      ai.steps.push({ op: 'work', act: 'drink', dur: 6, label: 'Drinking' })
       return
     }
     a.thirstH = 0
@@ -238,7 +238,7 @@ function planAnimal(sim: Sim, a: Animal) {
         ai.goal = 'investigate'
         ai.cooldowns.investigate = sim.state.time.play + 60
         go(tr, false, 2)
-        ai.steps.push({ op: 'work', act: 'sniff', dur: 5, label: 'Węszy' })
+        ai.steps.push({ op: 'work', act: 'sniff', dur: 5, label: 'Sniffing' })
         return
       }
     }
@@ -259,13 +259,13 @@ function planAnimal(sim: Sim, a: Animal) {
   if (restTime && sim.rng.chance(0.7)) {
     ai.goal = 'rest'
     go({ x: a.homeX + sim.rng.range(-6, 6), z: a.homeZ + sim.rng.range(-6, 6) })
-    ai.steps.push({ op: 'work', act: 'rest', dur: 60 + sim.rng.next() * 60, label: 'Odpoczywa' })
+    ai.steps.push({ op: 'work', act: 'rest', dur: 60 + sim.rng.next() * 60, label: 'Resting' })
     return
   }
   ai.goal = 'graze'
   const range = a.species === 'rat' ? 14 : sp.temperament === 'predator' ? 160 : 90
   go(pickWander(sim, a, range))
-  ai.steps.push({ op: 'work', act: 'graze', dur: sim.rng.range(10, 40), label: 'Żeruje' })
+  ai.steps.push({ op: 'work', act: 'graze', dur: sim.rng.range(10, 40), label: 'Foraging' })
 }
 
 export function faunaSystem(sim: Sim) {

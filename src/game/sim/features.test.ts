@@ -143,13 +143,13 @@ describe('items, food, trade, craft', () => {
     const sim = testSim()
     const smith = sim.state.npcs.find((n) => n.profession === 'blacksmith')!
     const m0 = sim.player.money
-    expect(placeOrder(sim, smith, 'knife')).toContain('Zamówiono')
+    expect(placeOrder(sim, smith, 'knife')).toContain('Ordered')
     expect(sim.player.money).toBeLessThan(m0)
     sim.state.time.cal += 11 * 3600
     WORK_ACTS.smith!(sim, smith, undefined, 1)
     const o = sim.state.px.orders[0]!
     expect(o.status).toBe('ready')
-    expect(collectOrder(sim, o.id)).toContain('Odebrano')
+    expect(collectOrder(sim, o.id)).toContain('Collected')
     expect(countItem(sim.player.inv, 'knife')).toBe(2)
   })
 
@@ -159,7 +159,7 @@ describe('items, food, trade, craft', () => {
     const store = houseOf(sim, smith)!.inv!
     const ingots0 = countItem(store, 'iron_ingot')
     const branch0 = countItem(store, 'branch')
-    expect(placeOrder(sim, smith, 'axe')).toContain('Zamówiono')
+    expect(placeOrder(sim, smith, 'axe')).toContain('Ordered')
     // Materials are reserved at ordering (the smith cannot use them for other work meanwhile).
     expect(countItem(store, 'iron_ingot')).toBe(ingots0 - 2)
     expect(countItem(store, 'branch')).toBe(branch0 - 1)
@@ -171,11 +171,11 @@ describe('items, food, trade, craft', () => {
     // Without materials the order is refused (no deposit taken, nothing minted).
     store.items = []
     const m = sim.player.money
-    expect(placeOrder(sim, smith, 'knife')).toContain('nie ma teraz materiałów')
+    expect(placeOrder(sim, smith, 'knife')).toContain("doesn't have the materials")
     expect(sim.player.money).toBe(m)
     expect(sim.state.px.orders.length).toBe(1)
     const axes0 = countItem(sim.player.inv, 'axe')
-    expect(collectOrder(sim, o.id)).toContain('Odebrano')
+    expect(collectOrder(sim, o.id)).toContain('Collected')
     expect(countItem(sim.player.inv, 'axe')).toBe(axes0 + 1)
     expect(sim.state.px.orders.length).toBe(0) // collected orders leave the list
   })
@@ -188,7 +188,7 @@ describe('items, food, trade, craft', () => {
     const m0 = sim.player.money
     placeOrder(sim, smith, 'axe')
     expect(sim.player.money).toBeLessThan(m0)
-    expect(cancelOrder(sim, sim.state.px.orders[0]!.id)).toContain('zwrot')
+    expect(cancelOrder(sim, sim.state.px.orders[0]!.id)).toContain('refunded')
     expect(sim.player.money).toBe(m0)
     expect(countItem(store, 'iron_ingot')).toBe(ingots0)
     expect(sim.state.px.orders.length).toBe(0)

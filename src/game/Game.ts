@@ -40,13 +40,13 @@ export interface GameOptions {
 export type Panel = null | 'settings' | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact'
 
 export async function loadWorld(seed: number, onProgress?: (l: string) => void): Promise<WorldData> {
-  onProgress?.('Szukam świata w pamięci podręcznej…')
+  onProgress?.('Looking for the world in the cache…')
   const cached = await loadWorldCache(seed)
   if (cached) {
     perf.count('world.cacheHit')
     return cached
   }
-  onProgress?.('Generuję świat (teren, rzeki, osady, drogi)…')
+  onProgress?.('Generating the world (terrain, rivers, settlements, roads)…')
   await new Promise((r) => setTimeout(r, 30))
   const w = generateWorld(seed)
   perf.record('world.generate', w.genMs)
@@ -100,13 +100,13 @@ export class Game {
   static async create(canvas: HTMLCanvasElement, o: GameOptions): Promise<Game> {
     let state: GameState | null = null
     if (o.slot) {
-      o.onProgress?.('Wczytuję zapis…')
+      o.onProgress?.('Loading save…')
       state = await readSave(o.slot)
     }
     const seed = state?.seed ?? o.seed
     const world = await loadWorld(seed, o.onProgress)
     if (state) checkWorldCompat(state, world)
-    o.onProgress?.('Zasiedlam osady…')
+    o.onProgress?.('Populating settlements…')
     state ??= createNewGame(world)
     const sim = new Sim(world, state)
     installSystems(sim)
@@ -114,7 +114,7 @@ export class Game {
     const game = new Game(canvas, sim, renderer, o.slot ?? newSlotId(seed))
     if (o.slot) game.saveName = (await readSaveMeta(o.slot).catch(() => undefined))?.name
     renderer.resize(canvas.clientWidth, canvas.clientHeight)
-    o.onProgress?.('Wczytuję modele…')
+    o.onProgress?.('Loading models…')
     await renderer.loadAssets(o.onProgress)
     return game
   }
@@ -237,7 +237,7 @@ export class Game {
         this.showDiag = !this.showDiag
         break
       case 'escape':
-        if (this.sim.state.px.activity) cancelActivity(this.sim, 'Przerwano.')
+        if (this.sim.state.px.activity) cancelActivity(this.sim, 'Interrupted.')
         else if (this.sim.state.px.autopilot) this.sim.state.px.autopilot = undefined
         else this.panel = this.panel ? null : 'menu'
         break
@@ -351,7 +351,7 @@ export class Game {
   cycleTarget() {
     const list = findTargets(this.sim, this.sim.player.rot)
     const next = nextTarget(list, this.target ? targetKey(this.target.ref) : null)
-    if (!next) return this.showToast('Brak celów w zasięgu.')
+    if (!next) return this.showToast('No targets in range.')
     this.pinnedTarget = targetKey(next.ref)
     this.refreshTarget()
     this.notify()
@@ -371,7 +371,7 @@ export class Game {
   toggleCombat() {
     const p = this.sim.player
     p.combat = !p.combat
-    this.showToast(p.combat ? 'Broń dobyta (tryb walki)' : 'Broń schowana')
+    this.showToast(p.combat ? 'Weapon drawn (combat mode)' : 'Weapon sheathed')
   }
 
   toggleTorch() {
@@ -379,27 +379,27 @@ export class Game {
     if (p.eq.off?.id === 'torch') {
       addItem(p.inv, p.eq.off)
       p.eq.off = undefined
-      this.showToast('Schowano pochodnię.')
+      this.showToast('Torch put away.')
       return
     }
     const t = p.inv.items.find((s) => s.id === 'torch')
-    if (!t) return this.showToast('Nie masz pochodni.')
-    if (p.eq.main && itemDef(p.eq.main.id).weapon?.twoHanded) return this.showToast('Obie ręce zajęte (broń dwuręczna).')
+    if (!t) return this.showToast('You don\'t have a torch.')
+    if (p.eq.main && itemDef(p.eq.main.id).weapon?.twoHanded) return this.showToast('Both hands are busy (two-handed weapon).')
     p.eq.off = removeStack(p.inv, t, 1) ?? undefined
-    this.showToast('Pochodnia w lewej ręce.')
+    this.showToast('Torch in your left hand.')
   }
 
   dropTorchLit() {
     const p = this.sim.player
-    if (p.eq.off?.id !== 'torch') return this.showToast('Nie trzymasz pochodni.')
+    if (p.eq.off?.id !== 'torch') return this.showToast('You aren\'t holding a torch.')
     dropItem(this.sim, p.x + Math.sin(p.rot), p.z + Math.cos(p.rot), p.eq.off, true)
     p.eq.off = undefined
-    this.showToast('Rzucono płonącą pochodnię.')
+    this.showToast('You throw the burning torch.')
   }
 
   useFirst(ids: string[]) {
     const s = this.sim.player.inv.items.find((i) => ids.includes(i.id))
-    if (!s) return this.showToast('Brak przedmiotu.')
+    if (!s) return this.showToast('No such item.')
     this.showToast(consume(this.sim, this.sim.player, s).msg)
   }
 
@@ -410,19 +410,19 @@ export class Game {
       const moved = removeStack(p.inv, s)!
       if (p.eq.main) addItem(p.inv, p.eq.main)
       p.eq.main = moved
-      this.showToast(`W ręce: ${d.name}`)
+      this.showToast(`In hand: ${d.name}`)
     } else if (d.armor) {
       const key = `${d.armor.slot}_${d.armor.layer}` as const
       const moved = removeStack(p.inv, s, 1)!
       const prev = p.eq.armor[key]
       if (prev) addItem(p.inv, prev)
       p.eq.armor[key] = moved
-      this.showToast(`Założono: ${d.name}`)
+      this.showToast(`Equipped: ${d.name}`)
     } else if (d.waterCapacity) {
-      if ((s.water ?? 0) <= 0) return this.showToast('Pusty.')
+      if ((s.water ?? 0) <= 0) return this.showToast('It\'s empty.')
       s.water! -= 1
       p.vitals.thirst = Math.min(100, p.vitals.thirst + 30)
-      this.showToast('Łyk wody.')
+      this.showToast('A sip of water.')
     } else this.showToast(consume(this.sim, p, s).msg)
     this.notify()
   }
@@ -458,7 +458,7 @@ export class Game {
     if (!r) return
     const c = canCraft(this.sim, this.sim.player, r)
     if (!c.ok) return this.showToast(c.reason!)
-    startActivity(this.sim, { kind: 'craft', label: `Wytwarzanie: ${r.name}`, total: craftTime(this.sim.player, r), data: r.id })
+    startActivity(this.sim, { kind: 'craft', label: `Crafting: ${r.name}`, total: craftTime(this.sim.player, r), data: r.id })
     this.panel = null
     this.notify()
   }
@@ -486,19 +486,19 @@ export class Game {
         this.placeBlueprint('campfire')
         break
       case 'dig':
-        startActivity(this.sim, { kind: 'dig', label: 'Kopanie', total: 4, data: `${fx},${fz}` })
+        startActivity(this.sim, { kind: 'dig', label: 'Digging', total: 4, data: `${fx},${fz}` })
         break
       case 'drop_torch':
         this.dropTorchLit()
         break
       case 'level':
-        startActivity(this.sim, { kind: 'level', label: 'Wyrównywanie', total: 6, data: `${fx},${fz},${this.sim.terrain.heightAt(p.x, p.z)}` })
+        startActivity(this.sim, { kind: 'level', label: 'Leveling', total: 6, data: `${fx},${fz},${this.sim.terrain.heightAt(p.x, p.z)}` })
         break
       case 'raise':
-        startActivity(this.sim, { kind: 'raise', label: 'Usypywanie', total: 4, data: `${fx},${fz}` })
+        startActivity(this.sim, { kind: 'raise', label: 'Raising ground', total: 4, data: `${fx},${fz}` })
         break
       case 'rest':
-        startActivity(this.sim, { kind: 'rest', label: 'Odpoczynek', total: 150, accel: 20 })
+        startActivity(this.sim, { kind: 'rest', label: 'Resting', total: 150, accel: 20 })
         break
       case 'sleep':
         this.showToast(startSleep(this.sim, sleepComfort(this.sim, null)))
@@ -541,9 +541,9 @@ export class Game {
       const dir: 1 | -1 = r.to === settlementId ? 1 : -1
       sim.state.px.autopilot = { roadId: r.id, idx: bi, dir }
       this.panel = null
-      return `Autopilot: droga do ${sim.world.settlements[settlementId]!.name} (${Math.round(r.length)} m). Ruch lub Esc przerywa.`
+      return `Autopilot: road to ${sim.world.settlements[settlementId]!.name} (${Math.round(r.length)} m). Move or press Esc to stop.`
     }
-    return 'Musisz stać przy drodze prowadzącej do tej osady.'
+    return 'You must be standing on a road leading to this settlement.'
   }
 
   /** Saves; on failure (e.g. quota) shows the reason and returns '' — never pretends success. */
@@ -555,7 +555,7 @@ export class Game {
       const d = Math.hypot(s.x - p.x, s.z - p.z) - s.radius
       if (!best || d < best.d) best = { name: s.name, d }
     }
-    return best && (best.d < 150 ? best.name : `okolice: ${best.name}`)
+    return best && (best.d < 150 ? best.name : `near ${best.name}`)
   }
 
   /** Saves into a new slot under a player-given name; later quick saves go to that slot. */
@@ -577,7 +577,7 @@ export class Game {
       this.notify()
       return ''
     }
-    this.showToast(this.saveName ? `Zapisano: ${this.saveName}` : 'Zapisano grę.')
+    this.showToast(this.saveName ? `Saved: ${this.saveName}` : 'Game saved.')
     this.notify()
     return slot
   }

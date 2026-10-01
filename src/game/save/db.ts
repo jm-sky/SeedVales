@@ -133,8 +133,8 @@ export async function writeSave(slot: string, state: GameState, info: SaveInfo =
     })
   } catch (e) {
     const name = (e as DOMException | null)?.name
-    if (name === 'QuotaExceededError') throw new SaveError('Brak miejsca w pamięci przeglądarki — gra NIE została zapisana. Usuń stare zapisy i spróbuj ponownie.')
-    throw new SaveError(`Zapis nie powiódł się (${name ?? String(e)}).`)
+    if (name === 'QuotaExceededError') throw new SaveError('Not enough browser storage — the game was NOT saved. Delete old saves and try again.')
+    throw new SaveError(`Saving failed (${name ?? String(e)}).`)
   }
   perf.record('save.write', performance.now() - t0)
   perf.gauge('save.bytes', json.length)
@@ -145,14 +145,14 @@ export async function writeSave(slot: string, state: GameState, info: SaveInfo =
 export async function readSave(slot: string): Promise<GameState> {
   const t0 = performance.now()
   const rec = await tx<SaveRecord | undefined>('saves', 'readonly', (t) => t.objectStore('saves').get(slot))
-  if (!rec) throw new SaveError(`Nie znaleziono zapisu „${slot}”.`)
+  if (!rec) throw new SaveError(`Save "${slot}" not found.`)
   let raw: GameState
   try {
     raw = JSON.parse(rec.json) as GameState
   } catch {
-    throw new SaveError('Zapis jest uszkodzony (nieczytelne dane).')
+    throw new SaveError('The save is corrupted (unreadable data).')
   }
-  if (!raw || typeof raw !== 'object' || typeof raw.saveVersion !== 'number' || !raw.player) throw new SaveError('Zapis jest uszkodzony (brak wymaganych pól).')
+  if (!raw || typeof raw !== 'object' || typeof raw.saveVersion !== 'number' || !raw.player) throw new SaveError('The save is corrupted (required fields missing).')
   const st = migrate(raw)
   perf.record('save.read', performance.now() - t0)
   return st

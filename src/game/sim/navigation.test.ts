@@ -19,12 +19,12 @@ describe('UI-04 navigation', () => {
   it('waypoint wins over an active quest, is saved, and is cleared when reached', () => {
     const sim = testSim()
     expect(navGoal(sim)).toBeNull()
-    sim.state.quests.push({ id: 'q', kind: 'wolves', title: 'Wilki', desc: '', settlementId: 1, giverId: 0, status: 'active', reward: 1, createdAt: 0, killsNeeded: 2, kills: 0 })
+    sim.state.quests.push({ id: 'q', kind: 'wolves', title: 'Wolves', desc: '', settlementId: 1, giverId: 0, status: 'active', reward: 1, createdAt: 0, killsNeeded: 2, kills: 0 })
     const s1 = sim.world.settlements[1]!
     expect(navGoal(sim)).toMatchObject({ kind: 'quest', x: s1.x, z: s1.z })
-    setWaypoint(sim, sim.player.x + 100, sim.player.z, 'Wzgórze')
-    expect(navGoal(sim)).toMatchObject({ kind: 'waypoint', label: 'Wzgórze' })
-    expect(roundTrip(sim).px.waypoint?.label).toBe('Wzgórze')
+    setWaypoint(sim, sim.player.x + 100, sim.player.z, 'Hill')
+    expect(navGoal(sim)).toMatchObject({ kind: 'waypoint', label: 'Hill' })
+    expect(roundTrip(sim).px.waypoint?.label).toBe('Hill')
     sim.player.x += 95
     navigationSystem(sim)
     expect(sim.state.px.waypoint).toBeUndefined()

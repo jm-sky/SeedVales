@@ -92,7 +92,7 @@ export function playerSystem(sim: Sim, dt: number) {
         p.z = shore.z
         p.y = sim.terrain.heightAt(p.x, p.z)
         sim.actors.update(p)
-        sim.message('Fale wyrzucają cię na brzeg.', 'info')
+        sim.message('The waves wash you ashore.', 'info')
       }
     }
     return
@@ -102,7 +102,7 @@ export function playerSystem(sim: Sim, dt: number) {
   // Activity progress.
   const act = px.activity
   const moving = Math.hypot(inp.mx, inp.mz) > 0.1
-  if (act && moving && act.kind !== 'autopilot') cancelActivity(sim, 'Przerwano czynność.')
+  if (act && moving && act.kind !== 'autopilot') cancelActivity(sim, 'Activity interrupted.')
   let ex: Exertion = 'idle'
   let comfort = 0.5
   if (px.activity) {
@@ -114,7 +114,7 @@ export function playerSystem(sim: Sim, dt: number) {
     const threat = threatToPlayer(sim)
     if (threat === 'attack' || ((a.kind === 'sleep' || a.kind === 'rest' || (a.accel ?? 1) > 1) && threat)) {
       sim.interruptReason = 'threat'
-      cancelActivity(sim, 'Zagrożenie! Przerywasz.')
+      cancelActivity(sim, 'Danger! You stop what you\'re doing.')
     } else if (a.kind === 'sleep' && p.vitals.vigor >= 99 && a.elapsed > 150) {
       a.elapsed = a.total
     }
@@ -153,7 +153,7 @@ export function playerSystem(sim: Sim, dt: number) {
         ap.idx += ap.dir
         if (ap.idx < 0 || ap.idx >= road.points.length) {
           px.autopilot = undefined
-          sim.message('Autopilot: dotarłeś do celu drogi.')
+          sim.message('Autopilot: you have reached the end of the road.')
         }
       }
       mx = (tgt.x - p.x) / (d || 1)
@@ -161,7 +161,7 @@ export function playerSystem(sim: Sim, dt: number) {
       if (threatToPlayer(sim)) {
         px.autopilot = undefined
         sim.interruptReason = 'threat'
-        sim.message('Autopilot przerwany — zagrożenie!', 'bad')
+        sim.message('Autopilot stopped — danger!', 'bad')
       }
     }
   } else if (ap && moving) px.autopilot = undefined
@@ -200,7 +200,7 @@ export function playerSystem(sim: Sim, dt: number) {
   }
   if (swimming && p.vitals.stamina <= 0) {
     p.vitals.parts.gut += 4 * dt
-    if (Math.floor(now) !== Math.floor(now - dt)) sim.message('Tonisz! Płyń do brzegu!', 'bad')
+    if (Math.floor(now) !== Math.floor(now - dt)) sim.message('You are drowning! Swim to shore!', 'bad')
     if (hp(p.vitals) <= 0) {
       p.vitals.ko = { until: now + COMBAT.koStandUpS, protectUntil: now + COMBAT.koProtectionS }
     }
@@ -214,7 +214,7 @@ export function playerSystem(sim: Sim, dt: number) {
     if (p.strTrain > 3600 * p.attrs.str && p.attrs.str < 10) {
       p.attrs.str++
       p.strTrain = 0
-      sim.message('Czujesz się silniejszy (Siła +1).', 'good')
+      sim.message('You feel stronger (Strength +1).', 'good')
     }
   }
   // Time acceleration request from activity.

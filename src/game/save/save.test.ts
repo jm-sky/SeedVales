@@ -44,8 +44,8 @@ describe('save / load', () => {
     expect(() => checkWorldCompat(st, sim.world)).not.toThrow()
     st.genVersion = sim.world.version - 1
     expect(() => checkWorldCompat(st, sim.world)).toThrow(SaveError)
-    expect(() => checkWorldCompat(st, sim.world)).toThrow(/generatora/)
-    expect(() => checkWorldCompat({ ...st, genVersion: sim.world.version, seed: 7 }, sim.world)).toThrow(/innego świata/)
+    expect(() => checkWorldCompat(st, sim.world)).toThrow(/world generator/)
+    expect(() => checkWorldCompat({ ...st, genVersion: sim.world.version, seed: 7 }, sim.world)).toThrow(/different world/)
   })
 
   it('SAVE-01: migrate backfills v1 saves and rejects newer/unknown versions', () => {
@@ -95,7 +95,7 @@ describe('save / load', () => {
       t.oncomplete = () => res()
     })
     db.close()
-    await expect(readSave('bad')).rejects.toThrow(/uszkodzony/)
+    await expect(readSave('bad')).rejects.toThrow(/corrupted/)
   })
 
   it('SAVE-01: a new game with the same seed gets a new slot and keeps the existing save', async () => {
@@ -124,14 +124,14 @@ describe('save / load', () => {
 
   it('UI-05: named saves keep their name and place in the save list (trimmed, max 40 chars)', async () => {
     const sim = testSim()
-    await writeSave('named', snapshot(sim), { name: '  Wyprawa na północ  ', place: 'Jaworzno' })
+    await writeSave('named', snapshot(sim), { name: '  Trip to the north  ', place: 'Jaworzno' })
     await writeSave('long', snapshot(sim), { name: 'x'.repeat(60) })
     await writeSave('blank', snapshot(sim), { name: '   ' })
     const list = await listSaves()
-    expect(list.find((m) => m.slot === 'named')).toMatchObject({ name: 'Wyprawa na północ', place: 'Jaworzno' })
+    expect(list.find((m) => m.slot === 'named')).toMatchObject({ name: 'Trip to the north', place: 'Jaworzno' })
     expect(list.find((m) => m.slot === 'long')!.name).toHaveLength(40)
     expect(list.find((m) => m.slot === 'blank')!.name).toBeUndefined()
-    expect((await readSaveMeta('named'))?.name).toBe('Wyprawa na północ')
+    expect((await readSaveMeta('named'))?.name).toBe('Trip to the north')
     for (const s of ['named', 'long', 'blank']) await deleteSave(s)
   })
 
@@ -142,7 +142,7 @@ describe('save / load', () => {
       throw new DOMException('full', 'QuotaExceededError')
     }
     try {
-      await expect(writeSave('quota', snapshot(sim))).rejects.toThrow(/Brak miejsca/)
+      await expect(writeSave('quota', snapshot(sim))).rejects.toThrow(/Not enough browser storage/)
     } finally {
       IDBObjectStore.prototype.put = orig
     }

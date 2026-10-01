@@ -73,11 +73,11 @@ export class Renderer {
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
-    onProgress?.('Budynki…')
+    onProgress?.('Buildings…')
     await this.structures.load()
-    onProgress?.('Roślinność…')
+    onProgress?.('Vegetation…')
     await this.vegetation.load()
-    onProgress?.('Postacie…')
+    onProgress?.('Characters…')
     await this.actors.load()
   }
 

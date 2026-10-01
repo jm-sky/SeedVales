@@ -18,5 +18,5 @@ export function reputationLabel(sim: Sim): string {
       best = s.name
     }
   }
-  return `${(bd / 1000).toFixed(1)} km do: ${best}`
+  return `${(bd / 1000).toFixed(1)} km to ${best}`
 }

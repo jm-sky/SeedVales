@@ -271,7 +271,7 @@ export class Actors {
           break
       }
     }
-    if (h.kind === 'npc' && h.ai.label === 'Rozmawia') return ['Idle_Talking_Loop', false]
+    if (h.kind === 'npc' && h.ai.label === 'Talking') return ['Idle_Talking_Loop', false]
     if (h.eq.off?.id === 'torch') return ['Idle_Torch_Loop', false]
     return ['Idle_Loop', false]
   }
@@ -281,7 +281,7 @@ export class Actors {
     if (a.action && a.action.kind === 'swing' && now - a.action.at < 0.8) return a.species === 'wolf' || a.species === 'fox' || a.species === 'dog' ? 'Attack' : 'Attack_Headbutt'
     if (a.moving === 'run') return 'Gallop'
     if (a.moving === 'walk' || a.moving === 'swim') return 'Walk'
-    if (a.ai.label === 'Żeruje' || a.ai.label === 'Pije' || a.ai.label === 'Pasie się') return 'Eating'
+    if (a.ai.label === 'Foraging' || a.ai.label === 'Drinking' || a.ai.label === 'Grazing') return 'Eating'
     return 'Idle'
   }
 
