@@ -1078,8 +1078,8 @@
    "scope": "v2",
    "behavior": "Waterskins (S/M/L) are craftable from hide (sew tool, survival skill)",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan survival--001"
+   "status": "verified",
+   "evidence": "src/game/sim/survival.test.ts CRAFT-03 (S = 1 hide, M = 1 hide + 1 rope, L = 2 hide + 1 rope, sewing kit, capacity 2/4/7; output price never above input price — no circular trade profit, D-ECON-5); recipes in data/recipes.ts category leather"
   },
   {
    "id": "FIRE-01",

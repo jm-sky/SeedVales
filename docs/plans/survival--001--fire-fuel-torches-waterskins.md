@@ -1,6 +1,6 @@
 # Survival: campfire fuel, stone hearth, standing torches, waterskin recipe
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — steps 1–4 (spec is complete, user decisions recorded); opus only for step 5 (design) and the wave review  
 **Domain:** survival  
 **Sub domains:** build, craft, items, traces, npc-duties, render  
@@ -50,4 +50,6 @@ CRAFT-03, FIRE-01…03 verified; FIRE-04 recorded as design-pending; one save bu
 
 ## Wynik
 
-*(not started)*
+**Step 1 — CRAFT-03 done (session 5, 2026-10-01):** recipes `waterskin_s` (1 hide), `waterskin_m` (1 hide + 1 rope), `waterskin_l` (2 hide + 1 rope); tool `sew` (sewing kit), skill survival, category leather, no quality roll (capacity is fixed by the item). Note 7 checked: output price 6/10/16 is below the input price 15/25/40, so crafting destroys value — no circular trade profit (D-ECON-5). Tests `src/game/sim/survival.test.ts` (CRAFT-03 ×2). No save change.
+
+Next: step 2 FIRE-01 (campfire fuel / burn-out / ash), steps 3–4, one `SAVE_VERSION` bump 7 → 8 for steps 2–4 together.
