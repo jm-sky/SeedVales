@@ -5,8 +5,10 @@ import { qualityMult } from '@/game/sim/inventory'
  * Pure helpers for the inventory screen (UI-03): category filter, sorting and item parameters.
  * No Vue/DOM — unit-tested with vitest.
  */
-import type { ItemCategory } from '@/game/data/items'
+import type { AmmoKind, ItemCategory } from '@/game/data/items'
 import type { ItemStack } from '@/game/sim/types'
+
+const AMMO_NAMES: Record<AmmoKind, string> = { arrow: 'arrows', bolt: 'bolts', stone: 'stones' }
 
 export type ItemFilter = 'all' | ItemCategory
 export type ItemSort = 'name' | 'weight' | 'value' | 'quality' | 'freshness'
@@ -75,7 +77,7 @@ export function itemParams(s: ItemStack): ItemParam[] {
     const w = d.weapon
     out.push({ label: 'Damage', value: `${Math.round(w.damage * qualityMult(s))} (${DMG[w.dmgType]})` })
     if (w.kind === 'melee') out.push({ label: 'Reach', value: `${w.reach} m` }, { label: 'Speed', value: `${w.cooldown} s/swing` })
-    else out.push({ label: 'Ammo', value: w.ammo ?? '—' })
+    else out.push({ label: 'Ammo', value: w.ammo ? AMMO_NAMES[w.ammo] : '—' })
   }
   if (d.armor) {
     const r = d.armor.resist

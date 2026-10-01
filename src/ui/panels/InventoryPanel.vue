@@ -32,6 +32,14 @@ const v = computed(() => {
     selected: selected.value && [p.eq.main, p.eq.off, ...Object.values(p.eq.armor), ...p.inv.items].includes(selected.value) ? selected.value : null,
   }
 })
+const SLOT_NAMES: Record<string, string> = {
+  main: 'main hand', off: 'off hand', boots: 'feet', legs: 'legs', torso: 'torso', head: 'head', hands: 'hands', forearms: 'forearms', shoulders: 'shoulders',
+}
+/** Armour keys are `slot_layer` (e.g. torso_outer). */
+const slotLabel = (k: string) => {
+  const [slot, layer] = k.split('_')
+  return `${SLOT_NAMES[slot!] ?? slot}${layer ? ` (${layer === 'under' ? 'under' : 'outer'})` : ''}`
+}
 const useLabel = (id: string) => {
   const d = itemDef(id)
   if (d.weapon || (d.caps?.length && !d.waterCapacity)) return 'Wield'
@@ -126,7 +134,7 @@ const useLabel = (id: string) => {
               :stack="s"
               @click="selected = s"
             >
-              <span class="text-[10px] text-muted-foreground">{{ slot }}</span>
+              <span class="text-[10px] text-muted-foreground">{{ slotLabel(slot) }}</span>
               <Button
                 size="xs"
                 variant="outline"
