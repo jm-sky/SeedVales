@@ -1,7 +1,7 @@
 /**
  * Actor rendering: skinned glTF characters (UBC head + outfit, UAL animations) and animals near the
- * player; cheap procedural placeholders further away or when no model exists (sheep, chicken,
- * moose). Boar and bear use our own rig + procedural clips (scripts/assets/rig-boar-bear.py). Renderer only reads simulation state.
+ * player; cheap procedural placeholders further away or when no model exists. Boar, bear, moose,
+ * sheep and chicken use our own rig + procedural clips (scripts/assets/rig-fauna.py). Renderer only reads simulation state.
  * @domain render
  * @subdomain actors
  */

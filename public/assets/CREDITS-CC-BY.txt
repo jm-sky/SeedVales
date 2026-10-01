@@ -1,6 +1,7 @@
 Third-party models used under Creative Commons Attribution (CC BY).
 Converted for SeedVales (scripts/assets/build-extra-animals.mjs): reoriented, re-centred,
-compressed (meshopt), textures downscaled, bear mesh simplified, animation clips renamed/trimmed.
+compressed (meshopt), textures downscaled, rigged and animated with procedural clips
+(scripts/assets/normalize-fauna.py, rig-fauna.py), animation clips renamed/trimmed.
 
 animals/Hare.glb
   "Rabbit" by Sherkiz, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
@@ -11,11 +12,20 @@ animals/Boar.glb
   licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 animals/Bear.glb
-  "Low Poly Bear 3d Model Free" (https://skfb.ly/pMCPF) by iRahulRajput,
-  licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+  "Black bear" by Poly by Google, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  via Poly Pizza: https://poly.pizza/m/56ym_pyVnel
+
+animals/Moose.glb  (the "Elk" model)
+  "Elk" by Poly by Google, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  via Poly Pizza: https://poly.pizza/m/bO8XPdrAb5G
+
+animals/Chicken.glb
+  "chicken" by Maf'j Alvarez, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  via Poly Pizza: https://poly.pizza/m/87XZ2kDlAhh
 
 Public domain (CC0), no attribution required:
 animals/Rat.glb  "Rat" by Quaternius via Poly Pizza: https://poly.pizza/m/iltq5bVNaV
+animals/Sheep.glb  "Sheep" by Quaternius via Poly Pizza: https://poly.pizza/m/C39AUXUUes
 
 landmarks.glb (CC0, public domain — no attribution required, listed for provenance), via Poly Pizza:
   Modular Ruins Pack by Quaternius  https://poly.pizza/m/F2LAK03B0r  (Ruin_* pieces)

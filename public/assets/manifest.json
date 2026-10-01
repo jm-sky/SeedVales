@@ -181,6 +181,12 @@
    "kb": 2496
   },
   {
+   "src": "_temp/*.glb (poly.pizza: Quaternius ruins/rocks/sail boat, Kenney ship wreck)",
+   "dst": "public/assets/landmarks.glb",
+   "kb": 419,
+   "tex": 512
+  },
+  {
    "src": "Extra_Animals/Rat.glb",
    "dst": "public/assets/animals/Rat.glb",
    "kb": 189,
@@ -190,29 +196,44 @@
   {
    "src": "Extra_Animals/Hare.glb",
    "dst": "public/assets/animals/Hare.glb",
-   "kb": 81,
+   "kb": 88,
    "ratio": 0,
    "tex": 0
   },
   {
    "src": "Extra_Animals/Boar_rigged.glb",
    "dst": "public/assets/animals/Boar.glb",
-   "kb": 112,
+   "kb": 132,
    "ratio": 0,
    "tex": 0
   },
   {
    "src": "Extra_Animals/Bear_rigged.glb",
    "dst": "public/assets/animals/Bear.glb",
-   "kb": 393,
-   "ratio": 0.3,
-   "tex": 512
+   "kb": 100,
+   "ratio": 0,
+   "tex": 256
   },
   {
-   "src": "_temp/*.glb (poly.pizza: Quaternius ruins/rocks/sail boat, Kenney ship wreck)",
-   "dst": "public/assets/landmarks.glb",
-   "kb": 419,
-   "tex": 512
+   "src": "Extra_Animals/Moose_rigged.glb",
+   "dst": "public/assets/animals/Moose.glb",
+   "kb": 130,
+   "ratio": 0,
+   "tex": 256
+  },
+  {
+   "src": "Extra_Animals/Sheep_rigged.glb",
+   "dst": "public/assets/animals/Sheep.glb",
+   "kb": 83,
+   "ratio": 0,
+   "tex": 0
+  },
+  {
+   "src": "Extra_Animals/Chicken_rigged.glb",
+   "dst": "public/assets/animals/Chicken.glb",
+   "kb": 61,
+   "ratio": 0,
+   "tex": 0
   }
  ]
 }

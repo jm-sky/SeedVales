@@ -1,8 +1,8 @@
 # Rigging and animating static animal models with Blender MCP: lessons learned
 
-Date: 2026-10-01 · Type: implementation notes · Status: informational (boar + bear done)
+Date: 2026-10-01 · Type: implementation notes · Status: informational (boar, bear, moose, sheep, chicken, hare done)
 
-What we did: added a rig and procedural clips (Idle/Walk/Gallop/Attack) to the static `Boar.glb` and `Bear.glb` entirely through Blender MCP (Python), with no manual work in the Blender UI. The reproducible result is `scripts/assets/rig-boar-bear.py`. This doc collects what to reuse for the next models (rat/hare extra clips, Death/Eating, new animals).
+What we did: added a rig and procedural clips (Idle/Walk/Gallop/Attack) to the static `Boar.glb` and `Bear.glb` entirely through Blender MCP (Python), with no manual work in the Blender UI. The reproducible result is `scripts/assets/rig-fauna.py`. This doc collects what to reuse for the next models (rat/hare extra clips, Death/Eating, new animals).
 
 ## Pipeline (works, reuse it)
 
@@ -43,3 +43,14 @@ What we did: added a rig and procedural clips (Idle/Walk/Gallop/Attack) to the s
 - Death (fall onto the side: root roll + legs folding) and Eating (head down, the Idle sniff amplified) for boar/bear. Add them in `animate()` and in `RIGGED_CLIPS`.
 - Hare has only Idle/Walk (Gallop falls back to Walk). It already has a rig, so add clips by importing it and appending NLA tracks with the same gait helpers (check its bone names/axes first).
 - For a new animal: copy a defs dict, measure, place bones, reuse `weigh()` and `animate()`, and tune A/B/T from the contact sheet.
+
+## Update (session 6): Death/Eating, more animals, what we learned
+
+- Death/Eating were added in `animate()`; `rig-boar-bear.py` is now `rig-fauna.py` (boar, bear, moose, sheep, chicken). Sources are normalised first by `normalize-fauna.py` (Poly Pizza downloads in `_temp/fauna/`, fetched with the REST API: `https://api.poly.pizza/v1.1/model/<id>` + header `x-auth-token`, the key is in `.env`/the addon; the response has `Download`, `Licence`, `Attribution`).
+- **Death** = root bone roll about Y (+1.5 rad) with a negative X shift (the roll moves the body centre sideways by ≈ its height) and a Z lift so the lowest vertex lands on z = 0; legs stiffen forward/back. Check numerically: evaluate the mesh at the last frame and print min z / x range (the contact sheet alone hid a 0.29 m sink).
+- **Eating** = neck/head down plus chest tilt; long-legged animals (moose) need `eatChest`/`eatDrop` or the head never reaches the ground. Chicken eating/attack = pecks (body+neck+head).
+- A skinned Poly Pizza source (Quaternius sheep) can have a *lying* rest pose with the standing pose only in the Idle action. Bake the evaluated mesh in **world space** at frame 0 (`new_from_object(evaluated)` + `transform(matrix_world)`), then drop modifiers/vertex groups/armature. Do not force `pose_position = 'REST'`.
+- The glTF importer adds an `Icosphere` object (bone shape): delete it by name before joining/exporting. After `bpy.data.objects.remove` do not touch the Python references again (ReferenceError) — keep names, not objects.
+- Hare (IK-style rig, armature scale 100, tiny bones): not rebuilt. Gallop = Walk keyframe times ×0.5; Death = animation of the `RootNode` ancestor (rotate 90° about Z, translate) added in Node (`addHareClips`). No Attack (hares flee).
+- Preview helper: orthographic camera along (1, −1.3, 0.5), ortho scale ≈ 1.5–2 × the animal's height, 380×300 per frame, contact sheet via numpy; the earlier perspective camera was too far to judge poses.
+- Quaternius' own Poly Pizza animals (cow/sheep/chicken variants) are voxel-ish or lack Walk; the Poly-by-Google/other CC-BY static models rigged with our pipeline matched the existing faceted style better.
