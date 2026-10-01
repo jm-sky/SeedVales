@@ -140,3 +140,33 @@ export const FOOD = {
   corpseRotH: 6,
   corpseBonesAfterH: 48,
 }
+
+/**
+ * Trade with any NPC (TRADE-02): what a household keeps for itself and never sells.
+ * Food reserve per household member; work kit and the main weapon are always kept.
+ */
+export const TRADE = { foodReservePerMember: 3 }
+
+/**
+ * Gifts (SOC-01): opinion gain = clamp(base + perLog·log2(1 + value/valueUnit)) × preference × personality,
+ * divided by (1 + gifts already given today). Wanted item ×wantedMul, liked category ×likedMul.
+ */
+export const GIFT = { base: 1, perLog: 4, valueUnit: 5, maxGain: 25, wantedMul: 2, likedMul: 1.4 }
+
+/**
+ * Companions (COMP-01/02/03). Daily wage (copper) = base + skill·perSkill, × risk and task multipliers.
+ * Travelling together within bondM raises opinion by bondPerH per calendar hour (up to bondCap).
+ */
+export const COMPANION = {
+  wageBase: 6,
+  wagePerSkill: 0.15,
+  riskMul: { low: 1, medium: 1.6, high: 2.6 },
+  taskMul: { escort: 1, guard: 1.3 },
+  followM: 3.5,
+  catchUpM: 12,
+  bondM: 30,
+  bondPerH: 0.5,
+  bondCap: 60,
+  killBond: 2,
+  maxCompanions: 3,
+}

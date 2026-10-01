@@ -934,8 +934,8 @@
    "scope": "v2",
    "behavior": "Handel możliwy z każdym NPC (nadwyżki); mechanizm handlu służy też do przekazywania przedmiotów",
    "verify": "vitest + e2e",
-   "status": "planned",
-   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+   "status": "verified",
+   "evidence": "vitest appendix-npc.test.ts \"TRADE-02: every adult offers a surplus…\", \"TRADE-02: buying from a non-trader…\", \"TRADE-02: talking, trading, gifts and hiring are offered…\"; panel handlu z przyciskiem Give (e2e acceptance 4a/4d/17)"
   },
   {
    "id": "SOC-01",
@@ -943,8 +943,8 @@
    "scope": "v2",
    "behavior": "Osobny system prezentów podnoszący relację (npc.opinion); NPC wyrażają preferencje przedmiotów",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+   "status": "verified",
+   "evidence": "vitest appendix-npc.test.ts \"SOC-01: a gift raises opinion with diminishing returns…\", \"SOC-01: the wanted item is revealed…\"; e2e acceptance 17 (prezent przez UI podnosi opinion)"
   },
   {
    "id": "UI-03",
@@ -1015,8 +1015,8 @@
    "scope": "v2",
    "behavior": "Najem towarzysza na czas, za kwotę, z zadaniem i poziomem ryzyka; wspólna podróż buduje relację",
    "verify": "vitest + e2e",
-   "status": "planned",
-   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+   "status": "verified",
+   "evidence": "vitest appendix-npc.test.ts \"COMP-01: hiring pays the NPC 1:1, the companion follows and the contract ends…\", \"COMP-01: risk raises the wage…\"; e2e acceptance 17 (najem przez UI)"
   },
   {
    "id": "COMP-02",
@@ -1024,8 +1024,8 @@
    "scope": "v2",
    "behavior": "Darmowe dołączenie: szansa z reputacji i relacji, modyfikowana charakterem, sytuacją i obowiązkami; chętniej młodzi mężczyźni bez rodziny; w każdej osadzie ≥1 starszy syn bez własnej rodziny",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+   "status": "verified",
+   "evidence": "vitest appendix-npc.test.ts \"COMP-02: every settlement has a grown son…\", \"COMP-02: join chance grows…\", \"COMP-02: asking gives one answer per day…\""
   },
   {
    "id": "COMP-03",
@@ -1033,8 +1033,8 @@
    "scope": "v2",
    "behavior": "Przekazanie broni/pancerza towarzyszowi (prezent/handel); NPC faktycznie ich używa i wybiera lepszą broń",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/npc--001--trade-gifts-companions.md"
+   "status": "verified",
+   "evidence": "vitest appendix-npc.test.ts \"COMP-03: a companion wields a better weapon and wears armour…\", \"COMP-03: an NPC in a fight swaps to its best melee weapon…\""
   },
   {
    "id": "SET-05",

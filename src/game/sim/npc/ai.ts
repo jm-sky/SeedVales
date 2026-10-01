@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { Human } from '../types'
-import { COMBAT, DECISION, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
+import { COMBAT, COMPANION, DECISION, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { perf } from '../../diag/perf'
 import { alertAround } from '../alerts'
@@ -15,6 +15,7 @@ import { decisionInterval } from '../fauna/perception'
 import { wieldBest } from '../inventory'
 import { steerTo } from '../movement'
 import { type Exertion, hp, penalty, updateVitals } from '../vitals'
+import { companionDist, follow } from './companions'
 import { goalOptions } from './goals'
 import { threatNear } from './queries'
 import { WORK_ACTS } from './works'
@@ -138,6 +139,8 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
     ai.decideAt = now + decisionInterval(h)
     perf.count('ai.decisions')
     if (ai.goal !== 'fight' && ai.goal !== 'flee' && threatNear(sim, h, h.profession === 'guard' ? 45 : 22)) ai.replanAt = 0
+    // A companion left behind reacts at the decision cadence, not after the 12 s replan.
+    else if (h.companion && ai.goal !== 'follow' && ai.goal !== 'fight' && ai.goal !== 'flee' && companionDist(sim, h) > COMPANION.followM * 1.5) ai.replanAt = 0
   }
   if (!ai.goal || now >= ai.replanAt || ai.stepIdx >= ai.steps.length) {
     planNpc(sim, h, ai.stepIdx >= ai.steps.length || !ai.goal)
@@ -148,6 +151,10 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
     return
   }
   h.combat = false
+  if (ai.goal === 'follow') {
+    follow(sim, h, dt, full)
+    return
+  }
   const cur = ai.steps[ai.stepIdx]
   if (!cur) {
     h.moving = 'idle'

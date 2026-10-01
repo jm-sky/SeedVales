@@ -508,6 +508,39 @@ try {
     window.__sv.pause(false)
   })
 
+  // 17. COMP-01 / SOC-01: hire a companion and give a gift through the UI (npc--001).
+  await S(() => {
+    const sv = window.__sv
+    const son = sv.game.sim.state.npcs.find((n) => n.kin === 'son' && n.settlementId === 0)
+    son.big5.n = 0.3
+    window.__son = son.id
+    sv.pause(true)
+    sv.approach(son.x, son.z, 1.4)
+  })
+  await waitTarget((t) => t.opts.includes('hire'))
+  await key('KeyE')
+  await clickTest('opt-hire')
+  await clickTest('hire-days-3')
+  await clickTest('hire-task-escort')
+  await clickTest('hire-risk-low')
+  await shot(page, 'acc-17-hire')
+  const m17 = await S(() => window.__sv.game.sim.player.money)
+  await clickTest('hire-confirm')
+  const hired = await S(() => {
+    const sim = window.__sv.game.sim
+    const n = sim.state.npcs.find((x) => x.kin === 'son' && x.settlementId === 0)
+    return { c: n.companion, money: sim.player.money }
+  })
+  await waitTarget((t) => t.opts.includes('gift'))
+  await key('KeyE')
+  await clickTest('opt-gift')
+  const op0 = await S(() => window.__sv.game.sim.state.npcs.find((x) => x.kin === 'son' && x.settlementId === 0).opinion)
+  await clickTest('gift-bread')
+  const op1 = await S(() => window.__sv.game.sim.state.npcs.find((x) => x.kin === 'son' && x.settlementId === 0).opinion)
+  await clickTest('panel-close')
+  check(results, '17. najem towarzysza (3 dni, eskorta) i prezent przez UI', hired.c?.kind === 'hired' && hired.c.until - hired.c.since === 3 * 86400 && hired.money < m17 && op1 > op0, { hired, op0, op1 })
+  await S(() => window.__sv.pause(false))
+
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)

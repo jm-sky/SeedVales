@@ -81,8 +81,9 @@ export function waterSources(sim: Sim, h: Human): WaterSource[] {
   return out.sort((a, b) => a.cost - b.cost)
 }
 
-/** Hostile animals near (attacking or predators/aggressive species close by). */
+/** Hostile animals near (attacking or predators/aggressive species close by; companions also defend the player). */
 export function threatNear(sim: Sim, h: Human, r = 22): Animal | null {
+  const ward = h.companion ? sim.player.id : -1
   let best: Animal | null = null
   let bd = Infinity
   for (const a of sim.actors.query(h.x, h.z, r)) {
@@ -90,7 +91,7 @@ export function threatNear(sim: Sim, h: Human, r = 22): Animal | null {
     const sp = SPECIES[a.species]
     const d = Math.hypot(a.x - h.x, a.z - h.z)
     // Threat = actively hostile, or a predator that is hunting / very close (a resting wolf 20 m away is not).
-    const hostile = a.aggroId === h.id || a.rabid || (sp.temperament === 'predator' && a.variant !== 'young' && (a.ai.goal === 'hunt' || d < 10)) || (sp.temperament === 'aggressive' && a.aggroId !== undefined)
+    const hostile = a.aggroId === h.id || a.aggroId === ward || a.rabid || (sp.temperament === 'predator' && a.variant !== 'young' && (a.ai.goal === 'hunt' || d < 10)) || (sp.temperament === 'aggressive' && a.aggroId !== undefined)
     if (!hostile) continue
     if (d < bd) {
       bd = d

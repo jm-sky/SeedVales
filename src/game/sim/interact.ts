@@ -16,6 +16,7 @@ import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, 
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
+import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
 import { acceptQuest } from './quests'
 import { addRep, addStat } from './reputation'
@@ -35,7 +36,7 @@ export type TargetRef =
   | { type: 'water'; x: number; z: number }
   | { type: 'cart'; id: number }
 
-export type UiPanel = 'trade' | 'storage' | 'craft' | 'quests' | 'dialog' | 'orders'
+export type UiPanel = 'trade' | 'storage' | 'craft' | 'quests' | 'dialog' | 'orders' | 'gift' | 'hire'
 
 export interface InteractOption {
   id: string
@@ -242,7 +243,9 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
       const n = sim.human(t.id)
       if (!n) return []
       if (n.vitals.ko && !n.vitals.dead) return [opt('help_npc', 'Tend the wounded', p.inv.items.some((s) => s.id === 'bandage' || s.id === 'salve'), 'You need a bandage')]
-      const o = [opt('talk', 'Talk', true, undefined, 'dialog'), opt('trade', 'Trade', true, undefined, 'trade')]
+      const o = [opt('talk', 'Talk', true, undefined, 'dialog'), opt('trade', 'Trade', true, undefined, 'trade'), opt('gift', 'Give a gift', p.inv.items.length > 0, 'You have nothing to give', 'gift')]
+      if (n.companion) o.push(opt('dismiss', n.companion.kind === 'hired' ? 'End the contract' : 'Part ways'))
+      else if (n.age === 'adult') o.push(opt('hire', 'Hire as a companion', true, undefined, 'hire'), opt('ask_join', 'Ask to come along'))
       if (n.profession === 'blacksmith') o.push(opt('orders', 'Order from the blacksmith', true, undefined, 'orders'))
       if (n.profession === 'herbalist') o.push(opt('heal_service', 'Ask for healing (15c)', p.money >= 15, 'Not enough money'))
       if (n.profession === 'guard' || n.profession === 'hunter') o.push(opt('quests', 'Quests', true, undefined, 'quests'))
@@ -269,6 +272,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
   }
   const at = (x: number, z: number) => `${x.toFixed(2)},${z.toFixed(2)}`
   switch (optionId) {
+    case 'ask_join': {
+      const n = sim.human((t as { id: number }).id)
+      return n ? askToJoin(sim, n).msg : ''
+    }
     case 'bed_sleep':
     case 'camp_sleep':
     case 'inn_sleep': {
@@ -309,6 +316,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       equip('chop')
       startActivity(sim, { kind: 'chop', ref: (t as { id: string }).id, label: 'Felling the tree', total: Math.max(6, 18 - p.skills.woodcutting / 8) })
       return ''
+    case 'dismiss': {
+      const n = sim.human((t as { id: number }).id)
+      return n ? dismissCompanion(sim, n) : ''
+    }
     case 'douse': {
       const b = sim.building((t as { id: string }).id)
       if (b) b.lit = false

@@ -38,7 +38,7 @@ export interface GameOptions {
   onProgress?: (label: string) => void
 }
 
-export type Panel = null | 'settings' | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact'
+export type Panel = null | 'settings' | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact' | 'gift' | 'hire'
 
 export async function loadWorld(seed: number, onProgress?: (l: string) => void): Promise<WorldData> {
   onProgress?.('Looking for the world in the cache…')

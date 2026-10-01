@@ -7,7 +7,7 @@ import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 7
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -126,6 +126,25 @@ export interface ActorBase {
 
 export type AgeGroup = 'child' | 'adult' | 'elder'
 
+/** Role in the household: `son` = grown son living with his parents, no family of his own (COMP-02). */
+export type Kin = 'head' | 'spouse' | 'child' | 'elder' | 'son'
+
+export type CompanionTask = 'escort' | 'guard'
+export type CompanionRisk = 'low' | 'medium' | 'high'
+
+/** Companion contract with the player (COMP-01/02). Times in calendar seconds. */
+export interface CompanionContract {
+  kind: 'hired' | 'free'
+  task: CompanionTask
+  risk: CompanionRisk
+  since: number
+  /** Contract end (hired only). */
+  until?: number
+  paid: number
+  /** Calendar s of the last opinion gain from travelling together. */
+  bondAt: number
+}
+
 export interface Human extends ActorBase {
   kind: 'player' | 'npc'
   name: string
@@ -149,6 +168,13 @@ export interface Human extends ActorBase {
   callForHelpAt?: number
   /** Trader caravan expedition (explicit phase; calendar s of departure). */
   trip?: { phase: 'outbound' | 'returning'; since: number }
+  kin?: Kin
+  /** Travels with the player (COMP-01/02). */
+  companion?: CompanionContract
+  /** Gifts received from the player today (SOC-01 diminishing returns). */
+  gifts?: { day: number; n: number }
+  /** Calendar day the player last asked this NPC to join for free (one roll per day). */
+  joinAskDay?: number
 }
 
 export interface Animal extends ActorBase {

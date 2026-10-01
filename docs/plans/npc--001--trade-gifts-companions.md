@@ -1,11 +1,11 @@
 # NPC: handel z każdym, prezenty, towarzysze
 
-**Status:** planned  
+**Status:** done  
 **Domain:** npc  
 **Sub domains:** trade, social, combat, ai  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 3)  
 **Created:** 2026-09-30  
-**Finished:** —
+**Finished:** 2026-10-01
 
 ---
 
@@ -29,3 +29,15 @@ FEATURES: `TRADE-02`, `SOC-01`, `COMP-01`, `COMP-02`, `COMP-03`.
 ## Weryfikacja
 
 vitest: dostępność handlu u losowego NPC, wpływ prezentu i limit, szansa dołączenia monotoniczna względem reputacji/opinion, towarzysz używa lepszej broni, kontrakt wygasa i NPC wraca; bilans pieniędzy. e2e: najem przez UI. Save/load kontraktu i stanu towarzysza.
+
+## Wynik (2026-10-01)
+
+Wszystkie kroki zrobione; TRADE-02, SOC-01, COMP-01/02/03 verified (`src/game/sim/appendix-npc.test.ts`, e2e acceptance krok 17). `SAVE_VERSION` 7.
+
+1. **TRADE-02** — opcja „Trade” istniała już dla każdego NPC, ale asortyment był całym magazynem domu (także narzędzia pracy i ostatnie jedzenie). Teraz `tradeStock` (`sim/trade.ts`): paczka NPC + magazyn domu minus rezerwa (zestaw pracy profesji, 3 porcje jedzenia na członka, 1 bukłak/wiadro); dzieci handlują tylko z własnej paczki. Panel pokazuje ilość „do oddania”. Tryb „przekaż” = przycisk **Give** w kolumnie gracza (ta sama funkcja co prezent — D-NPC-1).
+2. **SOC-01** — `sim/gifts.ts`: przyrost `opinion` = min(25, 1 + 4·log2(1 + wartość/5)) × preferencja (życzenie ×2, ta sama kategoria ×1,4) × (0,7 + 0,6·ugodowość) / (1 + prezenty dziś). Życzenia deterministyczne z profesji/roli i id (bez stanu w zapisie); spełnione życzenie przechodzi na następne. Ujawniane w rozmowie i w panelu prezentu (`GiftPanel.vue`).
+3. **COMP-01** — `sim/npc/companions.ts` + `HirePanel.vue`: 1/3/7 dni, zadanie Escort/Protection, ryzyko low/medium/high (stawka ×1/×1,6/×2,6, zgoda: neurotyczność vs opinia, zachowanie w walce). Płatność z góry 1:1 do sakiewki NPC. Towarzysz idzie za graczem (cel `follow` sterowany bezpośrednio, formacja za plecami, bieg przy doganianiu), walczy z zagrożeniami gracza, je/pije/śpi (nocą obóz na miejscu). Kontrakt wygasa (`companionSystem`, co 2 s) → NPC wraca do zwykłego życia. Wspólna podróż +0,5 opinion/h (do 60), wspólne zabicie groźnego zwierzęcia +2.
+4. **COMP-02** — `joinChance` z opinion, reputacji (uczciwość+sława+odwaga), Big Five i sytuacji (syn +0,3; głowa/małżonek −0,15; strażnik −0,3; choroba/krwawienie −0,3). Jedna odpowiedź dziennie. `Human.kin` (head/spouse/child/elder/son); `createNewGame` dodaje w każdej osadzie „starszego syna bez rodziny” osobnym strumieniem RNG (populacja jest w zapisie, nie w cache świata → bez bumpu `GEN_VERSION`, D-NPC-4).
+5. **COMP-03** — wspólna ocena broni `weaponScore` (obrażenia × jakość × zużycie) dla NPC (`wieldBest`) i fallbacku gracza (`switchWeapon`); `wieldBest` zmienia broń także wtedy, gdy w ręku jest użyteczna, ale gorsza. Otrzymany pancerz zakładany, gdy lepszy w danym slocie (`wearBetterArmor`).
+
+Uproszczenia / odłożone: zadanie „praca” towarzysza (wymaga projektu pracy na rzecz gracza) — D-NPC-3; brak zwrotu przy wcześniejszym zakończeniu kontraktu; maks. 3 towarzyszy; stare zapisy nie dostają syna (tylko wyprowadzenie `kin`).

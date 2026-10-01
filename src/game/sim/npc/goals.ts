@@ -6,12 +6,13 @@
  */
 import type { Sim } from '../sim'
 import type { AiStep, Human } from '../types'
-import { RUN_SPEED_MPS } from '../../config/calibration'
+import { COMPANION, RUN_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { countItem, findFood } from '../inventory'
 import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
 import { isBadWeather } from '../weather'
+import { companionDist } from './companions'
 import { deliverSurplus, dutyPlan } from './duties'
 import { doorOf, houseOf, settlementBuildings, threatNear, waterSources } from './queries'
 import { householdFoodCount } from './works'
@@ -39,6 +40,9 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const homeS = sim.world.settlements[h.settlementId]!
   // Caravan on the road: keeps travelling across the day, sleeps where it is (camp).
   const onTrip = h.profession === 'trader' && Math.hypot(h.x - homeS.x, h.z - homeS.z) > homeS.radius + 200
+  // Companion (COMP-01/02): follows the player instead of duties, social life and wandering.
+  const comp = h.companion
+  const away = onTrip || (!!comp && Math.hypot(h.x - door.x, h.z - door.z) > 150)
 
   // --- Safety ---
   const threat = threatNear(sim, h, isGuard ? 45 : 22)
@@ -46,7 +50,8 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
     const armed = !!h.eq.main && h.age === 'adult'
     // Cornered: a faster attacker already targeting me — running is futile, an armed adult fights back.
     const cornered = armed && threat.aggroId === h.id && SPECIES[threat.species].run > RUN_SPEED_MPS
-    const brave = isGuard || h.profession === 'hunter' || cornered || (armed && b5.n < 0.35 && b5.a < 0.6)
+    const defends = !!comp && (comp.task === 'guard' || comp.risk === 'high' || (comp.risk === 'medium' && armed))
+    const brave = isGuard || h.profession === 'hunter' || cornered || defends || (armed && b5.n < 0.35 && b5.a < 0.6)
     if (brave) {
       opts.push({ id: 'fight', score: 0.97, plan: () => ({ label: 'Fighting!', steps: [] }) })
     } else {
@@ -118,7 +123,12 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   // Sleep: guards sleep by day (night duty).
   const sleepTime = isGuard ? hr >= 9 && hr < 16 : night || hr >= 22 || hr < 5
   const sleepU = sleepTime ? (v.vigor < 90 ? 0.55 + (1 - v.vigor / 100) * 0.4 : 0.25) : v.vigor < 10 ? 0.85 : 0
-  if (sleepU > 0 && house && (!onTrip || v.vigor < (night ? 75 : 12))) {
+  if (comp) {
+    const d = companionDist(sim, h)
+    if (d > COMPANION.followM) opts.push({ id: 'follow', score: d > COMPANION.catchUpM ? 0.95 : 0.72, plan: () => ({ label: 'Following you', steps: [] }) })
+    opts.push({ id: 'wait', score: 0.12, plan: () => ({ label: 'Waiting for you', steps: [work('rest', 8, 'Waiting')] }) })
+  }
+  if (sleepU > 0 && house && (!away || v.vigor < (night ? 75 : 12))) {
     opts.push({
       id: 'sleep',
       score: sleepU,
@@ -126,14 +136,14 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
         const wake = isGuard ? 16 : 6
         const hrsLeft = ((wake - hr + 24) % 24) || 8
         const dur = Math.min(8, Math.max(1, hrsLeft)) * 150 // calendar h → gameplay s (150 s/h)
-        if (onTrip) return { label: 'Camping by the road', steps: [work('camp', dur, 'Camping by the road')] }
+        if (away) return { label: 'Camping by the road', steps: [work('camp', dur, 'Camping by the road')] }
         return { label: 'Sleeping', steps: [go(door.x, door.z, 1.2), work('sleep', dur, 'Sleeping', house.id, 'sleep')] }
       },
     })
   }
 
   // --- Social (extraversion) ---
-  if (!onTrip && ((hr >= 17 && hr < 23) || (v.social < 25 && !night))) {
+  if (!onTrip && !comp && ((hr >= 17 && hr < 23) || (v.social < 25 && !night))) {
     const s = 0.2 + b5.e * 0.3 + need(v.social) * 0.4
     const fire = settlementBuildings(sim, h.settlementId, 'campfire')[0]
     const inn = settlementBuildings(sim, h.settlementId, 'inn')[0]
@@ -151,7 +161,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   }
 
   // --- Weather shelter (neuroticism raises it) ---
-  if (isBadWeather(sim.weather) && house && !onTrip) {
+  if (isBadWeather(sim.weather) && house && !onTrip && !comp) {
     const inside = Math.hypot(h.x - door.x, h.z - door.z) < 3
     if (!inside) {
       const s = 0.4 + b5.n * 0.25 + (sim.weather.kind === 'storm' ? 0.2 : 0) - (isGuard ? 0.25 : 0)
@@ -161,6 +171,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
 
   // --- Duties (conscientiousness) ---
   const inWork = isGuard || onTrip || (hr >= 6 && hr < 19 && !night)
+  if (comp) return opts
   if ((inWork && h.age !== 'child') || (h.age === 'child' && hr >= 9 && hr < 16)) {
     const s = (0.32 + b5.c * 0.3) * (v.vigor > 10 ? 1 : 0.3) * (h.age === 'adult' ? 1 : 0.7)
     opts.push({ id: 'work', score: s, plan: () => dutyPlan(sim, h) })

@@ -67,3 +67,5 @@ Den / Lair, Rat nest. Settlement sizes: SM/MD/LG/XL shown as-is.
 | obrażenia: cięte / kłute / obuchowe | damage: cut / pierce / blunt |
 | Skill names | Medicine, Sneaking, Survival, Trapping, Melee, Ranged, Construction, Blacksmithing, Woodcutting, Farming, Trading |
 | Professions | Farmer, Woodcutter, Hunter, Blacksmith, Trader, Herbalist, Shepherd, Guard (match ids in `data/professions.ts`) |
+| Towarzysz / Najmij / Eskorta / Ochrona / Ryzyko | Companion / Hire / Escort / Protection / Risk (Low risk / Some risk / Dangerous) |
+| Prezent / Daj / Zakończ umowę / Rozstań się | Gift / Give / End the contract / Part ways |

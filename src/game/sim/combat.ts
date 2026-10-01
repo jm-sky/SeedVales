@@ -15,6 +15,7 @@ import { train } from './actions'
 import { alertAround } from './alerts'
 import { fleeHome } from './fauna/perception'
 import { qualityMult, removeItem, wearTool } from './inventory'
+import { companionsOnKill } from './npc/companions'
 import { questOnKill } from './quests'
 import { addRep, addStat, settlementAt } from './reputation'
 import { bleedAt } from './traces'
@@ -170,6 +171,7 @@ export function killAnimal(sim: Sim, a: Animal, killer?: Actor) {
   }
   sim.emit({ type: 'death', id: a.id })
   sim.removeAnimal(a)
+  if (sp.dangerous && killer && (killer.kind === 'player' || (killer as Human).companion)) companionsOnKill(sim, a.x, a.z)
   if (killer?.kind === 'player') {
     addStat(sim, 'kills')
     if (a.species === 'rat') addStat(sim, 'ratsKilled')

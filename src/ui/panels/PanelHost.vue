@@ -6,6 +6,8 @@ import CharacterPanel from './CharacterPanel.vue'
 import CraftPanel from './CraftPanel.vue'
 import DialogPanel from './DialogPanel.vue'
 import GameMenu from './GameMenu.vue'
+import GiftPanel from './GiftPanel.vue'
+import HirePanel from './HirePanel.vue'
 import InteractMenu from './InteractMenu.vue'
 import InventoryPanel from './InventoryPanel.vue'
 import MapPanel from './MapPanel.vue'
@@ -42,6 +44,8 @@ const panel = computed(() => {
     <MapPanel v-else-if="panel === 'map'" />
     <DialogPanel v-else-if="panel === 'dialog'" />
     <OrdersPanel v-else-if="panel === 'orders'" />
+    <GiftPanel v-else-if="panel === 'gift'" />
+    <HirePanel v-else-if="panel === 'hire'" />
     <SettingsPanel v-else-if="panel === 'settings'" />
     <GameMenu
       v-else-if="panel === 'menu'"

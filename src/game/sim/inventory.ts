@@ -122,18 +122,45 @@ export function invHasCap(inv: Inventory, cap: Capability): boolean {
 }
 
 /**
- * NPC weapon choice: swaps the best carried weapon of a kind into the main hand (no-op if one is
- * already wielded). Ranged weapons only with matching ammo carried.
+ * NPC weapon choice: wields the best usable weapon of a kind (main hand or pack, by `weaponScore`).
+ * Ranged weapons only with matching ammo carried (COMP-03: a better weapon received is actually used).
  */
 export function wieldBest(h: Human, kind: 'melee' | 'ranged') {
   const usable = (s: ItemStack | undefined) => {
     const w = s ? itemDef(s.id).weapon : undefined
     return !!w && w.kind === kind && (s!.dur ?? 1) > 0 && (!w.ammo || h.inv.items.some((i) => itemDef(i.id).ammoKind === w.ammo))
   }
-  if (usable(h.eq.main)) return
-  let best: ItemStack | undefined
-  for (const s of h.inv.items) if (usable(s) && (!best || itemDef(s.id).weapon!.damage > itemDef(best.id).weapon!.damage)) best = s
-  if (best) equipToMain(h, best)
+  let best = usable(h.eq.main) ? h.eq.main : undefined
+  for (const s of h.inv.items) if (usable(s) && (!best || weaponScore(s) > weaponScore(best))) best = s
+  if (best && best !== h.eq.main) equipToMain(h, best)
+}
+
+/** Weapon value for automatic choice (player fallback and NPCs): damage × quality × wear. */
+export function weaponScore(s: ItemStack): number {
+  const d = itemDef(s.id)
+  if (!d.weapon) return 0
+  const wear = s.dur !== undefined && d.durability ? 0.5 + 0.5 * (s.dur / d.durability) : 1
+  return d.weapon.damage * qualityMult(s) * wear
+}
+
+/** Armour value for automatic choice: mean resistance × quality. */
+export function armorScore(s: ItemStack): number {
+  const a = itemDef(s.id).armor
+  return a ? ((a.resist.cut + a.resist.pierce + a.resist.blunt) / 3) * qualityMult(s) : 0
+}
+
+/** NPC puts on received armour when it is better than what the slot holds (COMP-03). Returns true if worn. */
+export function wearBetterArmor(h: Human, stack: ItemStack): boolean {
+  const a = itemDef(stack.id).armor
+  const i = h.inv.items.indexOf(stack)
+  if (!a || i < 0) return false
+  const key = `${a.slot}_${a.layer}` as const
+  const cur = h.eq.armor[key]
+  if (cur && armorScore(cur) >= armorScore(stack)) return false
+  h.inv.items.splice(i, 1)
+  if (cur) addItem(h.inv, cur)
+  h.eq.armor[key] = stack
+  return true
 }
 
 /** Moves a tool from inventory to main hand (UI convenience, vision §27). Returns the equipped stack. */

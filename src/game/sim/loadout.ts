@@ -7,7 +7,7 @@
 import type { Sim } from './sim'
 import type { ItemStack, WeaponKind } from './types'
 import { itemDef } from '../data/items'
-import { equipToMain } from './inventory'
+import { equipToMain, weaponScore } from './inventory'
 
 export const weaponKindOf = (id: string): WeaponKind | undefined => itemDef(id).weapon?.kind
 
@@ -48,8 +48,7 @@ export function switchWeapon(sim: Sim, kind?: WeaponKind): string {
   let s = prim ? bestStack(sim, prim) : undefined
   if (!s) {
     for (const it of p.inv.items) {
-      const w = itemDef(it.id).weapon
-      if (w?.kind === want && (!s || w.damage > itemDef(s.id).weapon!.damage)) s = it
+      if (weaponKindOf(it.id) === want && (!s || weaponScore(it) > weaponScore(s))) s = it
     }
   }
   if (!s) return want === 'melee' ? 'No melee weapon.' : 'No ranged weapon.'

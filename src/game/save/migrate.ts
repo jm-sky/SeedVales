@@ -57,6 +57,11 @@ const MIGRATIONS: Record<number, Migration> = {
   5: (st) => {
     st.carts ??= []
   },
+  // v6 → v7: companions, gifts (optional fields); household roles derived for old populations
+  // (head = has a profession, other adults = spouse). Old saves get no extra son (COMP-02, D-NPC-3).
+  6: (st) => {
+    for (const n of st.npcs) n.kin ??= n.profession ? 'head' : n.age === 'adult' ? 'spouse' : n.age
+  },
 }
 
 export function migrate(st: GameState): GameState {

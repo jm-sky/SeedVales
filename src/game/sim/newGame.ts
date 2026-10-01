@@ -5,7 +5,7 @@
  */
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { ProfessionId, WorldData } from '../world/types'
-import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, SettlementState } from './types'
+import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, Kin, SettlementState } from './types'
 import { START_CALENDAR_S, TREASURY_START } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { NAMES, PROFESSIONS } from '../data/professions'
@@ -121,10 +121,10 @@ export function createNewGame(world: WorldData): GameState {
       addItem(house.inv!, newStack('branch', 4))
       const hh: Household = { id: hid, settlementId: s.id, profession: gh.profession, houseId: house.id, memberIds: [] }
       households.push(hh)
-      const roles: { male: boolean; age: AgeGroup; main: boolean }[] = [{ male: rng.chance(0.75), age: 'adult', main: true }]
-      if (gh.members >= 2) roles.push({ male: !roles[0]!.male, age: 'adult', main: false })
-      if (gh.members >= 3) roles.push({ male: rng.chance(0.5), age: 'child', main: false })
-      if (gh.members >= 4) roles.push({ male: rng.chance(0.5), age: 'elder', main: false })
+      const roles: { male: boolean; age: AgeGroup; main: boolean; kin: Kin }[] = [{ male: rng.chance(0.75), age: 'adult', main: true, kin: 'head' }]
+      if (gh.members >= 2) roles.push({ male: !roles[0]!.male, age: 'adult', main: false, kin: 'spouse' })
+      if (gh.members >= 3) roles.push({ male: rng.chance(0.5), age: 'child', main: false, kin: 'child' })
+      if (gh.members >= 4) roles.push({ male: rng.chance(0.5), age: 'elder', main: false, kin: 'elder' })
       for (const r of roles) {
         const ang = rng.range(0, Math.PI * 2)
         const px = house.x + Math.cos(ang) * 6
@@ -132,6 +132,7 @@ export function createNewGame(world: WorldData): GameState {
         const npc = makeHuman(rng, nextId++, px, pz, h(px, pz), r.male, r.age)
         npc.settlementId = s.id
         npc.householdId = hid
+        npc.kin = r.kin
         if (r.main) {
           npc.profession = gh.profession
           for (const [k, v] of Object.entries(prof.skills)) npc.skills[k as keyof typeof npc.skills] = v! + rng.range(-8, 8)
@@ -191,6 +192,32 @@ export function createNewGame(world: WorldData): GameState {
   for (const d of world.dens.filter((dd) => dd.species === 'bear')) {
     const a = makeAnimal(nextId++, 'moose', 'adult', d.x + 200, d.z + 120, h(d.x + 200, d.z + 120), rng)
     animals.push(a)
+  }
+
+  // COMP-02: every settlement has at least one grown son living with his parents (no family of his own).
+  // Separate RNG stream so the rest of the population stays as before.
+  const srng = new Rng(world.seed ^ 0x5011)
+  for (const s of world.settlements) {
+    const hh = households.filter((x) => x.settlementId === s.id && x.memberIds.length >= 2)
+    if (!hh.length) continue
+    const fam = hh[srng.int(0, hh.length - 1)]!
+    const house = byId.get(fam.houseId)!
+    const ang = srng.range(0, Math.PI * 2)
+    const px = house.x + Math.cos(ang) * 6
+    const pz = house.z + Math.sin(ang) * 6
+    const son = makeHuman(srng, nextId++, px, pz, h(px, pz), true, 'adult')
+    son.settlementId = s.id
+    son.householdId = fam.id
+    son.kin = 'son'
+    son.big5.o = Math.max(son.big5.o, 0.55)
+    son.skills.melee = srng.range(10, 25)
+    son.money = srng.int(2, 12)
+    addItem(son.inv, newStack('knife'))
+    addItem(son.inv, newStack('bread', 1))
+    son.vitals.thirst = srng.range(50, 95)
+    son.vitals.hunger = srng.range(50, 95)
+    npcs.push(son)
+    fam.memberIds.push(son.id)
   }
 
   const home = world.settlements[world.homeSettlement]!

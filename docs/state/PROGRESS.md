@@ -4,11 +4,11 @@
 
 ## Teraz
 
-- Weryfikacja (ostatnia, 2026-10-01): `pnpm check` 131/131, `pnpm e2e:run`: acceptance 29/29, mobile 10/10, smoke 3/3; `check-layers` OK.
-- Formaty: `SAVE_VERSION` 6, `GEN_VERSION` 7.
+- Weryfikacja (ostatnia, 2026-10-01): `pnpm check` 144/144, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 błędów konsoli; `check-layers` OK; `bench:sim` ok (powtórka; pierwszy przebieg na WSL dał szum).
+- Formaty: `SAVE_VERSION` 7, `GEN_VERSION` 7.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
-- Fale: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` done / `npc--001` do zrobienia; 4a `render--002`, 4b `render--001`, 5, 6 — nierozpoczęte.
-- Następny krok: `npc--001`, potem review fali 3 (numer 006).
+- Fale: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` done / `npc--001` done (review 006 w toku); 4a `render--002`, 4b `render--001`, 5, 6 — nierozpoczęte.
+- Następny krok: review fali 3 (numer 006), potem fala 4a `render--002`.
 - ❓ dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping); pomiar na urządzeniu (D-PERF-2).
 - Starsze sekcje (sesja przygotowawcza, stan po sesji 1): [progress-log.md](progress-log.md).
 
@@ -40,3 +40,8 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **Fala 3 `economy--001` done (2026-10-01):** RES-07, FOOD-03, TRANS-01 verified (taczka/wózek, `SAVE_VERSION` 6). `pnpm check` 131/131, e2e acceptance 29/29, mobile 10/10, smoke 3/3.
 - Następny krok: `npc--001` (handel z każdym NPC, prezenty, towarzysze), potem review fali 3 (subagent w izolowanym worktree; zakres od `0514669^` / `2c6e4d6^` do HEAD w `src/game/sim/{actions,cooking,cart}.ts` i powiązanych).
 - **Plan grafiki (docs, 2026-10-01):** research 002 + review 005 wpięte w roadmapę — fala 4 = 4a `render--002` (metryki PERF-02 → światło/niebo → teren → pilot PBR) → 4b `render--001` (przepisany: opady już istnieją, pula 7 świateł, wiatr/woda RENDER-05); nowa fala 6 `render--003` (draft, warunkowy: wykończenie i optymalizacje tylko przy zmierzonym problemie). Decyzje D-REN-6/7, D-PERF-2. ❓ Dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping) i pomiar na realnym laptopie/telefonie (checklista powstanie w `render--002` krok 0). Review fali 3 → numer **006**.
+
+## Sesja 3
+
+- **`npc--001` done (2026-10-01):** TRADE-02 (handel nadwyżkami z każdym NPC, Give), SOC-01 (prezenty, życzenia w rozmowie), COMP-01 (najem: dni/zadanie/ryzyko, podążanie, wygasanie), COMP-02 (darmowe dołączenie, syn w każdej osadzie), COMP-03 (lepsza broń/pancerz) — verified. `SAVE_VERSION` 7 (D-NPC-1…5). `pnpm check` 144/144, e2e acceptance 30/30 (nowy krok 17: najem + prezent przez UI), mobile 10/10, smoke 3/3.
+
