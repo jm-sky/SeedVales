@@ -2,6 +2,8 @@
 
 Główny indeks dokumentacji.
 
+> **Language: English everywhere (D-LANG-1, 2026-10-01).** New and edited docs are written in English; existing Polish docs are legacy and get translated when substantially edited. Details: [IMPORTANT-PRODUCT-NOTES.md](IMPORTANT-PRODUCT-NOTES.md).
+
 ## Najważniejsze pliki
 
 | Plik | Rola |

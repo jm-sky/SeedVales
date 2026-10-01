@@ -1,5 +1,7 @@
 # Wizja i założenia projektu
 
+> **Language: English everywhere (decision D-LANG-1, 2026-10-01).** All player-facing text, all proper names (NPC first names + occupational surnames, e.g. the home guard *Mark Hornblower*; settlement and landmark names), all new and edited documentation, plans, quest designs and code comments are in English. Existing Polish documents (including this file) are legacy: they stay valid in content, but are translated to English when substantially edited; never add new Polish text. Code still to migrate: the NPC name pool (`NAMES` in `src/game/data/professions.ts`) and settlement names (`src/game/world/gen/settlements.ts`) are Polish — tracked as a follow-up, see `docs/design/DECISIONS.md`.
+
 > **Uzupełnienia:** [VISION-APPENDIX.md](VISION-APPENDIX.md) — nowsze doprecyzowania i nowe wymagania (postacie, zwierzęta, ślady, pogoda, landmarki/skarby, handel/prezenty, UI, pozyskiwanie i transport, spatial grid/kadencja decyzji, burmistrz, kierunek graficzny, gotowanie, towarzysze). Przy sprzeczności dodatek jest nowszy; rozstrzygnięcia w `docs/design/DECISIONS.md`. Status wymagań z dodatku: `docs/state/FEATURES.json` (`scope: "v2"`), kolejność: `docs/roadmap/v1-closure-and-appendix.md`.
 
 ## Spis treści

@@ -4,6 +4,7 @@
 
 ## Teraz
 
+- **D-LANG-1 (2026-10-01): English everywhere** — UI, proper names (English first name + occupational surname; home guard = Mark Hornblower), docs, plans, comments. Polish docs are legacy. Open follow-up: switch NPC/settlement name pools in code to English (`GEN_VERSION` bump).
 - Weryfikacja (ostatnia, 2026-10-01): `pnpm check` 131/131, `pnpm e2e:run`: acceptance 29/29, mobile 10/10, smoke 3/3; `check-layers` OK.
 - Formaty: `SAVE_VERSION` 6, `GEN_VERSION` 7.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).

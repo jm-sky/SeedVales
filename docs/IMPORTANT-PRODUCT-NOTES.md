@@ -2,6 +2,14 @@
 
 This file contains important cross-cutting product requirements that should be considered alongside `docs/VISION.md` and `docs/VISION-APPENDIX.md`.
 
+## Language — English everywhere (D-LANG-1, 2026-10-01)
+
+- **Everything is English**: player-facing text, proper names, documentation, plans, quest designs, code comments.
+- **Proper names are English too** — this replaces the earlier rule "proper names (settlements, NPCs) stay unchanged". NPCs have English first names and an occupational surname hinting at their trade (author's example, fixed: the home settlement's guard is **Mark Hornblower**). Settlements and landmarks get English names.
+- Existing Polish documents (VISION.md, VISION-APPENDIX.md, DECISIONS.md, PROGRESS.md, plans…) are legacy: translate when substantially edited; never add new Polish text.
+- Pending code migration: NPC name pool (`src/game/data/professions.ts` `NAMES`) and settlement names (`src/game/world/gen/settlements.ts`) are still Polish.
+- Reference cast and naming examples: `docs/design/quests/QUEST-WORLD.md`.
+
 ## UI language
 
 - All player-facing UI text must be in **English**, not Polish.

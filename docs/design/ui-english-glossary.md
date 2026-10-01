@@ -5,8 +5,9 @@ terms consistent across `data/`, `sim/` messages, `Game.ts` and `ui/`. Tone: pla
 archaic; sentence case for labels and buttons ("Save game", not "Save Game"); messages are short sentences
 ending with a period; 2nd person for the player ("You need an axe.").
 
-**Proper nouns stay as they are**: settlement names (Jaworzno, Głogów Dolny, Wrzosowo…), NPC names, the game
-name. They are names of places/people in the world, not UI text.
+**Proper nouns are English too** (D-LANG-1, 2026-10-01 — supersedes the earlier "proper nouns stay as they are"): NPCs get
+English first names + occupational surnames (e.g. the home guard *Mark Hornblower*), settlements and landmarks get English
+names. The current Polish name pools in code (`professions.ts`, `settlements.ts`) are pending migration. The game name stays.
 
 ## Items (`data/items.ts`)
 

@@ -24,7 +24,7 @@ SeedVales is a browser-based medieval-themed world simulation game with RPG elem
 
 ## Documentation hub (`docs/`)
 
-`docs/README.md` is the index. `docs/VISION.md` is the main product-requirements-style vision doc (Polish) and the authoritative source for game design questions — read it before designing any gameplay system. Important cross-cutting product requirements are collected in `docs/IMPORTANT-PRODUCT-NOTES.md`; read it before UI, map, exploration, or visibility work. Subfolders, each with their own naming convention documented in their `README.md`:
+`docs/README.md` is the index. `docs/VISION.md` is the main product-requirements-style vision doc (legacy Polish — see the language rule below) and the authoritative source for game design questions — read it before designing any gameplay system. Important cross-cutting product requirements are collected in `docs/IMPORTANT-PRODUCT-NOTES.md`; read it before UI, map, exploration, or visibility work. Subfolders, each with their own naming convention documented in their `README.md`:
 
 - `docs/vision/` — vision broken out per domain (one file per domain)
 - `docs/design/` — detailed design for a domain/area, filename prefixed by domain (e.g. `ui-combat.md`)
@@ -59,7 +59,7 @@ The next session starts from `NEXT-SESSION-KICK-OFF-PROMPT.md` (long-running loo
 
 ## Standing rules
 
-- **Player-facing text is English** (D-UI-4, no i18n layer); terms per `docs/design/ui-english-glossary.md` (add new ones). Proper names (settlements, NPCs) unchanged. Docs/comments may be Polish. Logic must never depend on label text — use ids/fields.
+- **English everywhere (D-LANG-1, supersedes parts of D-UI-4).** Player-facing text (no i18n layer; terms per `docs/design/ui-english-glossary.md`, add new ones), proper names (NPCs: English first name + occupational surname, e.g. the home guard **Mark Hornblower**; settlements, landmarks), all new/edited docs, plans, quest designs and code comments are English. Existing Polish docs are legacy: translate when substantially edited, never add new Polish text. Pending: NPC/settlement name pools in code are still Polish. Logic must never depend on label text — use ids/fields.
 - Layering: sim/world/data/config/core/save never import three/vue/render/ui/audio; UI mutates state only through `Game` methods.
 - New mutable state must be saved; a format change needs a `SAVE_VERSION` bump + migration in `save/migrate.ts` + test. A generator change needs a `GEN_VERSION` bump. Current values: `docs/state/PROGRESS.md` "Teraz".
 - Per-tick systems use spatial queries only (PERF-01). Conservation: every resource/money flow has a source and a sink.
