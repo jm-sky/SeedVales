@@ -20,6 +20,7 @@ Główny indeks dokumentacji.
 | [reviews/2026-09-30--001--v1-review.md](reviews/2026-09-30--001--v1-review.md) | niezależne review v1 (Grok / Scribe) |
 | [research/2026-10-01--002--realistic-visuals-practical-roadmap.md](research/2026-10-01--002--realistic-visuals-practical-roadmap.md) | research grafiki (podstawa planów `render--002/001/003`; review raportu 001: [reviews/2026-10-01--005](reviews/2026-10-01--005--rendering-research-critical-review.md)) |
 | [research/2026-10-01--003--blender-mcp.md](research/2026-10-01--003--blender-mcp.md) | Blender MCP check + where Blender fits (offline glTF asset pipeline only) |
+| [research/2026-10-01--004--rigging-static-animals.md](research/2026-10-01--004--rigging-static-animals.md) | Lessons from rigging boar/bear via Blender MCP (geometric weights, gait helpers, contact-sheet checks) |
 | [DEVELOPER-CALIBRATION-TOOLS.md](DEVELOPER-CALIBRATION-TOOLS.md) | propozycja narzędzi kalibracyjnych (plan `tools--001`, draft) |
 | [assets/README.md](assets/README.md) | katalog assetów Quaternius i konwersji |
 
