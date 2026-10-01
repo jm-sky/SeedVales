@@ -35,17 +35,8 @@ export const NATURE_MODEL: Record<string, { models: string[]; baseH: number }> =
   reed: { models: ['Grass_Common_Tall'], baseH: 1 },
 }
 
-/** Piece nodes of `landmarks.glb` (WORLD-11): ruins, standing stones, wrecks. Built by `scripts/assets/build-landmarks.mjs`. */
-export const LANDMARK_NODES = {
-  walls: ['Ruin_Wall_Broken', 'Ruin_Wall_Half', 'Ruin_Wall_Hole', 'Ruin_Wall_Double_Broken', 'Ruin_Wall_Overgrown'],
-  arch: 'Ruin_Arch_Broken',
-  columns: ['Ruin_Column', 'Ruin_Column_Short'],
-  floor: 'Ruin_Floor',
-  bricks: 'Ruin_Bricks',
-  stones: ['Stone_1', 'Stone_2', 'Stone_3', 'Stone_4', 'Stone_5'],
-  ship: 'Wreck_Ship',
-  boat: 'Wreck_Boat',
-} as const
+export { LANDMARK_NODES } from '../world/landmarkLayout'
+import { LANDMARK_NODES } from '../world/landmarkLayout'
 
 /** Pack file -> node names that must exist in it. */
 export function packNodeNames(): Record<string, string[]> {

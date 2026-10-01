@@ -12,6 +12,7 @@ import { NodeCache } from '../world/nodes'
 import { SpatialHash } from '../world/spatial'
 import { Terrain, TerrainEdits } from '../world/terrain'
 import { CHUNK_M } from '../world/types'
+import { LandmarkSolids } from './landmarkSolids'
 
 export type SimEvent =
   | { type: 'hit'; x: number; y: number; z: number; targetId: number; dmg: number }
@@ -33,6 +34,8 @@ export interface SimSystem {
 export class Sim {
   terrain: Terrain
   nodes: NodeCache
+  /** WORLD-11 landmark colliders (immutable with the world). */
+  readonly landmarkSolids: LandmarkSolids
   actors = new SpatialHash<Actor>(32)
   rng: Rng
   events: SimEvent[] = []
@@ -65,6 +68,7 @@ export class Sim {
     this.state = state
     this.terrain = new Terrain(world, TerrainEdits.fromJSON(state.terrainEdits))
     this.nodes = new NodeCache(this.terrain)
+    this.landmarkSolids = new LandmarkSolids(world.landmarks)
     this.rng = new Rng(state.rng)
     this.reindex()
   }

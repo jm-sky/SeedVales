@@ -4,8 +4,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { GenLandmark, LandmarkKind } from '../world/types'
+import { layout } from '../world/landmarkLayout'
 import { LANDMARK_NODES } from './assetNames'
-import { layout } from './landmarks'
 
 const KINDS: LandmarkKind[] = ['stone_circle', 'house_ruin', 'estate_ruin', 'shipwreck', 'boat_wreck']
 const known = new Set<string>(Object.values(LANDMARK_NODES).flat())

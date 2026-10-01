@@ -8,8 +8,8 @@
 import * as THREE from 'three'
 import type { Sim } from '../sim/sim'
 import type { GenLandmark } from '../world/types'
-import { hash01, hashString } from '../core/rng'
 import { perf } from '../diag/perf'
+import { layout } from '../world/landmarkLayout'
 import { LANDMARK_NODES } from './assetNames'
 import { loadGltf, mergeTemplate, packNode, part } from './assets'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -37,91 +37,6 @@ function fallbackNodes(): Record<string, THREE.Object3D> {
   LANDMARK_NODES.stones.forEach((n, i) => (out[n] = mk(new THREE.DodecahedronGeometry(0.9, 0).scale(1, 1.4 + i * 0.35, 1).translate(0, 1 + i * 0.3, 0), 0x6d6a66)))
   out[LANDMARK_NODES.ship] = mk(box(5, 3, 14), wood)
   out[LANDMARK_NODES.boat] = mk(box(1.8, 0.7, 4), wood)
-  return out
-}
-
-interface Slot {
-  name: string
-  x: number
-  z: number
-  ry: number
-  s?: number
-  /** Metres sunk into the ground. */
-  sink?: number
-  pitch?: number
-  roll?: number
-}
-
-const pick = <T>(a: readonly T[], h: number): T => a[Math.floor(h * a.length) % a.length]!
-
-/** Piece placement (landmark-local metres, +Z forward) per kind; deterministic from the landmark id. */
-export function layout(l: GenLandmark): Slot[] {
-  const seed = hashString(l.id)
-  const h = (...v: number[]) => hash01(seed, ...v)
-  const out: Slot[] = []
-  const N = LANDMARK_NODES
-  switch (l.kind) {
-    case 'boat_wreck':
-      out.push({ name: N.boat, x: 0, z: 0, ry: 0, sink: 0.3, pitch: 0.06, roll: 0.18 })
-      break
-    case 'estate_ruin':
-    case 'house_ruin': {
-      const estate = l.kind === 'estate_ruin'
-      const nx = estate ? 6 : 3
-      const nz = estate ? 4 : 2
-      const W = nx * 3
-      const D = nz * 3
-      const wall = (x: number, z: number, ry: number, i: number) => {
-        if (h(i, 11) < (estate ? 0.12 : 0.22)) {
-          if (h(i, 12) < 0.6) out.push({ name: N.bricks, x, z, ry: h(i, 13) * 6, sink: 0.05 })
-          return
-        }
-        out.push({ name: pick(N.walls, h(i, 14)), x, z, ry, sink: 0.12 })
-      }
-      let k = 0
-      for (let i = 0; i < nx; i++) {
-        const x = -W / 2 + 1.5 + i * 3
-        // The estate keeps one arched gateway on the front.
-        if (estate && i === Math.floor(nx / 2)) out.push({ name: N.arch, x, z: D / 2, ry: 0, sink: 0.1 })
-        else wall(x, D / 2, 0, k++)
-        wall(x, -D / 2, Math.PI, k++)
-      }
-      for (let i = 0; i < nz; i++) {
-        const z = -D / 2 + 1.5 + i * 3
-        wall(W / 2, z, Math.PI / 2, k++)
-        wall(-W / 2, z, -Math.PI / 2, k++)
-      }
-      if (estate) {
-        // Inner dividing wall and corner columns.
-        for (let i = 0; i < 3; i++) wall(-W / 2 + 4.5 + i * 3, 0, 0, k++)
-        for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) out.push({ name: pick(N.columns, h(k++, 15)), x: (cx * W) / 2, z: (cz * D) / 2, ry: 0, sink: 0.1 })
-      }
-      // Floor slabs inside, some missing.
-      for (let i = 0; i < nx - 1; i++) {
-        for (let j = 0; j < nz - 1; j++) {
-          if (h(i, j, 16) < 0.55) out.push({ name: N.floor, x: -W / 2 + 3 + i * 3, z: -D / 2 + 3 + j * 3, ry: 0, sink: 0.05 })
-        }
-      }
-      out.push({ name: N.bricks, x: W / 2 - 1.5, z: D / 2 - 1.5, ry: h(17) * 6 })
-      break
-    }
-    case 'shipwreck':
-      // Half sunk in the sand, bow up and listing.
-      out.push({ name: N.ship, x: 0, z: 0, ry: 0, sink: 1.8, pitch: -0.14, roll: 0.22 })
-      break
-    case 'stone_circle': {
-      const n = 8 + (seed % 3)
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 + h(i, 1) * 0.12
-        const r = l.radius * (0.85 + h(i, 2) * 0.2)
-        // One in five has fallen over.
-        const fallen = h(i, 3) < 0.2
-        out.push({ name: pick(N.stones, h(i, 4)), x: Math.cos(a) * r, z: Math.sin(a) * r, ry: -a + Math.PI / 2 + (h(i, 5) - 0.5) * 0.4, s: 0.9 + h(i, 6) * 0.35, sink: 0.15, roll: fallen ? 1.1 : (h(i, 7) - 0.5) * 0.16 })
-      }
-      out.push({ name: N.stones[2], x: 0, z: 0, ry: h(9, 9) * 6, s: 1.1, sink: 0.3 })
-      break
-    }
-  }
   return out
 }
 
