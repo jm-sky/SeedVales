@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SeedVales is a browser-based medieval-themed world simulation game with RPG elements (no fantasy). Stack: Vue 3 + TypeScript + Tailwind CSS v4 + shadcn-vue + Three.js, using pnpm.
 
-**Current repo state: integrated v1-ish game, v1 not yet declared done.** `src/game/` holds the full stack — `world/` (seeded generator, terrain, spatial grid, resource nodes), `sim/` (needs, NPC utility-AI + Big Five, fauna, combat, crafting, trade, build, reputation, quests), `data/`, `config/calibration.ts`, `save/` (IndexedDB world cache + versioned saves), `render/` (Three.js, Quaternius assets), `audio/`, `input/`, `diag/`, `debug/` (`window.__sv` test API), `Game.ts` (facade). Vue UI lives in `src/ui/` (HUD, panels, mobile controls). Always read `docs/state/PROGRESS.md` (handoff) and `git log` first; requirement statuses are in `docs/state/FEATURES.json`, the work order in `docs/roadmap/v1-closure-and-appendix.md`.
+**Current repo state: integrated game, v1 complete; addendum waves (`docs/roadmap/v1-closure-and-appendix.md`) in progress.** `src/game/` holds the full stack — `world/` (seeded generator, terrain, spatial grid, resource nodes), `sim/` (needs, NPC utility-AI + Big Five, fauna, combat, crafting, trade, build, reputation, quests), `data/`, `config/calibration.ts`, `save/` (IndexedDB world cache + versioned saves), `render/` (Three.js, Quaternius assets), `audio/`, `input/`, `diag/`, `debug/` (`window.__sv` test API), `Game.ts` (facade). Vue UI lives in `src/ui/` (HUD, panels, mobile controls). Always read `docs/state/PROGRESS.md` (handoff; section "Teraz" = current counts, format versions, next step) and `git log` first; requirement statuses are in `docs/state/FEATURES.json`, the work order in `docs/roadmap/v1-closure-and-appendix.md`.
 
 ## Commands
 
@@ -14,9 +14,10 @@ SeedVales is a browser-based medieval-themed world simulation game with RPG elem
 - `pnpm lint` / `pnpm lint:fix` — ESLint (cached)
 - `pnpm type-check` — `vue-tsc --build`
 - Package manager is pinned via the `packageManager` field in `package.json`; use pnpm, not npm/yarn.
-- `pnpm test` — vitest (sim rules named by FEATURES IDs, determinism, save, economy); `pnpm check` = type-check + lint + test
-- `node scripts/check-layers.mjs` — sim/world/data/config/core/save must not import three/vue/render/ui/audio (not yet part of `pnpm check`)
-- `pnpm e2e` — Playwright smoke + acceptance (§9) + mobile; needs `pnpm dev --port 5199` running
+- `pnpm test` — vitest (sim rules named by FEATURES IDs, determinism, save, economy); `pnpm check` = type-check + lint + check-layers + test
+- `node scripts/check-layers.mjs` — sim/world/data/config/core/save must not import three/vue/render/ui/audio (already run by `pnpm check`)
+- `pnpm e2e:run [smoke] [acceptance] [mobile]` — preferred: starts its own Vite server (free port, no HMR/watch), runs the suites (all by default), prints one summary line; Chrome auto-detected (override with `CHROME_PATH`)
+- `pnpm e2e` — same suites against an already running `pnpm dev --port 5199` (manual debugging)
 - `pnpm bench:sim [--update-baseline]`, `pnpm bench:render [low|medium]` — reports in `test-results/bench/` (gitignored); summary goes to `docs/state/PERF.md`
 - `node scripts/e2e/tour.mjs` — screenshots for visual review; `pnpm build` — production build
 - Headless Chromium uses SwiftShader: FPS/GPU numbers are not representative; pure JS phases (sim, chunk/vegetation builds, render preparation) are comparable within the same environment, `render.draw` is not (software rasterization). Device measurements are the user's step (D-PERF-2).
@@ -55,6 +56,19 @@ The next session starts from `NEXT-SESSION-KICK-OFF-PROMPT.md` (long-running loo
 - Design for spatial indexing, distance-based update frequency/LOD, and patch/cache mechanisms from the start — this is a stated non-negotiable, not a later optimization pass.
 - Systems query only objects in range (spatial grid: `sim.actors.query`, `sim.nodes.query`), never full-world scans per actor/tick. NPC/animal *decisions* run at ~1 s cadence (per species/state), separate from movement LOD; critical events force an immediate decision.
 - Avoid building a generic "engine" or heavy abstractions before a working gameplay loop exists; avoid large files/modules with multiple unrelated responsibilities.
+
+## Standing rules
+
+- **Player-facing text is English** (D-UI-4, no i18n layer); terms per `docs/design/ui-english-glossary.md` (add new ones). Proper names (settlements, NPCs) unchanged. Docs/comments may be Polish. Logic must never depend on label text — use ids/fields.
+- Layering: sim/world/data/config/core/save never import three/vue/render/ui/audio; UI mutates state only through `Game` methods.
+- New mutable state must be saved; a format change needs a `SAVE_VERSION` bump + migration in `save/migrate.ts` + test. A generator change needs a `GEN_VERSION` bump. Current values: `docs/state/PROGRESS.md` "Teraz".
+- Per-tick systems use spatial queries only (PERF-01). Conservation: every resource/money flow has a source and a sink.
+- Fog of war (MAP-01): hide new map/minimap elements in unexplored cells (`isExplored`).
+- Never weaken criteria, disable tests, or change budgets/baselines to hide a regression. "Flaky" is not a diagnosis — find the cause.
+- Subagents: always `isolation: "worktree"` and forbid `git checkout/switch/reset/stash` (an unisolated one once switched the repo to an old commit). Commit the files they need first (a worktree is created from a commit). After merging their branches, remove the worktrees (`git worktree remove`, `git branch -D`) as hygiene.
+- Use `pnpm e2e:run` (no HMR). With the manual `pnpm e2e` + `pnpm dev`, do not edit `src/` or run vitest / `pnpm install` meanwhile — HMR reloads the page ("Execution context was destroyed"). `window.__*` globals are lost on page reload in e2e; pass ids via Node script variables.
+
+- Project skills (`.claude/skills/`): `verify` (check/e2e/bench), `wave-review` (worktree subagent review + triage), `handoff` (state files, version bumps, commit/push) — use them instead of re-deriving these procedures.
 
 ## Code style (enforced by `eslint.config.ts`)
 
