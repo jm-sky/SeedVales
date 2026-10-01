@@ -1,0 +1,149 @@
+{
+  "woodcutter": {
+    "node": "Kit_Woodcutter",
+    "bone": "hand_r",
+    "position": [
+      0.06212,
+      -0.03493,
+      0.17196
+    ],
+    "quaternion": [
+      0.58713,
+      -0.18561,
+      -0.63649,
+      0.46444
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "felling axe held in the right fist, head up/forward; kit frame = grip"
+  },
+  "blacksmith": {
+    "node": "Kit_Blacksmith",
+    "bone": "hand_r",
+    "position": [
+      -0.02,
+      0.075,
+      0
+    ],
+    "quaternion": [
+      0.56388,
+      0.50108,
+      0.63824,
+      0.15366
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "smith hammer held in the right fist; kit frame = grip"
+  },
+  "shepherd": {
+    "node": "Kit_Shepherd",
+    "bone": "hand_r",
+    "position": [
+      0.02,
+      0.075,
+      0
+    ],
+    "quaternion": [
+      -0.00295,
+      -0.32516,
+      -0.94233,
+      0.07917
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "staff (1.6 m) held in the right fist, rope grip band; kit frame = grip"
+  },
+  "guard": {
+    "node": "Kit_Guard",
+    "bone": "spine_01",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "quaternion": [
+      -0.05084,
+      0,
+      0,
+      0.99871
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "sword at the left hip (hilt up) + round shield on the back, dome backwards; kit frame = model axes at the bone head"
+  },
+  "hunter": {
+    "node": "Kit_Hunter",
+    "bone": "spine_03",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "quaternion": [
+      0.113,
+      0,
+      0,
+      0.99359
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "quiver with arrows + bow slung on the back; kit frame = model axes at the bone head"
+  },
+  "herbalist": {
+    "node": "Kit_Herbalist",
+    "bone": "spine_01",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "quaternion": [
+      -0.05084,
+      0,
+      0,
+      0.99871
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "belt pouch (front right) + bottle (front left); kit frame = model axes at the bone head"
+  },
+  "trader": {
+    "node": "Kit_Trader",
+    "bone": "spine_01",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "quaternion": [
+      -0.05084,
+      0,
+      0,
+      0.99871
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "notes": "sack backpack + belt pouch (front, left of centre); kit frame = model axes at the bone head"
+  }
+}

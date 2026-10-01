@@ -42,7 +42,7 @@ Humanoid class (D-REN-11): ≤ 13 k body tris, ≤ 1 MB, ≤ 512 px, 1–2 mater
 Decide per variant after seeing it in `tour.mjs`; data lives in `professions.ts` (`outfit` field), never keyed on label text.
 
 ### 3. Hair/beard library and held items
-Unchanged from research 005 (P2 hair from Universal Base Characters, P3 bone-attached kit from Fantasy Props). Depends on nothing here; Knight_Helm makes hair visibility a quality-profile concern.
+Unchanged from research 005 (P2 hair from Universal Base Characters, P3 bone-attached kit from Fantasy Props). **P3 assets/data are done and parked; the attach code is specified in [render--006](render--006--held-items.md).** Depends on nothing here; Knight_Helm makes hair visibility a quality-profile concern.
 
 ### 4. Blender variants from `All_Male.blend` / `All_Female.blend` (modular parts are separate objects with shared weights)
 Highest-ROI combinations, all reuse existing weights so no rigging:
