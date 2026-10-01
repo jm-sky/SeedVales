@@ -32,6 +32,17 @@ export interface DebugApi {
   pause(on: boolean): void
   /** Teleport next to a point and face it (distance d). */
   approach(x: number, z: number, d?: number): void
+  /**
+   * Frame pacing for device measurements (PERF-02, D-PERF-2): RAF interval quantiles and share of slow
+   * frames since the last `perf.reset()`, plus GPU frame time when the timer extension exists (else null).
+   */
+  pacing(): PacingReport
+}
+
+export interface PacingReport {
+  raf: { samples: number; p50: number; p95: number; p99: number; over16: number; over33: number; over50: number }
+  frameCpu: { p50: number; p95: number; p99: number }
+  gpu: { available: boolean; samples: number; p50: number; p95: number; p99: number; dropped: number } | null
 }
 
 export function installDebugApi(game: Game) {
@@ -40,6 +51,20 @@ export function installDebugApi(game: Game) {
     game,
     perf,
     teleport: (x, z) => game.debugTeleport(x, z),
+    pacing: () => {
+      const timers = perf.report().timers
+      const t = (k: string) => timers.find((x) => x.name === k)
+      const raf = t('raf.interval')
+      const fr = t('frame')
+      const g = t('gpu.frame')
+      const gpu = game.renderer.gpu
+      const r2 = (v = 0) => Math.round(v * 100) / 100
+      return {
+        raf: { samples: raf?.samples ?? 0, p50: r2(raf?.median), p95: r2(raf?.p95), p99: r2(raf?.p99), over16: r2(perf.shareAbove('raf.interval', 16.7)), over33: r2(perf.shareAbove('raf.interval', 33.3)), over50: r2(perf.shareAbove('raf.interval', 50)) },
+        frameCpu: { p50: r2(fr?.median), p95: r2(fr?.p95), p99: r2(fr?.p99) },
+        gpu: gpu.available ? { available: true, samples: g?.samples ?? 0, p50: r2(g?.median), p95: r2(g?.p95), p99: r2(g?.p99), dropped: gpu.dropped } : null,
+      }
+    },
     openSpot: (minR, sid) => openSpot(sim(), minR, sid),
     teleportToSettlement: (id, dx = 0, dz = 20) => {
       const s = sim().world.settlements[id]!

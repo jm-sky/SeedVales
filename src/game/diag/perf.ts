@@ -1,10 +1,17 @@
 /**
  * Shared lightweight diagnostics: timers with bounded ring buffers, gauges and counters.
- * CPU timings only (performance.now). GPU time is NOT measured here — see render/gpuTimer.
+ * CPU timings (performance.now). GPU time comes from render/gpuTimer when the browser exposes
+ * EXT_disjoint_timer_query_webgl2 (recorded as `gpu.frame`); otherwise there is no GPU data.
  * @domain diag
  */
 
-const RING = 512
+/**
+ * Quantiles come from a log-bucket histogram of the whole run (since the last reset), so median/p95/p99,
+ * max, mean and overBudget all describe the same window (PERF-02). Bucket width 2% → quantile error ≤ 2%.
+ */
+const H_MIN = 1e-3
+const H_STEP = Math.log(1.02)
+const H_BUCKETS = Math.ceil(Math.log(1e5 / H_MIN) / H_STEP) + 1
 
 export interface MetricSummary {
   name: string
@@ -18,12 +25,16 @@ export interface MetricSummary {
   overBudget: number
 }
 
+const bucketOf = (v: number) => (v <= H_MIN ? 0 : Math.min(H_BUCKETS - 1, Math.floor(Math.log(v / H_MIN) / H_STEP) + 1))
+/** Representative value of a bucket (geometric middle). */
+const bucketValue = (i: number) => (i === 0 ? 0 : H_MIN * Math.exp((i - 0.5) * H_STEP))
+
 class Timer {
-  buf = new Float32Array(RING)
-  idx = 0
+  hist = new Uint32Array(H_BUCKETS)
   count = 0
   overBudget = 0
   total = 0
+  max = 0
   name: string
   budget?: number
   constructor(name: string, budget?: number) {
@@ -32,24 +43,40 @@ class Timer {
   }
 
   push(v: number) {
-    this.buf[this.idx] = v
-    this.idx = (this.idx + 1) % RING
+    this.hist[bucketOf(v)]!++
     this.count++
     this.total += v
+    if (v > this.max) this.max = v
     if (this.budget !== undefined && v > this.budget) this.overBudget++
   }
 
+  quantile(p: number): number {
+    if (!this.count) return 0
+    const target = Math.min(this.count - 1, Math.floor(p * this.count))
+    let acc = 0
+    for (let i = 0; i < H_BUCKETS; i++) {
+      acc += this.hist[i]!
+      if (acc > target) return Math.min(this.max, bucketValue(i))
+    }
+    return this.max
+  }
+
+  /** Share of samples above `ms` (bucket resolution). */
+  shareAbove(ms: number): number {
+    if (!this.count) return 0
+    let n = 0
+    for (let i = bucketOf(ms) + 1; i < H_BUCKETS; i++) n += this.hist[i]!
+    return n / this.count
+  }
+
   summary(): MetricSummary {
-    const n = Math.min(this.count, RING)
-    const arr = Array.from(this.buf.subarray(0, n)).sort((a, b) => a - b)
-    const q = (p: number) => (n ? arr[Math.min(n - 1, Math.floor(p * n))]! : 0)
     return {
       name: this.name,
       samples: this.count,
-      median: q(0.5),
-      p95: q(0.95),
-      p99: q(0.99),
-      max: n ? arr[n - 1]! : 0,
+      median: this.quantile(0.5),
+      p95: this.quantile(0.95),
+      p99: this.quantile(0.99),
+      max: this.max,
       mean: this.count ? this.total / this.count : 0,
       budget: this.budget,
       overBudget: this.overBudget,
@@ -107,6 +134,11 @@ class Perf {
   detail<T>(name: string, fn: () => T): T {
     const prefix = name.split('.')[0]!
     return this.detailed.has(prefix) || this.detailed.has('*') ? this.measure(name, fn) : fn()
+  }
+
+  /** Share of a timer's samples above `ms` (e.g. RAF intervals over 16.7 / 33.3 / 50 ms). */
+  shareAbove(name: string, ms: number): number {
+    return this.timers.get(name)?.shareAbove(ms) ?? 0
   }
 
   gauge(name: string, value: number) {

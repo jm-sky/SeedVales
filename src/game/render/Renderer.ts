@@ -1,7 +1,7 @@
 /**
  * Renderer root: scene, lights (sun/moon/hemisphere), sky & fog by time of day and weather,
  * quality profile, CPU timing and renderer.info stats. Reads sim state only.
- * GPU time is not measured (WebGL timer queries unavailable in many browsers) — see DECISIONS.
+ * GPU time only when EXT_disjoint_timer_query_webgl2 exists (`gpuTimer.ts`, PERF-02); otherwise CPU only.
  * @domain render
  */
 import * as THREE from 'three'
@@ -12,6 +12,7 @@ import { Actors } from './actors'
 import { CameraRig } from './cameraRig'
 import { Carts } from './carts'
 import { Dynamics } from './dynamics'
+import { GpuTimer } from './gpuTimer'
 import { QUALITY, type QualityProfile } from './quality'
 import { Structures } from './structures'
 import { TargetMarker } from './targetMarker'
@@ -41,9 +42,11 @@ export class Renderer {
   sun = new THREE.DirectionalLight(0xfff2dd, 2)
   hemi = new THREE.HemisphereLight(0xbfd8ff, 0x5a4a30, 1)
   quality: QualityProfile
+  gpu: GpuTimer
   private sim: Sim
   private sky = new THREE.Color()
   private first = true
+  private frameNo = 0
   private fogFar: number
 
   constructor(canvas: HTMLCanvasElement, sim: Sim, quality: QualityProfile = 'medium') {
@@ -54,6 +57,7 @@ export class Renderer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.pixelRatio))
     this.renderer.shadowMap.enabled = q.shadows
     this.renderer.shadowMap.type = THREE.PCFShadowMap
+    this.gpu = new GpuTimer(this.renderer.getContext())
     this.rig = new CameraRig(sim.terrain, canvas.clientWidth / Math.max(1, canvas.clientHeight))
     this.scene.fog = new THREE.Fog(0x9cc4e4, 150, q.fogFar)
     this.fogFar = q.fogFar
@@ -154,8 +158,17 @@ export class Renderer {
     this.terrain.snowCover = season === 'winter' && (w.kind === 'snow' || w.wetness > 0.2) ? 0.8 : 0
   }
 
+  private lightCount(): number {
+    let n = 0
+    this.scene.traverseVisible((o) => {
+      if ((o as THREE.Light).isLight) n++
+    })
+    return n
+  }
+
   render(dt: number) {
     perf.begin('render.cpu')
+    const t0 = performance.now()
     const p = this.sim.player
     this.handleEvents()
     this.lighting()
@@ -167,9 +180,17 @@ export class Renderer {
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)
     this.carts.update()
+    // Render preparation = render.cpu without draw submission (D-PERF-2 headless gate metric).
+    perf.record('render.prep', performance.now() - t0)
+    this.gpu.poll()
+    this.gpu.begin()
     perf.measure('render.draw', () => this.renderer.render(this.scene, this.rig.camera))
+    this.gpu.end()
     perf.end('render.cpu')
     const info = this.renderer.info
+    perf.gauge('render.programs', info.programs?.length ?? 0)
+    // Scene traversal is not free: refresh the light count every 120 frames only.
+    if (this.frameNo++ % 120 === 0) perf.gauge('render.lights', this.lightCount())
     perf.gauge('render.drawCalls', info.render.calls)
     perf.gauge('render.triangles', info.render.triangles)
     perf.gauge('render.geometries', info.memory.geometries)

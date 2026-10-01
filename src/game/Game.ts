@@ -62,6 +62,7 @@ export class Game {
   target: Target | null = null
   options: InteractOption[] = []
   panel: Panel = null
+  private paced = false
   panelRef: TargetRef | null = null
   /** Target chosen with Tab (UI-06); kept while it stays in range. */
   pinnedTarget: string | null = null
@@ -143,6 +144,9 @@ export class Game {
     const loop = (t: number) => {
       if (!this.running) return
       this.raf = requestAnimationFrame(loop)
+      // RAF pacing (PERF-02): time between callbacks, separate from the synchronous `frame` work.
+      if (this.paced) perf.record('raf.interval', t - this.last)
+      this.paced = true
       this.frame(Math.min(0.25, (t - this.last) / 1000))
       this.last = t
     }
@@ -155,6 +159,7 @@ export class Game {
     this.detach()
     this.audio.dispose()
     document.exitPointerLock?.()
+    this.renderer.gpu.dispose()
     this.renderer.renderer.dispose()
     // Release the WebGL context now (in-game "new game" remounts; browsers cap live contexts).
     this.renderer.renderer.forceContextLoss()
