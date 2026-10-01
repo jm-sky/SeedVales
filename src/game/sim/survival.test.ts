@@ -215,10 +215,15 @@ describe('survival: stone hearth (FIRE-02)', () => {
     fire.fuel = 1
     const branches = countItem(wh.inv!, 'branch') + countItem(wh.inv!, 'log')
     guard.vitals.hunger = guard.vitals.thirst = guard.vitals.vigor = 100
-    run(sim, 600, 0.5)
+    // The woodcutter may restock the warehouse during the run, so watch for the withdrawal (the sink) itself.
+    let lowest = branches
+    for (let k = 0; k < 20; k++) {
+      run(sim, 30, 0.5)
+      lowest = Math.min(lowest, countItem(wh.inv!, 'branch') + countItem(wh.inv!, 'log'))
+    }
     expect(fire.lit).toBe(true)
     expect(fire.fuel!).toBeGreaterThan(FIRE.tendBelowH * 0.6)
-    expect(countItem(wh.inv!, 'branch') + countItem(wh.inv!, 'log')).toBeLessThan(branches) // the sink
+    expect(lowest).toBeLessThan(branches) // the sink
   })
 
   it('FIRE-02: without a guard another settler tends the fire; an unstocked fire goes out', () => {
