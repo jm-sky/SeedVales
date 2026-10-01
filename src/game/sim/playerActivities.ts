@@ -29,7 +29,7 @@ export const ACTIVITY_DONE: Record<string, Done> = {
   roast: (sim, a) => completeRoast(sim, sim.player, Number(a.data) || 1),
   break_chunk: (sim, a) => {
     const g = sim.state.ground.find((gg) => gg.id === Number(a.ref))
-    return g ? breakChunk(sim, sim.player, g) : { ok: false, msg: 'Odłamek zniknął.' }
+    return g ? breakChunk(sim, sim.player, g) : { ok: false, msg: 'The chunk is gone.' }
   },
   gather: (sim, a) => {
     const n = node(sim, a)
@@ -37,7 +37,7 @@ export const ACTIVITY_DONE: Record<string, Done> = {
   },
   butcher: (sim, a) => {
     const c = sim.state.corpses.find((cc) => cc.id === Number(a.ref))
-    return c ? butcher(sim, sim.player, c) : { ok: false, msg: 'Zwłoki zniknęły.' }
+    return c ? butcher(sim, sim.player, c) : { ok: false, msg: 'The carcass is gone.' }
   },
   bury: (sim, a) => {
     const c = sim.state.corpses.find((cc) => cc.id === Number(a.ref))
@@ -77,7 +77,7 @@ export const ACTIVITY_DONE: Record<string, Done> = {
     const d = sim.state.dens.find((dd) => dd.id === a.ref)
     return d ? burnDen(sim, sim.player, d) : null
   },
-  sleep: (sim) => ({ ok: true, msg: `Budzisz się. Wigor: ${Math.round(sim.player.vitals.vigor)}%` }),
-  rest: () => ({ ok: true, msg: 'Odpocząłeś.' }),
-  heal_self: () => ({ ok: true, msg: 'Opatrzono rany.' }),
+  sleep: (sim) => ({ ok: true, msg: `You wake up. Vigor: ${Math.round(sim.player.vitals.vigor)}%` }),
+  rest: () => ({ ok: true, msg: 'You feel rested.' }),
+  heal_self: () => ({ ok: true, msg: 'Your wounds are dressed.' }),
 }

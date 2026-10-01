@@ -43,16 +43,16 @@ export function giveOrDrop(sim: Sim, h: Human, stack: ItemStack) {
  */
 export function fillTrough(sim: Sim, h: Human, trough: Building): ActionResult {
   const bucket = h.inv.items.find((s) => s.id === 'bucket')
-  if (!bucket) return fail('Potrzebne wiadro.')
+  if (!bucket) return fail('You need a bucket.')
   const well = sim.buildingsNear(trough.x, trough.z, 12).find((w) => w.kind === 'well')
   if (well) {
     trough.water = TROUGH_CAPACITY
-    return ok('Napełniono koryto prosto ze studni.')
+    return ok('You filled the trough straight from the well.')
   }
-  if ((bucket.water ?? 0) <= 0) return fail('Wiadro jest puste — nabierz wody.')
+  if ((bucket.water ?? 0) <= 0) return fail('The bucket is empty — fetch some water.')
   trough.water = Math.min(TROUGH_CAPACITY, (trough.water ?? 0) + (bucket.water ?? 0))
   bucket.water = 0
-  return ok('Wlano wodę do koryta.')
+  return ok('You poured water into the trough.')
 }
 
 export const TROUGH_CAPACITY = 12
@@ -69,9 +69,9 @@ export function nodeAvailable(sim: Sim, n: ResNode): boolean {
 }
 
 export function fellTree(sim: Sim, h: Human, n: ResNode, efficiency = 1): ActionResult {
-  if (!isTree(n.kind) || sim.state.nodes[n.id]?.kind === 'felled') return fail('Drzewo już ścięte.')
+  if (!isTree(n.kind) || sim.state.nodes[n.id]?.kind === 'felled') return fail('This tree is already felled.')
   const tool = findTool(h, 'chop')
-  if (!tool) return fail('Potrzebujesz siekiery.')
+  if (!tool) return fail('You need an axe.')
   sim.state.nodes[n.id] = { kind: 'felled', at: sim.state.time.cal }
   const logs = n.kind === 'tree_dead' ? 1 : Math.max(1, Math.round(n.scale / 9))
   giveOrDrop(sim, h, newStack('log', Math.max(1, Math.round(logs * efficiency))))
@@ -81,7 +81,7 @@ export function fellTree(sim: Sim, h: Human, n: ResNode, efficiency = 1): Action
   train(h, 'woodcutting', 0.5, 3)
   sim.markNodeChunk(n.id)
   sim.emit({ type: 'sound', kind: 'treefall', x: n.x, z: n.z })
-  return ok(`Ścięto drzewo: +${logs} belki, gałęzie.`)
+  return ok(`You felled the tree: +${logs} ${logs === 1 ? 'log' : 'logs'} and some branches.`)
 }
 
 /** Strikes a rock can take before it is gone (RES-02/RES-07). */
@@ -93,51 +93,51 @@ export const isBoulder = (n: ResNode) => n.kind === 'rock' && n.scale >= ROCK.bo
  * lands next to the rock and is broken into stones separately (`breakChunk`).
  */
 export function mineRock(sim: Sim, h: Human, n: ResNode): ActionResult {
-  if (n.kind !== 'rock') return fail('To nie skała.')
+  if (n.kind !== 'rock') return fail('That is not a rock.')
   const tool = findTool(h, 'mine')
-  if (!tool) return fail('Potrzebujesz kilofa.')
+  if (!tool) return fail('You need a pickaxe.')
   const st = (sim.state.nodes[n.id] ??= { kind: 'harvested', at: sim.state.time.cal, left: rockPieces(n) })
-  if ((st.left ?? 0) <= 0) return fail('Skała wyczerpana.')
+  if ((st.left ?? 0) <= 0) return fail('This rock is exhausted.')
   st.left = (st.left ?? 1) - 1
   if (st.left <= 0) st.kind = 'depleted'
-  let what = 'kamień'
+  let what = '2 stones'
   if (isBoulder(n)) {
     const a = Math.atan2(h.x - n.x, h.z - n.z)
     const r = n.radius + 0.4
     dropItem(sim, n.x + Math.sin(a) * r, n.z + Math.cos(a) * r, newStack('rock_chunk', 1))
-    what = 'odłamek skały'
+    what = 'a rock chunk'
   } else giveOrDrop(sim, h, newStack('stone', 2))
   let extra = ''
   for (const d of sim.world.deposits) {
     if (Math.hypot(d.x - n.x, d.z - n.z) < d.radius + 40 && sim.rng.chance(0.35 * d.richness)) {
       const ore = d.ore === 'coal' ? 'coal' : `${d.ore}_ore`
       giveOrDrop(sim, h, newStack(ore, 1))
-      extra = `, ${itemDef(ore).name}!`
+      extra = ` and found ${itemDef(ore).name.toLowerCase()}!`
       break
     }
   }
   wearTool(tool, 2)
   sim.markNodeChunk(n.id)
-  return ok(`Wydobyto ${what}${extra}`)
+  return ok(`You mined ${what}${extra || '.'}`)
 }
 
 /** Breaks one rock chunk lying on the ground into stones (pickaxe, RES-07). */
 export function breakChunk(sim: Sim, h: Human, g: GroundItem): ActionResult {
-  if (g.stack.id !== 'rock_chunk') return fail('To nie odłamek skały.')
+  if (g.stack.id !== 'rock_chunk') return fail('That is not a rock chunk.')
   const tool = findTool(h, 'mine')
-  if (!tool) return fail('Potrzebujesz kilofa.')
+  if (!tool) return fail('You need a pickaxe.')
   g.stack.qty -= 1
   if (g.stack.qty <= 0) sim.removeGround(g)
   giveOrDrop(sim, h, newStack('stone', ROCK.chunkStones))
   wearTool(tool, 1)
-  return ok(`Rozbito odłamek: +${ROCK.chunkStones} kamienie.`)
+  return ok(`You broke the chunk: +${ROCK.chunkStones} ${ROCK.chunkStones === 1 ? 'stone' : 'stones'}.`)
 }
 
 const REGROW_DAYS: Partial<Record<ResNode['kind'], number>> = { bush_berry: 4, herb: 5, mushroom: 3, tree_apple: 8 }
 
 export function gatherNode(sim: Sim, h: Human, n: ResNode): ActionResult {
   const st = sim.state.nodes[n.id]
-  if (st && (st.kind !== 'harvested' || (st.left ?? 0) <= 0)) return fail('Nic tu już nie ma.')
+  if (st && (st.kind !== 'harvested' || (st.left ?? 0) <= 0)) return fail('There is nothing left here.')
   const season = seasonOf(sim.state.time.cal)
   let item: string
   let qty = 1
@@ -147,17 +147,17 @@ export function gatherNode(sim: Sim, h: Human, n: ResNode): ActionResult {
       qty = 2
       break
     case 'bush_berry':
-      if (season === 'winter' || season === 'spring') return fail('Krzew nie ma teraz owoców.')
+      if (season === 'winter' || season === 'spring') return fail('The bush has no fruit right now.')
       item = 'berries'
       qty = 3 + Math.floor(h.skills.survival / 25)
       break
     case 'herb':
-      if (season === 'winter') return fail('Zioła są przykryte śniegiem.')
+      if (season === 'winter') return fail('The herbs are covered with snow.')
       item = n.herb ?? 'mint'
       qty = 1 + (h.skills.medicine > 30 ? 1 : 0)
       break
     case 'mushroom':
-      if (season === 'winter') return fail('Zimą nie ma grzybów.')
+      if (season === 'winter') return fail('There are no mushrooms in winter.')
       item = 'mushroom'
       qty = 2
       break
@@ -165,20 +165,20 @@ export function gatherNode(sim: Sim, h: Human, n: ResNode): ActionResult {
       sim.state.nodes[n.id] = { kind: 'depleted', at: sim.state.time.cal }
       giveOrDrop(sim, h, newStack('stone', 1))
       sim.markNodeChunk(n.id)
-      return ok('Podniesiono kamień.')
+      return ok('You picked up a stone.')
     case 'tree_apple':
-      if (season !== 'summer' && season !== 'autumn') return fail('Brak jabłek o tej porze roku.')
+      if (season !== 'summer' && season !== 'autumn') return fail('No apples at this time of year.')
       item = 'apple'
       qty = 4
       break
     default:
-      return fail('Nie da się tego zebrać.')
+      return fail('You cannot gather this.')
   }
   sim.state.nodes[n.id] = { kind: 'harvested', at: sim.state.time.cal, left: 0 }
   giveOrDrop(sim, h, newStack(item, qty))
   train(h, n.kind === 'herb' ? 'medicine' : 'survival', 0.3)
   sim.markNodeChunk(n.id)
-  return ok(`Zebrano: ${itemDef(item).name} ×${qty}`)
+  return ok(`Gathered: ${itemDef(item).name} ×${qty}`)
 }
 
 /** Regrowth check: harvested nodes become available again after REGROW_DAYS. */
@@ -201,9 +201,9 @@ export function regrowNodes(sim: Sim) {
 }
 
 export function butcher(sim: Sim, h: Human, c: Corpse): ActionResult {
-  if (c.butchered) return fail('Już oprawione.')
+  if (c.butchered) return fail('Already butchered.')
   const tool = findTool(h, 'cut')
-  if (!tool) return fail('Potrzebujesz noża.')
+  if (!tool) return fail('You need a knife.')
   const sp = SPECIES[c.species]
   const vm = VARIANT_MULT[c.variant].size
   const rotten = sim.state.time.cal - c.diedAt > 6 * 3600
@@ -217,7 +217,7 @@ export function butcher(sim: Sim, h: Human, c: Corpse): ActionResult {
   c.meat = 0
   wearTool(tool, 1)
   train(h, 'survival', 0.5, 2)
-  return ok(rotten ? 'Mięso zgniłe — zostały skóra i kości.' : `Oprawiono: ${sp.name}.`)
+  return ok(rotten ? 'The meat has rotted — only hide and bones are left.' : `You butchered the ${sp.name.toLowerCase()}.`)
 }
 
 export interface DigLoot {
@@ -228,10 +228,10 @@ export interface DigLoot {
 /** Digging with a shovel: lowers terrain; chance for shells/coins/ore depending on place. */
 export function dig(sim: Sim, h: Human, x: number, z: number): ActionResult {
   const tool = findTool(h, 'dig')
-  if (!tool) return fail('Potrzebujesz łopaty.')
+  if (!tool) return fail('You need a shovel.')
   const b = sim.terrain.biomeAt(x, z)
-  if (b === Biome.Mountain || b === Biome.Snow) return fail('Skała — potrzebny kilof.')
-  if (sim.terrain.waterDepthAt(x, z) > 0.3) return fail('Tu jest woda.')
+  if (b === Biome.Mountain || b === Biome.Snow) return fail('Solid rock — you need a pickaxe.')
+  if (sim.terrain.waterDepthAt(x, z) > 0.3) return fail('There is water here.')
   sim.terrain.applyEdit(x, z, 1.4, { kind: 'add', amount: -0.35 })
   sim.markTerrain(x, z, 2)
   wearTool(tool, 1)
@@ -243,50 +243,50 @@ export function dig(sim: Sim, h: Human, x: number, z: number): ActionResult {
   if (nearSea && r < 0.3) {
     const pearl = sim.rng.chance(0.08)
     giveOrDrop(sim, h, newStack(pearl ? 'pearl_shell' : 'shell', 1))
-    return ok(pearl ? 'Wykopano drogocenną muszlę!' : 'Wykopano muszlę.')
+    return ok(pearl ? 'You dug up a pearl shell!' : 'You dug up a shell.')
   }
   if (inSettlement && r < 0.12) {
     const coins = sim.rng.int(1, 12)
     h.money += coins
-    return ok(`Znaleziono ${coins} miedziaków!`)
+    return ok(`You found ${coins} ${coins === 1 ? 'copper coin' : 'copper coins'}!`)
   }
   for (const d of sim.world.deposits) {
     if (Math.hypot(d.x - x, d.z - z) < d.radius && r < 0.25 * d.richness) {
       const ore = d.ore === 'coal' ? 'coal' : `${d.ore}_ore`
       giveOrDrop(sim, h, newStack(ore, 1))
-      return ok(`Trafiono na złoże: ${itemDef(ore).name}!`)
+      return ok(`You struck a deposit: ${itemDef(ore).name}!`)
     }
   }
-  return ok('Wykopano dołek.')
+  return ok('You dug a hole.')
 }
 
 export function levelTerrain(sim: Sim, h: Human, x: number, z: number, target: number): ActionResult {
   const tool = findTool(h, 'dig')
-  if (!tool) return fail('Potrzebujesz łopaty.')
+  if (!tool) return fail('You need a shovel.')
   sim.terrain.applyEdit(x, z, 3, { kind: 'level', target })
   sim.markTerrain(x, z, 4)
   wearTool(tool, 1)
   train(h, 'construction', 0.3)
-  return ok('Wyrównano teren.')
+  return ok('You levelled the ground.')
 }
 
 export function raiseTerrain(sim: Sim, h: Human, x: number, z: number): ActionResult {
   const tool = findTool(h, 'dig')
-  if (!tool) return fail('Potrzebujesz łopaty.')
-  if (countItem(h.inv, 'stone') < 1) return fail('Potrzebujesz kamienia lub ziemi (kamień).')
+  if (!tool) return fail('You need a shovel.')
+  if (countItem(h.inv, 'stone') < 1) return fail('You need a stone to raise the ground.')
   removeItem(h.inv, 'stone', 1)
   sim.terrain.applyEdit(x, z, 1.6, { kind: 'add', amount: 0.35 })
   sim.markTerrain(x, z, 2)
-  return ok('Usypano wyżej.')
+  return ok('You raised the ground.')
 }
 
 export function buryCorpse(sim: Sim, h: Human, c: Corpse): ActionResult {
   const tool = findTool(h, 'dig')
-  if (!tool) return fail('Potrzebujesz łopaty.')
+  if (!tool) return fail('You need a shovel.')
   sim.removeCorpse(c)
   wearTool(tool, 1)
   sim.state.px.stats.buried = (sim.state.px.stats.buried ?? 0) + (h.kind === 'player' ? 1 : 0)
-  return ok('Zwłoki zakopane.')
+  return ok('You buried the body.')
 }
 
 /** Water safety 0 (safe) .. 1 (very risky). Wells are safe (vision §17, §24.1). */
@@ -308,20 +308,20 @@ export function waterRisk(sim: Sim, x: number, z: number): number {
 }
 
 export function drinkFromWater(sim: Sim, h: Human, x: number, z: number, safe = false): ActionResult {
-  if (!safe && sim.terrain.isSeaAt(x, z)) return fail('Słona woda — niepitna.')
+  if (!safe && sim.terrain.isSeaAt(x, z)) return fail('Salt water — not drinkable.')
   drink(h.vitals, 45)
   if (!safe) {
     const risk = waterRisk(sim, x, z)
     if (sim.rng.chance(risk * 0.5)) {
       makeIll(h.vitals, 'stomach', 20 + risk * 40)
-      return ok('Napiłeś się… woda miała dziwny posmak.')
+      return ok('You drank… the water tasted strange.')
     }
   }
-  return ok('Napiłeś się wody.')
+  return ok('You drank some water.')
 }
 
 export function fillContainers(h: Human, x: number, z: number, sim: Sim, safe: boolean): ActionResult {
-  if (!safe && sim.terrain.isSeaAt(x, z)) return fail('Słona woda.')
+  if (!safe && sim.terrain.isSeaAt(x, z)) return fail('Salt water.')
   let n = 0
   for (const s of h.inv.items) {
     const cap = itemDef(s.id).waterCapacity
@@ -330,15 +330,15 @@ export function fillContainers(h: Human, x: number, z: number, sim: Sim, safe: b
       n++
     }
   }
-  return n ? ok('Napełniono pojemniki na wodę.') : fail('Brak pustych pojemników.')
+  return n ? ok('You filled your water containers.') : fail('No empty containers.')
 }
 
 export function drinkFromContainer(h: Human): ActionResult {
   const s = h.inv.items.find((i) => (i.water ?? 0) > 0)
-  if (!s) return fail('Brak wody w bukłaku.')
+  if (!s) return fail('Your waterskin is empty.')
   s.water! -= 1
   drink(h.vitals, 30)
-  return ok('Łyk z bukłaka.')
+  return ok('You take a sip from the waterskin.')
 }
 
 /** Eat or apply an item (food/herb/medical). Target defaults to self. */
@@ -351,18 +351,18 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
     target.vitals.bleeding = 0
     if (stack.id === 'herbal_tea' && target.vitals.illness && target.vitals.illness.kind !== 'rabies') target.vitals.illness.severity *= 0.4
     train(h, 'medicine', 0.4, 2)
-    return ok(`Użyto: ${d.name}.`)
+    return ok(`Used: ${d.name}.`)
   }
   if (d.herb) {
     removeStack(h.inv, stack, 1)
     if (d.herb.poison) {
       makeIll(target.vitals, 'poison', d.herb.poison)
-      return ok(`${d.name} — trujące!`)
+      return ok(`${d.name} — poisonous!`)
     }
     heal(target.vitals, d.herb.heal * (0.5 + h.skills.medicine / 100))
     if (d.herb.cures && target.vitals.illness) target.vitals.illness.hoursLeft *= 0.6
     train(h, 'medicine', 0.2)
-    return ok(`Zjedzono zioło: ${d.name}.`)
+    return ok(`You ate a herb: ${d.name}.`)
   }
   if (d.food) {
     removeStack(h.inv, stack, 1)
@@ -371,37 +371,37 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
     const chance = (d.food.illnessChance ?? 0) + (spoiled ? 0.35 : 0)
     if (chance > 0 && sim.rng.chance(chance)) {
       makeIll(target.vitals, 'stomach', 25)
-      return ok(`${d.name} — boli brzuch…`)
+      return ok(`${d.name} — your stomach hurts…`)
     }
-    return ok(`Zjedzono: ${d.name}.`)
+    return ok(`You ate: ${d.name}.`)
   }
-  return fail('Tego nie da się zjeść.')
+  return fail('You cannot eat this.')
 }
 
 /** Repair: hammer + 2 branches (from actor or household store). Removes rat nests at >60%. */
 export function repairBuilding(_sim: Sim, h: Human, b: Building, store?: Building): ActionResult {
-  if (b.durability >= 98) return fail('Nie wymaga naprawy.')
+  if (b.durability >= 98) return fail('It does not need repair.')
   const tool = findTool(h, 'hammer') ?? findTool(h, 'chop')
-  if (!tool) return fail('Potrzebujesz młotka lub siekiery.')
+  if (!tool) return fail('You need a hammer or an axe.')
   const src = countItem(h.inv, 'branch') >= 2 ? h.inv : store?.inv && countItem(store.inv, 'branch') >= 2 ? store.inv : null
-  if (!src) return fail('Potrzebujesz 2 gałęzi.')
+  if (!src) return fail('You need 2 branches.')
   removeItem(src, 'branch', 2)
   b.durability = Math.min(100, b.durability + 30 + h.skills.construction * 0.2)
   wearTool(tool, 1)
   train(h, 'construction', 0.4, 2)
   if (b.ratNest && b.durability > 60) {
     b.ratNest = undefined
-    return ok('Naprawiono budynek — gniazdo szczurów zlikwidowane.')
+    return ok('You repaired the building — the rat nest is gone.')
   }
-  return ok(`Naprawiono (${Math.round(b.durability)}%).`)
+  return ok(`Repaired (${Math.round(b.durability)}%).`)
 }
 
 export function burnDen(sim: Sim, h: Human, den: DenState): ActionResult {
-  if (!den.alive) return fail('Legowisko już zniszczone.')
-  if (!findTool(h, 'fire_start')) return fail('Potrzebujesz krzesiwa lub pochodni.')
-  if (countItem(h.inv, 'branch') < 5) return fail('Potrzebujesz 5 gałęzi.')
+  if (!den.alive) return fail('The den is already destroyed.')
+  if (!findTool(h, 'fire_start')) return fail('You need flint and steel or a torch.')
+  if (countItem(h.inv, 'branch') < 5) return fail('You need 5 branches.')
   removeItem(h.inv, 'branch', 5)
   den.alive = false
   sim.emit({ type: 'sound', kind: 'fire', x: den.x, z: den.z })
-  return ok('Legowisko spłonęło.')
+  return ok('The den burned down.')
 }

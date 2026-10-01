@@ -7,7 +7,7 @@ import type { Recipe, StationKind } from '../data/recipes'
 import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { Human } from './types'
-import { itemDef } from '../data/items'
+import { CAPABILITY_NAMES, itemDef, QUALITY_NAMES } from '../data/items'
 import { train } from './actions'
 import { giveOrDrop } from './actions'
 import { findTool, hasItems, newStack, removeItem, wearTool } from './inventory'
@@ -21,14 +21,14 @@ export function nearStation(sim: Sim, h: Human, st: StationKind): boolean {
 }
 
 export function canCraft(sim: Sim, h: Human, r: Recipe): { ok: boolean; reason?: string } {
-  if (!hasItems(h.inv, r.inputs)) return { ok: false, reason: 'Brak składników' }
-  if (r.tool && !findTool(h, r.tool)) return { ok: false, reason: `Brak narzędzia (${r.tool})` }
-  if (r.station && !nearStation(sim, h, r.station)) return { ok: false, reason: `Wymaga: ${STATION_NAMES[r.station]}` }
-  if (r.minSkill && h.skills[r.skill] < r.minSkill) return { ok: false, reason: `Za niski skill (${Math.round(h.skills[r.skill])}/${r.minSkill})` }
+  if (!hasItems(h.inv, r.inputs)) return { ok: false, reason: 'Missing ingredients' }
+  if (r.tool && !findTool(h, r.tool)) return { ok: false, reason: `Missing: ${CAPABILITY_NAMES[r.tool]}` }
+  if (r.station && !nearStation(sim, h, r.station)) return { ok: false, reason: `Requires: ${STATION_NAMES[r.station]}` }
+  if (r.minSkill && h.skills[r.skill] < r.minSkill) return { ok: false, reason: `Skill too low (${Math.round(h.skills[r.skill])}/${r.minSkill})` }
   return { ok: true }
 }
 
-export const STATION_NAMES: Record<StationKind, string> = { campfire: 'ognisko', anvil: 'kowadło', dryrack: 'suszarnia', workbench: 'warsztat' }
+export const STATION_NAMES: Record<StationKind, string> = { campfire: 'campfire', anvil: 'anvil', dryrack: 'drying rack', workbench: 'workbench' }
 
 /** Duration in gameplay seconds; good skill speeds up (vision §23). */
 export const craftTime = (h: Human, r: Recipe) => r.timeS * (1 - Math.min(0.5, h.skills[r.skill] / 200))
@@ -49,6 +49,6 @@ export function completeCraft(sim: Sim, h: Human, r: Recipe): ActionResult {
   const q = r.quality ? rollQuality(sim, h.skills[r.skill]) : undefined
   giveOrDrop(sim, h, newStack(r.output.item, r.output.qty, q !== undefined ? { q } : {}))
   train(h, r.skill, 0.5, 2)
-  const qn = q !== undefined ? ` (jakość: ${['niska', 'średnia', 'wysoka', 'wyjątkowa'][q]})` : ''
-  return { ok: true, msg: `Wytworzono: ${itemDef(r.output.item).name} ×${r.output.qty}${qn}` }
+  const qn = q !== undefined ? ` (quality: ${QUALITY_NAMES[q]})` : ''
+  return { ok: true, msg: `Crafted: ${itemDef(r.output.item).name} ×${r.output.qty}${qn}` }
 }

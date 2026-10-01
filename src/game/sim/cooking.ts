@@ -50,7 +50,7 @@ export function cookedFreshness(raw: ItemStack): number {
 /** Completes a roast of up to `n` pieces (least fresh first). Inputs are taken only now (interrupt-safe). */
 export function completeRoast(sim: Sim, h: Human, n: number): ActionResult {
   const cap = roastCapacity(sim, h)
-  if (!cap) return { ok: false, msg: 'Ognisko zgasło albo jesteś za daleko.' }
+  if (!cap) return { ok: false, msg: 'The fire went out or you are too far away.' }
   let left = Math.min(n, cap)
   const stacks = rawMeat(h).sort((a, b) => (a.fresh ?? 0) - (b.fresh ?? 0))
   const out: ItemStack[] = []
@@ -62,10 +62,10 @@ export function completeRoast(sim: Sim, h: Human, n: number): ActionResult {
     }
     if (s.qty <= 0) h.inv.items.splice(h.inv.items.indexOf(s), 1)
   }
-  if (!out.length) return { ok: false, msg: 'Nie masz surowego mięsa.' }
+  if (!out.length) return { ok: false, msg: 'You have no raw meat.' }
   const tmp = { items: [] as ItemStack[] }
   for (const s of out) addItem(tmp, s)
   for (const s of tmp.items) giveOrDrop(sim, h, s)
   train(h, 'survival', 0.3, out.length)
-  return { ok: true, msg: `Upieczono: ${out.length} × ${itemDef('cooked_meat').name}` }
+  return { ok: true, msg: `Roasted: ${itemDef('cooked_meat').name} ×${out.length}` }
 }

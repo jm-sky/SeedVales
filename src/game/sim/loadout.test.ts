@@ -51,7 +51,7 @@ describe('UI-03 loadout', () => {
     const sim = armed()
     sim.player.inv.items = sim.player.inv.items.filter((s) => !s.id.includes('bow'))
     switchWeapon(sim, 'melee')
-    expect(switchWeapon(sim, 'ranged')).toMatch(/Brak/)
+    expect(switchWeapon(sim, 'ranged')).toMatch(/No ranged weapon/)
     expect(sim.player.eq.main?.id).toBe('sword')
   })
 

@@ -120,7 +120,7 @@ describe('wave 3: roasting at the campfire (FOOD-03)', () => {
     expect(cooked.find((s) => s.sp === 'deer')!.fresh).toBeCloseTo(cookedLife * 0.5)
     expect(cooked.find((s) => s.sp === 'boar')!.fresh).toBeCloseTo(cookedLife)
     expect(countItem(p.inv, 'raw_meat')).toBe(1) // one boar piece left
-    expect(stackLabel(cooked.find((s) => s.sp === 'deer')!)).toMatch(/\(sarna\)|\(jeleń\)/i)
+    expect(stackLabel(cooked.find((s) => s.sp === 'deer')!)).toMatch(/\(deer\)|\(stag\)/i)
     // Meta survives save/load.
     expect(roundTrip(sim).player.inv.items.some((s) => s.id === 'cooked_meat' && s.sp === 'deer')).toBe(true)
   })

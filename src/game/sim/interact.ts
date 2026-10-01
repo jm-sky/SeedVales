@@ -53,16 +53,16 @@ export interface Target {
 }
 
 const BUILDING_NAMES: Partial<Record<Building['kind'], string>> = {
-  house: 'Dom', well: 'Studnia', campfire: 'Ognisko', noticeboard: 'Tablica ogłoszeń', warehouse: 'Magazyn osady',
-  market: 'Stragan', inn: 'Gospoda', field: 'Pole', pen: 'Zagroda', anvil: 'Kowadło', woodpile: 'Stos drewna',
-  dryrack: 'Suszarnia', herbgarden: 'Ogródek ziołowy', torchpost: 'Pochodnia', trough: 'Koryto', palisade: 'Palisada',
-  shed: 'Szopa', bridge: 'Most', spit: 'Ruszt',
+  house: 'House', well: 'Well', campfire: 'Campfire', noticeboard: 'Notice board', warehouse: 'Settlement warehouse',
+  market: 'Market stall', inn: 'Inn', field: 'Field', pen: 'Pen', anvil: 'Anvil', woodpile: 'Woodpile',
+  dryrack: 'Drying rack', herbgarden: 'Herb garden', torchpost: 'Torch post', trough: 'Trough', palisade: 'Palisade',
+  shed: 'Shed', bridge: 'Bridge', spit: 'Spit',
 }
 export const buildingName = (b: Building) => BUILDING_NAMES[b.kind] ?? b.kind
 
 const NODE_NAMES: Record<string, string> = {
-  tree_broad: 'Drzewo liściaste', tree_pine: 'Sosna', tree_dead: 'Martwe drzewo', tree_apple: 'Jabłoń', bush: 'Krzew',
-  bush_berry: 'Krzew jagodowy', rock: 'Skała', stone: 'Kamień', herb: 'Zioło', mushroom: 'Grzyb', reed: 'Trzcina',
+  tree_broad: 'Broadleaf tree', tree_pine: 'Pine', tree_dead: 'Dead tree', tree_apple: 'Apple tree', bush: 'Bush',
+  bush_berry: 'Berry bush', rock: 'Rock', stone: 'Stone', herb: 'Herb', mushroom: 'Mushroom', reed: 'Reed',
 }
 
 /** Stable identity of a target (for Tab cycling / pinning, UI-06). */
@@ -100,10 +100,10 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
     if (a.kind === 'npc') push({ type: 'npc', id: a.id }, (a as Human).name, a.x, a.z)
     else if (a.kind === 'animal' && SPECIES[(a as Animal).species].temperament === 'domestic') push({ type: 'animal', id: a.id }, SPECIES[(a as Animal).species].name, a.x, a.z)
   }
-  for (const c of sim.corpsesNear(p.x, p.z, 7.1)) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Zwłoki: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)
+  for (const c of sim.corpsesNear(p.x, p.z, 7.1)) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Carcass: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)
   for (const g of sim.groundNear(p.x, p.z, 5.7)) if (Math.abs(g.x - p.x) < 4 && Math.abs(g.z - p.z) < 4) push({ type: 'ground', id: g.id }, itemDef(g.stack.id).name, g.x, g.z, 0.3)
-  for (const s of sim.state.sites) push({ type: 'site', id: s.id }, 'Plac budowy', s.x, s.z, 1)
-  for (const d of sim.state.dens) if (d.alive) push({ type: 'den', id: d.id }, `Legowisko (${SPECIES[d.species === 'deer' ? 'deer' : d.species].name})`, d.x, d.z, 1.5)
+  for (const s of sim.state.sites) push({ type: 'site', id: s.id }, 'Building site', s.x, s.z, 1)
+  for (const d of sim.state.dens) if (d.alive) push({ type: 'den', id: d.id }, `Den (${SPECIES[d.species === 'deer' ? 'deer' : d.species].name})`, d.x, d.z, 1.5)
   for (const b of sim.buildingsNear(p.x, p.z, maxDist + 6)) {
     if (b.kind === 'bridge' || b.kind === 'palisade') continue
     const extra = Math.min(b.hw, b.hd) + (b.kind === 'field' || b.kind === 'pen' ? Math.max(b.hw, b.hd) * 0.6 : 0.5)
@@ -112,7 +112,7 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   for (const n of sim.nodes.query(p.x, p.z, maxDist + 1)) {
     if (n.kind === 'reed') continue
     if (isTree(n.kind) ? sim.state.nodes[n.id]?.kind === 'felled' : !nodeAvailable(sim, n)) continue
-    const label = n.kind === 'herb' ? `Zioło: ${itemDef(n.herb ?? 'mint').name}` : NODE_NAMES[n.kind]!
+    const label = n.kind === 'herb' ? `Herb: ${itemDef(n.herb ?? 'mint').name}` : NODE_NAMES[n.kind]!
     push({ type: 'node', id: n.id }, label, n.x, n.z, n.radius)
   }
   cands.sort((a, b) => a.dist - b.dist)
@@ -124,7 +124,7 @@ export function waterTarget(sim: Sim, facing: number): Target | null {
   const fx = p.x + Math.sin(facing) * 1.5
   const fz = p.z + Math.cos(facing) * 1.5
   if (sim.terrain.waterDepthAt(fx, fz) > 0.05 || sim.terrain.waterDepthAt(p.x, p.z) > 0.05) {
-    return { ref: { type: 'water', x: fx, z: fz }, label: sim.terrain.isSeaAt(fx, fz) ? 'Morze' : 'Woda', x: fx, z: fz, dist: 1 }
+    return { ref: { type: 'water', x: fx, z: fz }, label: sim.terrain.isSeaAt(fx, fz) ? 'Sea' : 'Water', x: fx, z: fz, dist: 1 }
   }
   return null
 }
@@ -135,62 +135,62 @@ const ROAST_ACCEL = 5
 const opt = (id: string, label: string, enabled = true, reason?: string, panel?: UiPanel): InteractOption => ({ id, label, enabled, reason, panel })
 
 function toolOpt(sim: Sim, id: string, label: string, cap: Capability, capName: string): InteractOption {
-  return findTool(sim.player, cap) ? opt(id, label) : opt(id, label, false, `Brak: ${capName}`)
+  return findTool(sim.player, cap) ? opt(id, label) : opt(id, label, false, `Missing: ${capName}`)
 }
 
 export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
   const p = sim.player
   switch (t.type) {
     case 'animal':
-      return [opt('pet', 'Pogłaszcz')]
+      return [opt('pet', 'Pet')]
     case 'building': {
       const b = sim.building(t.id)
       if (!b) return []
       const o: InteractOption[] = []
-      const repair = b.durability < 90 ? [toolOpt(sim, 'repair', `Napraw (${Math.round(b.durability)}%, 2 gałęzie)`, 'hammer', 'młotek')] : []
+      const repair = b.durability < 90 ? [toolOpt(sim, 'repair', `Repair (${Math.round(b.durability)}%, 2 branches)`, 'hammer', 'hammer')] : []
       switch (b.kind) {
         case 'anvil':
         case 'dryrack':
-          o.push(opt('craft', b.kind === 'anvil' ? 'Kowadło — wytwarzanie' : 'Suszarnia — wytwarzanie', true, undefined, 'craft'))
+          o.push(opt('craft', b.kind === 'anvil' ? 'Anvil — crafting' : 'Drying rack — crafting', true, undefined, 'craft'))
           break
         case 'campfire':
           if (b.lit !== false) {
             const cap = roastCapacity(sim, p)
             const n = roastBatch(sim, p)
-            o.push(opt('roast', `Piecz mięso (${n}/${cap} szt.)`, n > 0, cap ? 'Brak surowego mięsa' : 'Podejdź bliżej ognia'))
+            o.push(opt('roast', `Roast meat (${n}/${cap} pcs)`, n > 0, cap ? 'No raw meat' : 'Move closer to the fire'))
           }
-          o.push(opt('craft', 'Gotuj / wytwarzaj', true, undefined, 'craft'), opt('rest', 'Odpocznij przy ogniu (przyspiesz)'), opt('camp_sleep', 'Śpij przy ognisku'))
-          if (!b.lit) o.unshift(toolOpt(sim, 'light', 'Rozpal', 'fire_start', 'krzesiwo'))
+          o.push(opt('craft', 'Cook / craft', true, undefined, 'craft'), opt('rest', 'Rest by the fire (speed up time)'), opt('camp_sleep', 'Sleep by the campfire'))
+          if (!b.lit) o.unshift(toolOpt(sim, 'light', 'Light', 'fire_start', 'flint and steel'))
           break
         case 'house':
         case 'shed':
-          if (b.owner === 'player') o.push(opt('storage', 'Skrzynia', true, undefined, 'storage'), opt('bed_sleep', 'Śpij we własnym łóżku'))
-          else o.push(opt('storage', 'Zajrzyj do skrzyni (cudza!)', true, undefined, 'storage'))
+          if (b.owner === 'player') o.push(opt('storage', 'Chest', true, undefined, 'storage'), opt('bed_sleep', 'Sleep in your own bed'))
+          else o.push(opt('storage', 'Look in the chest (not yours!)', true, undefined, 'storage'))
           o.push(...repair)
           break
         case 'inn':
-          o.push(opt('inn_sleep', 'Wynajmij nocleg (8 m) i śpij', p.money >= 8, 'Za mało pieniędzy'))
+          o.push(opt('inn_sleep', 'Rent a bed (8c) and sleep', p.money >= 8, 'Not enough money'))
           break
         case 'market': {
-          o.push(opt('market', 'Podejdź do handlarza'))
+          o.push(opt('market', 'Approach the trader'))
           break
         }
         case 'noticeboard':
-          o.push(opt('quests', 'Przeczytaj ogłoszenia', true, undefined, 'quests'))
+          o.push(opt('quests', 'Read the notices', true, undefined, 'quests'))
           break
         case 'torchpost':
-          o.push(b.lit ? opt('douse', 'Zgaś pochodnię') : toolOpt(sim, 'light', 'Zapal pochodnię', 'fire_start', 'krzesiwo'))
+          o.push(b.lit ? opt('douse', 'Put out the torch') : toolOpt(sim, 'light', 'Light the torch', 'fire_start', 'flint and steel'))
           break
         case 'trough':
-          o.push(opt('fill_trough', `Napełnij koryto (${Math.round(b.water ?? 0)}/12)`, !!p.inv.items.find((s) => s.id === 'bucket'), 'Potrzebne wiadro'))
+          o.push(opt('fill_trough', `Fill the trough (${Math.round(b.water ?? 0)}/12)`, !!p.inv.items.find((s) => s.id === 'bucket'), 'You need a bucket'))
           break
         case 'warehouse':
-          o.push(opt('storage', 'Magazyn osady', true, undefined, 'storage'))
-          if (b.ratNest) o.push(opt('inspect_nest', 'Obejrzyj gniazdo szczurów'))
+          o.push(opt('storage', 'Settlement warehouse', true, undefined, 'storage'))
+          if (b.ratNest) o.push(opt('inspect_nest', 'Inspect the rat nest'))
           o.push(...repair)
           break
         case 'well':
-          o.push(opt('drink_well', 'Napij się (bezpieczna woda)'), opt('fill_well', 'Napełnij bukłak/wiadro'))
+          o.push(opt('drink_well', 'Drink (safe water)'), opt('fill_well', 'Fill waterskin/bucket'))
           break
         default:
           o.push(...repair)
@@ -198,42 +198,42 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
       return o
     }
     case 'corpse':
-      return [toolOpt(sim, 'butcher', 'Oprawić', 'cut', 'nóż'), toolOpt(sim, 'bury', 'Zakopać', 'dig', 'łopata')]
+      return [toolOpt(sim, 'butcher', 'Butcher', 'cut', 'knife'), toolOpt(sim, 'bury', 'Bury', 'dig', 'shovel')]
     case 'den':
-      return [opt('burn_den', 'Spal legowisko (5 gałęzi + ogień)', countItem(p.inv, 'branch') >= 5 && !!findTool(p, 'fire_start'), 'Potrzeba 5 gałęzi i krzesiwa/pochodni')]
+      return [opt('burn_den', 'Burn the den (5 branches + fire)', countItem(p.inv, 'branch') >= 5 && !!findTool(p, 'fire_start'), 'You need 5 branches and flint and steel or a torch')]
     case 'ground': {
       const g = sim.state.ground.find((gg) => gg.id === t.id)
-      if (g?.stack.id === 'rock_chunk') return [toolOpt(sim, 'break_chunk', 'Rozbij kilofem na kamienie', 'mine', 'kilof'), opt('pickup', 'Podnieś (ciężki)')]
-      return [opt('pickup', 'Podnieś')]
+      if (g?.stack.id === 'rock_chunk') return [toolOpt(sim, 'break_chunk', 'Break into stones with a pickaxe', 'mine', 'pickaxe'), opt('pickup', 'Pick up (heavy)')]
+      return [opt('pickup', 'Pick up')]
     }
     case 'node': {
       const n = sim.nodes.byId(t.id)
       if (!n) return []
       if (isTree(n.kind)) {
-        const o = [toolOpt(sim, 'chop', 'Zetnij drzewo', 'chop', 'siekiera')]
-        if (n.kind === 'tree_apple') o.unshift(opt('gather', 'Zerwij jabłka'))
+        const o = [toolOpt(sim, 'chop', 'Fell the tree', 'chop', 'axe')]
+        if (n.kind === 'tree_apple') o.unshift(opt('gather', 'Pick apples'))
         return o
       }
-      if (n.kind === 'rock') return [toolOpt(sim, 'mine', 'Wydobądź kamień / rudę', 'mine', 'kilof')]
-      if (n.kind === 'stone') return [opt('gather', 'Podnieś kamień')]
-      return [opt('gather', n.kind === 'bush' ? 'Nazbieraj gałęzi' : 'Zbierz')]
+      if (n.kind === 'rock') return [toolOpt(sim, 'mine', 'Mine stone / ore', 'mine', 'pickaxe')]
+      if (n.kind === 'stone') return [opt('gather', 'Pick up the stone')]
+      return [opt('gather', n.kind === 'bush' ? 'Gather branches' : 'Gather')]
     }
     case 'npc': {
       const n = sim.human(t.id)
       if (!n) return []
-      if (n.vitals.ko && !n.vitals.dead) return [opt('help_npc', 'Opatrz rannego', p.inv.items.some((s) => s.id === 'bandage' || s.id === 'salve'), 'Potrzebny bandaż')]
-      const o = [opt('talk', 'Rozmawiaj', true, undefined, 'dialog'), opt('trade', 'Handluj', true, undefined, 'trade')]
-      if (n.profession === 'blacksmith') o.push(opt('orders', 'Zamów u kowala', true, undefined, 'orders'))
-      if (n.profession === 'herbalist') o.push(opt('heal_service', 'Poproś o leczenie (15 m)', p.money >= 15, 'Za mało pieniędzy'))
-      if (n.profession === 'guard' || n.profession === 'hunter') o.push(opt('quests', 'Zadania', true, undefined, 'quests'))
+      if (n.vitals.ko && !n.vitals.dead) return [opt('help_npc', 'Tend the wounded', p.inv.items.some((s) => s.id === 'bandage' || s.id === 'salve'), 'You need a bandage')]
+      const o = [opt('talk', 'Talk', true, undefined, 'dialog'), opt('trade', 'Trade', true, undefined, 'trade')]
+      if (n.profession === 'blacksmith') o.push(opt('orders', 'Order from the blacksmith', true, undefined, 'orders'))
+      if (n.profession === 'herbalist') o.push(opt('heal_service', 'Ask for healing (15c)', p.money >= 15, 'Not enough money'))
+      if (n.profession === 'guard' || n.profession === 'hunter') o.push(opt('quests', 'Quests', true, undefined, 'quests'))
       return o
     }
     case 'site': {
       const s = sim.state.sites.find((ss) => ss.id === t.id)
-      return s ? [opt('build', 'Dostarcz materiały i buduj'), opt('cancel_site', 'Rozbierz plac budowy')] : []
+      return s ? [opt('build', 'Deliver materials and build'), opt('cancel_site', 'Dismantle the building site')] : []
     }
     case 'water':
-      return [opt('drink', 'Napij się'), opt('fill', 'Napełnij bukłak'), opt('drink_skin', 'Pij z bukłaka')]
+      return [opt('drink', 'Drink'), opt('fill', 'Fill waterskin'), opt('drink_skin', 'Drink from waterskin')]
   }
 }
 
@@ -263,34 +263,34 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     }
     case 'break_chunk':
       equip('mine')
-      startActivity(sim, { kind: 'break_chunk', ref: String((t as { id: number }).id), label: 'Rozbijanie odłamka', total: ROCK.breakS })
+      startActivity(sim, { kind: 'break_chunk', ref: String((t as { id: number }).id), label: 'Breaking the chunk', total: ROCK.breakS })
       return ''
     case 'burn_den':
-      startActivity(sim, { kind: 'burn_den', ref: (t as { id: string }).id, label: 'Podpalanie legowiska', total: 5 })
+      startActivity(sim, { kind: 'burn_den', ref: (t as { id: string }).id, label: 'Setting the den on fire', total: 5 })
       return ''
     case 'bury':
       equip('dig')
-      startActivity(sim, { kind: 'bury', ref: String((t as { id: number }).id), label: 'Kopanie grobu', total: 10 })
+      startActivity(sim, { kind: 'bury', ref: String((t as { id: number }).id), label: 'Digging a grave', total: 10 })
       return ''
     case 'butcher':
       equip('cut')
-      startActivity(sim, { kind: 'butcher', ref: String((t as { id: number }).id), label: 'Oprawianie', total: 8 })
+      startActivity(sim, { kind: 'butcher', ref: String((t as { id: number }).id), label: 'Butchering', total: 8 })
       return ''
     case 'cancel_site': {
       const s = sim.state.sites.find((ss) => ss.id === (t as { id: string }).id)
       if (!s) return ''
       for (const [item, qty] of Object.entries(s.delivered)) if (qty > 0) dropItem(sim, s.x, s.z, { id: item, qty })
       sim.state.sites.splice(sim.state.sites.indexOf(s), 1)
-      return 'Rozebrano plac budowy (materiały leżą na ziemi).'
+      return 'You dismantled the building site (the materials are on the ground).'
     }
     case 'chop':
       equip('chop')
-      startActivity(sim, { kind: 'chop', ref: (t as { id: string }).id, label: 'Ścinanie drzewa', total: Math.max(6, 18 - p.skills.woodcutting / 8) })
+      startActivity(sim, { kind: 'chop', ref: (t as { id: string }).id, label: 'Felling the tree', total: Math.max(6, 18 - p.skills.woodcutting / 8) })
       return ''
     case 'douse': {
       const b = sim.building((t as { id: string }).id)
       if (b) b.lit = false
-      return 'Zgaszono.'
+      return 'Put out.'
     }
     case 'drink':
     case 'drink_well':
@@ -299,22 +299,22 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       const b = t.type === 'building' ? sim.building(t.id) : undefined
       const x = t.type === 'water' ? t.x : b!.x
       const z = t.type === 'water' ? t.z : b!.z
-      startActivity(sim, { kind: optionId.startsWith('drink') ? 'drink' : 'fill', ref: b ? 'well' : undefined, label: optionId.startsWith('drink') ? 'Picie' : 'Napełnianie', total: 2, data: at(x, z) })
+      startActivity(sim, { kind: optionId.startsWith('drink') ? 'drink' : 'fill', ref: b ? 'well' : undefined, label: optionId.startsWith('drink') ? 'Drinking' : 'Filling', total: 2, data: at(x, z) })
       return ''
     }
     case 'drink_skin': {
       const s = p.inv.items.find((i) => (i.water ?? 0) > 0)
-      if (!s) return 'Bukłak pusty.'
+      if (!s) return 'Your waterskin is empty.'
       s.water! -= 1
       p.vitals.thirst = Math.min(100, p.vitals.thirst + 30)
-      return 'Łyk z bukłaka.'
+      return 'You take a sip from the waterskin.'
     }
     case 'fill_trough': {
       const b = sim.building((t as { id: string }).id)
       return b ? fillTrough(sim, p, b).msg : ''
     }
     case 'gather':
-      startActivity(sim, { kind: 'gather', ref: (t as { id: string }).id, label: 'Zbieranie', total: 2.5 })
+      startActivity(sim, { kind: 'gather', ref: (t as { id: string }).id, label: 'Gathering', total: 2.5 })
       return ''
     case 'heal_service': {
       const n = sim.human((t as { id: number }).id)
@@ -325,7 +325,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       p.vitals.bleeding = 0
       p.vitals.convalescenceH = Math.max(0, p.vitals.convalescenceH - 8)
       if (p.vitals.illness) p.vitals.illness = undefined
-      return `${n.name} opatruje rany i podaje zioła.`
+      return `${n.name} dresses your wounds and gives you herbs.`
     }
     case 'help_npc': {
       const n = sim.human((t as { id: number }).id)
@@ -335,50 +335,50 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       heal(n.vitals, 20)
       n.vitals.ko = undefined
       n.opinion = Math.min(100, n.opinion + 30)
-      addRep(sim, n.settlementId, { helpfulness: 5 }, `Pomogłeś rannemu: ${n.name}`)
+      addRep(sim, n.settlementId, { helpfulness: 5 }, `You helped the wounded: ${n.name}`)
       return ''
     }
     case 'inspect_nest':
-      return 'W ścianie magazynu gniazdo szczurów. Wybij szczury i napraw budynek (młotek + gałęzie).'
+      return 'Rats have nested in the warehouse wall. Kill the rats and repair the building (hammer + branches).'
     case 'light': {
       const b = sim.building((t as { id: string }).id)
       if (b) b.lit = true
-      return 'Rozpalono.'
+      return 'Lit.'
     }
     case 'market': {
       const b = sim.building((t as { id: string }).id)
       const trader = b ? sim.npcsOf(b.settlementId).find((n) => n.profession === 'trader') : undefined
-      return trader ? `Handlarz: ${trader.name} — podejdź i porozmawiaj (Handluj).` : 'Stragan pusty.'
+      return trader ? `Trader: ${trader.name} — go and talk to them (Trade).` : 'The stall is empty.'
     }
     case 'mine':
       equip('mine')
-      startActivity(sim, { kind: 'mine', ref: (t as { id: string }).id, label: 'Wydobywanie', total: ROCK.strikeS })
+      startActivity(sim, { kind: 'mine', ref: (t as { id: string }).id, label: 'Mining', total: ROCK.strikeS })
       return ''
     case 'pet': {
       addStat(sim, 'petted')
-      return 'Zwierzę łasi się do ciebie.'
+      return 'The animal nuzzles up to you.'
     }
     case 'pickup': {
       const g = sim.state.ground.find((gg) => gg.id === (t as { id: number }).id)
       if (!g) return ''
       const n = fitQty(p, g.stack)
-      if (n <= 0) return 'Nie uniesiesz więcej.'
+      if (n <= 0) return 'You cannot carry any more.'
       addItem(p.inv, { ...g.stack, qty: n })
       g.stack.qty -= n
       if (g.stack.qty <= 0) sim.removeGround(g)
-      return `Podniesiono: ${itemDef(g.stack.id).name}${g.stack.qty > 0 ? ` ×${n} (reszta za ciężka)` : ''}`
+      return `Picked up: ${itemDef(g.stack.id).name}${g.stack.qty > 0 ? ` ×${n} (the rest is too heavy)` : ''}`
     }
     case 'repair':
       equip('hammer')
-      startActivity(sim, { kind: 'repair', ref: (t as { id: string }).id, label: 'Naprawa', total: 10 })
+      startActivity(sim, { kind: 'repair', ref: (t as { id: string }).id, label: 'Repairing', total: 10 })
       return ''
     case 'rest':
-      startActivity(sim, { kind: 'rest', label: 'Odpoczynek przy ogniu', total: 150, accel: 20 })
-      return 'Odpoczywasz (czas przyspieszony, Esc przerywa).'
+      startActivity(sim, { kind: 'rest', label: 'Resting by the fire', total: 150, accel: 20 })
+      return 'You rest (time sped up, Esc to stop).'
     case 'roast': {
       const n = roastBatch(sim, p)
-      if (!n) return 'Nie masz surowego mięsa.'
-      startActivity(sim, { kind: 'roast', label: `Pieczenie mięsa (${n} szt.)`, total: roastSeconds(), accel: ROAST_ACCEL, data: String(n) })
+      if (!n) return 'You have no raw meat.'
+      startActivity(sim, { kind: 'roast', label: `Roasting meat (${n} pcs)`, total: roastSeconds(), accel: ROAST_ACCEL, data: String(n) })
       return ''
     }
     default:
@@ -389,8 +389,8 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
 export function startSleep(sim: Sim, comfort: number): string {
   const hr = hourOf(sim.state.time.cal)
   const hours = isNight(sim.state.time.cal) || hr > 20 ? Math.min(9, ((6 - hr + 24) % 24) || 8) : Math.max(2, (100 - sim.player.vitals.vigor) / 12)
-  startActivity(sim, { kind: 'sleep', label: `Sen (komfort ${Math.round(comfort * 100)}%)`, total: hours * 150, accel: 40, data: String(comfort) })
-  return 'Zasypiasz… (czas przyspieszony, Esc przerywa)'
+  startActivity(sim, { kind: 'sleep', label: `Sleeping (comfort ${Math.round(comfort * 100)}%)`, total: hours * 150, accel: 40, data: String(comfort) })
+  return 'You fall asleep… (time sped up, Esc to stop)'
 }
 
 /** Taking from someone else's chest: theft detection. */
@@ -406,7 +406,7 @@ export function checkTheft(sim: Sim, b: Building): boolean {
     if (night) r *= 0.5
     if (d < r) {
       addStat(sim, 'caughtStealing')
-      addRep(sim, n.settlementId, { honesty: -8 }, `${n.name} przyłapał(a) cię na kradzieży!`)
+      addRep(sim, n.settlementId, { honesty: -8 }, `${n.name} caught you stealing!`)
       n.opinion = Math.max(-100, n.opinion - 40)
       return true
     }
@@ -418,7 +418,7 @@ export function checkTheft(sim: Sim, b: Building): boolean {
 export function warehouseTake(sim: Sim, b: Building): { allowed: boolean; msg?: string } {
   const rep = sim.state.settlements[b.settlementId]?.rep
   if (rep && rep.helpfulness >= 10) return { allowed: true }
-  return { allowed: true, msg: 'Bierzesz ze wspólnego magazynu — mieszkańcy to zauważą.' }
+  return { allowed: true, msg: 'You are taking from the common warehouse — the villagers will notice.' }
 }
 
 export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toStorage: boolean): string {
@@ -430,13 +430,13 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
     const moved = removeStack(p.inv, s)!
     addItem(b.inv, moved)
     if (b.kind === 'warehouse' && itemDef(moved.id).price * moved.qty >= 10) addRep(sim, b.settlementId, { helpfulness: 1 })
-    return `Odłożono: ${itemDef(moved.id).name}`
+    return `Stored: ${itemDef(moved.id).name}`
   }
   const s = b.inv.items[stackIdx]
   if (!s) return ''
   const n = fitQty(p, s)
-  if (n <= 0) return 'Nie uniesiesz więcej.'
-  if (b.owner.startsWith('household') && checkTheft(sim, b)) return 'Przyłapano cię!'
+  if (n <= 0) return 'You cannot carry any more.'
+  if (b.owner.startsWith('household') && checkTheft(sim, b)) return 'You were caught!'
   if (b.kind === 'warehouse') {
     const rep = sim.state.settlements[b.settlementId]!.rep
     if (rep.helpfulness < 10) addRep(sim, b.settlementId, { honesty: -1, helpfulness: -1 })
@@ -444,7 +444,7 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
   const partial = n < s.qty
   const moved = removeStack(b.inv, s, n)!
   addItem(p.inv, moved)
-  return `Wzięto: ${itemDef(moved.id).name}${partial ? ` ×${n} (reszta za ciężka)` : ''}`
+  return `Taken: ${itemDef(moved.id).name}${partial ? ` ×${n} (the rest is too heavy)` : ''}`
 }
 
 export { acceptQuest, COMBAT }
