@@ -84,6 +84,24 @@ Readings:
 - Static scenes: `render.prep` median ≤ 1.8 ms, p95 ≤ 8.5 ms; programs 10–18, lights 9 (sun + hemisphere + 6 pooled fire lights + the player torch light).
 - Teleport hitch: p95 23–51 ms (loading/respawn only).
 
+## Cloud container (session 5, reference only — D-PERF-5)
+
+Machine: Intel Xeon @ 2.80 GHz ×4 (Anthropic cloud session). **Not comparable with the WSL baselines above** — `bench:render` now refuses that comparison (machine fingerprint in the baseline). Official gates (step-1 confirmation, 4a exit gate) run on the WSL laptop (❓ user). One run each on `915771d` + bench fix (render--002 step 1 code):
+
+| Scene | low prep med/p95 | low veg rebuild p95 (n) | medium prep med/p95 | medium veg rebuild p95 (n) | medium frames |
+|---|---|---|---|---|---:|
+| small-settlement | 1.39 / 4.56 | 0 (0) | 3.2 / 5.79 | 0 (0) | 61 |
+| crowded-settlement | 0.5 / 3.2 | 2.6 (12) | 4.94 / 12.78 | 4.47 (19) | 60 |
+| dense-forest | 0.4 / 3.32 | 6.39 (10) | 0.9 / 8.11 | 4.3 (12) | 44 |
+| night-campfires | 0.4 / 1.99 | 2.6 (4) | 2.67 / 10.91 | 2.5 (2) | 54 |
+| water-shore | 0.3 / 1.6 | 5.79 (2) | 0.7 / 7.79 | 2.5 (6) | 61 |
+| rain | 1.31 / 6.39 | 0 (0) | 2.52 / 10.28 | 3.2 (3) | 52 |
+| snow | 1.8 / 5.35 | 3 (2) | 7.34 / 17.55 | 2.6 (4) | 49 |
+| march-10mps | 4.3 / 10.91 | 6 (12) | 9.13 / 16.86 | 5.3 (19) | 28 |
+| teleport-hitch | 12.53 / 26.5 | 6.6 (16) | 11.13 / 15.89 | 4 (6) | 6 |
+
+Observations: medium runs at ~1 fps here (march only 28 frames, teleport 6) and static scenes still build terrain chunks after `chunks.pending` = 0 (terrain p95 6–8 ms) — the container is slower than the warm-up assumes. Vegetation rebuild slices stay ≤ 6.4 ms (max), but static scenes now show more slices (node changes by NPCs → the time-sliced rebuild spans several frames); whether that moves `render.prep` p95 on the WSL machine is part of the user's confirmation run.
+
 ## Device measurement checklist (for the user — ❓ D-PERF-2)
 
 Headless cannot judge GPU cost or real frame pacing. To measure on a laptop and a phone:

@@ -37,9 +37,15 @@ export async function launch({ mobile = false } = {}) {
   const page = await context.newPage()
   const logs = []
   page.on('console', (m) => {
-    if (m.type() === 'error' || m.type() === 'warning') logs.push(`[${m.type()}] ${m.text()}`)
+    if (m.type() !== 'error' && m.type() !== 'warning') return
+    const at = m.text().startsWith('Failed to load resource') ? ` (${m.location().url})` : ''
+    logs.push(`[${m.type()}] ${m.text()}${at}`)
   })
   page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`))
+  // A failed resource logs only "status of 404" in the console — record which URL it was.
+  page.on('response', (r) => {
+    if (r.status() >= 400) logs.push(`[http ${r.status()}] ${r.url()}`)
+  })
   return { browser, context, page, logs }
 }
 

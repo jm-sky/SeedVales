@@ -77,11 +77,11 @@ for (const v of variants) {
 await page.setViewportSize({ width: 640 * variants.length, height: 380 })
 for (const [name, list] of Object.entries(shots)) {
   const cells = list.map((s) => `<figure><img src="data:image/png;base64,${fs.readFileSync(s.file).toString('base64')}"><figcaption>${s.label}</figcaption></figure>`).join('')
-  await page.setContent(`<style>body{margin:0;display:flex;background:#111}figure{margin:0;position:relative}img{width:640px;height:360px;display:block}figcaption{position:absolute;top:4px;left:6px;color:#fff;font:bold 16px sans-serif;text-shadow:0 0 3px #000}</style>${cells}`)
+  await page.setContent(`<link rel="icon" href="data:,"><style>body{margin:0;display:flex;background:#111}figure{margin:0;position:relative}img{width:640px;height:360px;display:block}figcaption{position:absolute;top:4px;left:6px;color:#fff;font:bold 16px sans-serif;text-shadow:0 0 3px #000}</style>${cells}`)
   await page.screenshot({ path: path.join(OUT, `ab-${name}.png`), clip: { x: 0, y: 0, width: 640 * list.length, height: 360 } })
 }
 await browser.close()
 await server?.close()
-const errors = logs.filter((l) => l.startsWith('[error]') || l.startsWith('[pageerror]'))
+const errors = logs.filter((l) => l.startsWith('[error]') || l.startsWith('[pageerror]') || l.startsWith('[http'))
 console.log(`ab: ${variants.length} variants × ${FRAMES.length} frames → ${OUT} · console errors: ${errors.length}`)
 for (const e of errors.slice(0, 5)) console.log(e)

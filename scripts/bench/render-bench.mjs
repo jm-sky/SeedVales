@@ -216,7 +216,7 @@ const f = (t) => (t ? `${t.median}/${t.p95}` : '—')
 const lines = [
   `# Render benchmark (${quality}, ${env.browser})`, '',
   `Machine: ${MACHINE} · baseline: ${base ? `${path.basename(BASELINE)} (${base.commit}, ${base.date.slice(0, 10)}, ${base.machine ?? 'machine unknown'})` : 'none'} · console errors: ${consoleErrors.length}`,
-  ...(base && !sameMachine ? ['', `**Baseline is from another machine — no verdict.** Measure a reference commit on this machine and pass \`--baseline=<file>\`.`] : []), '',
+  ...(base && !sameMachine ? ['', '**Baseline is from another machine — no verdict.** Measure a reference commit on this machine and pass `--baseline=<file>`.'] : []), '',
   '| Scene | frames | render.prep med/p95 | vs baseline | frame CPU | render.cpu | draw (SwiftShader) | terrain | veg rebuild | chunk build | draw calls | triangles | programs | lights (active) | textures |',
   '|---|---:|---|---|---|---|---|---|---|---|---:|---:|---:|---|---:|',
 ]

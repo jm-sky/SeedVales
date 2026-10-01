@@ -15,6 +15,7 @@ import { Carts } from './carts'
 import { Dynamics } from './dynamics'
 import { GpuTimer } from './gpuTimer'
 import { QUALITY, type QualityProfile } from './quality'
+import { snapShadowCenter } from './shadowSnap'
 import { SkyDome } from './sky'
 import { Structures } from './structures'
 import { TargetMarker } from './targetMarker'
@@ -55,6 +56,8 @@ export class Renderer {
   private first = true
   private frameNo = 0
   private fogFar: number
+  private toLight = new THREE.Vector3(0, 1, 0)
+  private snapIn = new THREE.Vector3()
 
   constructor(canvas: HTMLCanvasElement, sim: Sim, quality: QualityProfile = 'medium') {
     this.sim = sim
@@ -168,7 +171,7 @@ export class Renderer {
       const a = (this.atmo = atmosphere(dl, h, w, this.atmo))
       this.scene.background = a.horizon
       fog.color.copy(a.fog)
-      this.sun.position.set(p.x + a.sunDir.x * 150, p.y + a.sunDir.y * 150, p.z + a.sunDir.z * 150)
+      this.toLight.copy(a.sunDir)
       this.sun.color.copy(a.sunColor)
       this.sun.intensity = a.sunIntensity
       this.hemi.color.copy(a.hemiSky)
@@ -183,7 +186,7 @@ export class Renderer {
       fog.color.copy(this.sky)
       // Sun path (east → west), moonlight at night.
       const ang = ((h - 6) / 12) * Math.PI
-      this.sun.position.set(p.x + Math.cos(ang) * 120, p.y + Math.max(15, Math.sin(ang) * 150), p.z + 40)
+      this.toLight.set(Math.cos(ang) * 120, Math.max(15, Math.sin(ang) * 150), 40).normalize()
       this.sun.intensity = dl * 2.2 * (1 - overcast * 0.6) + 0.12
       this.sun.color.set(dl > 0.2 ? 0xfff2dd : 0x8899cc)
       this.hemi.intensity = 0.35 + dl * 0.9 * (1 - overcast * 0.3)
@@ -191,7 +194,10 @@ export class Renderer {
     const fogK = Math.max(w.fog, w.kind === 'rain' || w.kind === 'snow' ? 0.35 : 0, w.kind === 'storm' ? 0.55 : 0)
     fog.near = 120 * (1 - fogK * 0.9)
     fog.far = this.fogFar * (1 - fogK * 0.85) + 60
-    this.sun.target.position.set(p.x, p.y, p.z)
+    // Shadow camera centre snapped to whole shadow texels in light space (no shimmer while walking).
+    const sc = this.sun.shadow.camera
+    snapShadowCenter(this.snapIn.set(p.x, p.y, p.z), this.toLight, (sc.right - sc.left) / this.sun.shadow.mapSize.x, this.sun.target.position)
+    this.sun.position.copy(this.sun.target.position).addScaledVector(this.toLight, 150)
     const season = seasonOf(cal)
     this.terrain.seasonTint = season === 'autumn' ? 0.6 : season === 'winter' ? 0.8 : 0
     this.terrain.snowCover = season === 'winter' && (w.kind === 'snow' || w.wetness > 0.2) ? 0.8 : 0

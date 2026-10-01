@@ -17,7 +17,7 @@ export interface VisualFlags {
   detail: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'flat', smooth: false, detail: false }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', smooth: false, detail: false }
 
 export function readVisualFlags(): VisualFlags {
   try {
