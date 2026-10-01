@@ -29,7 +29,10 @@ describe('render: asset guard (render--004)', () => {
   it('every species model and character GLB exists and parses', async () => {
     const files = [
       ...Object.values(SPECIES).flatMap((s) => (s.model ? [`animals/${s.model}.glb`] : [])),
-      ...['Male_Peasant', 'Female_Peasant', 'Male_Ranger', 'Female_Ranger', 'Male_Knight', 'Female_Knight', 'Male_Head', 'Female_Head', 'anims'].map((k) => `characters/${k}.glb`),
+      ...['Male', 'Female'].flatMap((sex) => [
+        ...['Peasant', 'Ranger', 'Ranger_NoHood', 'Knight', 'Knight_Helm', 'Knight_Cloth', 'Wizard', 'Peasant_Boots', 'Blacksmith', 'Herbalist'].map((o) => `${sex}_${o}`),
+        `${sex}_Head`,
+      ]).concat('anims').map((k) => `characters/${k}.glb`),
     ]
     const bad: string[] = []
     for (const f of files) await nodeNames(f).catch(() => bad.push(f))

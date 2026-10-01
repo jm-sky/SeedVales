@@ -49,7 +49,7 @@ Konwersje: glTF → GLB, `resample` animacji, EXT_meshopt_compression (dekodowan
 - Studnia, ognisko, tablica, pochodnie, koryto, suszarnia, palisada, most, uprawy — proceduralne low-poly.
 - Broń/narzędzia w dłoni — brak (FBX-only w RPG Items).
 
-## Audit (2026-10-01, render--004 step 1; refreshed after the step-3 fauna class, 2026-10-01)
+## Audit (2026-10-01, render--004 step 1; refreshed after the step-3 fauna class and the render--005 outfit variants, 2026-10-01)
 
 Measurement only — no asset file changed by the audit. Reproduce: `node scripts/assets/inspect-pack.mjs --audit --md [dir|files…]` (Node + glTF Transform, no Blender; default `public/assets`). "tris (unique)" counts every mesh once, "tris (scene)" what one scene instance draws; packs hold many models, so their totals are not per-model.
 
@@ -70,19 +70,35 @@ Measurement only — no asset file changed by the audit. Reproduce: `node script
 | animals/Sheep.glb | 83 | 610 | 610 | 16 | 1/2 | 2 | — | 6: Idle,Walk,Gallop,Attack,Eating,Death | yes (1) |
 | animals/Stag.glb | 481 | 3670 | 3670 | 41 | 2/6 | 5 | — | 13: Attack_Headbutt,Attack_Kick,Death,Eating,Gallop,Gallop_Jump,… | yes (1) |
 | animals/Wolf.glb | 541 | 1962 | 1962 | 53 | 1/4 | 4 | — | 12: Attack,Death,Eating,Gallop,Gallop_Jump,Idle,… | yes (1) |
+| characters/Female_Blacksmith.glb | 434 | 6091 | 6091 | 70 | 5/5 | 2 | 512x512 png | — | yes (5) |
 | characters/Female_Head.glb | 697 | 2703 | 2703 | 69 | 3/3 | 3 | 512x512 png; 256x256 png (×3) | — | yes (3) |
+| characters/Female_Herbalist.glb | 445 | 7147 | 7147 | 70 | 5/5 | 2 | 512x512 png | — | yes (5) |
+| characters/Female_Knight.glb | 774 | 8484 | 8484 | 71 | 6/6 | 1 | 512x512 png | — | yes (6) |
+| characters/Female_Knight_Cloth.glb | 732 | 6967 | 6967 | 70 | 5/5 | 1 | 512x512 png | — | yes (5) |
+| characters/Female_Knight_Helm.glb | 796 | 9472 | 9472 | 72 | 7/7 | 1 | 512x512 png | — | yes (7) |
 | characters/Female_Peasant.glb | 462 | 5915 | 5915 | 70 | 4/4 | 1 | 512x512 png | — | yes (4) |
+| characters/Female_Peasant_Boots.glb | 444 | 7674 | 7674 | 69 | 4/4 | 1 | 512x512 png | — | yes (4) |
 | characters/Female_Ranger.glb | 949 | 13035 | 13035 | 75 | 9/10 | 2 | 512x512 png (×2) | — | yes (9) |
+| characters/Female_Ranger_NoHood.glb | 928 | 11787 | 11787 | 73 | 8/9 | 2 | 512x512 png (×2) | — | yes (8) |
+| characters/Female_Wizard.glb | 846 | 7463 | 7463 | 71 | 6/7 | 2 | 512x512 png (×2) | — | yes (6) |
+| characters/Male_Blacksmith.glb | 635 | 5876 | 5876 | 70 | 5/6 | 3 | 512x512 png (×2) | — | yes (5) |
 | characters/Male_Head.glb | 661 | 2213 | 2213 | 69 | 3/3 | 3 | 512x512 png; 256x256 png (×3) | — | yes (3) |
+| characters/Male_Herbalist.glb | 646 | 7007 | 7007 | 70 | 5/6 | 3 | 512x512 png (×2) | — | yes (5) |
+| characters/Male_Knight.glb | 786 | 10906 | 10906 | 71 | 6/6 | 1 | 512x512 png | — | yes (6) |
+| characters/Male_Knight_Cloth.glb | 734 | 8430 | 8430 | 70 | 5/5 | 1 | 512x512 png | — | yes (5) |
+| characters/Male_Knight_Helm.glb | 807 | 11912 | 11912 | 72 | 7/7 | 1 | 512x512 png | — | yes (7) |
 | characters/Male_Peasant.glb | 686 | 5747 | 5747 | 70 | 4/5 | 2 | 512x512 png (×2) | — | yes (4) |
+| characters/Male_Peasant_Boots.glb | 627 | 5987 | 5987 | 69 | 4/5 | 2 | 512x512 png (×2) | — | yes (4) |
 | characters/Male_Ranger.glb | 951 | 12912 | 12912 | 75 | 9/10 | 2 | 512x512 png (×2) | — | yes (9) |
+| characters/Male_Ranger_NoHood.glb | 930 | 11626 | 11626 | 73 | 8/9 | 2 | 512x512 png (×2) | — | yes (8) |
+| characters/Male_Wizard.glb | 821 | 7589 | 7589 | 71 | 6/7 | 2 | 512x512 png (×2) | — | yes (6) |
 | characters/anims.glb | 2496 | 0 | 0 | 67 | 0/0 | 0 | — | 22: Crouch_Fwd_Loop,Crouch_Idle_Loop,Death01,Fixing_Kneeling,Hit_Chest,Idle_Loop,… | yes (1) |
 | landmarks.glb | 419 | 15357 | 15357 | 34 | 17/34 | 14 | 512x512 png; 512x512 jpeg (×2) | — | no |
 | nature.glb | 3325 | 27127 | 27127 | 30 | 15/21 | 11 | 512x512 png; 512x498 png (×11) | — | no |
 | props.glb | 851 | 28758 | 28758 | 33 | 15/31 | 4 | 256x256 png (×4) | 4: Chest_Close,Chest_Closed,Chest_Open,Chest_Opened | yes (2) |
 | village.glb | 2458 | 25221 | 25221 | 46 | 23/45 | 7 | 512x512 png (×6) | — | no |
 
-**Total:** 26 files, 18.64 MB, 168372 unique tris (the largest single files: `nature.glb` 3.3 MB, `anims.glb` 2.5 MB, `village.glb` 2.4 MB).
+**Total:** 42 files, 29.75 MB, 302790 unique tris (the largest single files: `nature.glb` 3.3 MB, `anims.glb` 2.5 MB, `village.glb` 2.4 MB).
 
 ### Budgets per model class (D-REN-10, D-REN-11)
 
@@ -92,7 +108,7 @@ Derived from the table; a new or replacement model stays inside its class or goe
 |---|---:|---:|---|---|---|
 | Fauna, small/medium (rat, hare, fox, wolf, deer…) | ≤ 4 k | ≤ 600 KB | none or ≤ 512 px | Idle + Walk (+ Gallop/Attack for hostile/prey) | 0.5–4 k, all inside the class (fauna class refreshed 2026-10-01) |
 | Fauna, large (bear, horse, cow, moose) | ≤ 6 k | ≤ 700 KB | ≤ 512 px | as above (+ Death) | bear 0.7 k / 100 KB, moose 1.6 k / 130 KB |
-| Humanoids (body outfits, heads) | ≤ 13 k body, ≤ 3 k head | ≤ 1 MB | ≤ 512 px, 1–2 maps | shared `anims.glb` (22 clips) | rangers 13 k, peasants 6 k |
+| Humanoids (body outfits, heads) | ≤ 13 k body, ≤ 3 k head | ≤ 1 MB | ≤ 512 px, 1–2 maps | shared `anims.glb` (22 clips) | rangers 13 k, peasants 6 k; render--005 variants 5.9–13.0 k (Blacksmith/Herbalist use 3 materials: atlas, skin, flat colour) |
 | Vegetation / props / village modules | ≤ 6 k per model | pack ≤ 3.5 MB | 256–512 px, atlas shared | — | trees 3.3–5.8 k; instanced (D-REN-2) |
 | Landmark pieces (`landmarks.glb`) | ≤ 3.2 k per piece; ≤ 30 k per placed landmark (merged) | ≤ 500 KB for the pack | ≤ 512 px | — | built only within 420 m; ≈ 2–5 draw calls per landmark (one per material) |
 | Held items / small props | ≤ 1.5 k | ≤ 100 KB | ≤ 256 px | — | not yet present |
@@ -107,6 +123,7 @@ Derived from the table; a new or replacement model stays inside its class or goe
 ## Workflow and rules (render--004 step 2)
 
 - **Where things live:** third-party sources in `_temp/` (not committed); committed output only in `public/assets/`. Build scripts: `scripts/assets/build-assets.mjs` (packs, characters), `build-extra-animals.mjs` (rat/hare/boar/bear/moose/sheep/chicken), `normalize-fauna.py` + `rig-fauna.py` (Blender MCP normalising and rigging). Source and licence per asset: `LICENSE-Quaternius-CC0.txt`, `CREDITS-CC-BY.txt` (CC-BY credit is mandatory).
+- **Character outfit variants (render--005):** `build-characters.mjs` (Node: `VARIANTS` lines from the pack glTFs, `--raw` for Blender-authored `assets-src/characters/*.raw.glb`, `--tex` for the colour-variant maps in `public/assets/characters/tex/`); `blender-character-variants.py` (Blender MCP, dev-only: Peasant_Boots, Blacksmith, Herbalist; scene restored afterwards, no .blend committed). Wired by `ProfessionDef.outfit` in `data/professions.ts`.
 - **Stable node names:** render code looks parts up by name. All requested names live in `src/game/render/assetNames.ts`; `assetNames.test.ts` (part of `pnpm check`) fails with the file and name if a re-export drops one, and checks that every species/character GLB exists and parses. Adding a looked-up node = add it to `assetNames.ts` first.
 - **Model direction (D-REN-10):** realistic where the CPU/GPU cost is small; replace a whole class together; budget = triangle/texture class of comparable assets (audit table), before/after `bench:render` + `tour.mjs` screenshots per model.
 - **Post-processing:** prune/dedupe/meshopt via glTF Transform (Node, reproducible in any session); texture size per class; no optimisation without a measured trigger (`render--003`).

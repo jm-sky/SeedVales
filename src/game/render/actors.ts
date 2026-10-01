@@ -8,6 +8,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
+import type { CharOutfit } from '../data/professions'
 import type { Sim } from '../sim/sim'
 import type { Actor, Animal, Human } from '../sim/types'
 import type { QualitySettings } from './quality'
@@ -36,7 +37,8 @@ interface Visual {
   rot: number
 }
 
-type CharKey = 'Male_Peasant' | 'Female_Peasant' | 'Male_Ranger' | 'Female_Ranger' | 'Male_Knight' | 'Female_Knight'
+type CharKey = `${'Male' | 'Female'}_${CharOutfit}`
+const CHAR_OUTFITS: CharOutfit[] = ['Peasant', 'Ranger', 'Ranger_NoHood', 'Knight', 'Wizard']
 
 const phCache = new Map<string, THREE.BufferGeometry>()
 const phMat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
@@ -116,7 +118,7 @@ export class Actors {
       this.clips = anims.animations
       this.heads.set('Male', mh)
       this.heads.set('Female', fh)
-      await Promise.all((['Male_Peasant', 'Female_Peasant', 'Male_Ranger', 'Female_Ranger', 'Male_Knight', 'Female_Knight'] as CharKey[]).map(async (k) => this.chars.set(k, await loadGltf(`characters/${k}.glb`))))
+      await Promise.all((['Male', 'Female'] as const).flatMap((sex) => CHAR_OUTFITS.map((o): CharKey => `${sex}_${o}`)).map(async (k) => this.chars.set(k, await loadGltf(`characters/${k}.glb`))))
     } catch (e) {
       console.warn('character assets failed', e)
     }
@@ -137,8 +139,8 @@ export class Actors {
   }
 
   private charKey(h: Human): CharKey {
-    const outfit = h.profession === 'guard' ? 'Knight' : h.kind === 'player' || h.profession === 'hunter' ? 'Ranger' : 'Peasant'
-    return `${h.male ? 'Male' : 'Female'}_${outfit}` as CharKey
+    const outfit: CharOutfit = h.kind === 'player' ? 'Ranger' : (h.profession && PROFESSIONS[h.profession].outfit) || 'Peasant'
+    return `${h.male ? 'Male' : 'Female'}_${outfit}`
   }
 
   private buildHuman(h: Human): Visual | null {

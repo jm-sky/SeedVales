@@ -1,6 +1,6 @@
 # Render: character outfit variants from the full Modular Outfits pack
 
-**Status:** in_progress  
+**Status:** in_progress  (steps 1, 2, 4 built; visual/perf verification on WSL pending)  
 **Model:** sonnet — Node build script + wiring; opus only for the Blender-authored variants (step 4) design review  
 **Domain:** render  
 **Sub domains:** assets, characters, perf  
@@ -57,4 +57,27 @@ Exit: each Blender variant ≤ the class budget, node names registered in `asset
 Step 1 delivered; steps 2–4 each closed as done / not needed after the visual review; costs recorded in `docs/assets/README.md` audit table.
 
 ## Wynik
-Step 1 done (see above). Next stage: user picks which step-2 variants to wire (recommended: `Ranger_NoHood` for hunters, `Wizard` for traders, `Knight_Helm` for alarm state, colour variants), then step 4 in Blender.
+**Step 1** done (guard = Knight, no helmet). **Step 2** done 2026-10-01 (Windows, Node only): `Knight_Helm`, `Knight_Cloth`, `Ranger_NoHood`, `Wizard` for both sexes built via `VARIANTS` in `build-characters.mjs`. **Step 4** built 2026-10-01 (Windows, Blender MCP): `Peasant_Boots`, `Blacksmith`, `Herbalist` for both sexes — authored by `scripts/assets/blender-character-variants.py` into `assets-src/characters/*.raw.glb` (committed, ~1 MB each, 512 px base colour only), post-processed with `node scripts/assets/build-characters.mjs --raw`. Not yet seen in the game (no e2e/tour on Windows).
+
+| file (male / female) | tris | KB | note |
+|---|---:|---:|---|
+| Knight_Helm | 11.9 k / 9.5 k | 807 / 796 | Knight + Armet |
+| Knight_Cloth | 8.4 k / 7.0 k | 734 / 732 | cloth body, no plate |
+| Ranger_NoHood | 11.6 k / 11.8 k | 930 / 928 | hunter |
+| Wizard | 7.6 k / 7.5 k | 821 / 846 | trader; no boots (bare feet mesh) |
+| Peasant_Boots | 6.0 k / 7.7 k | 627 / 444 | Ranger boots decimated to 1.8 k, UV on a leather swatch of the Peasant atlas (1 atlas) |
+| Blacksmith | 5.9 k / 6.1 k | 635 / 434 | Peasant + 224-tri apron (shrinkwrapped to Body+Legs, weights transferred), flat charcoal material |
+| Herbalist | 7.0 k / 7.1 k | 646 / 445 | Peasant + Ranger hood, flat muted-olive material |
+
+All inside the humanoid class (≤ 13 k tris, ≤ 1 MB, 512 px); the audit table in `docs/assets/README.md` is refreshed. Blacksmith/Herbalist (male) use 3 materials (atlas, skin, flat colour) — the Peasant atlas has no black/green swatch; if draw calls matter, switch to a swatch (script has `find_swatch`). Each variant has one skin per part with the same 65 joint names as `Male_Peasant.glb` (checked in Node).
+
+**Wired** (data in `ProfessionDef.outfit`, logic by id): guard → Knight, hunter → Ranger_NoHood, trader → Wizard, player → Ranger (hood stays), rest Peasant. Not wired (files ready): `Knight_Helm`, `Knight_Cloth`, `Peasant_Boots`, `Blacksmith`, `Herbalist`. `Actors.load` loads Peasant/Ranger/Ranger_NoHood/Knight/Wizard × 2 sexes at startup (~3.5 MB more than before: NoHood + Wizard, 2 sexes × ~0.9 MB) — lazy-load via `loadGltf` if startup cost shows up in `bench:startup`.
+
+### Colour variants (maps ready, not wired)
+`node scripts/assets/build-characters.mjs --tex` writes `public/assets/characters/tex/<Outfit>_2.png|_3.png` (Knight, Noble, Peasant, Ranger, Wizard; 512 px, 0.28–0.52 MB each, same UV layout as `<Outfit>_BaseColor`). To use one in code: clone the outfit material once per colour (cache by `outfit+n`, not per NPC), load the PNG with `THREE.TextureLoader`, set `tex.flipY = false` and `tex.colorSpace = THREE.SRGBColorSpace` (glTF convention), assign to `material.map`, and use the clone for the NPC's skinned meshes after `SkeletonUtils.clone`. Geometry is shared, so no extra tris.
+
+### To verify on WSL
+1. `pnpm bench:render` (medium) in a settlement scene before/after this commit (extra outfits loaded at startup, hunter/trader models) and `pnpm bench:startup` (asset decode +~3.5 MB).
+2. `node scripts/e2e/tour.mjs` screenshots: guard (Knight), hunter (Ranger_NoHood, head/hair not clipping), trader (Wizard robe, bare feet acceptable?), plus temporary wiring of Blacksmith/Herbalist/Peasant_Boots to look at the apron fit (it is a flat-ish sheet; check it does not clip while walking/crouching), boots (flat leather colour), hood (flat olive).
+3. Decide per variant: wire (`outfit` in `professions.ts` — blacksmith → `Blacksmith`, herbalist → `Herbalist`, optionally farmer/woodcutter → `Peasant_Boots`), cut (ratio in `VARIANTS`/`RAW_RATIO`) or drop. Wiring needs `CharOutfit` + `CHAR_OUTFITS` in `actors.ts` extended and the file listed in `assetNames.test.ts`.
+4. If the apron/hood look too flat or the 3rd material costs draw calls: regenerate with the Blender script (constants at the top) and rerun `--raw`.

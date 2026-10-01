@@ -5,6 +5,9 @@
 import type { ProfessionId } from '../world/types'
 import type { SkillId } from './skills'
 
+/** Outfit GLB family under characters/ (`<Male|Female>_<outfit>.glb`); the player keeps Ranger (hood). */
+export type CharOutfit = 'Peasant' | 'Ranger' | 'Ranger_NoHood' | 'Knight' | 'Wizard'
+
 export interface ProfessionDef {
   id: ProfessionId
   name: string
@@ -17,6 +20,8 @@ export interface ProfessionDef {
   /** Household store starting goods. */
   store: { item: string; qty: number }[]
   shirt: number
+  /** Character outfit model; omitted = Peasant. */
+  outfit?: CharOutfit
 }
 
 export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
@@ -33,13 +38,13 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
     store: [{ item: 'log', qty: 4 }, { item: 'branch', qty: 12 }, { item: 'bread', qty: 3 }, { item: 'dried_meat', qty: 2 }],
   },
   hunter: {
-    id: 'hunter', name: 'Hunter', weapon: 'short_bow', money: [25, 70], workHours: [5, 15], shirt: 0x3e5a32,
+    id: 'hunter', name: 'Hunter', weapon: 'short_bow', money: [25, 70], workHours: [5, 15], shirt: 0x3e5a32, outfit: 'Ranger_NoHood',
     kit: [{ item: 'knife', qty: 1 }, { item: 'arrow', qty: 20 }, { item: 'waterskin_m', qty: 1 }],
     skills: { ranged: 45, survival: 35, sneak: 30, traps: 20 },
     store: [{ item: 'dried_meat', qty: 6 }, { item: 'hide', qty: 2 }, { item: 'arrow', qty: 20 }],
   },
   guard: {
-    id: 'guard', name: 'Guard', weapon: 'spear', money: [30, 80], workHours: [0, 24], shirt: 0x5a2a2a,
+    id: 'guard', name: 'Guard', weapon: 'spear', money: [30, 80], workHours: [0, 24], shirt: 0x5a2a2a, outfit: 'Knight',
     kit: [{ item: 'short_sword', qty: 1 }, { item: 'torch', qty: 3 }, { item: 'bandage', qty: 2 }, { item: 'flint', qty: 1 }],
     skills: { melee: 40, medicine: 10 },
     store: [{ item: 'bread', qty: 4 }, { item: 'dried_meat', qty: 3 }, { item: 'torch', qty: 6 }],
@@ -51,7 +56,7 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
     store: [{ item: 'mint', qty: 6 }, { item: 'chamomile', qty: 6 }, { item: 'yarrow', qty: 3 }, { item: 'bread', qty: 3 }, { item: 'carrot', qty: 4 }],
   },
   trader: {
-    id: 'trader', name: 'Trader', weapon: 'dagger', money: [200, 400], workHours: [8, 18], shirt: 0x2f4a78,
+    id: 'trader', name: 'Trader', weapon: 'dagger', money: [200, 400], workHours: [8, 18], shirt: 0x2f4a78, outfit: 'Wizard',
     kit: [{ item: 'knife', qty: 1 }],
     skills: { trade: 50 },
     store: [
