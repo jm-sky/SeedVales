@@ -5,6 +5,7 @@
  *
  * Sources (see docs/assets/README.md): Rat.glb, Hare.glb as downloaded; Boar.glb (from FBX) and
  * Bear.glb normalised in Blender (applied transforms, head towards +Z in glTF, origin at the feet).
+ * Boar/Bear are read from *_rigged.glb: rig + procedural clips made by scripts/assets/rig-boar-bear.py.
  * Clips are renamed to the names render/actors.ts plays (Idle/Walk/Gallop/Attack/Death).
  *
  * Usage: node scripts/assets/build-extra-animals.mjs
@@ -25,13 +26,15 @@ await MeshoptSimplifier.ready
 await MeshoptEncoder.ready
 io.registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder })
 
+const RIGGED_CLIPS = { Idle: 'Idle', Walk: 'Walk', Gallop: 'Gallop', Attack: 'Attack' }
+
 /** Source clip name (without the "Armature|" prefix) → runtime name; unlisted clips are dropped. */
 const ANIMALS = {
   Rat: { clips: { Rat_Idle: 'Idle', Rat_Walk: 'Walk', Rat_Run: 'Gallop', Rat_Attack: 'Attack', Rat_Death: 'Death' } },
   Hare: { clips: { Bunny_idle: 'Idle', Bunny_walk: 'Walk' } },
-  Boar: {},
+  Boar: { file: 'Boar_rigged', clips: RIGGED_CLIPS },
   // 18.7k tris + 4096 px texture in the source.
-  Bear: { tex: 512, ratio: 0.3, error: 0.01 },
+  Bear: { file: 'Bear_rigged', clips: RIGGED_CLIPS, tex: 512, ratio: 0.3, error: 0.01 },
 }
 
 const renameClips = (map) => (doc) => {
@@ -44,8 +47,8 @@ const renameClips = (map) => (doc) => {
 
 const manifestPath = path.join(ROOT, 'public/assets/manifest.json')
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
-for (const [name, { clips = {}, tex = 0, ratio = 0, error = 0.01 }] of Object.entries(ANIMALS)) {
-  const src = path.join(SRC, `${name}.glb`)
+for (const [name, { file = name, clips = {}, tex = 0, ratio = 0, error = 0.01 }] of Object.entries(ANIMALS)) {
+  const src = path.join(SRC, `${file}.glb`)
   const dst = path.join(OUT, `${name}.glb`)
   const doc = await io.read(src)
   const ops = [renameClips(clips), dedup(), prune(), resample()]
