@@ -1,7 +1,7 @@
 # Realistyczniejsza grafika: największa poprawa przy ograniczonym koszcie
 
 **Data:** 2026-10-01  
-**Status:** rekomendacja po niezależnym researchu i self-review; bez implementacji  
+**Status:** rekomendacja po niezależnym researchu i self-review; bez implementacji. **Wdrożona do planów 2026-10-01:** [`render--002`](../plans/render--002--visual-foundation-and-render-metrics.md) (fala 4a), [`render--001`](../plans/render--001--weather-variety-effects.md) (4b), [`render--003`](../plans/render--003--visual-polish-and-optimization.md) (fala 6); korekty krytyczne w `render--002` §„Krytyczna ocena źródeł”, decyzje D-REN-6/7, D-PERF-2.  
 **Repo:** SeedVales-2, recon na `af30673768aaf9bec62d508cda0f351304896298`  
 **Zakres:** laptop i mobile; mały/średni nakład pracy; jakość obrazu, stabilność klatek i koszt utrzymania
 

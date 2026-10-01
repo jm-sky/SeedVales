@@ -29,6 +29,7 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **UI-LANG-01 verified (2026-10-01):** cały interfejs po angielsku (decyzja użytkownika: bez i18n, D-UI-4; słownik `docs/design/ui-english-glossary.md`). Nazwy własne bez zmian. Nowy tekst dla gracza pisz od razu po angielsku według słownika. **v1 znów kompletne** wg FEATURES (poza WORLD-10 — dźwięk nieodsłuchany).
 - **Fala 3 `economy--001` done (2026-10-01):** RES-07, FOOD-03, TRANS-01 verified (taczka/wózek, `SAVE_VERSION` 6). `pnpm check` 131/131, e2e acceptance 29/29, mobile 10/10, smoke 3/3.
 - Następny krok: `npc--001` (handel z każdym NPC, prezenty, towarzysze), potem review fali 3 (subagent w izolowanym worktree; zakres od `0514669^` / `2c6e4d6^` do HEAD w `src/game/sim/{actions,cooking,cart}.ts` i powiązanych).
+- **Plan grafiki (docs, 2026-10-01):** research 002 + review 005 wpięte w roadmapę — fala 4 = 4a `render--002` (metryki PERF-02 → światło/niebo → teren → pilot PBR) → 4b `render--001` (przepisany: opady już istnieją, pula 7 świateł, wiatr/woda RENDER-05); nowa fala 6 `render--003` (draft, warunkowy: wykończenie i optymalizacje tylko przy zmierzonym problemie). Decyzje D-REN-6/7, D-PERF-2. ❓ Dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping) i pomiar na realnym laptopie/telefonie (checklista powstanie w `render--002` krok 0). Review fali 3 → numer **006**.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

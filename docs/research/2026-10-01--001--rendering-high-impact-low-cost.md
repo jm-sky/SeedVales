@@ -1,7 +1,7 @@
 # Rendering 3D — wysoki efekt wizualny przy niskim koszcie
 
 **Data:** 2026-10-01  
-**Status:** research / rekomendacje  
+**Status:** research / rekomendacje — **katalog kierunków, nie plan wdrożenia** (review [005](../reviews/2026-10-01--005--rendering-research-critical-review.md): request changes). Podstawą planów jest [research 002](2026-10-01--002--realistic-visuals-practical-roadmap.md) → `render--002`, `render--001`, `render--003`.  
 **Projekt:** SeedVales-2  
 **Cel:** możliwie duży wzrost jakości obrazu przy małym koszcie GPU/CPU/pamięci, z naciskiem na laptop i mobile.
 

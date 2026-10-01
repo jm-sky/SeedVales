@@ -6,7 +6,8 @@
 ## Środowisko i ograniczenia pomiaru
 
 - CPU Intel Core Ultra 7 268V ×8, WSL2 (Linux 5.15), Node v22.15.1; przeglądarka: Chromium headless (Playwright).
-- **Headless = SwiftShader (programowy GPU):** FPS i czas GPU są niereprezentatywne; czasy CPU (sim, `render.cpu`, budowa chunków, przebudowa roślinności) są reprezentatywne.
+- **Headless = SwiftShader (programowy GPU):** FPS i czas GPU są niereprezentatywne. Czyste fazy JS (sim, budowa chunków, przebudowa roślinności, przygotowanie renderu) są porównywalne **w tym samym środowisku**; `render.draw` (a więc i część `render.cpu`) obejmuje programową rasteryzację i nie przenosi się na hardware (korekta 2026-10-01, D-PERF-2, [research 002 §3.1](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md)).
+- **Ring 512:** kwantyle/max timerów liczone są z ostatnich 512 próbek, a `samples/mean/overBudget` z całego przebiegu — przy długich testach nie są spójne (poprawka: `render--002` krok 0).
 - **GPU nie jest mierzone** (brak powszechnego `EXT_disjoint_timer_query_webgl2`) — raportujemy tylko CPU i `renderer.info` (D-PERF).
 - **Nie zmierzono na realnym telefonie** — profil `low` i emulacja mobile w e2e dotyczą tylko UI/sterowania.
 - WSL daje szum pomiarowy rzędu ±20% p95 — regresje potwierdzamy powtórką (kolumny „a / b” = dwa przebiegi).
@@ -77,7 +78,7 @@ Licznik „>4 ms” w `long-run-5-days` jest bardzo czuły na obciążenie maszy
 
 ## Znane wąskie gardła
 
-1. **Przebudowa roślinności przy przeskoku** (`render.vegetationRebuild`): mediana 4.9 ms, ale p95 30.7 ms przy teleporcie o 100 m (generacja ~30 chunków węzłów naraz + wypełnienie instancji; 13 próbek). Przy marszu przebudowa co ~64 m (pół chunka) → pojedynczy koszt ~5 ms. Poprawa (przy `render--001`): prefetch chunków węzłów po 1–2 na klatkę w pierścieniu `vegFar` + margines i/lub rozłożenie wypełniania instancji na kilka klatek.
+1. **Przebudowa roślinności przy przeskoku** (`render.vegetationRebuild`): mediana 4.9 ms, ale p95 30.7 ms przy teleporcie o 100 m (generacja ~30 chunków węzłów naraz + wypełnienie instancji; 13 próbek). Przy marszu przebudowa co ~64 m (pół chunka) → pojedynczy koszt ~5 ms. Gra nie ma teleportacji (podróż fizyczna), więc to głównie hitch przy wczytaniu/respawnie; najpierw zmierzyć marsz (`render--002` krok 1). Poprawa (jeśli marsz lub nowe obiekty przekroczą budżet): prefetch chunków węzłów po 1–2 na klatkę w pierścieniu `vegFar` + margines i/lub rozłożenie wypełniania instancji na kilka klatek.
 2. **Postacie: 7–12 draw calli na osobę** (skinned części nie są łączone) — dominują draw calls w osadach (353–425). Poprawa: atlas + scalenie części (render--001 / tools--001).
 3. **Budowa chunka terenu** max 8.1 ms (na granicy budżetu 8 ms) przy teleportach; przy marszu 3.6 ms.
 4. **Brak pomiaru GPU i telefonu** — patrz wyżej.

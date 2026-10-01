@@ -20,4 +20,4 @@ FEATURES: `WORLD-11`, `LOOT-01`.
 
 ## Weryfikacja
 
-vitest: determinizm landmarków (ten sam seed → te same), reguły rozmieszczenia na ≥ 8 seedach, loot nie odradza się po save/load. e2e/tour: zrzuty każdego typu landmarku.
+vitest: determinizm landmarków (ten sam seed → te same), reguły rozmieszczenia na ≥ 8 seedach, loot nie odradza się po save/load. e2e/tour: zrzuty każdego typu landmarku. Render landmarków przez istniejące szablony scalane + instancing (D-REN-2) i materiały wg polityki z `render--002` krok 4; `bench:render` w scenie z landmarkiem w zasięgu (draw calls, `render.cpu`, `render.vegetationRebuild` przy marszu) — przekroczenie budżetu → redukcja kosztu przed kolejnymi krokami (zasady przekrojowe roadmapy).

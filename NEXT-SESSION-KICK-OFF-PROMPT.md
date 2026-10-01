@@ -15,11 +15,17 @@ Kontynuujesz pracę nad grą SeedVales (Vue 3 + TypeScript + Three.js, pnpm). St
 
 **Fala 3 (dokończyć):**
 1. `npc--001` — handel z każdym NPC, prezenty i preferencje, towarzysze (najem na czas/za kwotę/z zadaniem i ryzykiem; darmowe dołączenie), przekazanie i użycie ekwipunku. Relacja = `npc.opinion` (D-PLAN-3).
-2. **Review fali 3** (subagent, izolowany worktree): `economy--001` (RES-07, FOOD-03, TRANS-01 — `sim/actions.ts`, `sim/cooking.ts`, `sim/cart.ts`, `render/carts.ts`, migracja `SAVE_VERSION` 6) + `npc--001` → `docs/reviews/YYYY-MM-DD--005--wave3-review.md`, popraw potwierdzone uwagi z testami regresji.
+2. **Review fali 3** (subagent, izolowany worktree): `economy--001` (RES-07, FOOD-03, TRANS-01 — `sim/actions.ts`, `sim/cooking.ts`, `sim/cart.ts`, `render/carts.ts`, migracja `SAVE_VERSION` 6) + `npc--001` → `docs/reviews/YYYY-MM-DD--006--wave3-review.md` (005 zajęte przez review renderingu), popraw potwierdzone uwagi z testami regresji.
 
-**Fala 4:** `render--001` (pogoda, różnorodność postaci/zwierząt, dekale śladów krwi — TRACE-01 część render, ogień z cząsteczkami/iskrami za profilem jakości D-REN-5); `tools--001` (draft — zdecyduj i zapisz D-TOOLS-1: realizować pierwszy wycinek albo odłożyć z uzasadnieniem).
+**Fala 4** (kolejność = zależność techniczna, D-REN-7; przeczytaj research `docs/research/2026-10-01--002--realistic-visuals-practical-roadmap.md` §4–§8 i review `docs/reviews/2026-10-01--005--…`):
+- **4a `render--002`** — najpierw metryki renderu (PERF-02: RAF pacing, GPU timer, spójne okna kwantyli, sceny noc/woda/deszcz/śnieg/marsz, baseline w PERF.md), potem światło/tone mapping/niebo, gładki teren + detal gruntu (tint przez uniformy), pilot PBR+IBL na jednym assecie. Każdy krok: timebox, fallback, keep/drop, zrzuty przed/po z tych samych kadrów.
+- **4b `render--001`** — ogień + pula świateł per profil, chmury + ulepszenie **istniejących** opadów, mokry teren/śnieg na uniformach, CHAR-01 (bez wzrostu draw calli), FAUNA-09, wiatr, woda, dekale. CHAR-01/FAUNA-09 mogą iść równolegle z 4a.
+- `tools--001` (draft — zdecyduj i zapisz D-TOOLS-1: realizować pierwszy wycinek albo odłożyć z uzasadnieniem).
+- Wydajność na urządzeniu mierzy użytkownik (D-PERF-2): zostaw checklistę w PROGRESS.md jako ❓ i nie blokuj pętli; nie ogłaszaj efektu „tanim” na podstawie SwiftShadera.
 
-**Fala 5:** `world--001` (landmarki, skarby — landmarki także na mapie z mgłą wojny); `settlement--001` (draft — doprecyzuj albo odłóż z uzasadnieniem).
+**Fala 5:** `world--001` (landmarki, skarby — landmarki także na mapie z mgłą wojny; `bench:render` ze sceną landmarku); `settlement--001` (draft — doprecyzuj albo odłóż z uzasadnieniem).
+
+**Fala 6:** `render--003` (draft, warunkowy) — przejrzyj PERF.md po falach 4–5 i dane z urządzeń (jeśli są); uruchamiaj tylko pozycje odpowiadające na zmierzony problem, resztę zamknij jako „niepotrzebne”.
 
 **Poza falami (nie zaczynaj bez planu):** MAP-02 (widoczność NPC/zwierząt wg zmysłów, v2 — model TBD w IMPORTANT-PRODUCT-NOTES; jeśli zostanie czas, najpierw plan + decyzja); pakiety zadań fabularnych w `docs/design/quests/` (tylko dokumentacja projektowa — wdrożenie wymaga osobnego planu i uzgodnienia z użytkownikiem).
 
