@@ -16,6 +16,8 @@ import { type QualityProfile } from './quality'
 import { applyWind } from './wind'
 
 const GRASS_BUDGET_MS = 2.5
+/** While tiles are still being built, upload the ring buffer at most every N frames. */
+const COMMIT_EVERY_FRAMES = 20
 const BLADE_H = 0.4
 const DRY = new THREE.Color(0xb8a45a)
 
@@ -24,8 +26,8 @@ export function bladeClumpGeometry(): THREE.BufferGeometry {
   const pos: number[] = []
   const col: number[] = []
   const idx: number[] = []
-  const base = new THREE.Color(0x4a7f2a)
-  const tip = new THREE.Color(0xa8d65a)
+  const base = new THREE.Color(0x42702a)
+  const tip = new THREE.Color(0x93bb4c)
   // 7 blades in a ~0.2 m radius, golden-angle spread so no two lean the same way.
   const blades: number[][] = []
   for (let i = 0; i < 7; i++) blades.push([Math.cos(i * 2.4) * 0.05 * (i % 4), Math.sin(i * 2.4) * 0.05 * (i % 4), i * 2.4, 0.08 + 0.03 * (i % 3), 0.7 + 0.1 * ((i * 5) % 4)])
@@ -64,8 +66,8 @@ export function crossQuadGeometry(): THREE.BufferGeometry {
   const uv: number[] = []
   const col: number[] = []
   const idx: number[] = []
-  const base = new THREE.Color(0x4f8a2e)
-  const tip = new THREE.Color(0xa0cf55)
+  const base = new THREE.Color(0x477a2c)
+  const tip = new THREE.Color(0x8cb54c)
   for (let q = 0; q < 2; q++) {
     const a = q * Math.PI * 0.5 + 0.3
     const dx = Math.cos(a) * 0.5
@@ -163,6 +165,8 @@ interface Ring {
   mesh: THREE.InstancedMesh
   tiles: Map<string, Float32Array> // matrices (16 floats per instance)
   committed: string
+  /** Frame of the last buffer upload (commit throttle). */
+  commitFrame: number
   cap: number
 }
 
@@ -204,11 +208,12 @@ export class Grass {
       const mesh = new THREE.InstancedMesh(geo, mat, cap)
       mesh.frustumCulled = false
       mesh.count = 0
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       mesh.castShadow = false
       mesh.receiveShadow = false
       this.group.add(mesh)
       this.mats.push(mat)
-      return { mesh, tiles: new Map<string, Float32Array>(), committed: '', cap } as Ring
+      return { mesh, tiles: new Map<string, Float32Array>(), committed: '', commitFrame: 0, cap } as Ring
     }
     if (near > 0) this.rings[0] = mk(0, near, 0, makeMaterial(this.u, { heightScale: BLADE_H, amplitude: 0.22 }), (this.geo[0] ??= bladeClumpGeometry()))
     // LOD1 has its own fade uniform copy (fade in before the near ring ends, out at the far edge).
@@ -263,7 +268,10 @@ export class Grass {
     return f
   }
 
+  private frame = 0
+
   update(px: number, pz: number, budgetMs = GRASS_BUDGET_MS) {
+    this.frame++
     this.u.uGrassCenter.value.set(px, pz)
     this.u1.uGrassCenter.value.set(px, pz)
     const t0 = performance.now()
@@ -304,7 +312,11 @@ export class Grass {
       // Commit when the set of ready tiles changed.
       const ready = need.filter((n) => ring.tiles.has(n.k))
       const sig = ready.map((n) => n.k).join('|')
-      if (sig !== ring.committed) {
+      // Commits are coalesced: every commit re-uploads the whole instance buffer (up to ~2.5 MB), and while walking
+      // a ring gains a tile every few frames (GPU bench: raf p95 10.7 -> 23.6 ms on medium march with a commit per tile).
+      const stale = sig !== ring.committed
+      const pending = ready.length < need.length
+      if (stale && (ring.committed === '' || !pending || this.frame - ring.commitFrame >= COMMIT_EVERY_FRAMES)) {
         const arr = ring.mesh.instanceMatrix.array as Float32Array
         let off = 0
         for (const n of ready) {
@@ -316,6 +328,7 @@ export class Grass {
         ring.mesh.count = off / 16
         ring.mesh.instanceMatrix.needsUpdate = true
         ring.committed = sig
+        ring.commitFrame = this.frame
       }
       // Evict tiles far outside the ring.
       if (ring.tiles.size > need.length * 2 + 16) {

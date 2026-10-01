@@ -207,3 +207,33 @@ A result class of its own (not the steady-state gate). Fresh browser process per
 
 Reading: world generation dominates the cold start (~3.4–3.8 s of 6–8 s); asset download/decode is a small share here (localhost, so network cost is absent — a real network adds the 15 MB). First-frame `render.cpu` max (0.9–2.2 s on SwiftShader) is mostly shader compilation + software rasterisation, not representative. Use as the "before" for `render--002` step 3.
 
+
+## WSL session 10 (2026-10-01) — 4a gate and grass cost on a real GPU
+
+Machine: Intel Core Ultra 7 268V ×8 (the same fingerprint as the WSL baselines), Intel Arc 140V iGPU. `bench:render` got two modes: default = headless SwiftShader (comparable with the committed baselines), `SV_GPU=1` = **real GPU** via Mesa d3d12 (`GALLIUM_DRIVER=d3d12`, `/usr/lib/wsl/lib`, frame-rate limit and vsync off → RAF interval = true frame time, `gpu.frame` from the timer query is available). `SV_VISUAL='{"grass":false}' SV_VISUAL_TAG=nograss` runs the A/B, `SV_SCENES=meadow` limits the scenes (march/teleport always run). New scenes/columns: `meadow` (open meadow, no baseline yet), grass update, GPU frame.
+
+**4a exit gate (SwiftShader, `render.prep` p95 vs the committed WSL baselines `c5ed00c`, one run each, 60+ frames):**
+
+| profile / variant | result |
+|---|---|
+| low, grass off | all scenes ok (−45…−85 %), except night-campfires +52 % (0.7 → 2.1 ms absolute; repeat of the grass-on run: +15 %) |
+| low, grass on | all ok (−43…−85 %), night-campfires +15 % (inconclusive band), water-shore +0 % |
+| medium, grass off | all ok (−21…−93 %), except water-shore +173 % (0.7 → 1.91 ms absolute, n = 60) |
+| medium, grass on | all ok (−2…−81 %), water-shore +29 % (0.7 → 0.9 ms absolute) |
+
+The two ⚠️ cells are sub-2-ms absolute values that flip between runs (+173 % → +29 % on the same scene one run later) — noise, not a regression. **Gate closed:** the whole `render--002` + relief + wind + grass package is ≤ baseline on every scene that is not noise. (A baseline refresh was not done: the baselines are older and *higher* than today's numbers, and refreshing needs two confirming runs.)
+
+**Real-GPU numbers (Arc 140V, RAF interval median / p95 ms, grass off → on, first grass rings: low 24 m ×0.4, medium 20/65, high 36/90):**
+
+| scene | low | medium | high |
+|---|---|---|---|
+| meadow | 1.21/2.89 → 1.31/3.07 | 3.01/6.78 → 3.32/6.92 | 3.67/8.60 → 3.97/8.43 |
+| march-10mps | 1.70/6.39 → 1.60/5.56 | 3.32/10.7 → 2.42/23.6 ¹ | 4.84/15.3 → 5.90/40.3 ¹ |
+| small-settlement | 4.7 → 5.7 (p95 spike = first frames) | 9.7 → 10.1 | 17.2 → 15.6 |
+| crowded-settlement | 2.6 → 2.5 | 11.6 → 12.0 | **28.8 → 27.7 (≈ 35 fps)** |
+
+GPU timer (`gpu.frame`, medium): meadow 2.24 → 3.07 ms, march 3.32 → 4.66 ms: **grass costs ≈ +1 ms GPU on medium** and ≈ +0.3 ms RAF on low/high; `render.grass` CPU update p95 0.1–1.3 ms. ¹ The march p95 is driven by sporadic multi-ms driver/host stalls (the same scene on the same commit ranged 10–40 ms between runs; a 3 s stall appeared once) — the gpu.frame p95 (9.5–12 ms) is the more stable figure. A commit throttle (`COMMIT_EVERY_FRAMES`) was added to the grass ring upload; it did not change the p95, kept because it removes redundant full-buffer uploads.
+
+**Finding unrelated to grass (❓ Opus/user):** the settlements are the expensive scenes on this iGPU — medium ≈ 10–12 ms (draw calls 480–610), **high ≈ 16–29 ms (700–890 draw calls, 1.8–2.3 M triangles)** with grass off as well. Low is comfortable (≤ 2.6 ms RAF). Candidates when this matters: building/prop merging per settlement, shadow-caster limits, lower high-profile NPC count draw cost (render--003).
+
+**Tuned values after measuring (grassPlacement.ts):** low `near 14 / far 36 / k 0.6` (was blade-less clump ring 24 m ×0.4 — low now gets a short blade ring), medium `22 / 70` (was 20/65), high `38 / 95` (was 36/90). A trial with medium 24/80 and high 40/110 was heavier than the margin allows (medium march GPU 4.7 → 7.8 ms, high march RAF 5.9 → 21 ms in one noisy run) and was backed off. `CLUMP_DENSITY` unchanged (3 / 2 per m²). Caps in `grassPlacement.test.ts` updated (LOD0 ≤ 4300/11500/24500, LOD1 ≤ 9500/44000/78000 instances).

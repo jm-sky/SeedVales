@@ -31,7 +31,10 @@ const { launch, newGame, shot, sv } = await import('../e2e/lib.mjs')
 
 const OUT = path.resolve(import.meta.dirname, '../../test-results/bench')
 fs.mkdirSync(OUT, { recursive: true })
-const { browser, page, logs } = await launch()
+const { browser, context, page, logs } = await launch()
+// SV_VISUAL='{"grass":false}' overrides render flags (localStorage `sv-visual`) for A/B gate runs; the tag goes into the output file name.
+const visualTag = (process.env.SV_GPU ? '-gpu' : '') + (process.env.SV_VISUAL ? `-${process.env.SV_VISUAL_TAG ?? 'visual'}` : '')
+if (process.env.SV_VISUAL) await context.addInitScript((v) => localStorage.setItem('sv-visual', v), process.env.SV_VISUAL)
 await newGame(page, '1337', quality)
 
 /** Scene setup runs in the page: (sv) => void. Same seed/time/weather each run. */
@@ -42,6 +45,17 @@ const scenes = [
     const s = sv.game.sim
     sv.setHour(12)
     for (let i = 0; i < 20000; i++) { const x = 500 + ((i * 97) % 7000); const z = 500 + ((i * 131) % 7000); if (s.terrain.biomeAt(x, z) === 7) { sv.teleport(x, z); return true } }
+    return false
+  }],
+  // render--007 step 2: open meadow far from settlements (grass cost; no baseline until measured).
+  ['meadow', (sv) => {
+    const s = sv.game.sim
+    const st = s.world.settlements[0]
+    sv.setHour(12)
+    for (let r = 120; r < 2500; r += 40) for (let a = 0; a < 6.28; a += 0.3) {
+      const x = st.x + Math.cos(a) * r; const z = st.z + Math.sin(a) * r
+      if (s.terrain.biomeAt(x, z) === 2 && s.terrain.roadAt(x, z) === 0 && s.terrain.slopeAt(x, z) < 0.15 && s.terrain.waterDepthAt(x, z) === 0 && s.terrain.biomeAt(x + 30, z) === 2 && s.terrain.biomeAt(x, z + 30) === 2) { sv.teleport(x, z); return true }
+    }
     return false
   }],
   ['night-campfires', (sv) => { const st = sv.game.sim.world.settlements[2]; sv.setHour(22); sv.teleport(st.x, st.z + 10) }],
@@ -88,7 +102,7 @@ const collect = (name) => sv(page, (n) => {
   return {
     scene: n,
     frame: pick('frame'), raf: pick('raf.interval'), prep: pick('render.prep'), renderCpu: pick('render.cpu'), draw: pick('render.draw'),
-    terrain: pick('render.terrain'), actors: pick('render.actors'), vegetation: pick('render.vegetationRebuild'), chunkBuild: pick('chunks.build'), sim: pick('sim.tick'),
+    terrain: pick('render.terrain'), actors: pick('render.actors'), vegetation: pick('render.vegetationRebuild'), grass: pick('render.grass'), gpuFrame: pick('gpu.frame'), chunkBuild: pick('chunks.build'), sim: pick('sim.tick'),
     drawCalls: r.gauges['render.drawCalls'], triangles: r.gauges['render.triangles'], programs: r.gauges['render.programs'], lights: r.gauges['render.lights'], activeLights: r.gauges['render.pointLights'],
     geometries: r.gauges['render.geometries'], textures: r.gauges['render.textures'], chunks: r.gauges['chunks.active'],
     gpuTimer: r.gauges['gpu.timerAvailable'] === 1,
@@ -140,7 +154,9 @@ const resetScene = () => sv(page, (cal) => {
 }, initialCal)
 
 const results = []
+const only = process.env.SV_SCENES?.split(',')
 for (const [name, setup] of scenes) {
+  if (only && !only.includes(name)) continue
   await resetScene()
   const ok = await sv(page, (src) => new Function('sv', `return (${src})(sv)`)(window.__sv), setup.toString())
   if (ok === false) throw new Error(`bench:render — scene "${name}": locator found no place (seed changed?)`)
@@ -205,9 +221,9 @@ results.push(await collect('teleport-hitch'))
 await browser.close()
 await server?.close()
 
-const env = { quality, machine: MACHINE, browser: 'Chrome headless + SwiftShader (software GPU)', date: new Date().toISOString(), note: 'gate metric: render.prep p95; render.draw/RAF/GPU/FPS not representative headless' }
+const env = { quality, machine: MACHINE, browser: process.env.SV_GPU ? 'Chrome headless + real GPU (WSL2 d3d12)' : 'Chrome headless + SwiftShader (software GPU)', date: new Date().toISOString(), note: 'gate metric: render.prep p95; render.draw/RAF/GPU/FPS not representative headless' }
 const consoleErrors = logs.filter((l) => l.startsWith('[error]') || l.startsWith('[pageerror]'))
-fs.writeFileSync(path.join(OUT, `render-${quality}-latest.json`), JSON.stringify({ env, results, consoleErrors }, null, 1))
+fs.writeFileSync(path.join(OUT, `render-${quality}${visualTag}-latest.json`), JSON.stringify({ env, results, consoleErrors }, null, 1))
 
 // Baseline comparison (review 009 F-10): gate = render.prep p95; small samples or noise band = inconclusive.
 const base = fs.existsSync(BASELINE) ? JSON.parse(fs.readFileSync(BASELINE, 'utf8')) : null
@@ -227,14 +243,14 @@ const lines = [
   `# Render benchmark (${quality}, ${env.browser})`, '',
   `Machine: ${MACHINE} · baseline: ${base ? `${path.basename(BASELINE)} (${base.commit}, ${base.date.slice(0, 10)}, ${base.machine ?? 'machine unknown'})` : 'none'} · console errors: ${consoleErrors.length}`,
   ...(base && !sameMachine ? ['', '**Baseline is from another machine — no verdict.** Measure a reference commit on this machine and pass `--baseline=<file>`.'] : []), '',
-  '| Scene | frames | render.prep med/p95 | vs baseline | frame CPU | render.cpu | draw (SwiftShader) | terrain | veg rebuild | chunk build | draw calls | triangles | programs | lights (active) | textures |',
+  '| Scene | frames | render.prep med/p95 | vs baseline | frame CPU | render.cpu | draw (SwiftShader) | terrain | veg rebuild | grass update | GPU frame | chunk build | draw calls | triangles | programs | lights (active) | textures |',
   '|---|---:|---|---|---|---|---|---|---|---|---:|---:|---:|---|---:|',
 ]
 for (const r of results) {
-  lines.push(`| ${r.scene} | ${r.prep?.samples ?? 0} | ${f(r.prep)} | ${verdict(r)} | ${f(r.frame)} | ${f(r.renderCpu)} | ${f(r.draw)} | ${f(r.terrain)} | ${f(r.vegetation)}${r.vegetation ? ` (n=${r.vegetation.samples}, max ${r.vegetation.max})` : ''} | ${f(r.chunkBuild)} | ${r.drawCalls ?? '—'} | ${r.triangles ?? '—'} | ${r.programs ?? '—'} | ${r.lights ?? '—'} (${r.activeLights ?? '—'}) | ${r.textures ?? '—'} |`)
+  lines.push(`| ${r.scene} | ${r.prep?.samples ?? 0} | ${f(r.prep)} | ${verdict(r)} | ${f(r.frame)} | ${f(r.renderCpu)} | ${f(r.draw)} | ${f(r.terrain)} | ${f(r.vegetation)}${r.vegetation ? ` (n=${r.vegetation.samples}, max ${r.vegetation.max})` : ''} | ${f(r.grass)} | ${f(r.gpuFrame)} | ${f(r.chunkBuild)} | ${r.drawCalls ?? '—'} | ${r.triangles ?? '—'} | ${r.programs ?? '—'} | ${r.lights ?? '—'} (${r.activeLights ?? '—'}) | ${r.textures ?? '—'} |`)
 }
 const md = lines.join('\n')
-fs.writeFileSync(path.join(OUT, `render-${quality}-latest.md`), md)
+fs.writeFileSync(path.join(OUT, `render-${quality}${visualTag}-latest.md`), md)
 console.log(md)
 if (updateBaseline) {
   const commit = (await import('node:child_process')).execSync('git rev-parse --short HEAD').toString().trim()

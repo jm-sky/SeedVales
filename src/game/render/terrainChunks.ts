@@ -24,7 +24,7 @@ const BIOME_COL: Record<number, THREE.Color> = {
   [Biome.Ocean]: C(0x8a7f5c),
   [Biome.Beach]: C(0xd8c68e),
   [Biome.Meadow]: C(0x6f9b3c),
-  [Biome.Steppe]: C(0xa9a35a),
+  [Biome.Steppe]: C(0x9da252),
   [Biome.Swamp]: C(0x4f5a2c),
   [Biome.ForestDeciduous]: C(0x547a2e),
   [Biome.ForestMixed]: C(0x4c6e2c),

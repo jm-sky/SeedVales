@@ -32,8 +32,8 @@ describe('grass placement', () => {
     }
     for (const q of ['low', 'medium', 'high'] as const) {
       const { near, far, k } = GRASS_RINGS[q]
-      expect(maxInstances(0, near, 0, k)).toBeLessThan(q === 'high' ? 22500 : q === 'medium' ? 10500 : 1)
-      expect(maxInstances(1, far, Math.max(0, near - 12), k)).toBeLessThan(q === 'high' ? 66000 : q === 'medium' ? 38000 : 3500)
+      expect(maxInstances(0, near, 0, k)).toBeLessThan(q === 'high' ? 24500 : q === 'medium' ? 11500 : 4300)
+      expect(maxInstances(1, far, Math.max(0, near - 12), k)).toBeLessThan(q === 'high' ? 78000 : q === 'medium' ? 44000 : 9500)
     }
   })
 

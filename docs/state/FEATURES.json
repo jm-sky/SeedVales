@@ -917,7 +917,7 @@
    "behavior": "Grass on the ground: instanced blade clumps near the camera with distance LOD (dense blades → crossed-quad clumps → terrain colour), placed from biome/road/slope/footprint masks, wind in the shader, season tint and hidden under snow; per-profile rings and caps",
    "verify": "A/B frames meadow-grass/summer/autumn/winter on 3 seeds + bench:render per profile (cloud same container; WSL ❓ user) + caps test",
    "status": "implemented_unverified",
-   "evidence": "render/grassPlacement.ts + grassPlacement.test.ts (masks, determinism, per-profile caps), render/grass.ts (rings, shader fade/wind/season/snow), sv-visual grass flag, frames docs/state/frames/render--007; look + real-GPU cost pending (WSL/opus); plan: docs/plans/render--007--nature-pass.md step 2 (D-REN-14)"
+   "evidence": "render/grassPlacement.ts + grassPlacement.test.ts (masks, determinism, per-profile caps), render/grass.ts (rings, shader fade/wind/season/snow), sv-visual grass flag, frames docs/state/frames/render--007; session 10 (WSL, Arc 140V real GPU, SV_GPU=1): cost +~1 ms GPU medium / +0.3 ms low,high in a meadow, render.grass CPU p95 <= 1.3 ms (docs/state/PERF.md 'WSL session 10'); rings re-tuned, colours tuned, frames docs/state/frames/render--007/wsl; look keep/drop pending (opus); plan: docs/plans/render--007--nature-pass.md step 2 (D-REN-14)"
   },
   {
    "id": "RENDER-07",

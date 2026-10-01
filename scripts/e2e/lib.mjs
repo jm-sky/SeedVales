@@ -27,7 +27,13 @@ const CHROME = findChrome()
 export async function launch({ mobile = false } = {}) {
   const browser = await chromium.launch({
     executablePath: CHROME,
-    args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
+    // SV_GPU=1 (WSL2): real GPU through Mesa d3d12 (needs /dev/dxg + /usr/lib/wsl/lib); numbers are then GPU numbers, not SwiftShader.
+    args: process.env.SV_GPU
+      ? ['--use-angle=gl', '--use-gl=angle', '--ignore-gpu-blocklist', '--enable-webgl', '--disable-frame-rate-limit', '--disable-gpu-vsync']
+      : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
+    env: process.env.SV_GPU
+      ? { ...process.env, GALLIUM_DRIVER: 'd3d12', LD_LIBRARY_PATH: `/usr/lib/wsl/lib:${process.env.LD_LIBRARY_PATH ?? ''}` }
+      : process.env,
   })
   const context = await browser.newContext(
     mobile

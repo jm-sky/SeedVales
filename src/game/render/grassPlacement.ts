@@ -18,9 +18,9 @@ export const CLUMP_DENSITY = [3, 2] as const
 
 /** Per-profile rings (m, horizontal from the player). `near` 0 = no blade ring. */
 export const GRASS_RINGS: Record<QualityProfile, { near: number; far: number; k: number }> = {
-  low: { near: 0, far: 24, k: 0.4 }, // `k` scales the density (low = sparse clump ring, plan budget table)
-  medium: { near: 20, far: 65, k: 1 },
-  high: { near: 36, far: 90, k: 1 },
+  low: { near: 14, far: 36, k: 0.6 }, // `k` scales the density (low = sparse clump ring, plan budget table)
+  medium: { near: 22, far: 70, k: 1 },
+  high: { near: 38, far: 95, k: 1 },
 }
 
 /** Fade zones (m): LOD0 shrinks over the last FADE_NEAR m of its ring; LOD1 fades in before it and out over FADE_FAR. */
