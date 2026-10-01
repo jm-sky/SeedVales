@@ -1,4 +1,4 @@
-# Kick-off: session 6 (Sonnet) — `survival--001` steps 2–4, then `diag--002` step 1 and `render--002` step 3
+# Kick-off: session 8 (Opus) — decisions for `render--002` step 3, 4a exit gate, then `render--001`
 
 You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State on 2026-10-01 (end of session 5): v1 complete; waves 1–3 done; wave 4a `render--002` steps 0–2 done (step 2: dome sky default, no tone mapping — D-REN-9; shadow texel snapping); `survival--001` step 1 (CRAFT-03 waterskin recipes) done. **This session runs on Sonnet (D-PLAN-7): it implements `sonnet` items in a long autonomous loop until they run out or you hit a real blocker.**
 
@@ -53,3 +53,7 @@ Skill `verify` (check + all e2e), skill `handoff`; up-to-date PROGRESS (what wor
 **Start message (paste, Sonnet session):**
 
 > Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state (merge main; a new review on main is triaged first — decisions via an Opus subagent), then work through the `sonnet` items in the order of §3 in the work loop (§4) until they run out or you hit a real blocker. Hand `opus` items to an Opus subagent or record them in PROGRESS. Don't stop at a plan or a question about continuing. Finish with a commit and push to `main`.
+
+---
+
+**Update after session 7 (Sonnet, cloud):** `survival--001` done (FIRE-01/02/03, review 010 triaged, `SAVE_VERSION` 8, no migrations), `diag--002` step 1 done (`pnpm bench:startup`), `render--002` step 3 implemented behind `sv-visual` flags with defaults unchanged. The §3 list above is historical; the next work is in PROGRESS "Teraz → Next step" (Opus keep/drop for terrain, then `render--001`).

@@ -1,12 +1,12 @@
 # Survival: campfire fuel, stone hearth, standing torches, waterskin recipe
 
-**Status:** in_progress  
+**Status:** done  
 **Model:** sonnet — steps 1–4 (spec is complete, user decisions recorded); opus only for step 5 (design) and the wave review  
 **Domain:** survival  
 **Sub domains:** build, craft, items, traces, npc-duties, render  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (between 4a and 4b — the sim model feeds `render--001` steps 1 and 8; step 1 can go any time)  
 **Created:** 2026-10-01  
-**Finished:** —
+**Finished:** 2026-10-01 (steps 1–4, 6; step 5 FIRE-04 stays design-only)
 
 ---
 
@@ -55,3 +55,5 @@ CRAFT-03, FIRE-01…03 verified; FIRE-04 recorded as design-pending; one save bu
 Next: step 2 FIRE-01 (campfire fuel / burn-out / ash), steps 3–4, one `SAVE_VERSION` bump 7 → 8 for steps 2–4 together.
 
 **Steps 2–4 + step 6 — FIRE-01/02/03 done (session 6, 2026-10-01, Sonnet):** model and decisions in D-FIRE-1. Code: `sim/fire.ts` (fuel, `fireLevel`, light/feed/dismantle, torch burn), ash in `sim/traces.ts` (`Trace.kind`), burn-down in `ecology` (`worldSystems.ts`), options in `sim/interact.ts` (Add fuel, Light, Dismantle the hearth, Light/Extinguish a planted torch), `Game.quick('plant_torch')` + quick-panel buttons (also reachable from the touch menu "Actions"), guard duty `feedFirePlan` + fallback goal `tend_fire`, work acts `take_fuel`/`feed_fire`. `SAVE_VERSION` 8, no `GEN_VERSION` change. Tests: `survival.test.ts` (17 incl. CRAFT-03); v7 save rejected (`save.test.ts`). e2e: acceptance 18a/18b, mobile M10. Simplifications: burning torches are scanned in the existing ground-spoilage loop instead of a separate lit-torch list; the spit discount next to a hearth was not implemented; step 5 (FIRE-04) stays design-only (`planned`). `bench:sim` same container before/after (cloud-only, p95 ms): small 0.36→0.45, crowded 1.10→1.10, accelerated-sleep 1.76→1.45, long-run 3.01→2.89 — no regression. Verified: `pnpm check` 187/187, e2e smoke 3/3, acceptance 32/32, mobile 11/11, 0 console errors (one earlier acceptance run lost step 18b's campfire for an unexplained reason; the step now throws a descriptive error with the sim state if it recurs).
+
+**Wave review:** [review 010](../reviews/2026-10-01--010--survival-fire-review.md) — 6 fixed with regression tests, 1 mitigated, 1 deferred to `render--001`, 2 unconfirmed.

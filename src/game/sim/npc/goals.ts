@@ -8,6 +8,7 @@ import type { Sim } from '../sim'
 import type { AiStep, Human } from '../types'
 import { COMPANION, FIRE, RUN_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
+import { isSettlementHearth } from '../fire'
 import { countItem, findFood } from '../inventory'
 import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
@@ -165,7 +166,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
 
   // --- Tend the settlement fire (FIRE-02 fallback): any adult steps in when it is nearly out and nobody is on it ---
   if (!away && !comp && h.age === 'adult' && !isGuard && v.vigor > 20) {
-    const fire = settlementBuildings(sim, h.settlementId, 'campfire').find((b) => b.hearth && (b.fuel ?? 0) < FIRE.fallbackBelowH && (!b.tender || b.tender.until < cal))
+    const fire = settlementBuildings(sim, h.settlementId, 'campfire').find((b) => isSettlementHearth(b) && (b.fuel ?? 0) < FIRE.fallbackBelowH && (!b.tender || b.tender.until < cal))
     if (fire) {
       opts.push({ id: 'tend_fire', score: 0.3 + b5.c * 0.3 + (night ? 0.15 : 0), plan: () => feedFirePlan(sim, h, FIRE.fallbackBelowH) })
     }

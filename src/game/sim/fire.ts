@@ -26,6 +26,9 @@ export function fireLevel(b: Building): number {
 
 export const isFirePlace = (b: Building) => b.kind === 'campfire'
 
+/** The settlement's own hearth (generated with the settlement) — the only fire the guard and settlers tend. */
+export const isSettlementHearth = (b: Building) => b.kind === 'campfire' && !!b.hearth && b.owner === 'settlement'
+
 /** Moves branches (then logs) from `inv` into the fire while they fit under the cap; returns hours added and items used. */
 export function feedFire(inv: Inventory, b: Building, maxItems = Infinity): { hours: number; used: number } {
   let hours = 0
@@ -51,7 +54,7 @@ export function feedFire(inv: Inventory, b: Building, maxItems = Infinity): { ho
 export function addFuelFromPack(p: Human, b: Building): ActionResult {
   if ((b.fuel ?? 0) + FIRE.branchH > FIRE.fuelCapH) return { ok: false, msg: 'The fire is already fully stocked.' }
   const r = feedFire(p.inv, b)
-  if (r.used === 0) return { ok: false, msg: 'You have no branches or logs.' }
+  if (r.used === 0) return { ok: false, msg: countItem(p.inv, 'branch') + countItem(p.inv, 'log') > 0 ? 'The fire cannot take any more.' : 'You have no branches or logs.' }
   return { ok: true, msg: `You add ${r.used} piece${r.used > 1 ? 's' : ''} of fuel (${b.fuel!.toFixed(1)} h of burning).` }
 }
 
@@ -64,12 +67,17 @@ export function lightFire(p: Human, b: Building): ActionResult {
   return { ok: true, msg: 'The fire catches.' }
 }
 
+/** Player puts a fire out; the fuel that is left stays and can be lit again. */
+export function douseFire(b: Building) {
+  b.lit = false
+}
+
 /** Settlement NPCs feed from what they carry and always manage to light it. */
 export function npcFeedFire(h: Human, b: Building): boolean {
-  const r = feedFire(h.inv, b)
+  feedFire(h.inv, b)
   if (!((b.fuel ?? 0) > 0)) return false
   b.lit = true
-  return r.used > 0
+  return true // already topped up by someone else is not a failed job (review 010 #6)
 }
 
 /**
@@ -87,7 +95,9 @@ export function burnFuel(b: Building, hours: number): boolean {
 /** Removes burnt-out campfires and leaves ash where they were. */
 export function removeBurntOut(sim: Sim, dead: Building[]) {
   if (!dead.length) return
+  const p = sim.player
   for (const b of dead) {
+    if (Math.hypot(b.x - p.x, b.z - p.z) < 40) sim.message('The campfire has burnt out.', 'info')
     const i = sim.state.buildings.indexOf(b)
     if (i >= 0) sim.state.buildings.splice(i, 1)
     addAsh(sim, b.x, b.z)
@@ -98,6 +108,7 @@ export function removeBurntOut(sim: Sim, dead: Building[]) {
 /** Dismantle a cold hearth: the stones come back (FIRE-02). */
 export function dismantleHearth(sim: Sim, p: Human, b: Building): ActionResult {
   if (!b.hearth) return { ok: false, msg: 'Only a stone hearth can be dismantled.' }
+  if (b.owner !== 'player') return { ok: false, msg: 'This hearth belongs to the settlement — leave it be.' }
   if (b.lit) return { ok: false, msg: 'Put the fire out first — it is still burning.' }
   const i = sim.state.buildings.indexOf(b)
   if (i < 0) return { ok: false, msg: '' }

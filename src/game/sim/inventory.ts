@@ -17,7 +17,7 @@ export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): I
 }
 
 const canMerge = (a: ItemStack, b: ItemStack) =>
-  a.id === b.id && itemDef(a.id).stack && (a.q ?? -1) === (b.q ?? -1) && (a.m ?? -1) === (b.m ?? -1) && a.sp === b.sp
+  a.id === b.id && itemDef(a.id).stack && (a.q ?? -1) === (b.q ?? -1) && (a.m ?? -1) === (b.m ?? -1) && a.sp === b.sp && (a.dur === undefined || b.dur === undefined || a.dur === b.dur)
 
 export function addItem(inv: Inventory, stack: ItemStack): void {
   if (stack.qty <= 0) return

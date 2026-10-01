@@ -15,7 +15,7 @@ import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, unloadInto, unloadToBuilding } from './cart'
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
-import { addFuelFromPack, canLightTorch, dismantleHearth, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
+import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
@@ -164,10 +164,11 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
             const n = roastBatch(sim, p)
             o.push(opt('roast', `Roast meat (${n}/${cap} pcs)`, n > 0, cap ? 'No raw meat' : 'Move closer to the fire'))
           }
-          o.push(opt('craft', 'Cook / craft', true, undefined, 'craft'), opt('rest', 'Rest by the fire (speed up time)'), opt('camp_sleep', 'Sleep by the campfire'))
+          o.push(opt('craft', 'Cook / craft', true, undefined, 'craft'), opt('rest', `Rest by the fire (speed up time${b.lit ? `, ${(b.fuel ?? 0).toFixed(1)} h of fuel` : ''})`), opt('camp_sleep', `Sleep by the campfire${b.lit ? ` (${(b.fuel ?? 0).toFixed(1)} h of fuel)` : ''}`))
           o.push(opt('add_fuel', `Add fuel (${(b.fuel ?? 0).toFixed(1)} h left)`, countItem(p.inv, 'branch') + countItem(p.inv, 'log') > 0, 'You have no branches or logs'))
           if (!b.lit) o.unshift(toolOpt(sim, 'light', 'Light', 'fire_start', 'flint and steel'))
-          if (b.hearth && !b.lit) o.push(opt('dismantle_hearth', 'Dismantle the hearth (get the stones back)'))
+          else o.push(opt('douse_fire', 'Put out the fire'))
+          if (b.hearth && !b.lit && b.owner === 'player') o.push(opt('dismantle_hearth', 'Dismantle the hearth (get the stones back)'))
           break
         case 'house':
         case 'shed':
@@ -341,6 +342,11 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       const b = sim.building((t as { id: string }).id)
       if (b) b.lit = false
       return 'Put out.'
+    }
+    case 'douse_fire': {
+      const b = sim.building((t as { id: string }).id)
+      if (b) douseFire(b)
+      return 'You put the fire out.'
     }
     case 'douse_planted': {
       const g = sim.state.ground.find((gg) => gg.id === (t as { id: number }).id)

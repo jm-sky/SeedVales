@@ -11,8 +11,8 @@ import { roundTrip } from '../save/snapshot'
 import { applyBuildProgress, placeSite } from './build'
 import { completeCraft } from './craft'
 import { fireNear } from './fauna/perception'
-import { addFuelFromPack, burnGroundTorch, dismantleHearth, fireLevel, lightFire, plantTorch, torchBurnH } from './fire'
-import { runOption } from './interact'
+import { addFuelFromPack, burnGroundTorch, dismantleHearth, fireLevel, lightFire, npcFeedFire, plantTorch, torchBurnH } from './fire'
+import { runOption, targetOptions } from './interact'
 import { addItem, countItem, newStack } from './inventory'
 import { feedFirePlan } from './npc/duties'
 import { settlementBuildings } from './npc/queries'
@@ -343,5 +343,96 @@ describe('survival: standing torch (FIRE-03)', () => {
     expect(saved.burnH).toBe(3.25)
     expect(saved.planted).toBe(true)
     expect(saved.lit).toBe(true)
+  })
+})
+
+describe('survival: review 010 triage', () => {
+  const nearestWarehouse = (sim: Sim) => sim.state.buildings.find((b) => b.kind === 'warehouse' && b.settlementId === 0)!
+
+  it('FIRE-02: a hearth the player builds beside a settlement is not tended or fed from the warehouse (review 010 #1)', () => {
+    const sim = testSim()
+    const wh = nearestWarehouse(sim)
+    sim.player.x = wh.x + 20
+    sim.player.z = wh.z
+    const mine = build(sim, 'hearth')
+    expect(mine.settlementId).toBe(0)
+    const guard = sim.state.npcs.find((n) => n.profession === 'guard' && n.settlementId === 0)!
+    for (const f of settlementBuildings(sim, 0, 'campfire')) if (f !== mine) f.fuel = 20 // the settlement's own fire needs nothing
+    const stock = countItem(wh.inv!, 'branch') + countItem(wh.inv!, 'log')
+    expect(feedFirePlan(sim, guard, FIRE.tendBelowH)).toBeNull()
+    run(sim, 300, 0.5)
+    expect(mine.lit).toBe(false)
+    expect(countItem(wh.inv!, 'branch') + countItem(wh.inv!, 'log')).toBe(stock)
+  })
+
+  it('FIRE-02: only the player\'s own hearth can be dismantled for stones, never a settlement hearth (review 010 #2)', () => {
+    const sim = testSim()
+    const fire = settlementBuildings(sim, 0, 'campfire')[0]!
+    fire.lit = false
+    fire.fuel = 0
+    const opts = targetOptions(sim, { type: 'building', id: fire.id }).map((o) => o.id)
+    expect(opts).not.toContain('dismantle_hearth')
+    expect(dismantleHearth(sim, sim.player, fire).ok).toBe(false)
+    expect(sim.building(fire.id)).toBe(fire)
+  })
+
+  it('FIRE-03: picking up a worn torch does not wear the fresh torches in the pack (review 010 #3)', () => {
+    const sim = testSim()
+    playerFarAway(sim)
+    const p = sim.player
+    p.inv.items = p.inv.items.filter((i) => i.id !== 'torch')
+    p.eq.off = undefined
+    addItem(p.inv, newStack('torch', 2))
+    expect(plantTorch(sim, p).ok).toBe(true)
+    const g = sim.state.ground.find((q) => q.planted)!
+    g.burnH = 0.5
+    runOption(sim, { type: 'ground', id: g.id }, 'pickup')
+    const burns = p.inv.items.filter((i) => i.id === 'torch').map((i) => [torchBurnH(i), i.qty])
+    expect(burns).toContainEqual([TORCH.burnH, 1])
+    expect(burns.some(([h]) => Math.abs(h! - 0.5) < 0.1)).toBe(true)
+  })
+
+  it('FIRE-01: a lit fire can be put out by the player (review 010 #5)', () => {
+    const sim = testSim()
+    const fire = settlementBuildings(sim, 0, 'campfire')[0]!
+    expect(targetOptions(sim, { type: 'building', id: fire.id }).map((o) => o.id)).toContain('douse_fire')
+    runOption(sim, { type: 'building', id: fire.id }, 'douse_fire')
+    expect(fire.lit).toBe(false)
+    expect(fire.fuel!).toBeGreaterThan(0) // the fuel stays; it can be lit again
+  })
+
+  it('FIRE-02: feeding a fire someone else just topped up is not a failed job (review 010 #6)', () => {
+    const sim = testSim()
+    const guard = sim.state.npcs.find((n) => n.profession === 'guard')!
+    const fire = settlementBuildings(sim, guard.settlementId, 'campfire')[0]!
+    fire.fuel = FIRE.fuelCapH
+    fire.lit = true
+    addItem(guard.inv, newStack('branch', 3))
+    expect(npcFeedFire(guard, fire)).toBe(true)
+  })
+
+  it('FIRE-02: settlement hearths stay lit for days from the stores plus the settlers\' own firewood (review 010 #7)', () => {
+    const sim = testSim()
+    playerFarAway(sim)
+    const fires = sim.state.buildings.filter((b) => b.kind === 'campfire' && b.hearth)
+    let litSamples = 0
+    let samples = 0
+    for (let h = 0; h < 72; h += 1) {
+      run(sim, H, 5)
+      for (const f of fires) {
+        samples++
+        if (f.lit) litSamples++
+      }
+    }
+    expect(litSamples / samples).toBeGreaterThan(0.6)
+  })
+
+  it('FIRE-01: the player is told when a nearby campfire burns out (review 010 #4)', () => {
+    const sim = testSim()
+    playerFarAway(sim)
+    const b = build(sim, 'campfire')
+    run(sim, (b.fuel! + 0.5) * H, 1)
+    expect(sim.building(b.id)).toBeUndefined()
+    expect(sim.state.messages.some((m) => /burnt out/i.test(m.text))).toBe(true)
   })
 })

@@ -1088,7 +1088,7 @@
    "behavior": "Campfire needs starter fuel (3 branches) and fire_start; burns for calendar hours; adding fuel extends burn time and raises fire size/light (high cap), shrinking back as fuel burns; when out it leaves an ash trace that fades in ~12 h, faster in rain",
    "verify": "vitest + e2e + screenshot",
    "status": "verified",
-   "evidence": "src/game/sim/survival.test.ts FIRE-01 (campfire = 3 branches, starts lit on starter fuel, burns in calendar hours, cap, fireLevel, burn-out removes it and leaves ash that fades in ~12 h and faster in rain, ash is no blood); sim/fire.ts + traces.ts; e2e acceptance 18b"
+   "evidence": "src/game/sim/survival.test.ts FIRE-01 (campfire = 3 branches, starts lit on starter fuel, burns in calendar hours, cap, fireLevel, burn-out removes it and leaves ash that fades in ~12 h and faster in rain, ash is no blood); sim/fire.ts + traces.ts; e2e acceptance 18b; sim side only — flame size/ash decals are `render--001` steps 1/8 (review 010 #9)"
   },
   {
    "id": "FIRE-02",
@@ -1106,7 +1106,7 @@
    "behavior": "Standing torch (cheap lantern): plant a torch upright on the ground, light/extinguish it, it burns 4-6 calendar hours while lit; only a lit torch gives light and scares animals",
    "verify": "vitest + e2e (incl. mobile)",
    "status": "verified",
-   "evidence": "src/game/sim/survival.test.ts FIRE-03 (plant from pack/hand, light/extinguish/pick up, burns only while lit, remaining time kept through pickup, burn-out removes light and fear, thrown torch burns out, save keeps burnH/planted); e2e acceptance 18a, mobile M10"
+   "evidence": "src/game/sim/survival.test.ts FIRE-03 (plant from pack/hand, light/extinguish/pick up, burns only while lit, remaining time kept through pickup, burn-out removes light and fear, thrown torch burns out, save keeps burnH/planted); e2e acceptance 18a, mobile M10; the planted torch is still drawn flat until `render--001` (review 010 #9)"
   },
   {
    "id": "FIRE-04",

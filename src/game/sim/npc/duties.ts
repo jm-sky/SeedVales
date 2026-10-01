@@ -10,6 +10,7 @@ import { FIRE } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, type SpeciesId } from '../../data/species'
 import { isTree } from '../../world/nodes'
+import { isSettlementHearth } from '../fire'
 import { countItem } from '../inventory'
 import { routeVia } from '../movement'
 import { daylight, hourOf, isNight, seasonOf } from '../time'
@@ -103,7 +104,7 @@ function hunter(sim: Sim, h: Human): DutyPlan {
  */
 export function feedFirePlan(sim: Sim, h: Human, belowH: number): DutyPlan {
   const cal = sim.state.time.cal
-  const fire = settlementBuildings(sim, h.settlementId, 'campfire').find((b) => b.hearth && (b.fuel ?? 0) < belowH && (!b.tender || b.tender.id === h.id || b.tender.until < cal))
+  const fire = settlementBuildings(sim, h.settlementId, 'campfire').find((b) => isSettlementHearth(b) && (b.fuel ?? 0) < belowH && (!b.tender || b.tender.id === h.id || b.tender.until < cal))
   if (!fire) return null
   const carried = countItem(h.inv, 'branch') + countItem(h.inv, 'log')
   const wh = sim.building(sim.state.settlements[h.settlementId]?.warehouseId)
