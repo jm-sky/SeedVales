@@ -91,12 +91,27 @@ async function settle() {
   await page.waitForTimeout(1000)
 }
 
+/**
+ * Measures at least MIN_FRAMES rendered frames (min 6 s, max 60 s). SwiftShader renders medium at ~2 fps,
+ * so a fixed 6 s window gave only ~10 samples and p95 = max (session 4).
+ */
+const MIN_FRAMES = 60
+async function measureFrames() {
+  const t0 = Date.now()
+  await page.waitForTimeout(6000)
+  while (Date.now() - t0 < 60000) {
+    const n = await sv(page, () => window.__sv.perf.report().timers.find((t) => t.name === 'render.prep')?.samples ?? 0)
+    if (n >= MIN_FRAMES) break
+    await page.waitForTimeout(1000)
+  }
+}
+
 const results = []
 for (const [name, setup] of scenes) {
   await sv(page, (src) => new Function('sv', `(${src})(sv)`)(window.__sv), setup.toString())
   await settle() // warm-up: chunk streaming, asset instancing, shader compilation
   await sv(page, () => window.__sv.perf.reset())
-  await page.waitForTimeout(6000)
+  await measureFrames()
   results.push(await collect(name))
   await shot(page, `bench-${quality}-${name}`)
 }

@@ -1,120 +1,141 @@
-# Wydajność — raport (PERF)
+# Performance report (PERF)
 
-**Aktualizacja:** 2026-09-30 (sesja 2, plan [diag--001](../plans/diag--001--sim-hotspots-and-perf-report.md))
-**Kod:** po `game--002` (GEN_VERSION 7, SAVE_VERSION 4) + audyt pełnych skanów (PERF-01).
+**Updated:** 2026-10-01 (session 4, plan [render--002](../plans/render--002--visual-foundation-and-render-metrics.md) step 0 — clean baselines)
+**Code:** `c5ed00c` + bench fix (`GEN_VERSION` 7, `SAVE_VERSION` 7). Earlier report (session 2, Polish): `git show c5ed00c:docs/state/PERF.md`.
 
-## Środowisko i ograniczenia pomiaru
+## Environment and measurement limits
 
-- CPU Intel Core Ultra 7 268V ×8, WSL2 (Linux 5.15), Node v22.15.1; przeglądarka: Chromium headless (Playwright).
-- **Headless = SwiftShader (programowy GPU):** FPS i czas GPU są niereprezentatywne. Czyste fazy JS (sim, budowa chunków, przebudowa roślinności, przygotowanie renderu) są porównywalne **w tym samym środowisku**; `render.draw` (a więc i część `render.cpu`) obejmuje programową rasteryzację i nie przenosi się na hardware (korekta 2026-10-01, D-PERF-2, [research 002 §3.1](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md)).
-- **Ring 512:** kwantyle/max timerów liczone są z ostatnich 512 próbek, a `samples/mean/overBudget` z całego przebiegu — przy długich testach nie są spójne (poprawka: `render--002` krok 0).
-- **GPU nie jest mierzone** (brak powszechnego `EXT_disjoint_timer_query_webgl2`) — raportujemy tylko CPU i `renderer.info` (D-PERF).
-- **Nie zmierzono na realnym telefonie** — profil `low` i emulacja mobile w e2e dotyczą tylko UI/sterowania.
-- WSL daje szum pomiarowy rzędu ±20% p95 — regresje potwierdzamy powtórką (kolumny „a / b” = dwa przebiegi).
+- CPU Intel Core Ultra 7 268V ×8, WSL2 (Linux 5.15), Node v22.15.1; browser: Chrome headless (Playwright driver).
+- **Headless = SwiftShader (software GPU).** FPS, RAF intervals, GPU time and `render.draw` include software rasterisation and do not transfer to hardware. Pure JS phases (sim, terrain chunk builds, vegetation rebuilds, render preparation `render.prep`) are comparable **within the same environment** (D-PERF-2). The render gate metric is therefore `render.prep` p95 (= `render.cpu` without draw submission).
+- **SwiftShader is slow:** medium renders at ~1.5–2 fps headless, low at ~3–5 fps. Since session 4 `bench:render` measures at least 60 frames per static scene (min 6 s, max 60 s); before, a fixed 6 s window gave ~10 samples and p95 was simply the max.
+- **Quantiles** (since `089bfae`) come from a whole-run log histogram (2% buckets), so median/p95/p99/max/mean/overBudget share one window. Before, p95 used the last 512 samples only — the sim baseline was refreshed for that reason (see below).
+- **GPU timer** (`EXT_disjoint_timer_query_webgl2`) is read asynchronously where available; headless numbers are SwiftShader's and not meaningful.
+- **No measurement on a real laptop or phone yet** — see the device checklist below (❓ for the user, D-PERF-2).
+- WSL noise is about ±20% on p95; regressions are confirmed with a repeat run (columns "a / b" = two runs).
 
-## Budżety (D-PERF)
+## Budgets (D-PERF)
 
-| Metryka | Budżet | Uzasadnienie |
+| Metric | Budget | Reason |
 |---|---:|---|
-| klatka (CPU) | 33.3 ms | minimum 30 FPS na słabszym sprzęcie |
-| `sim.tick` | 4 ms | przy 60 FPS (16.7 ms) zostaje połowa na GPU/driver |
-| `render.cpu` | 10 ms | jw. |
-| budowa chunka terenu | 8 ms | jeden chunk na klatkę bez przycięcia |
+| frame (CPU) | 33.3 ms | at least 30 fps on weaker hardware |
+| `sim.tick` | 4 ms | at 60 fps (16.7 ms) half the frame stays for GPU/driver |
+| `render.cpu` | 10 ms | as above |
+| terrain chunk build | 8 ms | one chunk per frame without a hitch |
+| wave 4a gate | `render.prep` p95 ≤ +10% | whole `render--002` package vs the baseline below (not +10% per step) |
 
-## Sceny
+## Scenes
 
-**`pnpm bench:sim`** (Node, seed 1337, rozgrzewka 5 s, krok 1/60 s, timery diag włączone, `detailed=sim`; JSON+MD w `test-results/bench/`, baza `scripts/bench/baseline.json`):
+**`pnpm bench:sim`** (Node, seed 1337, 5 s warm-up, 1/60 s step, diag timers on, `detailed=sim`; JSON + MD in `test-results/bench/`, baseline `scripts/bench/baseline.json`):
+`small-settlement` (player in an SM settlement, 60 s) · `crowded-settlement` (LG settlement + 60 extra animals, 60 s) · `dense-forest` (walk through forest, 60 s) · `combat` (6 wolves attack, 30 s) · `chunk-traverse` (1200 m along a road, resource node streaming) · `accelerated-sleep` (8 calendar hours at ×40) · `long-run-5-days` (5 game days, 5 returns to the same places, 0.5 s step = 5 sub-steps, so ">4 ms" is not a 60 fps frame; memory and save size).
 
-- `small-settlement` — gracz w osadzie SM, 60 s.
-- `crowded-settlement` — osada LG + 60 dodatkowych zwierząt, 60 s.
-- `dense-forest` — marsz przez las, 60 s.
-- `combat` — 6 wilków atakuje, 30 s.
-- `chunk-traverse` — 1200 m drogą (streaming węzłów zasobów).
-- `accelerated-sleep` — 8 h kalendarza przy ×40.
-- `long-run-5-days` — 5 dni gry, 5 powrotów w te same miejsca, krok 0.5 s (jeden `sim.step` = 5 pod-kroków, więc „>4 ms” nie oznacza klatki 60 FPS); pamięć i rozmiar zapisu.
+**`pnpm bench:render [low|medium]`** (Chrome headless, own Vite server, seed 1337, waits for `chunks.pending` = 0, then ≥ 60 frames): `small-settlement`, `crowded-settlement`, `dense-forest`, `night-campfires`, `water-shore`, `rain`, `snow`, `march-10mps` (steady 30 s march along the first road — crosses chunk borders, no teleport), `teleport-hitch` (12 jumps of ~100 m — loading/respawn case only). Screenshots per scene in `test-results/bench/`.
 
-**`pnpm bench:render medium`** (Chromium headless, seed 1337, rozgrzewka 4 s, pomiar 6 s): `small-settlement`, `crowded-settlement`, `dense-forest`, `chunk-traverse` (12 teleportów po 100 m wzdłuż drogi — celowo najgorszy przypadek streamingu).
+## Simulation baseline (session 4, whole-run quantiles, ms)
 
-## Symulacja — przed/po audycie (ms, 2 przebiegi każdy)
+Baseline refreshed with `--update-baseline` on `c5ed00c` after two confirming runs. Reason: the quantile method changed from a last-512 ring to the whole run (`089bfae`), so p95/p99 now include warm-up and rare calendar systems — the unmodified `ffa2380` shows the same jump (small-settlement 0.10 → 0.20, accelerated-sleep 0.56 → 1.12, long-run 0.87 → 1.60), i.e. it is a measurement change, not a code regression.
 
-| Scena | p95 przed | p95 po | p99 przed | p99 po | >4 ms przed | >4 ms po |
-|---|---|---|---|---|---|---|
-| small-settlement | 0.096 / 0.107 | 0.099 / 0.111 | 0.183 / 0.187 | 0.199 / 0.201 | 0 / 0 | 0 / 0 |
-| crowded-settlement | 0.378 / 0.361 | 0.369 / 0.367 | 0.505 / 0.548 | 0.544 / 0.506 | 0 / 0 | 0 / 0 |
-| dense-forest | 0.039 / 0.039 | 0.044 / 0.041 | 0.085 / 0.098 | 0.094 / 0.082 | 0 / 0 | 0 / 0 |
-| combat | 0.056 / 0.060 | 0.044 / 0.067 | 0.110 / 0.113 | 0.120 / 0.168 | 0 / 0 | 0 / 0 |
-| chunk-traverse | 0.043 / 0.040 | 0.052 / 0.037 | 0.099 / 0.106 | 0.185 / 0.086 | 0 / 0 | 0 / 0 |
-| accelerated-sleep | 0.589 / 0.647 | 0.574 / 0.740 | 0.975 / 0.795 | 0.968 / 1.039 | 0 / 0 | 0 / 0 |
-| long-run-5-days | 0.786 / 0.817 | 0.795 / 0.860 | 0.981 / 0.976 | 1.065 / 2.167 | 5 / 5 | 3 / 3 |
+| Scene | p95 a / b | p99 a / b | >4 ms a / b |
+|---|---|---|---|
+| small-settlement | 0.192 / 0.188 | 0.441 / 0.517 | 1 / 0 |
+| crowded-settlement | 0.507 / 0.432 | 1.075 / 0.696 | 3 / 0 |
+| dense-forest | 0.077 / 0.059 | 0.216 / 0.148 | 0 / 0 |
+| combat | 0.132 / 0.108 | 0.477 / 0.321 | 0 / 0 |
+| chunk-traverse | 0.074 / 0.067 | 0.204 / 0.174 | 1 / 0 |
+| accelerated-sleep | 0.918 / 1.119 | 2.027 / 1.872 | 0 / 0 |
+| long-run-5-days | 1.391 / 1.260 | 2.520 / 2.151 | 79 / 29 |
 
-Wniosek: przy obecnych populacjach (91 NPC, ~180–240 zwierząt) zmiana jest neutralna w granicach szumu — zapytania przestrzenne o dużym promieniu (≈400 m wokół osady) kosztują tyle co skan ~200 zwierząt, ale skalują się z powierzchnią, nie z populacją. `dens` wypadł z listy najdroższych systemów. Wszystkie sceny ≪ 4 ms (p95 ≤ 0.9 ms). Dryf crowded p95 0.34 (sesja 1, świat GEN 5) → 0.37 wynika ze zmiany świata (GEN 7) i objazdów budynków (D-SIM-11) i mieści się w progu regresji 1.25×. Baza `scripts/bench/baseline.json` zaktualizowana po audycie (świat GEN 5 → 7 = inne sceny, porównanie ze starą bazą byłoby nieadekwatne).
+All scenes stay far below the 4 ms budget. The ">4 ms" count in `long-run-5-days` is very sensitive to machine load (3–5 on a quiet machine in session 2, 29–89 now with whole-run counting of 5-sub-step frames) — compare p95, not this counter.
 
-### Obciążenie i najdroższe systemy (przebieg „po” #1)
+## Render baseline (session 4, before render--002 steps 1–4)
 
-| Scena | obciążenie | najdroższe systemy (p95, ms) |
+Two runs per profile ("a / b"), each static scene ≥ 60 frames, 0 console errors. Gate metric for wave 4a: `render.prep` p95 per scene vs these values (compare against the higher of a/b; differences under ±20% are noise).
+
+**Low**
+
+| Scene | frames a/b | render.prep med/p95 a | b | terrain p95 a / b | veg rebuild p95 (n) a / b | chunk build p95 a / b | draw calls | triangles | programs | lights |
+|---|---|---|---|---|---|---|---:|---:|---:|---:|
+| small-settlement | 60 / 63 | 0.7 / 3.82 | 0.7 / 1.91 | 0.2 / 0.1 | 0 (0) / 0 (0) | 0 / 0 | 148 | 455382 | 10 | 9 |
+| crowded-settlement | 62 / 63 | 0.4 / 6.14 | 0.3 / 1.99 | 0.1 / 0.1 | 10.08 (8) / 2.28 (7) | 0 / 0 | 147 | 397575 | 11 | 9 |
+| dense-forest | 61 / 60 | 0.3 / 1.39 | 0.2 / 1.8 | 0.2 / 0.2 | 1.9 (3) / 3.3 (3) | 0 / 0 | 58 | 321167 | 11 | 9 |
+| night-campfires | 62 / 63 | 0.3 / 1.39 | 0.3 / 0.8 | 0.4 / 0.2 | 1.5 (1) / 1.7 (1) | 0 / 0 | 133 | 388291 | 11 | 9 |
+| water-shore | 60 / 62 | 0.2 / 0.5 | 0.2 / 0.61 | 0.1 / 0.1 | 4.2 (2) / 4.1 (2) | 0 / 0 | 113 | 424033 | 11 | 9 |
+| rain | 60 / 62 | 0.5 / 2.11 | 0.7 / 2.62 | 0.2 / 0.2 | 0 (0) / 2.78 (1) | 0 / 0 | 141 | 458581 | 12 | 9 |
+| snow | 60 / 61 | 1.31 / 3.97 | 1.21 / 4.22 | 0.1 / 0.1 | 2.89 (1) / 8.77 (1) | 0 / 0 | 139 | 455295 | 12 | 9 |
+| march-10mps | 56 / 85 | 3.01 / 24.09 | 1.39 / 8.77 | 9.13 / 6.65 | 22.7 (6) / 9.8 (8) | 8.27 / 5.24 | 127 | 572094 | 12 | 9 |
+| teleport-hitch | 17 / 19 | 10.08 / 23.61 | 9.88 / 51.12 | 16.4 / 14.1 | 17.5 (10) / 41.94 (11) | 11.58 / 11.35 | 97 | 396558 | 12 | 9 |
+
+**Medium**
+
+| Scene | frames a/b | render.prep med/p95 a | b | terrain p95 a / b | veg rebuild p95 (n) a / b | chunk build p95 a / b | draw calls | triangles | programs | lights |
+|---|---|---|---|---|---|---|---:|---:|---:|---:|
+| small-settlement | 61 / 61 | 1.39 / 3.39 | 1.51 / 7.64 | 0.2 / 0.2 | 0 (0) / 0 (0) | 0 / 0 | 334 | 1059912 | 15 | 9 |
+| crowded-settlement | 60 / 61 | 1.31 / 8.43 | 1.8 / 6.39 | 0.2 / 0.2 | 8.4 (6) / 5.45 (7) | 0 / 0 | 361 | 870162 | 17 | 9 |
+| dense-forest | 61 / 61 | 0.2 / 2.89 | 0.2 / 3.39 | 0.2 / 0.2 | 4.1 (4) / 4.3 (4) | 0 / 0 | 91 | 1081280 | 17 | 9 |
+| night-campfires | 60 / 60 | 1.51 / 4.84 | 1.21 / 3.07 | 0.2 / 0.1 | 3.39 (2) / 2.19 (2) | 0 / 0 | 370 | 892092 | 17 | 9 |
+| water-shore | 61 / 62 | 0.2 / 0.7 | 0.2 / 0.7 | 0.2 / 0.1 | 5 (1) / 4.2 (2) | 0 / 0 | 173 | 726772 | 17 | 9 |
+| rain | 60 / 61 | 0.99 / 7.64 | 0.7 / 1.99 | 5.35 / 0.2 | 0 (0) / 0 (0) | 2.67 / 0 | 296 | 1055184 | 18 | 9 |
+| snow | 60 / 60 | 1.7 / 17.55 | 1.1 / 6.39 | 11.81 / 0.9 | 22.7 (1) / 8.9 (1) | 7.64 / 1.3 | 272 | 1012458 | 18 | 9 |
+| march-10mps | 48 / 52 | 4.56 / 20.97 | 3.32 / 12.04 | 6.92 / 7.79 | 38.74 (8) / 24 (8) | 4.94 / 5.04 | 242 | 1562760 | 18 | 9 |
+| teleport-hitch | 10 / 12 | 16.53 / 33.4 | 13.3 / 33.73 | 13.8 / 12.78 | 24.5 (8) / 12.04 (8) | 8.9 / 7.79 | 162 | 827096 | 18 | 9 |
+
+Readings:
+- **March at 10 m/s: vegetation rebuild p95 9.8–22.7 ms (low) and 24–38.7 ms (medium)**, above the 8 ms threshold of `render--002` step 1 → amortising the rebuild over frames is needed (step 1 is a keep, not optional). Terrain chunk builds while marching stay at p95 5–8 ms.
+- **Snow / rain on medium**: one run caught the season/weather terrain rebuild wave (terrain p95 11.8 ms, chunk build 7.6 ms); step 3 (tint as uniforms) removes it.
+- Static scenes: `render.prep` median ≤ 1.8 ms, p95 ≤ 8.5 ms; programs 10–18, lights 9 (sun + hemisphere + 6 pooled fire lights + the player torch light).
+- Teleport hitch: p95 23–51 ms (loading/respawn only).
+
+## Device measurement checklist (for the user — ❓ D-PERF-2)
+
+Headless cannot judge GPU cost or real frame pacing. To measure on a laptop and a phone:
+
+1. Production build: `pnpm build && pnpm exec vite preview --host` (phone on the same network), open the printed URL. Do not measure `pnpm dev`.
+2. Start a new game with seed **1337**, pick the quality profile to test (Settings), stand in the home settlement at noon (clear weather).
+3. Warm up for **30 s** without measuring (shader compilation, chunk streaming).
+4. In the browser console (on a phone: remote debugging, e.g. Chrome `chrome://inspect`): `window.__sv.perf.reset()`, wait **60 s**, then `copy(JSON.stringify(window.__sv.pacing()))` and paste the result into a note. `pacing()` returns RAF p50/p95/p99, share of frames over 16.7 / 33.3 / 50 ms, CPU frame quantiles and GPU quantiles (or "no data" when the GPU timer extension is missing).
+5. Repeat step 4 **3×**, alternating with the other quality profile (e.g. low, medium, low, medium, …).
+6. On the phone, additionally play normally for **10–15 min** (walk out of the settlement, night with campfires, rain if possible) and note heat/throttling and the last `pacing()` result.
+7. Note the device, browser and battery saver state. Send the notes back; they go into this file under "Device results".
+
+## Known bottlenecks
+
+1. **Snow (and season tint) rebuilds terrain** — the tint is baked into vertex colours, so a weather/season change marks chunks dirty and rebuilds them (medium snow: `render.terrain` median ~5 ms every frame during the rebuild wave). `render--002` step 3 moves the tint to uniforms.
+2. **Vegetation rebuild during the march** (`render.vegetationRebuild`): see the march row — decides `render--002` step 1 (threshold p95 > 8 ms at march speed).
+3. **Characters: 7–12 draw calls per person** (skinned parts not merged) — dominate draw calls in settlements. Fix: atlas + merged parts (`render--001` / `tools--001` / `render--003`).
+4. **Teleport hitch** (loading/respawn only — travel is physical): many chunks at once; acceptable behind a loading screen.
+5. **No GPU / phone measurement** — checklist above.
+
+## Full-scan audit (PERF-01)
+
+Rule: per-tick / per-actor systems query only objects in range (`sim.actors.query`, `sim.nodes.query`, `sim.groundNear`, `sim.corpsesNear`, `sim.buildingsNear`) or indices (`sim.building(id)`, `sim.householdBuildings`, `sim.settlementBuildings`, `sim.npcsOf`). Full list scans are allowed in rare calendar systems and player actions — with a reason.
+
+| Place | Was | Decision |
 |---|---|---|
-| small-settlement | npcs=91 animals=181 nearNpc=9 nearFauna=7 spatialQueries=25816 collisionChecks=9223 aiPlans=65 aiFailures=16 | quests 0.59, dens 0.20, regrow 0.20 |
-| crowded-settlement | npcs=91 animals=241 nearNpc=19 nearFauna=43 spatialQueries=68722 collisionChecks=42281 aiPlans=78 aiFailures=14 | fauna 0.29, npc 0.18, quests 0.07 |
-| dense-forest | npcs=91 animals=181 spatialQueries=5246 collisionChecks=3601 aiPlans=64 chunksGenerated=1 | quests 0.08, npc 0.05, ecology 0.04 |
-| combat | npcs=91 animals=187 spatialQueries=4540 aiPlans=24 aiFailures=5 | quests 0.18, npc 0.07, ecology 0.05 |
-| chunk-traverse | npcs=91 animals=187 spatialQueries=121985 collisionChecks=57848 aiPlans=984 aiFailures=200 chunksGenerated=20 | regrow 0.57, quests 0.12, ecology 0.06 |
-| accelerated-sleep | npcs=91 animals=183 nearNpc=18 nearFauna=12 spatialQueries=23134 aiPlans=203 aiFailures=24 | npc 0.40, fauna 0.16, quests 0.08 |
-| long-run-5-days | npcs=91 animals=216 ground=92 corpses=0 nodesState=452 saveKB=428 heapΔ=7.5 MB | — |
+| `quests.ts` rats at a building / rats left | `s.animals.filter` in a loop over buildings | `countNear` (`sim/queries.ts`) — 40/60 m query |
+| `quests.ts` wolves near a settlement | `s.animals.filter` per settlement | `animalsNear` (settlement radius + 350 m) |
+| `quests.ts`, `build.ts`, `interact.ts` (host, trader, guard) | `s.npcs.find` | `sim.npcsOf(settlementId)` (index) |
+| `worldSystems.ts` rats at a nest | `s.animals.filter` | `countNear` 40 m |
+| `worldSystems.ts` den animals | `s.animals.filter` per den | one pass per system run (every 30 s) → map `denId → count` (den animals roam up to 160 m — a spatial query would be wrong) |
+| `fauna/ai.ts` carrion/bait, eating | `state.ground` / `state.corpses` `.find` with distance | `sim.groundNear` / `sim.corpsesNear` (spatial indices; mutations via `sim.addGround/removeGround/addCorpse/removeCorpse`) |
+| `fauna/ai.ts` pen/trough | `state.buildings.find` | `sim.householdBuildings(hid)` |
+| `npc/queries.ts` `householdBuilding` / `settlementBuildings` | `state.buildings.find/filter` | indices in `Sim.rebuildBuildingIndex` |
+| `sim.building(id)` (27 calls, e.g. per NPC plan) | `state.buildings.find` | `Map` id → building |
+| `npc/goals.ts` downed neighbour to help | `state.npcs.find` with distance | `sim.actors.query(150)` |
+| `npc/goals.ts` food seller | `state.npcs.find` | `sim.npcsOf` |
+| `npc/duties.ts` corpses for the hunter | `state.corpses.find` | `sim.corpsesNear(200)` |
+| `npc/companions.ts` companion list (per companion per tick) | `state.npcs.filter` | cached list, rebuilt on hire/join/dismiss/death and every `companionSystem` run (review 006 #9) |
+| `interact.ts` targets around the player (5 Hz) | scan of `corpses` / `ground` | `corpsesNear` / `groundNear` |
+| `npc/ai.ts` `npcSystem`, `fauna/ai.ts` `faunaSystem` | loop over all actors | **kept** — LOD scheduler (each actor has `nextUpdate`); O(n) time comparisons |
+| `worldSystems.ts` `ecology` (spoilage, durability, fields) | loops over buildings/NPCs/ground | **kept** — calendar system every 5 s, per-object work is required |
+| `npc/companions.ts` `companionSystem` | loop over NPCs | **kept** — every 2 s, contracts/bond per companion |
+| `quests.ts` loop over buildings with a nest | `buildings` scan every 10 s | **kept** — ~150 buildings, `ratNest` filter |
+| `npc/works.ts` `shear` | loop over animals | **kept** — rare work act |
+| `interact.ts` theft witnesses | loop over NPCs | **kept** — player action, not per tick |
+| `treasury.ts` `totalMoney` | loop over NPCs | **kept** — tests/diagnostics only |
 
-`quests` na szczycie małych scen to pojedyncze wywołania co 10 s (pierwsze po rozgrzewce JIT); nie wpływa na p95 ticka. `aiFailures` w `chunk-traverse` to NPC przy dalekim LOD, których cele zostały daleko od teleportowanego gracza (cooldown, bez pętli).
-
-## Rendering (medium, CPU)
-
-| Scena | frame CPU med/p95 | render.cpu med/p95 | draw calls | trójkąty | inne |
-|---|---|---|---:|---:|---|
-| small-settlement | 4.7 / 12.6 | 3.8 / 11.5 | 353 | 1.08 M | mixers 9, heap 128 MB |
-| crowded-settlement | 5.7 / 13.2 | 4.6 / 12.3 | 425 | 0.93 M | chunk build 0.5 / 1.6, mixers 15, heap 160 MB |
-| dense-forest | 6.5 / 7.9 | 6.2 / 7.7 | 91 | 1.08 M | chunk build 0.4 / 1.1, heap 164 MB |
-| chunk-traverse | 13.1 / 74.8 | — | — | — | chunk build 3.6 / 4.7 (max 8.1), veg rebuild 4.9 / 30.7, nodes gen 0.3 / 0.7 per chunk, heap 206 MB |
-
-### Uwaga o szumie (powtórka po review 002)
-
-Licznik „>4 ms” w `long-run-5-days` jest bardzo czuły na obciążenie maszyny: ten sam kod dał 3–5 (spokojna maszyna) i 35 (load average ~2) — test A/B HEAD vs poprawki review w tych samych warunkach: 35 vs 27. Nie jest to regresja kodu; p95 wszystkich scen nadal < 1 ms.
-
-## Znane wąskie gardła
-
-1. **Przebudowa roślinności przy przeskoku** (`render.vegetationRebuild`): mediana 4.9 ms, ale p95 30.7 ms przy teleporcie o 100 m (generacja ~30 chunków węzłów naraz + wypełnienie instancji; 13 próbek). Przy marszu przebudowa co ~64 m (pół chunka) → pojedynczy koszt ~5 ms. Gra nie ma teleportacji (podróż fizyczna), więc to głównie hitch przy wczytaniu/respawnie; najpierw zmierzyć marsz (`render--002` krok 1). Poprawa (jeśli marsz lub nowe obiekty przekroczą budżet): prefetch chunków węzłów po 1–2 na klatkę w pierścieniu `vegFar` + margines i/lub rozłożenie wypełniania instancji na kilka klatek.
-2. **Postacie: 7–12 draw calli na osobę** (skinned części nie są łączone) — dominują draw calls w osadach (353–425). Poprawa: atlas + scalenie części (render--001 / tools--001).
-3. **Budowa chunka terenu** max 8.1 ms (na granicy budżetu 8 ms) przy teleportach; przy marszu 3.6 ms.
-4. **Brak pomiaru GPU i telefonu** — patrz wyżej.
-
-## Audyt pełnych skanów (PERF-01)
-
-Reguła: systemy per-tick / per-aktor pytają tylko obiekty w zasięgu (`sim.actors.query`, `sim.nodes.query`, `sim.groundNear`, `sim.corpsesNear`, `sim.buildingsNear`) albo indeksy (`sim.building(id)`, `sim.householdBuildings`, `sim.settlementBuildings`, `sim.npcsOf`). Skany całych list są dozwolone w rzadkich systemach kalendarzowych i akcjach gracza — z uzasadnieniem.
-
-| Miejsce | Było | Decyzja |
-|---|---|---|
-| `quests.ts` szczury przy budynku / pozostałe szczury | `s.animals.filter` w pętli po budynkach | `countNear` (`sim/queries.ts`) — zapytanie 40/60 m |
-| `quests.ts` wilki przy osadzie | `s.animals.filter` per osada | `animalsNear` (promień osady + 350 m) |
-| `quests.ts`, `build.ts`, `interact.ts` (gospodarz, handlarz, strażnik) | `s.npcs.find` | `sim.npcsOf(settlementId)` (indeks) |
-| `worldSystems.ts` szczury przy gnieździe | `s.animals.filter` | `countNear` 40 m |
-| `worldSystems.ts` zwierzęta legowiska | `s.animals.filter` per legowisko | jedno przejście na uruchomienie systemu (co 30 s) → mapa `denId → liczba` (zwierzęta legowiska wędrują do 160 m — zapytanie przestrzenne byłoby błędne) |
-| `fauna/ai.ts` padlina/przynęta, zjadanie | `state.ground` / `state.corpses` `.find` z dystansem | `sim.groundNear` / `sim.corpsesNear` (nowe indeksy przestrzenne, mutacje przez `sim.addGround/removeGround/addCorpse/removeCorpse`) |
-| `fauna/ai.ts` zagroda/koryto | `state.buildings.find` | `sim.householdBuildings(hid)` |
-| `npc/queries.ts` `householdBuilding` / `settlementBuildings` | `state.buildings.find/filter` | indeksy w `Sim.rebuildBuildingIndex` |
-| `sim.building(id)` (27 wywołań, m.in. per plan NPC) | `state.buildings.find` | `Map` id → budynek |
-| `npc/goals.ts` ranny do pomocy | `state.npcs.find` z dystansem | `sim.actors.query(150)` |
-| `npc/goals.ts` sprzedawca jedzenia | `state.npcs.find` | `sim.npcsOf` |
-| `npc/duties.ts` zwłoki dla myśliwego | `state.corpses.find` | `sim.corpsesNear(200)` |
-| `interact.ts` cele przy graczu (5 Hz) | skan `corpses` / `ground` | `corpsesNear` / `groundNear` |
-| `npc/ai.ts` `npcSystem`, `fauna/ai.ts` `faunaSystem` | pętla po wszystkich aktorach | **zostaje** — scheduler LOD (każdy aktor ma `nextUpdate`); koszt O(n) porównań czasu |
-| `worldSystems.ts` `ecology` (psucie, trwałość, pola) | pętle po budynkach/NPC/ziemi | **zostaje** — system kalendarzowy co 5 s, praca per obiekt jest konieczna |
-| `quests.ts` pętla po budynkach z gniazdem | skan `buildings` co 10 s | **zostaje** — ~150 budynków, filtr `ratNest` |
-| `npc/works.ts` `shear` | pętla po zwierzętach | **zostaje** — rzadki akt pracy |
-| `interact.ts` świadkowie kradzieży | pętla po NPC | **zostaje** — akcja gracza, nie per tick |
-| `treasury.ts` `totalMoney` | pętla po NPC | **zostaje** — tylko testy/diagnostyka |
-
-Nowe liczniki diagnostyczne z sesji 2: `ai.detours`, `fauna.huntGiveUp`, `world.gen.routeBandMiss`, `world.gen.homeRetry`, `world.gen.structureMissing`, `world.gen.householdSkipped`.
-
-## Jak odtworzyć
+## How to reproduce
 
 ```bash
-pnpm bench:sim                     # 2× dla potwierdzenia; porównanie z scripts/bench/baseline.json
-pnpm dev --port 5199 &             # potrzebne dla bench:render
+pnpm bench:sim                     # 2× to confirm; compared with scripts/bench/baseline.json
+pnpm bench:render low              # own Vite server; 2× to confirm
 pnpm bench:render medium
 ```
