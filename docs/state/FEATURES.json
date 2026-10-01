@@ -943,8 +943,8 @@
    "scope": "v2",
    "behavior": "Mid-scale relief (40–250 m hills, knolls, hollows, gentle ridges) varying by region; flat meadows still exist; settlements/roads flattened; slopes walkable; ~1-day walk calibration kept",
    "verify": "generator tests on 3 seeds (settlements, roads, landmarks, slope sample), walk calibration, A/B frames, GEN_VERSION bump + old-save rejection test",
-   "status": "planned",
-   "evidence": "plan: docs/plans/world--002--terrain-relief.md (D-WORLD-10)"
+   "status": "implemented_unverified",
+   "evidence": "world/gen/heightfield.ts (hilliness field + rolling/knoll/ridge terms), world/gen/relief.test.ts (3 seeds: slope p99 < 0.6x collision limit, flat meadows, relief percentiles), GEN_VERSION 9 (old-save rejection via the existing genVersion test), generate.seeds.test.ts 8 seeds green; look keep/drop (opus) pending: docs/state/frames/world--002; plan: docs/plans/world--002--terrain-relief.md (D-WORLD-10)"
   },
   {
    "id": "LOOT-01",

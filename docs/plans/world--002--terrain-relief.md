@@ -1,6 +1,6 @@
 # World: mid-scale terrain relief (hills, hollows, ridges)
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — generator change, tests, calibration re-check; opus — look keep/drop from the A/B frames  
 **Domain:** world  
 **Sub domains:** generator, terrain, roads, settlements  
@@ -46,4 +46,16 @@ Lower amplitudes / only the 120–250 m term. The hilliness field alone (with to
 
 ## Result
 
-*(empty)*
+Session 9 (Sonnet, cloud container).
+
+- **Step 1 done.** `heightfield.ts`: hilliness region (`nHill`, ~2.5 km, smoothstep 0.34–0.74), rolling hills (200 m wavelength, ±~8 m), knolls/hollows (64 m, ±~3 m), sparse ridged term (320 m, ≤6 m); all × hilliness × (1 − mountain mask), ×1.15. `GEN_VERSION` 9. Test `relief.test.ts` (written first, failing on the old field) on seeds 1337/42/777, measured on the 8 m base field away from coast/mountains:
+  | | before | after |
+  |---|---|---|
+  | median \|h − mean(±112 m)\| | 0.99–1.02 m | 1.12–1.29 m |
+  | p90 of the same | 2.54–2.68 m | 3.39–4.43 m |
+  | near-flat cells (slope < 5 %) | 49–52 % | 25–34 % |
+  | cells > 10 % slope | 14–16 % | 38–52 % |
+  | slope p99 | ~0.20 | 0.46–0.49 (collision limit 1.2) |
+  The median barely moves by design (hilliness is regional); rolling regions get the 4 m+ relief.
+- **Step 2 done.** `generate.seeds.test.ts` (8 seeds: settlements, roads, home route within `ROUTE_BAND` × `DAY_MARCH_M`) and landmark tests green — calibration holds, no spacing change. One test depended on layout timing: `survival.test.ts` FIRE-02 compared the warehouse stock only at the end of the run and the woodcutter's restock landed just before the sample (guard behaviour was correct: warehouse 26 → 16 → feed); it now records the lowest level during the run (the sink itself), assertion intent unchanged. `bench:sim` same container, parent commit vs new (p95 ms): small-settlement 0.25 → 0.33, crowded 0.77 → 0.90, long-run 2.11 → 2.15, others equal/lower — noise-level (the ⚠️ flags vs the old committed baseline appear on the unmodified parent too). `bench:startup low` ×3: world generation 2439 → 2750 ms (one-time, cached, +13 %), HUD median 4509 → 4744 ms.
+- **Step 3 frames (opus keep/drop pending, ❓ user).** `ab.mjs` before (clean worktree at `9802676`) and after for seeds 1337, 42, 777 (9 frames each, 0 console errors). Kept pairs: `docs/state/frames/world--002/{1337,777}-{before,after}-summer-meadow.png`; the full sets are regenerated with `SV_SEED=<n> node scripts/e2e/ab.mjs medium 'after={}'`. Sonnet's read of `meadow-hills` (winter, snow): horizon and a lake now sit at a visibly different level, flat snowy foreground still there; rolling relief is moderate at this camera height — **Opus: decide whether to raise amplitudes** (the fallback in this plan goes the other way). Not checked: roads climbing walls close up (road A* cost untouched), settlement approach frames.
