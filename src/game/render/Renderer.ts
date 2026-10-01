@@ -9,15 +9,18 @@ import type { Sim } from '../sim/sim'
 import { perf } from '../diag/perf'
 import { daylight, hourOf, seasonOf } from '../sim/time'
 import { Actors } from './actors'
+import { atmosphere, type Atmosphere, overcastOf } from './atmosphere'
 import { CameraRig } from './cameraRig'
 import { Carts } from './carts'
 import { Dynamics } from './dynamics'
 import { GpuTimer } from './gpuTimer'
 import { QUALITY, type QualityProfile } from './quality'
+import { SkyDome } from './sky'
 import { Structures } from './structures'
 import { TargetMarker } from './targetMarker'
 import { TerrainChunks } from './terrainChunks'
 import { Vegetation } from './vegetation'
+import { readVisualFlags, type VisualFlags } from './visualFlags'
 
 export type { QualityProfile } from './quality'
 
@@ -43,6 +46,9 @@ export class Renderer {
   hemi = new THREE.HemisphereLight(0xbfd8ff, 0x5a4a30, 1)
   quality: QualityProfile
   gpu: GpuTimer
+  readonly visual: VisualFlags
+  private skyDome: SkyDome | null = null
+  private atmo: Atmosphere | undefined
   private sim: Sim
   private sky = new THREE.Color()
   private first = true
@@ -57,6 +63,10 @@ export class Renderer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.pixelRatio))
     this.renderer.shadowMap.enabled = q.shadows
     this.renderer.shadowMap.type = THREE.PCFShadowMap
+    this.visual = readVisualFlags()
+    const TONE = { none: THREE.NoToneMapping, aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping } as const
+    this.renderer.toneMapping = TONE[this.visual.tone]
+    this.renderer.toneMappingExposure = this.visual.exposure
     this.gpu = new GpuTimer(this.renderer.getContext())
     this.rig = new CameraRig(sim.terrain, canvas.clientWidth / Math.max(1, canvas.clientHeight))
     this.scene.fog = new THREE.Fog(0x9cc4e4, 150, q.fogFar)
@@ -76,6 +86,10 @@ export class Renderer {
     this.dynamics = new Dynamics(sim)
     this.marker = new TargetMarker(sim.terrain)
     this.carts = new Carts(sim)
+    if (this.visual.sky === 'dome') {
+      this.skyDome = new SkyDome()
+      this.scene.add(this.skyDome.mesh)
+    }
     this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
   }
 
@@ -135,24 +149,38 @@ export class Renderer {
     const dl = daylight(cal)
     const w = sim.weather
     const h = hourOf(cal)
-    const dusk = Math.max(0, 1 - Math.abs(dl - 0.35) * 3) * (dl > 0 && dl < 1 ? 1 : 0)
-    this.sky.copy(NIGHT_SKY).lerp(DAY_SKY, dl).lerp(DUSK_SKY, dusk * 0.5)
-    const overcast = w.kind === 'clear' ? 0 : w.kind === 'overcast' ? 0.4 : 0.7
-    this.sky.lerp(STORM_SKY.clone().multiplyScalar(0.3 + dl * 0.7), overcast)
-    this.scene.background = this.sky
+    const p = this.sim.player
+    const overcast = overcastOf(w)
     const fog = this.scene.fog as THREE.Fog
-    fog.color.copy(this.sky)
+    if (this.skyDome) {
+      // One parameter set drives sky, fog, sun and hemisphere (render--002 step 2).
+      const a = (this.atmo = atmosphere(dl, h, w, this.atmo))
+      this.scene.background = a.horizon
+      fog.color.copy(a.fog)
+      this.sun.position.set(p.x + a.sunDir.x * 150, p.y + a.sunDir.y * 150, p.z + a.sunDir.z * 150)
+      this.sun.color.copy(a.sunColor)
+      this.sun.intensity = a.sunIntensity
+      this.hemi.color.copy(a.hemiSky)
+      this.hemi.groundColor.copy(a.hemiGround)
+      this.hemi.intensity = a.hemiIntensity
+      this.skyDome.update(a, this.rig.camera.position)
+    } else {
+      const dusk = Math.max(0, 1 - Math.abs(dl - 0.35) * 3) * (dl > 0 && dl < 1 ? 1 : 0)
+      this.sky.copy(NIGHT_SKY).lerp(DAY_SKY, dl).lerp(DUSK_SKY, dusk * 0.5)
+      this.sky.lerp(STORM_SKY.clone().multiplyScalar(0.3 + dl * 0.7), overcast)
+      this.scene.background = this.sky
+      fog.color.copy(this.sky)
+      // Sun path (east → west), moonlight at night.
+      const ang = ((h - 6) / 12) * Math.PI
+      this.sun.position.set(p.x + Math.cos(ang) * 120, p.y + Math.max(15, Math.sin(ang) * 150), p.z + 40)
+      this.sun.intensity = dl * 2.2 * (1 - overcast * 0.6) + 0.12
+      this.sun.color.set(dl > 0.2 ? 0xfff2dd : 0x8899cc)
+      this.hemi.intensity = 0.35 + dl * 0.9 * (1 - overcast * 0.3)
+    }
     const fogK = Math.max(w.fog, w.kind === 'rain' || w.kind === 'snow' ? 0.35 : 0, w.kind === 'storm' ? 0.55 : 0)
     fog.near = 120 * (1 - fogK * 0.9)
     fog.far = this.fogFar * (1 - fogK * 0.85) + 60
-    // Sun path (east → west), moonlight at night.
-    const ang = ((h - 6) / 12) * Math.PI
-    const p = this.sim.player
-    this.sun.position.set(p.x + Math.cos(ang) * 120, p.y + Math.max(15, Math.sin(ang) * 150), p.z + 40)
     this.sun.target.position.set(p.x, p.y, p.z)
-    this.sun.intensity = dl * 2.2 * (1 - overcast * 0.6) + 0.12
-    this.sun.color.set(dl > 0.2 ? 0xfff2dd : 0x8899cc)
-    this.hemi.intensity = 0.35 + dl * 0.9 * (1 - overcast * 0.3)
     const season = seasonOf(cal)
     this.terrain.seasonTint = season === 'autumn' ? 0.6 : season === 'winter' ? 0.8 : 0
     this.terrain.snowCover = season === 'winter' && (w.kind === 'snow' || w.wetness > 0.2) ? 0.8 : 0
@@ -171,8 +199,8 @@ export class Renderer {
     const t0 = performance.now()
     const p = this.sim.player
     this.handleEvents()
-    this.lighting()
     this.rig.update(p.x, p.y, p.z, dt)
+    this.lighting()
     perf.measure('render.terrain', () => this.terrain.update(p.x, p.z, this.first ? 4000 : 5))
     this.first = false
     perf.measure('render.vegetation', () => this.vegetation.update(p.x, p.z))

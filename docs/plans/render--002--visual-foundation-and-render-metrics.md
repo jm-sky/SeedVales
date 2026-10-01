@@ -1,6 +1,6 @@
 # Render: fundament wizualny (światło, niebo, teren, materiały) i metryki renderu
 
-**Status:** planned  
+**Status:** in_progress  
 **Domain:** render  
 **Sub domains:** lighting, sky, terrain, materials, diag, assets  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 4a — przed `render--001`)  
@@ -98,4 +98,18 @@ Low (bez shadow map): blob shadows pod graczem i bliskimi aktorami (limit liczby
 
 ## Wynik
 
-—
+*(English per D-LANG-1.)*
+
+**Step 0 — metrics (code done, commit `089bfae`; baseline pending):**
+- `diag/perf.ts`: quantiles from a whole-run log histogram (2% buckets), so median/p95/p99, max, mean and overBudget share one window; `perf.shareAbove()`. Test `diag/perf.test.ts` (PERF-02).
+- RAF pacing: `raf.interval` timer in `Game.start`; GPU timer `render/gpuTimer.ts` (EXT_disjoint_timer_query_webgl2, async readback, disjoint dropped; no extension = `gpu.timerAvailable` 0, no data). `window.__sv.pacing()` returns RAF p50/p95/p99, share > 16.7/33.3/50 ms, CPU frame and GPU quantiles — for the user's device checklist.
+- `render.prep` timer (= render.cpu without draw submission, the D-PERF-2 gate metric); gauges `render.programs`, `render.lights` (light count refreshed every 120 frames).
+- `bench:render` now starts its own Vite server (`scripts/e2e/server.mjs`), waits until `chunks.pending` = 0 before measuring, and has the scenes small/crowded settlement, dense forest, night with campfires, water shore, rain, snow, steady march along a road at 10 m/s, and a teleport hitch test. Screenshots per scene.
+- **Not done yet:** a clean baseline (the only run so far overlapped with the reviewer subagent → CPU contention, not usable); PERF.md rewrite in English with the baseline + device checklist; `bench:sim` baseline refresh (quantile method changed from last-512 ring to whole run — rerun twice, then `--update-baseline` with this justification).
+- First (noisy) observations: snow triggers vegetation rebuilds (n=3, ~24 ms) and terrain rebuilds (season/snow tint baked into vertex colours — step 3 moves it to uniforms); march p95 veg rebuild ~20 ms in the noisy run → re-measure before deciding step 1.
+
+**Step 2 — light/sky (in progress, uncommitted work landed in the checkpoint commit behind flags; defaults = old look):**
+- `render/visualFlags.ts` (localStorage `sv-visual` overrides: tone none/aces/agx/neutral, exposure, sky flat/dome, smooth, detail), `render/atmosphere.ts` (one parameter set: zenith/horizon/fog/sun/hemisphere/sun direction), `render/sky.ts` (gradient dome + sun disc, tone mapped). `Renderer.lighting()` keeps the old path verbatim for `sky: flat`.
+- A/B tool `scripts/e2e/ab.mjs [quality] 'label={flags}' …` → `test-results/ab/ab-<frame>.png` montages (6 frames: settlement noon/dusk/night, overcast, meadow hills, mountain river). First run done (before / dome / dome+ACES / dome+AgX×1.2) but **not yet reviewed**; it logged one 404 console error (unknown resource — check).
+- Next: review montages, tune exposure/palette (correction 5), pick defaults, keep/drop; shadow texel snapping.
+

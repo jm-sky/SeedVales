@@ -1,68 +1,50 @@
-# Kick-off: sesja 3 — fale dodatku 3–5 (długa pętla)
+# Kick-off: session 4 — wave 3 review triage, then waves 4–5 (long loop)
 
-Kontynuujesz pracę nad grą SeedVales (Vue 3 + TypeScript + Three.js, pnpm). Stan na 2026-10-01: v1 domknięte (etap 0), fale 1 (`sim--001`) i 2 (`ui--001`) zrobione z niezależnymi review, z fali 3 zrobiony `economy--001`. Cały interfejs jest po angielsku (UI-LANG-01), mapa ma mgłę wojny (MAP-01). **Ta sesja to długa, samodzielna pętla: realizuj plany po kolei, aż skończą się plany albo trafisz na prawdziwą blokadę.**
+You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State on 2026-10-01 (end of session 3, checkpoint): v1 complete; waves 1–2 done; wave 3 `economy--001` and `npc--001` done (TRADE-02, SOC-01, COMP-01/02/03 verified, `SAVE_VERSION` 7); independent review 006 of wave 3 received, **triage not started**; wave 4a `render--002` in progress (step 0 metrics committed, step 2 light/sky scaffolding behind flags). **This session is a long autonomous loop: work through the plans in order until they run out or you hit a real blocker.**
 
-## 1. Start (obowiązkowo, zwięźle)
+**Language: English everywhere (D-LANG-1)** — code comments, docs, plans, reviews, commit messages. Existing Polish docs are legacy: translate the parts you substantially edit; never add new Polish text.
 
-1. Przeczytaj: `CLAUDE.md`, `docs/state/PROGRESS.md` (handoff — sekcja „Sesja 2” i „Następny krok”), `docs/roadmap/v1-closure-and-appendix.md` (kolejność fal), `docs/design/DECISIONS.md`, **`docs/IMPORTANT-PRODUCT-NOTES.md`** (wymagania przekrojowe: język UI, mgła wojny, widoczność wg zmysłów) i `docs/design/ui-english-glossary.md`. `docs/IMPLEMENTATION-PROMPT.md` nadal obowiązuje (§3, §6 diagnostyka, §8 weryfikacja, §10). `docs/VISION.md` / `docs/VISION-APPENDIX.md` tylko w sekcjach potrzebnych do bieżącego planu.
-2. `git status`, `git log --oneline | head -20`, `git fetch origin main` — na `main` równolegle pojawiają się commity z dokumentacją (np. `docs/design/quests/`); scal je przed pracą.
-3. Środowisko: brak `node_modules` → `pnpm install --frozen-lockfile`. Chromium wykrywany automatycznie (`scripts/e2e/lib.mjs`; nadpisanie przez `CHROME_PATH`, nie uruchamiaj `playwright install`); headless = SwiftShader (FPS niereprezentatywne, CPU tak). `_temp/` (paczki Quaternius) prawdopodobnie nie istnieje — pracuj na `public/assets/` i placeholderach.
-4. Weryfikacja stanu: `pnpm check` (oczekiwane **131/131**), `node scripts/check-layers.mjs`; `pnpm e2e:run` (sam stawia serwer bez HMR): `smoke` 3/3, `acceptance` **29/29**, `mobile` **10/10**, 0 błędów konsoli. Jeśli coś pada — to jest pierwsze zadanie.
+## 1. Start (mandatory, brief)
 
-## 2. Kolejność pracy
+1. Read: `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 3", **"Triage plan for review 006"**), `docs/reviews/2026-10-01--006--wave3-review.md`, `docs/roadmap/v1-closure-and-appendix.md`, `docs/design/DECISIONS.md`, `docs/IMPORTANT-PRODUCT-NOTES.md`, `docs/design/ui-english-glossary.md`, and the plan `docs/plans/render--002--visual-foundation-and-render-metrics.md` (incl. "Wynik"). `docs/IMPLEMENTATION-PROMPT.md` still applies (§3, §6, §8, §10).
+2. `git status`, `git log --oneline | head -20`, `git fetch origin main` and merge — docs commits land on `main` in parallel.
+3. Environment: no `node_modules` → `pnpm install --frozen-lockfile`. Chromium auto-detected (`CHROME_PATH` override; do not run `playwright install`). Headless = SwiftShader.
+4. Verify: `pnpm check` (expect **146/146**), `pnpm e2e:run` (smoke 3/3, acceptance **30/30**, mobile 10/10, 0 console errors). Anything red is task one.
 
-Źródło prawdy: `docs/roadmap/v1-closure-and-appendix.md`. Pozostało:
+## 2. Work order
 
-**Fala 3 (dokończyć):**
-1. `npc--001` — handel z każdym NPC, prezenty i preferencje, towarzysze (najem na czas/za kwotę/z zadaniem i ryzykiem; darmowe dołączenie), przekazanie i użycie ekwipunku. Relacja = `npc.opinion` (D-PLAN-3).
-2. **Review fali 3** (skill `wave-review`): `economy--001` (RES-07, FOOD-03, TRANS-01 — `sim/actions.ts`, `sim/cooking.ts`, `sim/cart.ts`, `render/carts.ts`, migracja `SAVE_VERSION` 6) + `npc--001` → `docs/reviews/YYYY-MM-DD--006--wave3-review.md` (005 zajęte przez review renderingu).
+1. **Triage review 006** (skill `wave-review` §3): follow the triage plan in PROGRESS.md — fix #1–#10 and #12, each with a failing-first regression test named with its FEATURES ID; #11 reject with reason; #13–#15 record as info/deferred. Mark each finding in the report (fixed + test name / rejected + reason), add a summary line, `bench:sim` (companion AI touched), then skill `handoff`. Wave 3 → `done` in the roadmap.
+2. **Wave 4a `render--002`** (continue):
+   - Step 0: clean baselines on a quiet machine (no subagents running): `pnpm bench:render low` and `medium` (twice), `pnpm bench:sim` twice then `--update-baseline` (quantiles changed from a last-512 ring to the whole run — record the reason). Rewrite `docs/state/PERF.md` in English with the baseline, the new scenes, and the device checklist for the user (`window.__sv.pacing()`; production build, 30 s warm-up, 3×60 s alternating, 10–15 min on a phone) → ❓ in PROGRESS.
+   - Step 2: run `node scripts/e2e/ab.mjs medium 'before={}' 'dome={"sky":"dome"}' 'aces={"sky":"dome","tone":"aces"}' 'agx={"sky":"dome","tone":"agx","exposure":1.2}'`, **look at** `test-results/ab/ab-*.png`, recalibrate the palette/exposure, pick defaults in `render/visualFlags.ts`, decide keep/drop, check the 404 console error the A/B run logged. Then shadow texel snapping. Night must stay readable.
+   - Steps 1, 3, 4 (5 optional) per the plan; exit gate: `render.prep` p95 ≤ 10% regression vs baseline for the whole package.
+3. **Wave 4b `render--001`**, `tools--001` (decide D-TOOLS-1), **wave 5** `world--001`, `settlement--001` (draft — refine or defer), **wave 6** `render--003` (conditional) — as in the roadmap. After each wave: skill `wave-review`, then `handoff`.
+4. Open follow-up from D-LANG-1 (only after waves or when convenient, needs a plan): English NPC/settlement name pools with occupational surnames (`GEN_VERSION` bump).
 
-**Fala 4** (kolejność = zależność techniczna, D-REN-7; przeczytaj research `docs/research/2026-10-01--002--realistic-visuals-practical-roadmap.md` §4–§8 i review `docs/reviews/2026-10-01--005--…`):
-- **4a `render--002`** — najpierw metryki renderu (PERF-02: RAF pacing, GPU timer, spójne okna kwantyli, sceny noc/woda/deszcz/śnieg/marsz, baseline w PERF.md), potem światło/tone mapping/niebo, gładki teren + detal gruntu (tint przez uniformy), pilot PBR+IBL na jednym assecie. Każdy krok: timebox, fallback, keep/drop, zrzuty przed/po z tych samych kadrów.
-- **4b `render--001`** — ogień + pula świateł per profil, chmury + ulepszenie **istniejących** opadów, mokry teren/śnieg na uniformach, CHAR-01 (bez wzrostu draw calli), FAUNA-09, wiatr, woda, dekale. CHAR-01/FAUNA-09 mogą iść równolegle z 4a.
-- `tools--001` (draft — zdecyduj i zapisz D-TOOLS-1: realizować pierwszy wycinek albo odłożyć z uzasadnieniem).
-- Wydajność na urządzeniu mierzy użytkownik (D-PERF-2): zostaw checklistę w PROGRESS.md jako ❓ i nie blokuj pętli; nie ogłaszaj efektu „tanim” na podstawie SwiftShadera.
+Outside the waves (do not start without a plan): MAP-02 sensory visibility; quest packs in `docs/design/quests/` (design docs only — implementation needs a plan and the user's agreement).
 
-**Fala 5:** `world--001` (landmarki, skarby — landmarki także na mapie z mgłą wojny; `bench:render` ze sceną landmarku); `settlement--001` (draft — doprecyzuj albo odłóż z uzasadnieniem).
+## 3. Work loop (for each plan item)
 
-**Fala 6:** `render--003` (draft, warunkowy) — przejrzyj PERF.md po falach 4–5 i dane z urządzeń (jeśli są); uruchamiaj tylko pozycje odpowiadające na zmierzony problem, resztę zamknij jako „niepotrzebne”.
+1. Take the next item; set the plan `in_progress` at the first one.
+2. Check in code whether the gap still exists; if not, note it in the plan's "Wynik".
+3. Write the test for the new behaviour first (vitest, FEATURES ID in the name) — it must fail.
+4. Implement minimally.
+5. Skill `verify` (check, e2e, bench, screenshots — actually look at them).
+6. Skill `handoff` (FEATURES + evidence, plan "Wynik", PROGRESS, DECISIONS, version bumps, commit + push to `main`). Push after every finished item.
+7. Back to 1.
 
-**Poza falami (nie zaczynaj bez planu):** MAP-02 (widoczność NPC/zwierząt wg zmysłów, v2 — model TBD w IMPORTANT-PRODUCT-NOTES; jeśli zostanie czas, najpierw plan + decyzja); pakiety zadań fabularnych w `docs/design/quests/` (tylko dokumentacja projektowa — wdrożenie wymaga osobnego planu i uzgodnienia z użytkownikiem).
+Do not end a turn with a plan or a "shall I continue?" question. Ask the user only for vision-changing decisions; record a blocked area in PROGRESS and move to independent work.
 
-Po każdej fali: skill `wave-review` (review, wpis w `docs/reviews/`, poprawki z testami regresji), potem skill `handoff` (roadmapa/plany: `Status: done`, `Finished:`).
+## 4. Rules
 
-## 3. Pętla robocza (powtarzaj dla każdej pozycji planu)
+Standing rules (English everywhere, layering, save/`SAVE_VERSION`, fog of war, tests/budgets, subagents in worktrees without checkout/switch/reset/stash, `pnpm e2e:run`): `CLAUDE.md`. Current format versions: PROGRESS "Teraz". Benchmarks are only meaningful when no subagent/test run competes for the CPU.
 
-1. Weź następną niezrobioną pozycję planu; status planu `in_progress` przy pierwszej.
-2. Zweryfikuj w kodzie, czy luka nadal istnieje. Nie → zapisz w „Wynik” planu i dalej.
-3. Test, który opisuje nowe zachowanie (vitest; ID z FEATURES w nazwie) — ma najpierw paść.
-4. Implementuj minimalnie wg §4.
-5. Weryfikacja: skill `verify` (check, e2e, bench, zrzuty).
-6. Stan i commit: skill `handoff` (FEATURES + evidence, „Wynik” planu, PROGRESS, DECISIONS, bumpy wersji, commit + push na gałąź sesji **oraz** `main`). Push po każdej ukończonej pozycji — kontener jest ulotny.
-7. Wróć do 1.
+## 5. End of session
 
-**Nie kończ tury planem ani pytaniem „czy kontynuować?”.** Pytaj użytkownika tylko przy decyzji zmieniającej wizję; blokadę jednego obszaru zapisz w PROGRESS.md i przejdź do niezależnej pracy.
-
-## 4. Zasady
-
-Stałe zasady (język UI, warstwy, zapis/`SAVE_VERSION`, mgła wojny, testy/budżety itd.): `CLAUDE.md`, sekcja „Standing rules”. Bieżące wersje formatów: `docs/state/PROGRESS.md`, „Teraz”.
-
-## 5. Subagenci i e2e
-
-Zasady pracy z subagentami (worktree, zakaz checkout/switch/reset/stash) i e2e: `CLAUDE.md`, „Standing rules”; procedura review: skill `wave-review`.
-
-## 6. Oszczędność kontekstu i ciągłość
-
-- Skrypty i zbiorcze komendy zamiast długich sekwencji pojedynczych wywołań; do kontekstu tylko podsumowania (np. `pnpm check 2>&1 | grep -E "Tests |✖|error"`).
-- Duże, niezależne zadania deleguj subagentom (§5); sam weryfikujesz ich wynik (testy, zrzuty).
-- Aktualizuj `PROGRESS.md` po każdym fragmencie i przed kompakcją kontekstu (co zrobione, co w toku, następny krok).
-
-## 7. Zakończenie sesji
-
-skill `verify` (check + wszystkie e2e), skill `handoff`; aktualny `PROGRESS.md` (co działa, jak sprawdzone, uproszczenia, braki, znane błędy, dokładny następny krok), commit + push (gałąź sesji i `main`), krótki raport: co zrobiono (plany/FEATURES), wyniki testów, ograniczenia, jak daleko zaszły fale dodatku.
+Skill `verify` (check + all e2e), skill `handoff`; up-to-date PROGRESS (what works, how verified, simplifications, gaps, known bugs, exact next step); commit + push to `main`; short report.
 
 ---
 
-**Wiadomość startowa (do wklejenia):**
+**Start message (paste):**
 
-> Przeczytaj `NEXT-SESSION-KICK-OFF-PROMPT.md` w katalogu głównym i wykonaj go. Zacznij od weryfikacji stanu, potem realizuj plany w kolejności z roadmapy w pętli roboczej (§3), aż skończą się plany albo trafisz na prawdziwą blokadę. Nie kończ na planie ani na pytaniu o kontynuację. Na koniec commit i push do `main`.
+> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state, triage review 006, then work through the plans in roadmap order in the work loop (§3) until the plans run out or you hit a real blocker. Don't stop at a plan or a question about continuing. Finish with a commit and push to `main`.
