@@ -1,138 +1,143 @@
 # Q02 — The Hollow Below the Road
 
-**Status: propozycja N; hunter 2/2.** Kontynuacja Q01 jest opcjonalna; wejście ma też wariant niezależny. Cztery etapy, trzy zakończenia.
+**Status: propozycja N; pakiet A (Codex 1), myślistwo 2/2.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Kontynuacja Q01 jest opcjonalna. Cztery etapy, trzy zakończenia. Skala: średni quest w V.
 
-## Założenie i warunki
+## Założenie
 
-Sella z sąsiedniej osady V znalazła wilcze ślady przy dolnej drodze. Nie chce „wyczyścić lasu”: ta droga prowadzi do studni i jest potrzebna pasterzom. Mara uważa, że bezpieczniejsza trasa może kosztować więcej czasu niż trzy martwe wilki. Konflikt dotyczy oceny ryzyka i odpowiedzialności, nie ukrytego złoczyńcy. Emocja: napięcie zamienia się w ulgę albo w świadomą zgodę na koszt.
+Na dolnym odcinku drogi z {H} do {V}, tuż przed zakrętem, locha z warchlakami zryła wykrot pod zwaloną sosną. Dwa dni temu wpadła na woźnicę z {V}, który szedł obok wozu — wyszedł z poturbowanym udem i porzuconym workiem soli. Myśliwa Dorota nie chce „czyścić lasu”: lochę z małymi da się przeczekać, ale nie każdy może czekać — tą drogą chodzi się na targ i do {H}. Strażniczka Bogna musi zdecydować, co zrobić z drogą, i potrzebuje kogoś, kto zobaczy wykrot z bliska. Konflikt dotyczy oceny ryzyka i kosztu, nie złoczyńcy.
 
-Start: `wolves_near_road=true`, Sella żyje, droga i objazd istnieją. Posiadanie Q01 lub `Mara.opinion≥10` odblokowuje dodatkową kwestię, ale nie daje wiedzy o legowisku. I: walka z wilkami, palenie legowiska (P dla zachowań FAUNA), fizyczna podróż, reputacja. N: rozpoznanie legowiska, ocena obejścia, etykieta „strefa ryzyka”.
+Emocja: napięcie przy wykrocie, potem ulga albo świadoma zgoda na koszt.
 
-## Stan i etapy
+**Wiedza NPC.** Dorota widziała tropy i zryty grunt, nie widziała wykrotu. Bogna zna tylko relację woźnicy i raport gracza/Doroty. Jarosław (H) zna dolną drogę, nie zna tego wykrotu.
 
-`accepted`, `tracksRead`, `denFound`, `roadRiskReported`, `choice=clear|reroute|patrol`, `settled`. Sella świadczy tylko o tym, co sama widziała. Odległa mapa nie przenosi się telepatycznie.
+**Warunki startu.** Gracz był w {V} co najmniej raz; w wykrocie istnieje legowisko dzika z młodymi (I: legowiska jako spawn; P: agresja przy młodych, `FAUNA-07/08`). Q01 ukończony lub opinia Jarosława ≥ 10 dodaje scenę S2.
 
-### 1. The lower road
+## Stan
 
-**S1 — Sella przy drogowskazie**
+`accepted`, `tracksRead`, `hollowFound`, `farrowCounted`, `reported`, `choice = unset|clear|reroute|watch`, `settled`. `hollowFound` wymaga fizycznego dojścia na odległość obserwacji; `farrowCounted` — obserwacji bez spłoszenia.
 
-**Sella:** You came from H? Then you know this road is not a line on a map. It is where people carry water.
-**Player:** What happened?
-**Sella:** Two sheep turned back. A cart-driver heard a howl below the bend. I found tracks after rain.
-**Player [A]:** I'll look with you.
-**Sella:** Look first. Promise second. → `accepted`.
-**Player [B]:** Ask the guard to close the road.
-**Sella:** A closed road sends people across the marsh. We need a reason, not a gate.
+## 1. The lower road
 
-**S2 — Mara, jeśli Q01 ukończony lub opinia ≥10**
+**S1 — Dorota przy porzuconym worku soli**
 
-**Mara:** Sella doesn't need another hunter to prove courage. She needs someone to count the ways this can go wrong.
-**Player:** You know her?
-**Mara:** I know the road. That is enough for today.
-**Player:** Will you come?
-**Mara:** To the first bend. After that, you report what you actually saw.
+**Dorota:** Don't step there. That's where he dropped it, and that's where she came out. See how the ground's turned?
+**Player:** A boar?
+**Dorota:** A sow. The prints are small and there are smaller ones round them. She's got young somewhere close, and she's decided this bend is hers.
+**Player:** The carter?
+**Dorota:** Bruised to the bone and lucky. He'll walk in a week. He won't walk this way.
+**Player [A]:** I'll help you find where she's lying up.
+**Dorota:** Good. Quietly, and not today at noon — she'll be lying in, and so would I. Come at first light. → `accepted`
+**Player [B]:** Why not just close the road?
+**Dorota:** Then people go round by the marsh, and the marsh has drowned more carters than pigs have. Bogna won't close it without a reason she can point at.
 
-**S3 — Sella po przyjęciu**
+**S2 — Jarosław (H), jeśli Q01 ukończony lub opinia ≥ 10**
 
-**Sella:** The lower track is fresh. The higher one is old and dry.
-**Player:** Which makes it safer?
-**Sella:** Neither. It makes one easier to read. A wolf can use a safe road too.
-**Player:** Then we mark the danger, not just the animal.
-**Sella:** Now you are listening.
+**Jarosław:** You're going down to Dorota's bend? I heard about the carter.
+**Player:** A sow with a farrow.
+**Jarosław:** Then don't go down wanting a fight. A sow with young doesn't care how brave you are. She cares where you're standing.
+**Player:** Do you know Dorota?
+**Jarosław:** I know she doesn't guess out loud. If she says a sow, it's a sow.
+**Player:** Anything else?
+**Jarosław:** Upwind of her, never between her and the young. And bring the thing you'd climb.
 
-### 2. Read the hollow
+**S3 — Dorota o świcie**
 
-**S4 — ślady przy zakręcie**
+**Dorota:** Two trails. This one's fresh — wet edges. That one's old.
+**Player:** Which is safer?
+**Dorota:** Neither. The fresh one's just easier to read. → `tracksRead`
+**Player [A]:** We follow the fresh one.
+**Dorota:** As far as the ground lets us. When I put my hand up, you stop. Not after one more step.
+**Player [B]:** Let's come back with more people.
+**Dorota:** More people, more noise. I'd rather two who can stand still.
 
-**Sella:** Three sets. One light. Young, perhaps.
-**Player:** Perhaps?
-**Sella:** I did not see the animal. I will not turn a guess into a fact.
-**Player [A]:** We follow the tracks.
-**Sella:** We follow until the ground tells us to stop. We do not walk into a den because a quest marker is patient.
-**Player [B]:** We return with a larger party.
-**Sella:** Sensible. Slower, but sensible.
+## 2. The hollow
 
-**S5 — legowisko, tylko po fizycznym znalezieniu**
+**S4 — Przy zwalonej sośnie** (po `hollowFound`)
 
-**Player:** The hollow is under the fallen pine.
-**Sella:** Bones outside, warm earth inside. The young one may be there.
-**Player:** We could burn it.
-**Sella:** And drive a frightened mother across the road. Or we could wait for daylight and draw them away. The ground will not tell us which is kinder.
+**Dorota:** *(szeptem)* Under the roots. See the bedding? She's dragged half the bracken in the wood in there.
+**Player:** I count five small ones.
+**Dorota:** Five. Spring farrow. In six weeks they'll follow her anywhere, and she'll stop guarding one hole. → `farrowCounted`
+**Player:** Six weeks of nobody using this bend.
+**Dorota:** Or six weeks of someone deciding they won't wait.
 
-**S6 — powrót z informacją**
+**S5 — Jeśli gracz spłoszy lochę**
 
-**Sella:** Is the den active?
-**Player [denFound]:** I saw the entrance and fresh bones. I did not enter.
-**Sella:** Good. That is enough to plan. The guard will need the exact bend, not “somewhere below.”
-**Player:** What happens if I kill the wolves near the road?
-**Sella:** The road is safer today. The territory is emptier tomorrow. Both are true.
+**Dorota:** Back! Behind the trunk — now! *(po chwili)* …She's stopped. She's only telling us. Walk away slowly and don't turn your back on her till the bend.
 
-### 3. A road has a price
+Spłoszenie nie kończy questa; locha jest przez dobę agresywniejsza (N).
 
-**S7 — strażniczka Ada przez raport Selli**
+**S6 — Powrót do drogi**
 
-**Ada:** Sella says you found the hollow. I have not seen it, so I am asking, not confirming.
-**Player:** Three sets of tracks; one may be young. The entrance is under a pine.
-**Ada:** That is a report. What do you recommend?
-**Player [A]:** Clear the den before the next market day.
-**Ada:** Give me a safe approach and a fallback. “Clear it” is not a plan.
-**Player [B]:** Move the water route uphill.
-**Ada:** That is a construction problem. The road crew will ask for time and timber.
-**Player [C]:** Mark the bend and patrol it at dusk.
-**Ada:** That is a guard problem. It spends people every evening.
+**Dorota:** Well. You've seen it. Now you tell Bogna — you saw it closer than I did.
+**Player:** And if I just kill her?
+**Dorota:** Then the road's safe tomorrow and there are five piglets that won't see autumn. I'm not saying don't. I'm saying count it.
 
-**S8 — Mara**
+## 3. A road has a price
 
-**Mara:** A wolf is not a debt. You do not owe the road its death.
-**Player:** And if it attacks a child?
-**Mara:** Then the danger is different. Today we have tracks, a den, and a road used by adults who can choose another hour.
-**Player:** You would leave it?
-**Mara:** I would choose what I can protect. Do not confuse that with leaving everything alone.
+**S7 — Bogna przy bramie {V}**
 
-**S9 — Sella przed decyzją**
+**Bogna:** Dorota says you've been to the hollow. Tell me what you saw, not what you think I want to hear.
+**Player:** One sow, five young, under the fallen pine by the bend. Fresh bedding. She came at us only when we got too close.
+**Bogna:** Good. Now I can do something. → `reported`
+**Player [A]:** Clear her out before the next market day.
+**Bogna:** Kill her or drive her off — and with what, and who's standing where when she turns? Give me that and I'll pay for it.
+**Player [B]:** Move the road uphill for the season.
+**Bogna:** That's posts, a cleared track, and our woodcutter's week. And everyone grumbling about the extra climb.
+**Player [C]:** Mark the bend and walk people through at set hours until the young can travel.
+**Bogna:** That's my evenings for six weeks. I can do it. I'd like to hear it's worth it.
 
-**Sella:** I will walk any of the three plans. I will not pretend they cost the same.
-**Player:** Tell me the cost.
-**Sella:** Clear: risk now, quiet later. Reroute: timber and a longer walk. Patrol: people, every dusk, until the pack moves on.
-**Player:** Then I choose with the cost named.
-**Sella:** That is the first useful thing anyone has said about a wolf today.
+**S8 — Dorota przed decyzją**
 
-### 4. Trzy zakończenia
+**Dorota:** I'll walk with any of the three. They don't cost the same, that's all.
+**Player:** Tell me plainly.
+**Dorota:** Clearing it: danger now, quiet after. The uphill track: timber and sweat. The watch: Bogna's evenings and everyone's patience.
+**Player:** And the piglets?
+**Dorota:** Live in two of them. Maybe in the first, if you drive her off rather than kill her. Driving off a sow is harder than people think.
+**Player [clear / reroute / watch]:** *(wybór)* → `choice`
 
-**E1 — Clear the hollow.** Warunek: `choice=clear`, `denFound`, wymagany sprzęt/ogień i faktyczne usunięcie aktywnego legowiska; wilki mogą zostać przegonione lub zabite, ale bieżąca implementacja I nie obsługuje jeszcze pełnego „przegonienia” — P/ N. `Sella` i `Ada` potwierdzają tylko to, co zobaczą lub otrzymają w raporcie.
+## 4. Zakończenia
 
-**Sella:** The hollow is cold.
-**Player:** We did not kill the young one.
-**Sella:** Then remember that the adults may return looking for it. We watch the road for three evenings.
-**Ada:** I will pay for the work, not for a story about it. The road is open when I can verify the sign.
+### E1 — Clear the hollow
+Warunek: `choice=clear`, `hollowFound`, legowisko faktycznie unieczynnione (I: spalenie legowiska — 5× gałąź + krzesiwo; walka). Wariant przepędzenia ogniem i hałasem bez zabicia: P/N (I obecnie obsługuje tylko zabicie). Zapłata: **35–45 c** z `treasury_V` przez Bognę po jej własnych oględzinach.
 
-Skutek: brak aktywnego den w tej lokalizacji; tymczasowy spadek presji wilków, reputacja `courage/helpfulness`; koszt zużytych gałęzi/ognia i ryzyko walki.
+**Dorota:** It's cold. Nothing in there but bracken.
+**Player [jeśli przepędzone]:** She went east with the young. Didn't look back.
+**Dorota:** She'll find another root to lie under. Further from the road, I hope.
+**Player [jeśli zabite]:** It's done.
+**Dorota:** Then we'll dress her properly — no point wasting her as well. *(pauza)* The little ones I'll take to the farm, if Małgorzata will have them. Somebody'll raise them.
+**Bogna:** I'll walk the bend myself tonight. If it's quiet, you're paid in the morning.
 
-**E2 — Move the work, not the animals.** Warunek: `choice=reroute`, zgoda Brama na drewno i wykonana naprawa/krótki objazd (N/P poza obecnym budynkiem drogi).
+Skutek: brak legowiska przy drodze; reputacja w V: odwaga +, uczynność +. Przy zabiciu: mięso i skóra (zwykły łup; warchlaki → household farmera V jako zwierzęta, N).
 
-**Bram:** The uphill line needs six posts, maybe eight.
-**Player:** I can bring the first load.
-**Bram:** Bring what you can carry. The road is longer; the work should not become a boast.
-**Sella:** People will complain about the extra bend.
-**Bram:** They complain about mud too. At least this one has a reason.
+### E2 — Move the road, not the pigs
+Warunek: `choice=reroute`, objazd zbudowany: gracz przynosi co najmniej połowę z 8 słupków/belek (I: transport, taczka/wózek `TRANS-01`), drwal V wykonuje resztę. Zapłata: **20–25 c** z `treasury_V` + darmowy posiłek w V; drewno dostarczone przez gracza to jego wkład, nie towar na sprzedaż.
 
-Skutek: utrwalony objazd, zużyte drewno/czas, mniejsza ekspozycja podróżnych; wilki pozostają w świecie, a teren nie jest „oczyszczony”.
+**Dorota:** Longer by — what — a hundred paces?
+**Player:** And a hill.
+**Bogna:** People have already complained about the hill. Good. They're complaining about the hill and not about their legs.
+**Dorota:** When the young can run, we pull the posts and let the old bend grow back. Or don't — the new one drains better.
 
-**E3 — A marked risk.** Warunek: `choice=patrol`, `roadRiskReported`, trzy rzeczywiste obchody Selli/Ada (N: harmonogram patrolu) lub jawne odroczenie do kolejnego tygodnia.
+Skutek: trwały objazd (N: odcinek drogi roboczej), locha zostaje; mniejsze ryzyko dla podróżnych.
 
-**Ada:** Third evening. No wolves on the road.
-**Player:** That is not the same as no wolves.
-**Ada:** Correct. I am writing “no sighting,” not “safe forever.”
-**Sella:** The signs lead west now. The patrol bought us time.
-**Player:** And after that?
-**Ada:** We inspect again. A boundary is useful only if someone remembers to look at it.
+### E3 — The watched bend
+Warunek: `choice=watch`, `reported`, sześć tygodni czasu kalendarza z przeprowadzaniem ludzi o ustalonych porach (N: harmonogram straży). Gracz może wziąć co najmniej 3 wieczorne zmiany zamiast Bogny (każda: **6 c** z `treasury_V`). Quest zamyka się, gdy locha z młodymi opuści wykrot (symulacja) albo po sześciu tygodniach.
 
-Skutek: brak budowy i brak gwarancji bezpieczeństwa; koszt pracy strażników, trwała flaga ostrzegawcza i możliwość ponownego questu po realnym powrocie wilków.
+**Bogna:** Sixth week. She's gone — went down to the stream with the lot of them, Dorota says.
+**Player:** All five?
+**Dorota:** Four. One didn't make it. That happens without anyone's help.
+**Bogna:** I'm writing "bend clear," not "safe forever." If she comes back next spring, we know what to do.
+
+Skutek: brak budowy i brak zabicia; koszt: czas strażników; trwała notatka „zagrożenie sezonowe” (N) i możliwość ponownego wystąpienia problemu wiosną.
 
 ## Odmowa, przerwanie, pominięcia
 
-Odmowa S1 nie obniża reputacji. Wycofanie po śladach zapisuje `tracksRead`; Sella nie twierdzi, że gracz znalazł den. Jeśli NPC rozwiążą problem, quest kończy się jako „resolved by settlement” i gracz dostaje wyłącznie uznanie za zweryfikowany wkład. Nie pojawia się automatyczny skarb ani nowe wilki. Śmierć Selli zamyka jej rekomendację; Ada może przyjąć raport, ale nie pamięta nieprzekazanych szczegółów. Pominięcie oględzin blokuje E1; nie można podpalić nieznanego miejsca bez celu.
+- Odmowa S1: bez kary; Bogna zamyka bend na kilka dni (droga przez bagno dłuższa).
+- Wycofanie po tropach: `tracksRead` zostaje; Dorota nie twierdzi, że gracz znalazł wykrot.
+- Bez `hollowFound` E1 niedostępne — nie da się spalić miejsca, którego nikt nie widział.
+- Jeśli NPC (Dorota, strażnicy) rozwiążą problem sami, quest kończy się wpisem „settled by {V}”; gracz dostaje wyłącznie uznanie za realny wkład (raport → mała opinia, bez zapłaty).
+- KO gracza przy wykrocie: Dorota odciąga go (jeśli obecna); quest trwa.
+- Śmierć Doroty: Bogna przyjmuje raport gracza, ale nie zna niczego, czego jej nie powiedziano.
 
-## Mechaniki / otwarte kwestie
+## Mechaniki
 
-I: wilki, walka, legowiska jako dane, reputacja, droga i budynki. P: FAUNA-07/08, patrol, przegonienie, ostrzegawcza flaga. N: trwała strefa ryzyka, objazd drogi roboczej, harmonogram patroli, koszt drewna. D: pełne outposty nie są wymagane. Do decyzji: czy spalenie legowiska ma usuwać spawn, czy tylko czasowo przenosić aktywność; czy reputacja za obejście ma być liczona jak za walkę.
+I: dzik, walka, legowisko (spawn), spalenie legowiska, reputacja, transport (`TRANS-01`). P: zachowanie przy młodych (`FAUNA-07/08`), przepędzenie ogniem. N: objazd drogi, harmonogram warty, notatka zagrożenia sezonowego, warchlaki jako zwierzęta gospodarskie. **Do decyzji:** czy spalenie legowiska usuwa spawn na stałe; czy reputacja za niebojowe rozwiązanie liczy się jak za walkę.

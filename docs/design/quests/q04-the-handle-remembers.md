@@ -1,130 +1,136 @@
 # Q04 — The Handle Remembers
 
-**Status: propozycja N; blacksmith/craft.**
+**Status: propozycja N; pakiet A (Codex 1), kowalstwo.** Obsada: [QUEST-WORLD](QUEST-WORLD.md). Trzy etapy, trzy zakończenia. Skala: mały, intymny quest w V.
 
 ## Założenie
 
-W kuźni V pęka stary młot Tobina. Nessa, jego córka i kowalka, chce zrobić nowy z lepszego materiału. Tobin uważa, że problemem jest zły chwyt, nie wiek narzędzia. Gracz ma sprawdzić narzędzie w pracy, porównać koszt i zdecydować, czy stary przedmiot przekuć, zachować jako pamiątkę, czy złożyć zamówienie na nowy.
+W kuźni {V} pęka trzonek starego młota Bogdana. Kuźnię od dwóch lat prowadzi jego córka Zofia, ale Bogdan wciąż przychodzi do drobnej roboty — kucie ostrzy, nity, cienkie blachy — i robi to tym jednym młotem. Zofia chce zrobić mu nowy, lżejszy, bo widzi, że stary „oddaje” w nadgarstek. Bogdan twierdzi, że młot jest dobry, tylko trzonek się zestarzał. Ma po trochu rację: głowa ma mikropęknięcie przy obuchu, przez które młot drży przy odbiciu — ta sama robota, ten sam nadgarstek, gorsze odkuwki. Gracz pomaga przeprowadzić próbę i rodzina decyduje: przekuć głowę, zrobić nowy młot, czy powiesić stary na ścianie.
 
-I: kowal, zamówienie z zaliczką, durability, materiały i pieniądze. N: dialog o pamięci przedmiotu, próba narzędzia, rozdzielenie „działa” od „jest bezpieczne”.
+**Wiedza NPC.** Zofia wie, że ojciec ma bóle nadgarstka. Bogdan wie, że ostatnie lemiesze wychodziły gorsze, i nikomu tego nie powiedział (powiązanie z G02). Żadne nie wie o pęknięciu głowy przed próbą.
 
-## Etapy i stan
+**Warunki startu.** V ma household kowala z co najmniej dwiema osobami. I: kowal, zamówienia z zaliczką (`CRAFT-02`), durability, materiały. N: próba narzędzia, przedmiot-pamiątka.
 
-`accepted`, `testObserved`, `quoteSeen`, `choice=reforge|new|keepsake`, `depositPaid`, `settled`. Test zużywa czas i trwałość, ale nie niszczy młota automatycznie.
+## Stan
 
-### 1. A cracked handle
+`accepted`, `bogdanTold`, `testDone`, `crackFound`, `choice = unset|reforge|new|keepsake`, `orderPlaced`, `settled`.
 
-**S1 — Nessa**
+## Etap 1 — A cracked handle
 
-**Nessa:** It cracked along the grain. That is not a good place for a crack.
-**Player:** Can you repair it?
-**Nessa:** I can put new wood around old weakness. I can also make a new head. Those are two prices.
-**Player [A]:** Let Tobin show how he uses it.
-**Nessa:** Good. He will hate the suggestion and prove it useful.
-**Player [B]:** Just make a new hammer.
-**Nessa:** “Just” is free. Iron is not.
+**S1 — Zofia przy kowadle**
 
-**S2 — Tobin**
+**Zofia:** Cracked along the grain. Right where his hand goes. That's not the place you want a crack.
+**Player:** Can it be fixed?
+**Zofia:** I can put a new handle on it in an afternoon. Or I can make him a new hammer, which he'll hate. Those aren't the same job.
+**Player [A]:** Let your father show me how he uses it.
+**Zofia:** Yes. Please. He'll be insulted, and then he'll show you everything. → `accepted`
+**Player [B]:** Just make a new one.
+**Zofia:** You tell him. I've tried three times.
 
-**Tobin:** I used this before Nessa could lift the bellows.
-**Player:** Then you know its balance.
-**Tobin:** I know my balance. The hammer has changed less than my knees.
-**Player:** What work did it do best?
-**Tobin:** Thin edge work. Not the heavy striking. Nessa remembers the numbers; I remember the feel.
+**S2 — Bogdan na ławie przed kuźnią**
 
-**S3 — próba**
+**Bogdan:** I had this hammer before she could lift the bellows.
+**Player:** Then you know its balance better than anyone.
+**Bogdan:** I know *my* balance. The hammer's changed less than my knees have.
+**Player:** What work does it do best?
+**Bogdan:** Edges. Thin work. Not the heavy drawing-out, I leave that to her now. — Ask her the numbers. I just know when it feels wrong.
+**Player [A]:** And lately? Does it feel wrong?
+**Bogdan:** *(długa pauza)* The last few shares I did came out — not bad. Not like they used to. I put it down to the iron. → `bogdanTold`
 
-**Nessa:** One test on cold iron. No showpiece.
+**S3 — Próba na zimnym żelazie** (czynność: gracz trzyma pręt, Bogdan uderza; albo gracz uderza sam — I: crafting/skill kowalstwa nie jest wymagany)
+
+**Zofia:** One test. Cold iron. No showing off.
 **Player:** Why cold?
-**Nessa:** Heat hides a bad edge. Cold work shows where the force travels.
-**Tobin:** It travels through my wrist.
-**Nessa:** Exactly.
+**Zofia:** Heat hides a bad hammer. Cold shows you where the blow goes.
+**Bogdan:** It goes into my wrist.
+**Zofia:** Exactly.
 
-### 2. Two kinds of good
+## Etap 2 — Two kinds of good
 
-**S4 — po teście**
+**S4 — Po próbie** (`testDone`; jeśli gracz obejrzy głowę z bliska → `crackFound`)
 
-**Player:** The old hammer still lands true.
-**Nessa:** It also shudders on the return.
-**Tobin:** It did not do that last month.
-**Nessa:** Last month is not a material specification.
-**Player:** Could a new handle solve it?
-**Nessa:** Perhaps. I will not promise “perhaps” for a paid repair.
+**Player:** It lands true. But it shivers on the way back up.
+**Bogdan:** It didn't do that last winter.
+**Player [crackFound]:** There's a hairline crack by the poll. It's in the head, not the handle.
+**Zofia:** *(bierze młot, ogląda pod światło)* …There. There it is. Father, that's been in there months.
+**Bogdan:** *(cicho)* The shares.
+**Zofia:** What about the shares?
+**Bogdan:** Nothing. Later.
 
-**S5 — wycena**
+Bez `crackFound` Zofia podejrzewa pęknięcie, ale nie ma pewności; opcja `reforge` jest wtedy niedostępna (nie przekuwa się czegoś, czego nie zbadano).
 
-**Nessa:** New handle: two days and local wood. Reforged head: iron, coal, and my time. New hammer: most expensive, least sentimental.
-**Player:** Which is best?
-**Nessa:** For a tool, “best” means the work it must survive. Tell me the work.
-**Tobin:** It must survive me changing my mind.
+**S5 — Co dalej**
 
-**S6 — decyzja Tobina**
+**Zofia:** Three ways. New handle on the old head — no, not now, not with that crack. Reforge the head: I draw it out again, it comes out shorter, maybe a little lighter. Or a new hammer from new iron.
+**Player:** Which would you choose?
+**Zofia:** For a tool? Whatever survives the work. Tell me what work he's going to do.
+**Bogdan:** Whatever I like. And changing my mind.
 
-**Tobin:** If we melt it, there is no old hammer left.
-**Player:** Is that what worries you?
-**Tobin:** It is what I am saying. Worry is a different word.
-**Nessa:** The old handle can stay in the wall rack. A thing may stop working and still have a place.
+**S6 — Bogdan sam**
 
-### 3. A named order
+**Bogdan:** If she reforges it, there's no old hammer left. It's just a smaller one with the same name.
+**Player:** Is that what bothers you?
+**Bogdan:** That's what I said. What bothers me is a different word.
+**Player [A]:** You could keep the old head and have a new one made.
+**Bogdan:** Two hammers. Like a rich man.
+**Player [B]:** It might be time to let it rest.
+**Bogdan:** Hm. Maybe it's earned that. Maybe I have.
 
-**S7 — wybór**
+## Etap 3 — Wybór i zakończenia
 
-**Player [reforge]:** Reforge the head and keep the old handle for the rack.
-**Tobin:** That sounds like both keeping and losing it.
-**Nessa:** It is exactly that.
+**S7 — Wybór** (ustawia `choice`)
 
-**Player [new]:** Order a new hammer and leave this one intact.
-**Nessa:** I need the deposit before I reserve iron.
-**Tobin:** And the old one?
-**Player:** You decide where it rests.
+**Player [reforge]:** Reforge the head. Keep the old handle on the wall.
+**Bogdan:** That's keeping it and losing it at once.
+**Zofia:** That's what it is, yes.
 
-**Player [keepsake]:** Repair only enough to hang it safely; do not use it for work.
-**Nessa:** That is not a repair order. It is preservation.
-**Tobin:** Then write that word. I do not want a future apprentice striking with it.
+**Player [new]:** A new hammer. The old one stays as it is.
+**Zofia:** That's iron and charcoal I'd rather not spend this month. If you can bring the iron, I'll do the work for nothing.
+**Bogdan:** For nothing. Listen to her.
 
-**S8 — zaliczka i własność**
+**Player [keepsake]:** Hang it up. He uses yours until he wants his own.
+**Bogdan:** Hers is too heavy.
+**Zofia:** Then I'll make you a light one when you ask. Not before.
 
-**Nessa:** The deposit belongs to the order. If you cancel before I heat the forge, most returns. After that, materials are consumed.
-**Player:** Show me the amount first.
-**Nessa:** I am showing it. Read it before agreeing.
-**Tobin:** Good. The hammer has had enough surprises.
+Materiały: `reforge` — węgiel ×4 (gracz lub zapasy kuźni); `new` — sztaba żelaza ×2 + węgiel ×4 (I: `iron_ingot`, `coal`; gracz przynosi albo kupuje — zamówienie `CRAFT-02` z zaliczką płaconą przez gracza, jeśli materiały są z kuźni). Czas pracy: zgodnie z istniejącym systemem zamówień.
 
-**S9 — oczekiwanie**
+### E1 — The same hammer, shorter
+Warunek: `reforge`, `crackFound`, materiały, zamówienie ukończone.
 
-**Nessa:** Come back after the stated work time. Do not call every hour “late.”
-**Player:** What if the materials run out?
-**Nessa:** The order waits. It does not invent iron.
+**Bogdan:** It feels wrong.
+**Zofia:** New things do.
+**Bogdan:** *(drugie uderzenie)* …It feels honest. — The old handle?
+**Zofia:** On the wall, over the door.
+**Bogdan:** Good. It can watch.
 
-### 4. Trzy zakończenia
+Skutek: Bogdan pracuje dalej; jakość jego drobnych wyrobów wraca do normy (N: modyfikator jakości NPC-kowala). Zapłata: Zofia oferuje graczowi **naprawę jednej broni lub narzędzia do pełnej durability** za darmo (usługa, nie gotówka).
 
-**E1 — The tool changes hands.** Warunek: `reforge`, materiały i zamówienie gotowe. Tobin testuje nowy przedmiot, ale Nessa zatwierdza bezpieczeństwo.
+### E2 — Two hammers
+Warunek: `new`, zamówienie odebrane.
 
-**Tobin:** It feels wrong.
-**Nessa:** New things often do.
-**Tobin:** It feels honest after the second strike.
-**Player:** The old handle?
-**Tobin:** On the wall. Let it remember without breaking again.
+**Zofia:** New handle, new head, same purpose.
+**Bogdan:** Same purpose is enough. *(waży w dłoni)* Lighter. I'll get used to it.
+**Player:** And the old one?
+**Bogdan:** For teaching. Where not to put your thumb.
 
-Skutek: nowy/odnowiony młot z innymi parametrami; stary uchwyt jako prywatny rekwizyt; koszt materiałów i pracy.
+Skutek: nowy przedmiot o pełnej durability; stary młot zostaje (jako przedmiot, oznaczony „damaged — do not use”, N). Jeśli gracz przyniósł żelazo, Zofia nie bierze zapłaty za robociznę i daje graczowi **gwoździe/ćwieki ×20** lub **nóż** (wartość ~8 c) „z resztek”.
 
-**E2 — A clean order.** Warunek: `new`, `depositPaid`, odbiór gotowego zamówienia. Tobin zachowuje stary młot.
+### E3 — The quiet hook
+Warunek: `keepsake`, młot powieszony; Bogdan nie używa go po ostrzeżeniu.
 
-**Nessa:** New handle, new head, same purpose.
-**Tobin:** Same purpose is enough.
-**Player:** Will you use the old one?
-**Tobin:** To teach where not to put your thumb.
+**Bogdan:** It's done enough.
+**Zofia:** I'll make it a proper hook.
+**Player:** No new hammer?
+**Bogdan:** Later. Today I know what I'm keeping.
 
-Skutek: osobny item z pełną durability; zachowana pamiątka; możliwy wzrost opinii Nessa za jasne zamówienie, bez bonusu bojowego.
+Skutek: Bogdan pracuje mniej (N: mniejsza wydajność kuźni do czasu, aż poprosi o nowy młot — Zofia robi go sama po ok. 2 tygodniach). Zapłata: posiłek i opinia rodziny (+15), bez gotówki — gracz niczego nie kupił ani nie przyniósł.
 
-**E3 — The quiet rack.** Warunek: `keepsake`, bez użycia narzędzia po ostrzeżeniu. Tobin rezygnuje z pracy tym młotem; Nessa nie pobiera fikcyjnej opłaty za pełną naprawę.
+## Odmowa, przerwanie, pominięcia
 
-**Tobin:** It has done enough.
-**Nessa:** I will make a small hook for it.
-**Player:** No replacement?
-**Tobin:** Later. Today I know what I am keeping.
+- Odmowa S1: młot leży w kuźni, Zofia osadza nowy trzonek na pękniętej głowie; drżenie i słabsze wyroby trwają (N), co podtrzymuje tło G02.
+- Zerwanie zamówienia: reguły `CRAFT-02` (zwrot niezużytych materiałów).
+- Niedostępna Zofia: zamówienie czeka, nie kończy się zaocznie.
+- Powiązanie z G02 (miękkie): po S4 z `crackFound` Bogdan w G02 może sam przyznać, że lemiesz był gorszy (dodatkowa opcja dialogowa, nie warunek).
 
-Skutek: stary przedmiot nie jest funkcjonalną bronią/narzędziem; rodzina dostaje prawdziwy wybór, a nie dodatkową nagrodę.
+## Mechaniki
 
-## Przerwanie i otwarte kwestie
-
-Odmowa S1 pozostawia młot w kuźni. Zerwanie zamówienia respektuje reguły CRAFT-02 i zwrot zużytych materiałów. Gdy Nessa jest niedostępna, UI pokazuje „order waiting”, nie kończy go zaocznie. I: craft/order. N: próba bezpieczeństwa, item pamiątkowy, dialog relacji ojciec–córka. Autor ma ustalić, czy narzędzia mają osobny stan „unsafe” i czy stary uchwyt może być dekoracją w późniejszym systemie budowy.
+I: kowal, zamówienia, durability, materiały. N: próba narzędzia, oznaczenie przedmiotu jako uszkodzonego/pamiątki, modyfikator jakości wyrobów NPC. **Do decyzji:** czy narzędzia mają stan „unsafe”; czy pamiątki mogą być dekoracją w budynku.
