@@ -26,7 +26,8 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - Review fali 2: `docs/reviews/2026-09-30--004--wave2-ui-review.md` — 7 ustaleń, 6 poprawionych (szczegóły przedmiotu, jakość po nowej grze, mapa cieni, broń dwuręczna vs pochodnia, NaN celu, kontekst WebGL), 1 info.
 - **Fala 3 `economy--001` w toku:** krok 1 RES-07 verified (głaz → odłamki → kamienie, pień), krok 2 FOOD-03 verified (pieczenie partiami: ognisko 1 / patelnia 2 / ruszt 5, gatunek i świeżość w produkcie — D-FOOD-3). `pnpm check` 126/126, e2e acceptance 27/27, mobile 10/10, smoke 3/3.
 - **Nowe wymagania z `docs/IMPORTANT-PRODUCT-NOTES.md` (dodane na main w trakcie sesji):** MAP-01 mgła wojny (v1) — **zrobione** (D-MAP-1, test + e2e); UI-LANG-01 cały tekst dla gracza po angielsku (v1) — **planned**, duża zmiana przekrojowa (wymaga planu: katalog tekstów, nazwy przedmiotów/receptur w `data/`, komunikaty sim, selektory tekstowe w e2e); MAP-02 widoczność aktorów wg zmysłów (v2) — planned. Status v1 w świetle nowych wymagań: **brakuje UI-LANG-01**.
-- Następny krok: zaplanować UI-LANG-01 (`docs/plans/ui--002--english-ui.md`) — jest v1, więc przed dalszymi falami dodatku; potem `economy--001` krok 3 (TRANS-01 taczka / wózek ręczny: udźwig dla ciężkich surowców, spowolnienie, bez stromych zboczy/wody), potem `npc--001`, potem review fali 3.
+- **UI-LANG-01 verified (2026-10-01):** cały interfejs po angielsku (decyzja użytkownika: bez i18n, D-UI-4; słownik `docs/design/ui-english-glossary.md`). Nazwy własne bez zmian. Nowy tekst dla gracza pisz od razu po angielsku według słownika. **v1 znów kompletne** wg FEATURES (poza WORLD-10 — dźwięk nieodsłuchany).
+- Następny krok: `economy--001` krok 3 (TRANS-01 taczka / wózek ręczny: udźwig dla ciężkich surowców, spowolnienie, bez stromych zboczy/wody), potem `npc--001`, potem review fali 3.
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

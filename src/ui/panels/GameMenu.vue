@@ -104,6 +104,7 @@ async function saveAs() {
       </div>
       <Button
         variant="ghost"
+        data-testid="menu-quit"
         @click="emit('quit')"
       >
         Quit without saving

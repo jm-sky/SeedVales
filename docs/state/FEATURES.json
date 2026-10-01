@@ -1042,8 +1042,8 @@
    "scope": "v1",
    "behavior": "Cały tekst widoczny dla gracza po angielsku (menu, HUD, przyciski, komunikaty, nazwy przedmiotów, zadania, mapa, ustawienia, błędy)",
    "verify": "e2e + przegląd zrzutów",
-   "status": "planned",
-   "evidence": "nowe wymaganie (2026-09-30); obecnie UI po polsku — wymaga planu (katalog tekstów / i18n w data + ui, aktualizacja e2e selektorów tekstowych)"
+   "status": "verified",
+   "evidence": "All player-facing strings translated to English without an i18n layer (D-UI-4, glossary docs/design/ui-english-glossary.md): data (items, recipes, blueprints, species, skills, professions), sim messages/labels/quests/reasons, calendar and weather names, Game toasts and loading text, save errors, all Vue UI. Sweep: remaining diacritics in src only in proper nouns (settlement/NPC names) and comments. Behaviour that keyed off Polish labels (shepherd sheep, talk/eat animations) updated. pnpm check 127/127, e2e smoke 3/3, acceptance 28/28, mobile 10/10, screenshots reviewed (character, trade, mobile HUD)"
   }
  ]
 }
