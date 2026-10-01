@@ -17,6 +17,8 @@ Ten plan jest **katalogiem warunkowym**, nie listą do odhaczenia. Każda pozycj
 
 Status `draft` → `planned` dopiero po przeglądzie wyników fali 4 i 5 w PERF.md oraz (jeśli dostępne) danych z urządzeń.
 
+**Inputs required before leaving draft (roadmap update 2026-10-01):** `diag--002` tiers A and B (startup, real travel, quality transitions, diagnostics overhead, lifecycle/memory — D-PERF-4) and the asset audit table from [`render--004`](render--004--asset-pipeline-and-audit.md) step 1. Item 2 (adaptive resolution) needs the transition result; items 4, 5 and 9 and asset geometry optimisation (decimated roofs, material atlases, stripped clips — `render--004` step 4) use the audit to pick targets. Asset edits follow D-REN-8 (Blender offline only, node-name guard test green).
+
 ## Pozycje
 
 | # | Pozycja | Warunek startu | Zakres / ograniczenia |
@@ -29,6 +31,7 @@ Status `draft` → `planned` dopiero po przeglądzie wyników fali 4 i 5 w PERF.
 | 6 | **Spatial batches roślinności / culling** | GPU (urządzenie) pokazuje dużo pracy poza widokiem lub w cieniach | Kompromis: mniej niewidocznych trójkątów, więcej draw calli. `frustumCulled=true` tylko z poprawnymi bounds (także z wiatrem). |
 | 7 | **Ograniczenie casterów cieni** | Shadow pass dominuje koszt na medium | Dobór casterów przestrzennie (wymaga pkt 6 dla instanced batches). CSM/PCSS tylko przy problemie, którego tańsze ustawienia nie rozwiązują. Throttling shadow map — nie przy ruchomych aktorach/słońcu (review R11). |
 | 8 | **LOD fade drzew** | Widoczny „pop” po falach 4–5 | Najpierw histereza i zbliżone sylwetki/kolory LOD; alphaHash/dither tylko w krótkim zakresie po A/B (szum bez TAA, podwójny render — review R13). |
+| 10 | **Asset geometry/texture optimisation** (`render--004` step 4) | Settlement scenes over the `render.prep` budget because of building/prop geometry, startup dominated by asset decode, or memory over the pilot limit | Targets from the `render--004` audit (expected: village roof tiles, `anims.glb`, oversized textures). Before/after on the same scenes + startup; node-name guard test stays green. |
 | 9 | **Odbudowa paczek Quaternius z mapami PBR** | Pilot PBR z `render--002` krok 4 = keep i jest dostęp do `_temp/extracted` | Selektywnie (skały, dachy, metal), nie wszystkie paczki; zmiana `baseColorOnly()` per klasa assetu. |
 
 ## Odłożone (bez planu; wrócić tylko z nowym uzasadnieniem)

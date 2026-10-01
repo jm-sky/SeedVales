@@ -1,79 +1,96 @@
-# Roadmap: domknięcie v1 → VISION-APPENDIX (v2)
+# Roadmap: v1 closure → VISION-APPENDIX (v2)
 
 **Created:** 2026-09-30  
-**Domains:** wszystkie  
-**Updated:** 2026-10-01 — fala 4 podzielona (fundament → efekty), nowa fala 6 (wykończenie/optymalizacja grafiki) i bramki wydajności wg [research 002](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md) / [review 005](../reviews/2026-10-01--005--rendering-research-critical-review.md)  
-**Źródła:** [VISION.md](../VISION.md), [VISION-APPENDIX.md](../VISION-APPENDIX.md), [review v1](../reviews/2026-09-30--001--v1-review.md), [DEVELOPER-CALIBRATION-TOOLS.md](../DEVELOPER-CALIBRATION-TOOLS.md)
+**Domains:** all  
+**Updated:** 2026-10-01 — (1) wave 4 split (foundation → effects), new wave 6 (visual polish/optimisation) and perf gates per [research 002](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md) / [review 005](../reviews/2026-10-01--005--rendering-research-critical-review.md); (2) side tracks from [review 008](../reviews/2026-10-01--008--save-load-review.md) (save fixtures), [review 009](../reviews/2026-10-01--009--render-performance-and-measurement-review.md) (benchmark trust) and [research 003](../research/2026-10-01--003--blender-mcp.md) (offline asset pipeline) scheduled against the waves — see "Side tracks". Translated to English (D-LANG-1).  
+**Sources:** [VISION.md](../VISION.md), [VISION-APPENDIX.md](../VISION-APPENDIX.md), [review v1](../reviews/2026-09-30--001--v1-review.md), [DEVELOPER-CALIBRATION-TOOLS.md](../DEVELOPER-CALIBRATION-TOOLS.md)
 
-Kolejność ustalona z użytkownikiem 2026-09-30: **najpierw domknięcie v1, potem dodatek do wizji falami**. Fala zaczyna się dopiero, gdy poprzednia ma status `done` (lub pozostałości są jawnie odłożone w DECISIONS). W obrębie fali plany można realizować w dowolnej kolejności, jeśli są niezależne.
+Order agreed with the user on 2026-09-30: **close v1 first, then the vision appendix in waves**. A wave starts only when the previous one is `done` (or its leftovers are explicitly deferred in DECISIONS). Plans inside a wave can go in any order if they are independent. Side tracks are not waves: each is tied to a **trigger** (the wave step it must precede), not to a calendar slot.
 
-Wymagania z dodatku są w `docs/state/FEATURES.json` ze `scope: "v2"` i statusem `planned` (`vision: "APPX: <sekcja>"`).
+Appendix requirements are in `docs/state/FEATURES.json` with `scope: "v2"` and status `planned` (`vision: "APPX: <section>"`).
 
-## Etap 0 — domknięcie v1 (obowiązkowe przed falami)
+## Stage 0 — v1 closure (done)
 
-| Plan | Zakres | Status |
+| Plan | Scope | Status |
 |---|---|---|
-| [game--002--v1-review-fixes](../plans/game--002--v1-review-fixes.md) | poprawki z review: ekonomia/zasoby, save↔genVersion, pętle AI, multi-seed WORLD-04 | done |
-| [diag--001--sim-hotspots-and-perf-report](../plans/diag--001--sim-hotspots-and-perf-report.md) | O(n×m) → spatial query, audyt skanów, `docs/state/PERF.md` | done |
-| (w PROGRESS) | RES-04 test plonów sezonowych; WORLD-10 jawnie „nieodsłuchane” | done |
-| [review 002](../reviews/2026-09-30--002--v1-closure-review.md) | niezależne review etapu 0 + poprawki | done |
+| [game--002--v1-review-fixes](../plans/game--002--v1-review-fixes.md) | review fixes: economy/resources, save↔genVersion, AI loops, multi-seed WORLD-04 | done |
+| [diag--001--sim-hotspots-and-perf-report](../plans/diag--001--sim-hotspots-and-perf-report.md) | O(n×m) → spatial query, scan audit, `docs/state/PERF.md` | done |
+| (in PROGRESS) | RES-04 seasonal yield test; WORLD-10 explicitly "not listened to" | done |
+| [review 002](../reviews/2026-09-30--002--v1-closure-review.md) | independent stage-0 review + fixes | done |
 
-**Etap 0 zamknięty 2026-09-30 — v1 ogłoszone (PROGRESS.md).**
+**Stage 0 closed 2026-09-30 — v1 declared (PROGRESS.md).**
 
-Wyjście z etapu 0: `pnpm check` + `pnpm e2e` zielone, FEATURES bez fałszywych `verified`, PROGRESS.md mówi jasno „v1 ukończone” albo co blokuje.
+## Wave 1 — simulation and AI (done)
 
-## Fala 1 — symulacja i AI (fundament pod resztę)
-
-| Plan | Zakres |
+| Plan | Scope |
 |---|---|
-| [sim--001--ai-cadence-and-animal-threat](../plans/sim--001--ai-cadence-and-animal-threat.md) (done) | kadencja decyzji ~1 s per gatunek/stan + wymuszenie reakcji krytycznej; ucieczka zwierząt domowych do pasterza/zagrody; strach dzikich przed ludźmi/ogniem/zagrodami z wyjątkami (młode, legowisko); zjadanie zwłok w czasie, przerywalne; ślady krwi (sim) wabiące drapieżniki |
+| [sim--001--ai-cadence-and-animal-threat](../plans/sim--001--ai-cadence-and-animal-threat.md) (done) | ~1 s decision cadence per species/state + forced critical reaction; domestic animals flee to herder/pen; wild animals fear humans/fire/pens with exceptions (young, den); interruptible carcass eating; blood traces (sim) attract predators |
 
-## Fala 2 — UI i ekrany
+## Wave 2 — UI and screens (done)
 
-| Plan | Zakres |
+| Plan | Scope |
 |---|---|
-| [ui--001--character-screens-map-settings](../plans/ui--001--character-screens-map-settings.md) | ekran postaci (atrybuty, reputacja, skille, choroby, ekwipunek, wybór broni głównej wręcz/dystansowej), filtrowanie/sortowanie, parametry przedmiotów, duża mapa, minimapa ze strzałką, ustawienia grafiki/głośności, nowa gra, nazwane zapisy, `Tab` — cykl celów |
+| [ui--001--character-screens-map-settings](../plans/ui--001--character-screens-map-settings.md) (done) | character screen, filtering/sorting, item details, big map, minimap with arrow, graphics/volume settings, new game, named saves, `Tab` target cycle |
 
-## Fala 3 — gospodarka, relacje, towarzysze
+## Wave 3 — economy, relations, companions (done)
 
-| Plan | Zakres |
+| Plan | Scope |
 |---|---|
-| [economy--001--gathering-cooking-transport](../plans/economy--001--gathering-cooking-transport.md) (done) | ścinanie → pień, rozbijanie skał (weryfikacja istniejącego), gotowanie przy ognisku/patelni/ruszcie z parametrami produktu, taczka/wózek |
-| [npc--001--trade-gifts-companions](../plans/npc--001--trade-gifts-companions.md) (done) | handel z każdym NPC, prezenty i preferencje, towarzysze (najem/darmowe dołączenie), przekazanie i użycie ekwipunku |
+| [economy--001--gathering-cooking-transport](../plans/economy--001--gathering-cooking-transport.md) (done) | felling → stump, rock breaking, cooking at campfire/pan/grill with product parameters, wheelbarrow/cart |
+| [npc--001--trade-gifts-companions](../plans/npc--001--trade-gifts-companions.md) (done) | trade with any NPC, gifts and preferences, companions (hire/free join), equipment hand-over and use |
 
-**Wave 3 done (2026-10-01):** review [006](../reviews/2026-10-01--006--wave3-review.md) triaged — 11 fixed with regression tests, 1 rejected, 3 info/deferred.
+Review [006](../reviews/2026-10-01--006--wave3-review.md) triaged — 11 fixed with regression tests, 1 rejected, 3 info/deferred. Reviews [008](../reviews/2026-10-01--008--save-load-review.md) and [009](../reviews/2026-10-01--009--render-performance-and-measurement-review.md) triaged in session 4 (code fixes done; the rest → side tracks below).
 
-## Fala 4 — oprawa wizualna
+## Wave 4 — visuals
 
-Kolejność wewnątrz fali jest zależnością techniczną (D-REN-7): efekty pogody i ognia korzystają ze wspólnego światła/nieba i materiału terenu z uniformami, więc najpierw fundament. Pierwszy pakiet 4a jest celowo mały (metryki, światło/niebo, teren, jeden pilot PBR) — każdy krok z timeboxem, fallbackiem i decyzją keep/drop.
+The order inside the wave is a technical dependency (D-REN-7): weather and fire effects use the shared light/sky and the uniform-driven terrain material, so the foundation comes first. Every step has a timebox, a fallback and a keep/drop decision.
 
-| Etap | Plan | Zakres |
+| Stage | Plan | Scope |
 |---|---|---|
-| 4a | [render--002--visual-foundation-and-render-metrics](../plans/render--002--visual-foundation-and-render-metrics.md) | metryki renderu (RAF pacing, GPU timer, spójne okna kwantyli, sceny A/B: noc/woda/deszcz/śnieg/marsz) → światło, tone mapping, niebo, mgła → gładkie normalne terenu + detal gruntu + tint przez uniformy → pilot selektywnego PBR+IBL na jednym assecie → (opcjonalnie) kontakt z podłożem |
-| 4b | [render--001--weather-variety-effects](../plans/render--001--weather-variety-effects.md) | ogień flipbook + pula świateł per profil, chmury w materiale nieba + ulepszenie istniejących opadów, mokry teren/śnieg na uniformach, różnorodność postaci (bez wzrostu draw calli), skala/tint zwierząt, wiatr roślinności, woda bez renderu odbić sceny, dekale krwi |
-| — | [tools--001--calibration-lab](../plans/tools--001--calibration-lab.md) | *(opcjonalnie, przed/razem z 4b)* Asset/Character/Equipment Lab na kodzie produkcyjnym — ułatwia kalibrację wariantów postaci i broni w dłoni |
+| 4a | [render--002--visual-foundation-and-render-metrics](../plans/render--002--visual-foundation-and-render-metrics.md) (in progress, steps 0–1 done) | render metrics + baseline gate (done) → time-sliced vegetation rebuild (done) → light, tone mapping, sky, fog → smooth terrain normals + ground detail + tint via uniforms → selective PBR+IBL pilot on one asset → (optional) ground contact |
+| 4b | [render--001--weather-variety-effects](../plans/render--001--weather-variety-effects.md) | fire flipbook + per-profile light pool, clouds in the sky material + better precipitation, wet ground/snow on uniforms, character variety (no extra draw calls), animal scale/tint, vegetation wind, water without a scene reflection render, blood decals |
+| — | [tools--001--calibration-lab](../plans/tools--001--calibration-lab.md) | *(optional, before/with 4b)* Asset/Character/Equipment Lab on production code — helps calibrating character variants and held weapons |
 
-CHAR-01 i FAUNA-09 (render--001 kroki 4–5) nie zależą od 4a i mogą iść równolegle. Bramki wyjścia 4a i 4b: w planach (≤10% regresji p95 przygotowania renderu `render.cpu` − `render.draw` na pakiet względem baseline, zrzuty z tych samych kadrów, wydajność na urządzeniu jako ❓ do pomiaru przez użytkownika — D-PERF-2).
+CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in parallel. Exit gates of 4a and 4b: in the plans (≤ 10% p95 regression of `render.prep` per package vs the render baseline, D-PERF-3; screenshots from the same frames; device performance as ❓ for the user — D-PERF-2).
 
-## Fala 5 — świat i osada
+**Side-track triggers inside wave 4** (details below): `diag--002` step 1 (startup) **before** `render--002` step 3 (terrain changes chunk build cost, which only startup and streaming expose); `diag--002` step 5 (real travel) **before** `render--001` step 6 (wind) / step 9 (ground clumps); `render--004` steps 1–2 (asset audit + node-name guard) any time during 4b.
 
-| Plan | Zakres |
+## Wave 5 — world and settlement
+
+| Plan | Scope |
 |---|---|
-| [world--001--landmarks-and-treasure](../plans/world--001--landmarks-and-treasure.md) | landmarki w generatorze, skarby (zakopane, skrzynie, rzadko w drapieżniku), kosztowności |
-| [settlement--001--mayor](../plans/settlement--001--mayor.md) | *(draft)* gracz burmistrzem przy wysokiej reputacji/relacjach; decyzje o rozbudowie — zależy od SET-04 (rozwój osad, deferred) |
+| [world--001--landmarks-and-treasure](../plans/world--001--landmarks-and-treasure.md) | generator landmarks, treasure (buried, chests, rarely inside a predator), valuables |
+| [settlement--001--mayor](../plans/settlement--001--mayor.md) | *(draft)* player becomes mayor at high reputation/relations; expansion decisions — depends on SET-04 (settlement growth, deferred) |
 
-## Fala 6 — wykończenie obrazu i optymalizacja grafiki (warunkowo)
+**Side-track triggers for wave 5:** `save--001` (at least v6, v5) **before** the first `SAVE_VERSION` bump — LOOT-01 "opened/dug" state is the expected first one (FAUNA-09 `prime` in 4b may come earlier; whichever bumps first waits for the fixtures). Landmark models (stone circle, shipwreck, boat wreck, ruins beyond partial village modules) come from `render--004` step 3 — or procedural geometry if that step is skipped.
 
-| Plan | Zakres |
+## Wave 6 — visual polish and graphics optimisation (conditional)
+
+| Plan | Scope |
 |---|---|
-| [render--003--visual-polish-and-optimization](../plans/render--003--visual-polish-and-optimization.md) | *(draft)* pomiar na urządzeniach; pozycje tylko przy zmierzonym problemie: adaptive resolution, jeden pass AO/bloom/AA (medium/high), KTX2, redukcja draw calli postaci, spatial batches/culling roślinności, ograniczenie casterów cieni, LOD fade, odbudowa paczek z mapami PBR |
+| [render--003--visual-polish-and-optimization](../plans/render--003--visual-polish-and-optimization.md) | *(draft)* device measurements; items only for a measured problem: adaptive resolution, one AO/bloom/AA pass (medium/high), KTX2, character draw-call reduction, vegetation spatial batches/culling, shadow-caster limits, LOD fade, PBR pack rebuild, asset geometry optimisation |
 
-Po fali 5, bo dopiero wtedy scena ma docelową gęstość. Brak zmierzonego problemu = pozycja zamknięta jako „niepotrzebne”.
+After wave 5, because only then the scene has its target density. No measured problem = item closed as "not needed". **Inputs required before it leaves `draft`:** `diag--002` steps 2–4 (transitions, diagnostics overhead, lifecycle/memory) and the `render--004` audit table; device data (D-PERF-2) when the user provides it.
 
-## Zasady przekrojowe
+## Side tracks (from reviews 008/009 and research 003)
 
-- Każdy nowy system: pomiar kosztu (diag), test reguł, zapis/odczyt nowego stanu (bump `SAVE_VERSION` + migracja/odrzut zgodnie z planem game--002 A4), obsługa mobile jeśli dotyczy gracza.
-- Zmiany generatora (landmarki, skarby) → bump `GEN_VERSION`.
-- **Grafika (od fali 4):** każda zmiana wizualna za profilem jakości, z pomiarem `bench:render` przed/po (sceny z render--002 krok 0) i zrzutami z tych samych kadrów. Plany dokładające geometrię lub obiekty w świecie (fala 5: landmarki, skrzynie; kępy trawy) — `bench:render` w scenie z nowymi obiektami; przekroczenie budżetu przygotowania renderu lub `render.vegetationRebuild` przy marszu → najpierw redukcja kosztu (render--002 krok 1 / render--003), nie dalsze dokładanie.
-- Na low brak composera/postprocessingu; jeden shadow-casting directional light; bez cieni świateł punktowych (D-REN-7).
-- Dodatek nie unieważnia VISION.md; przy sprzeczności dodatek jest nowszy — zapisz rozstrzygnięcie w DECISIONS.
+Critical assessment, in short: the cheap, high-value parts go early and are tied to the step whose risk they cover; the expensive or speculative parts wait for evidence. Nothing here changes a budget or baseline to absorb a result.
+
+| Plan | What | When (trigger) | Why this placement |
+|---|---|---|---|
+| [diag--002--render-benchmark-trust](../plans/diag--002--render-benchmark-trust.md) — **tier A** (steps 1, 5) | startup result class; real-input travel | step 1 before `render--002` step 3; step 5 before `render--001` step 6 | The steady-state gate cannot see the two places where the upcoming work adds cost: chunk/terrain build at startup and streaming while walking (F-01 was found exactly there). |
+| `diag--002` — **tier B** (steps 2–4) | quality transitions, diagnostics overhead, lifecycle/memory | before `render--003` leaves `draft` (wave 6) | Only needed to decide adaptive resolution / quality switching and to trust long sessions; nothing earlier depends on them. |
+| `diag--002` — **tier C** (steps 6–7) | fresh context per scene; per-variant A/B metrics table | only if a verdict comes out `inconclusive` twice or scene contamination is suspected | Partly covered already (scene reset, failing locators, console errors fail the run). Otherwise closed as "not needed". |
+| [save--001--historical-save-fixtures](../plans/save--001--historical-save-fixtures.md) | real historical save fixtures through `readSave` → `Sim` | before the next `SAVE_VERSION` bump (latest: start of wave 5) | Fixtures are worth most right before the format changes again. D-SAVE-4 already turns broken old saves into a clean rejection, so there is no urgency now; v1–v3 are best-effort. |
+| [render--004--asset-pipeline-and-audit](../plans/render--004--asset-pipeline-and-audit.md) | asset audit, node-name guard test, source/credits rules (step 1–2); authoring of missing models with Blender as an offline tool (step 3); geometry/texture optimisation (step 4) | steps 1–2 during 4b; step 3 before/with `world--001` step 1 and when rigs for boar/bear are wanted; step 4 only via `render--003` | Blender is a dev tool, never a build/CI/e2e dependency (D-REN-8). Optimising assets without a measured problem contradicts wave 6's rule, so the audit is measurement, optimisation stays conditional. |
+
+Other pending work outside the waves (needs a plan before starting): D-LANG-1 follow-up (English NPC/settlement name pools, `GEN_VERSION` bump — best combined with `world--001` step 1, which bumps `GEN_VERSION` anyway), MAP-02 sensory visibility, quest packs in `docs/design/quests/`.
+
+## Cross-cutting rules
+
+- Every new system: cost measurement (diag), rule test, save/load of new state (`SAVE_VERSION` bump + migration/rejection per game--002 A4 **and a fixture of the previous format, `save--001` step 4**), mobile support where the player is involved.
+- Generator changes (landmarks, treasure, name pools) → `GEN_VERSION` bump. Batch them into one bump where possible (each bump invalidates every existing save, D-SAVE-1).
+- **Graphics (from wave 4):** every visual change behind a quality profile, with `bench:render` before/after (render--002 step 0 scenes, verdict vs baseline, D-PERF-3) and screenshots from the same frames. Changes to chunk/terrain build or asset loading also need the startup result (`diag--002` step 1) once it exists. Plans adding geometry or world objects (wave 5: landmarks, chests; grass clumps) — `bench:render` in a scene with the new objects; exceeding the render-prep budget or `render.vegetationRebuild` while walking → reduce cost first (render--003), do not keep adding.
+- New or replaced `.glb` assets: credits/licence in `public/assets/CREDITS-CC-BY.txt` or the CC0 licence file, row in `docs/assets/README.md`, node names required by render code preserved (guard test from `render--004` step 2).
+- Low has no composer/postprocessing; one shadow-casting directional light; no point-light shadows (D-REN-7).
+- The appendix does not invalidate VISION.md; on conflict the appendix is newer — record the resolution in DECISIONS.

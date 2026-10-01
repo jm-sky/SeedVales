@@ -16,7 +16,7 @@ Główny indeks dokumentacji.
 | [state/progress-log.md](state/progress-log.md) | archiwum starszych sekcji PROGRESS |
 | [state/FEATURES.json](state/FEATURES.json) | wymagania, kryteria odbioru, statusy |
 | [design/DECISIONS.md](design/DECISIONS.md) | decyzje i uproszczenia |
-| [roadmap/v1-closure-and-appendix.md](roadmap/v1-closure-and-appendix.md) | kolejność: domknięcie v1 → fale dodatku |
+| [roadmap/v1-closure-and-appendix.md](roadmap/v1-closure-and-appendix.md) | order: v1 closure → appendix waves + side tracks (save fixtures, benchmark trust, asset pipeline) |
 | [reviews/2026-09-30--001--v1-review.md](reviews/2026-09-30--001--v1-review.md) | niezależne review v1 (Grok / Scribe) |
 | [research/2026-10-01--002--realistic-visuals-practical-roadmap.md](research/2026-10-01--002--realistic-visuals-practical-roadmap.md) | research grafiki (podstawa planów `render--002/001/003`; review raportu 001: [reviews/2026-10-01--005](reviews/2026-10-01--005--rendering-research-critical-review.md)) |
 | [research/2026-10-01--003--blender-mcp.md](research/2026-10-01--003--blender-mcp.md) | Blender MCP check + where Blender fits (offline glTF asset pipeline only) |

@@ -8,8 +8,8 @@
 - Verification (latest, 2026-10-01, session 4 checkpoint): `pnpm check` 167/167, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
 - Formats: `SAVE_VERSION` 7, `GEN_VERSION` 7.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
-- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (steps 0–1 done, step 2 scaffolding behind flags), 4b `render--001`, 5, 6 — not started. Side plans: `diag--002` (planned, review 009 tooling), `save--001` (draft, historical fixtures).
-- Next step: confirm step 1 with `bench:render low` + a second `medium` run, then `render--002` step 2 (A/B review, palette, shadow texel snapping), step 3 (terrain: draft material in the plan's notes), step 4.
+- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (steps 0–1 done, step 2 scaffolding behind flags), 4b `render--001`, 5, 6 — not started. Side tracks (roadmap update 2026-10-01, D-PERF-4 / D-SAVE-7 / D-REN-8): `diag--002` tier A (startup before `render--002` step 3; real travel before `render--001` step 6), tier B before wave 6, tier C conditional; `save--001` (planned: v6/v5 fixtures before the next `SAVE_VERSION` bump); `render--004` (planned: asset audit + node-name guard during 4b, models for wave 5, optimisation only via `render--003`).
+- Next step: confirm step 1 with `bench:render low` + a second `medium` run, then `render--002` step 2 (A/B review, palette, shadow texel snapping), **`diag--002` step 1 (startup)**, step 3 (terrain: draft material in the plan's notes; startup re-measured), step 4.
 - ❓ dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping); pomiar na urządzeniu (D-PERF-2).
 - Starsze sekcje (sesja przygotowawcza, stan po sesji 1): [progress-log.md](progress-log.md).
 

@@ -18,6 +18,7 @@ Rules (save/generator versioning, evidence discipline): `CLAUDE.md` → "Standin
 ## 2. Format versions
 
 - New or changed mutable state, or changed save shape → bump `SAVE_VERSION`, add migration in `src/game/save/migrate.ts` + test.
+- **Before** the bump: export a save of the current format as `src/game/save/fixtures/v<old>.json` and add its load test (`readSave` → `Sim` → advance; plan `save--001`, D-SAVE-7). A bump without the previous format's fixture is not handed off.
 - Any generator change → bump `GEN_VERSION`.
 - Record the current values in PROGRESS "Teraz". Quick check: `git diff <base> --stat -- src/game/save src/game/world`.
 

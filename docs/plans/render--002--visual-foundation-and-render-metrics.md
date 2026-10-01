@@ -64,6 +64,8 @@ Mierzalne headless (CPU). Nie włączać `frustumCulled=true` bez poprawnych bou
 
 ### 3. Teren: gładkie normalne + detal gruntu
 
+**Precondition (D-PERF-4, 2026-10-01):** [`diag--002`](diag--002--render-benchmark-trust.md) step 1 (startup result class) runs before this step, and again after it — terrain changes chunk build cost, which the steady-state gate does not see. Compare `chunks.build` and first-frame `render.prep` before/after.
+
 - Wyłączyć `flatShading`; normalne z heightfieldu próbkowanego także poza krawędzią chunka, wg reguły niezależnej od LOD (inaczej szwy między chunkami/LOD; skirts nie gwarantują ciągłości normalnych).
 - Tint sezonu/śniegu jako uniformy zamiast wypalania w vertex colors → mniej `dirty chunks` (mierzalne headless: liczba przebudów przy zmianie pory roku/pogody). To przygotowuje WEATHER-02.
 - Współrzędne świata XZ w metrach jako UV + 1–2 tekstury detalu (trawa/grunt, ziemia/kamień), 512–1024 px. Maski droga/biom/nachylenie zapisane przy budowie chunka jako atrybut — **nie odtwarzać rodzaju podłoża z finalnego RGB**. Vertex colors zostają jako makrozróżnicowanie (uważać na podwójne barwienie).
