@@ -12,7 +12,7 @@
 ---
 
 Source: [VISION-APPENDIX.md](../VISION-APPENDIX.md) — "Character models", "Animals", "Traces", "Weather", "Graphics direction". Research: [002](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md), [review 005](../reviews/2026-10-01--005--rendering-research-critical-review.md).
-FEATURES: `RENDER-03`, `TRACE-01` (render), `WEATHER-01`, `WEATHER-02`, `CHAR-01`, `FAUNA-09`, `RENDER-05`.
+FEATURES: `RENDER-03`, `TRACE-01` (render), `WEATHER-01`, `WEATHER-02`, `CHAR-01`, `FAUNA-09` (`RENDER-05` moved to `render--006`).
 Decisions: **D-REN-5** (effects behind quality profiles), **D-REN-7** (no point-light shadows, fixed light pool per profile, at most one post pass), **D-REN-13** (terrain shader path is the default), **D-FIRE-1** (fire sim), **D-PERF-2/3/5** (what headless can and cannot prove).
 
 **Dependency:** `render--002` exit gate (closed in the cloud on 2026-10-01; WSL numbers ❓ user — see that plan). Steps 4 (CHAR-01) and 5 (FAUNA-09) do not depend on the foundation.
@@ -31,9 +31,9 @@ Decisions: **D-REN-5** (effects behind quality profiles), **D-REN-7** (no point-
 
 Step numbers are kept (other plans and the roadmap cite them); execute in this order:
 
-**1a → 1b → 8 → 3 → 2 → 4 → 5 → 6 → 7 → (9)**
+**(after `world--002` + `render--006`) 1a → 1b → 8 → 3 → 2 → 4 → 5**
 
-Reasoning: fire (1) is the effect the user cares most about and consumes the newest sim state; decals (8) are small and consume the same sim hand-off; wet/snow (3) is a few uniforms on the material that is now the default; clouds/precipitation (2) need the sky material only; variety (4, 5) is independent; wind (6) waits for `diag--002` step 5 (real-input travel); water (7) is the largest shader job; ground clumps (9) are optional.
+Reasoning: the nature pass comes first (user, 2026-10-01: grass/trees/water fill most of the screen); then fire (1) — an effect the user explicitly asked for — consuming the newest sim state; decals (8) are small and consume the same sim hand-off; wet/snow (3) is a few uniforms on the material that is now the default; clouds/precipitation (2) need the sky material only; variety (4, 5) is independent.
 
 ## Steps
 
@@ -108,17 +108,9 @@ Hair colour (blond/brown/black/red/grey), beard/no beard (render--005 step 3 hai
 
 Young: scale down; prime/alpha: scale up + ~10 % darker. Needs sim traits `young`/`prime` (shared with sim--001 step 3); if `prime` is new saved state → `SAVE_VERSION` bump (no migration, D-SAVE-7) — coordinate with `world--001` step 3 (8 → 9) so the two do not collide (whichever lands second bumps again). All fauna is rigged now (D-REN-12), scale/tint does not touch the rig.
 
-### 6. RENDER-05 — vegetation wind — **Model: sonnet**; precondition `diag--002` step 5 (real-input travel, D-PERF-4)
+### 6, 7, 9 — moved to [`render--006`](render--006--nature-pass.md) (session 8, user: nature first)
 
-Vertex shader: 1–2 periodic functions, phase from instance position, height/flexibility mask, fixed base; render seconds (not calendar ×24), strength from weather. Start with one kind (reeds/bushes), then near-tree vertices. Same deformation in depth/shadow material, bounds widened by the max offset, `mergeTemplate()` keeps the needed attributes. Stop: detached shadow or rubbery trunk. Fallback: wind on clumps only, without shadows.
-
-### 7. RENDER-05 — water without a second scene render — **Model: sonnet**; look: **opus** keep/drop
-
-Two scrolling normal-map samples (shared world UV across chunks, procedural texture), Fresnel, depth/shore colour from a shallow-water mask computed from the heightfield and the local water level (refreshed after terrain edits), sky/environment colour reflection, sun glint. Choose opaque vs alpha consciously (seeing the bottom/submerged objects, order with rain and decals). No `Water` addon with a reflector, no SSR, refraction or FFT. Fallback: one normal map + colour + Fresnel.
-
-### 9. *(optional)* ground clumps — **Model: sonnet**
-
-A few grass clumps around the camera (spatial batches, culling, alpha cutout; no millions of blades) — only after step 6 and if `render.vegetationRebuild` stays within budget (`render--002` step 1).
+Vegetation wind (6) is `render--006` step 1 (shared wind module for grass and trees), water (7) is `render--006` step 4 (now with transparency/depth colour and a planar reflection on high — user decision), ground clumps (9) became real grass (`render--006` step 2). Numbers kept here so older references resolve.
 
 ## Light and overdraw budget (whole wave)
 
@@ -129,7 +121,7 @@ A few grass clumps around the camera (spatial batches, culling, alpha cutout; no
 ## Exit gate
 
 - Whole wave 4b ≤ 10 % p95 `render.prep` regression vs the state after `render--002` (headless, same machine; do not add up per-step allowances). Character draw calls do not grow.
-- Acceptance frames (A/B montages): night with campfires, hearth, torches, rain, snow, water shore, forest in wind, settlement. Value gate: a visible improvement at the normal camera distance, not only in close-ups.
+- Acceptance frames (A/B montages): night with campfires, hearth, torches, rain, snow, settlement. Value gate: a visible improvement at the normal camera distance, not only in close-ups.
 - FEATURES: `verified` for an effect only with headless evidence + frames; device performance stays ❓ in PROGRESS (D-PERF-2). Opus wave review (`wave-review`) at the end.
 
 ## Risks
