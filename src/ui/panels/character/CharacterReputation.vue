@@ -4,7 +4,7 @@ import { useGameStrict } from '@/composables/useGame'
 import { BADGES } from '@/game/sim/reputation'
 import { REP_DIMS, type RepDim } from '@/game/sim/types'
 
-const DIM: Record<RepDim, string> = { honesty: 'Uczciwość', helpfulness: 'Pomocność', renown: 'Sława', courage: 'Odwaga' }
+const DIM: Record<RepDim, string> = { honesty: 'Honesty', helpfulness: 'Helpfulness', renown: 'Renown', courage: 'Courage' }
 const { game, version } = useGameStrict()
 const v = computed(() => {
   void version.value
@@ -41,10 +41,10 @@ const v = computed(() => {
     </div>
     <div>
       <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-        Odznaki
+        Badges
       </h3>
       <p v-if="!v.badges.length">
-        Brak.
+        None.
       </p>
       <span
         v-for="b in v.badges"

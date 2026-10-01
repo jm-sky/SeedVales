@@ -12,24 +12,24 @@ export type ItemFilter = 'all' | ItemCategory
 export type ItemSort = 'name' | 'weight' | 'value' | 'quality' | 'freshness'
 
 export const FILTERS: { id: ItemFilter; label: string }[] = [
-  { id: 'all', label: 'Wszystko' },
-  { id: 'weapon', label: 'Broń' },
-  { id: 'armor', label: 'Pancerz' },
-  { id: 'tool', label: 'Narzędzia' },
-  { id: 'food', label: 'Jedzenie' },
-  { id: 'herb', label: 'Zioła' },
-  { id: 'medical', label: 'Medyczne' },
-  { id: 'resource', label: 'Surowce' },
-  { id: 'ammo', label: 'Amunicja' },
-  { id: 'misc', label: 'Inne' },
+  { id: 'all', label: 'All' },
+  { id: 'weapon', label: 'Weapons' },
+  { id: 'armor', label: 'Armor' },
+  { id: 'tool', label: 'Tools' },
+  { id: 'food', label: 'Food' },
+  { id: 'herb', label: 'Herbs' },
+  { id: 'medical', label: 'Medical' },
+  { id: 'resource', label: 'Resources' },
+  { id: 'ammo', label: 'Ammo' },
+  { id: 'misc', label: 'Other' },
 ]
 
 export const SORTS: { id: ItemSort; label: string }[] = [
-  { id: 'name', label: 'Nazwa' },
-  { id: 'weight', label: 'Waga' },
-  { id: 'value', label: 'Wartość' },
-  { id: 'quality', label: 'Jakość' },
-  { id: 'freshness', label: 'Świeżość' },
+  { id: 'name', label: 'Name' },
+  { id: 'weight', label: 'Weight' },
+  { id: 'value', label: 'Value' },
+  { id: 'quality', label: 'Quality' },
+  { id: 'freshness', label: 'Freshness' },
 ]
 
 const weight = (s: ItemStack) => itemDef(s.id).weight * s.qty
@@ -42,7 +42,7 @@ const freshness = (s: ItemStack) => {
 
 /** Filtered and sorted copy; ties broken by name (stable, locale-aware). */
 export function viewItems(items: readonly ItemStack[], filter: ItemFilter, sort: ItemSort): ItemStack[] {
-  const byName = (a: ItemStack, b: ItemStack) => itemDef(a.id).name.localeCompare(itemDef(b.id).name, 'pl')
+  const byName = (a: ItemStack, b: ItemStack) => itemDef(a.id).name.localeCompare(itemDef(b.id).name, 'en')
   const key: Record<ItemSort, (a: ItemStack, b: ItemStack) => number> = {
     name: () => 0,
     weight: (a, b) => weight(b) - weight(a),
@@ -60,34 +60,34 @@ export interface ItemParam {
   value: string
 }
 
-const QUALITY = ['niska', 'średnia', 'wysoka', 'wyjątkowa']
-const DMG = { cut: 'cięte', pierce: 'kłute', blunt: 'obuchowe' } as const
+const QUALITY = ['poor', 'average', 'good', 'exceptional']
+const DMG = { cut: 'cut', pierce: 'pierce', blunt: 'blunt' } as const
 
 /** Human-readable parameters of a stack (weapon/armour/food/durability…). */
 export function itemParams(s: ItemStack): ItemParam[] {
   const d = itemDef(s.id)
   const out: ItemParam[] = [
-    { label: 'Waga', value: `${(d.weight * s.qty).toFixed(2)} kg${s.qty > 1 ? ` (${d.weight} kg/szt.)` : ''}` },
-    { label: 'Wartość', value: `${Math.round(d.price * qualityMult(s))} m/szt.` },
+    { label: 'Weight', value: `${(d.weight * s.qty).toFixed(2)} kg${s.qty > 1 ? ` (${d.weight} kg each)` : ''}` },
+    { label: 'Value', value: `${Math.round(d.price * qualityMult(s))} c each` },
   ]
-  if (s.q !== undefined) out.push({ label: 'Jakość', value: QUALITY[s.q] ?? String(s.q) })
+  if (s.q !== undefined) out.push({ label: 'Quality', value: QUALITY[s.q] ?? String(s.q) })
   if (d.weapon) {
     const w = d.weapon
-    out.push({ label: 'Obrażenia', value: `${Math.round(w.damage * qualityMult(s))} (${DMG[w.dmgType]})` })
-    if (w.kind === 'melee') out.push({ label: 'Zasięg', value: `${w.reach} m` }, { label: 'Szybkość', value: `${w.cooldown} s/cios` })
-    else out.push({ label: 'Amunicja', value: w.ammo ?? '—' })
+    out.push({ label: 'Damage', value: `${Math.round(w.damage * qualityMult(s))} (${DMG[w.dmgType]})` })
+    if (w.kind === 'melee') out.push({ label: 'Reach', value: `${w.reach} m` }, { label: 'Speed', value: `${w.cooldown} s/swing` })
+    else out.push({ label: 'Ammo', value: w.ammo ?? '—' })
   }
   if (d.armor) {
     const r = d.armor.resist
-    out.push({ label: 'Ochrona', value: `cięte ${Math.round(r.cut * 100)}%, kłute ${Math.round(r.pierce * 100)}%, obuch ${Math.round(r.blunt * 100)}%` })
+    out.push({ label: 'Protection', value: `cut ${Math.round(r.cut * 100)}%, pierce ${Math.round(r.pierce * 100)}%, blunt ${Math.round(r.blunt * 100)}%` })
   }
   if (d.food) {
-    out.push({ label: 'Odżywczość', value: String(d.food.nutrition) })
-    if (s.fresh !== undefined) out.push({ label: 'Świeżość', value: `${Math.round(s.fresh)} / ${d.food.spoilH} h` })
-    if (s.sp) out.push({ label: 'Gatunek', value: (SPECIES as Record<string, { name: string }>)[s.sp]?.name ?? s.sp })
-    if (d.food.raw) out.push({ label: 'Uwaga', value: 'surowe — lepiej ugotować' })
+    out.push({ label: 'Nutrition', value: String(d.food.nutrition) })
+    if (s.fresh !== undefined) out.push({ label: 'Freshness', value: `${Math.round(s.fresh)} / ${d.food.spoilH} h` })
+    if (s.sp) out.push({ label: 'Species', value: (SPECIES as Record<string, { name: string }>)[s.sp]?.name ?? s.sp })
+    if (d.food.raw) out.push({ label: 'Note', value: 'raw — better cooked' })
   }
-  if (d.durability && s.dur !== undefined) out.push({ label: 'Wytrzymałość', value: `${Math.round((s.dur / d.durability) * 100)}%` })
-  if (d.waterCapacity) out.push({ label: 'Woda', value: `${s.water ?? 0} / ${d.waterCapacity}` })
+  if (d.durability && s.dur !== undefined) out.push({ label: 'Durability', value: `${Math.round((s.dur / d.durability) * 100)}%` })
+  if (d.waterCapacity) out.push({ label: 'Water', value: `${s.water ?? 0} / ${d.waterCapacity}` })
   return out
 }

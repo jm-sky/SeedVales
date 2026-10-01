@@ -14,7 +14,7 @@ const d = computed(() => {
   const b = ref?.type === 'building' ? g.sim.building(ref.id) : undefined
   if (!b?.inv) return null
   const foreign = b.owner.startsWith('household')
-  return { b, title: `${buildingName(b)}${foreign ? ' (cudza własność!)' : ''}`, items: [...b.inv.items], mine: [...g.sim.player.inv.items], foreign }
+  return { b, title: `${buildingName(b)}${foreign ? ' (someone else\'s property!)' : ''}`, items: [...b.inv.items], mine: [...g.sim.player.inv.items], foreign }
 })
 function move(i: number, toStorage: boolean) {
   const msg = transferToStorage(game.value.sim, d.value!.b, i, toStorage)
@@ -34,12 +34,12 @@ function move(i: number, toStorage: boolean) {
       v-if="d.foreign"
       class="mb-2 text-xs text-bad"
     >
-      Branie z cudzej skrzyni to kradzież — jeśli ktoś zobaczy (noc i skradanie pomagają), stracisz reputację.
+      Taking from someone else's chest is theft — if anyone sees you (night and sneaking help), you will lose reputation.
     </p>
     <div class="grid gap-3 sm:grid-cols-2">
       <div>
         <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-          Zawartość
+          Contents
         </h3>
         <div class="grid gap-1">
           <ItemRow
@@ -52,14 +52,14 @@ function move(i: number, toStorage: boolean) {
               :data-testid="`take-${s.id}`"
               @click="move(i, false)"
             >
-              Weź
+              Take
             </Button>
           </ItemRow>
         </div>
       </div>
       <div>
         <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-          Twój plecak
+          Your backpack
         </h3>
         <div class="grid gap-1">
           <ItemRow
@@ -73,7 +73,7 @@ function move(i: number, toStorage: boolean) {
               :data-testid="`put-${s.id}`"
               @click="move(i, true)"
             >
-              Odłóż
+              Put
             </Button>
           </ItemRow>
         </div>

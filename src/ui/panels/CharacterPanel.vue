@@ -15,7 +15,7 @@ const { game } = useGameStrict()
 
 <template>
   <PanelFrame
-    title="Postać"
+    title="Character"
     wide
     @close="game.closePanel()"
   >

@@ -8,7 +8,7 @@ const t = computed(() => {
   const g = game.value
   if (!g.target || g.panel || g.sim.state.px.activity) return null
   const first = g.options.find((o) => o.enabled) ?? g.options[0]
-  return { label: g.target.label, hint: g.options.length > 1 ? `${g.options.length} opcje` : first?.label ?? '', reason: first && !first.enabled ? first.reason : '', more: g.targetCount > 1 }
+  return { label: g.target.label, hint: g.options.length > 1 ? `${g.options.length} options` : first?.label ?? '', reason: first && !first.enabled ? first.reason : '', more: g.targetCount > 1 }
 })
 </script>
 

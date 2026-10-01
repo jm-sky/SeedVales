@@ -16,7 +16,7 @@ const emit = defineEmits<{ close: [] }>()
       <button
         class="rounded px-2 py-1 text-lg leading-none hover:bg-accent"
         data-testid="panel-close"
-        aria-label="Zamknij"
+        aria-label="Close"
         @click="emit('close')"
       >
         ✕

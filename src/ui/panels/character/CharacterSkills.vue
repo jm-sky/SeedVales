@@ -15,7 +15,7 @@ const v = computed(() => {
   <div class="grid gap-4 sm:grid-cols-2">
     <div>
       <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-        Atrybuty
+        Attributes
       </h3>
       <div
         v-for="(val, k) in v.attrs"
@@ -27,7 +27,7 @@ const v = computed(() => {
     </div>
     <div>
       <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-        Umiejętności (rosną z użyciem)
+        Skills (improve with use)
       </h3>
       <div
         v-for="(val, k) in v.skills"

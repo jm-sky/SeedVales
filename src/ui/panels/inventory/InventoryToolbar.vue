@@ -19,7 +19,7 @@ const sort = defineModel<ItemSort>('sort', { required: true })
       {{ f.label }}
     </Button>
     <label class="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-      Sortuj
+      Sort
       <select
         v-model="sort"
         class="rounded border bg-background px-1 py-0.5 text-xs text-foreground"

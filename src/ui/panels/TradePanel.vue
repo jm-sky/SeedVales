@@ -19,7 +19,7 @@ const d = computed(() => {
   const inv = tradeInventory(g.sim, npc)
   return {
     npc,
-    title: `Handel: ${npc.name} (${professionName(npc.profession) || 'mieszkaniec'})`,
+    title: `Trade: ${npc.name} (${professionName(npc.profession) || 'villager'})`,
     theirs: (inv?.items ?? []).map((s) => ({ s, price: buyPrice(g.sim, npc, s) })),
     mine: g.sim.player.inv.items.map((s) => ({ s, price: sellPrice(g.sim, npc, s) })),
     money: g.sim.player.money,
@@ -44,13 +44,13 @@ function sell(s: ItemStack) {
     @close="game.closePanel()"
   >
     <div class="mb-2 flex justify-between text-xs">
-      <span>Twoje pieniądze: <b class="text-quest">{{ formatCoins(d.money) }}</b></span>
-      <span>Kupiec: {{ formatCoins(d.npcMoney) }}</span>
+      <span>Your money: <b class="text-quest">{{ formatCoins(d.money) }}</b></span>
+      <span>Merchant: {{ formatCoins(d.npcMoney) }}</span>
     </div>
     <div class="grid gap-3 sm:grid-cols-2">
       <div>
         <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-          Kup
+          Buy
         </h3>
         <div class="grid gap-1">
           <ItemRow
@@ -65,14 +65,14 @@ function sell(s: ItemStack) {
               :data-testid="`buy-${e.s.id}`"
               @click="buy(e.s)"
             >
-              Kup 1
+              Buy 1
             </Button>
           </ItemRow>
         </div>
       </div>
       <div>
         <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-          Sprzedaj
+          Sell
         </h3>
         <div class="grid gap-1">
           <ItemRow
@@ -88,7 +88,7 @@ function sell(s: ItemStack) {
               :data-testid="`sell-${e.s.id}`"
               @click="sell(e.s)"
             >
-              Sprzedaj 1
+              Sell 1
             </Button>
           </ItemRow>
         </div>

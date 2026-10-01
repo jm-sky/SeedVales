@@ -9,8 +9,8 @@ const info = computed(() => {
   const d = itemDef(props.stack.id)
   const parts: string[] = [`${(d.weight * props.stack.qty).toFixed(1)} kg`, d.size]
   if (props.stack.dur !== undefined && d.durability) parts.push(`${Math.round((props.stack.dur / d.durability) * 100)}%`)
-  if (props.stack.fresh !== undefined && d.food) parts.push(props.stack.fresh < d.food.spoilH * 0.2 ? 'psuje się' : `świeże ${Math.round(props.stack.fresh)}h`)
-  if (props.stack.water !== undefined) parts.push(`woda ${props.stack.water}/${d.waterCapacity}`)
+  if (props.stack.fresh !== undefined && d.food) parts.push(props.stack.fresh < d.food.spoilH * 0.2 ? 'spoiling' : `fresh ${Math.round(props.stack.fresh)}h`)
+  if (props.stack.water !== undefined) parts.push(`water ${props.stack.water}/${d.waterCapacity}`)
   return parts.join(' · ')
 })
 </script>
@@ -29,7 +29,7 @@ const info = computed(() => {
       <span
         v-if="price !== undefined"
         class="mr-1 text-xs text-quest"
-      >{{ price }} m</span>
+      >{{ price }} c</span>
       <slot />
     </div>
   </div>

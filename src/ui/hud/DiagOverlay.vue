@@ -22,7 +22,7 @@ const f = (v: number) => v.toFixed(2)
     data-testid="diag"
   >
     <div class="mb-1 font-bold">
-      Diagnostyka CPU (ms: med / p95 / p99 · n) — GPU niezmierzone
+      CPU diagnostics (ms: med / p95 / p99 · n) — GPU not measured
     </div>
     <div
       v-for="t in r.timers"

@@ -14,7 +14,7 @@ import PanelHost from './panels/PanelHost.vue'
 const props = defineProps<{ request: StartRequest }>()
 const emit = defineEmits<{ quit: []; restart: [seed: number | null] }>()
 const canvas = ref<HTMLCanvasElement>()
-const loading = ref('Przygotowanie…')
+const loading = ref('Preparing…')
 const error = ref('')
 const { game, version } = provideGame()
 let ro: ResizeObserver | null = null
@@ -79,7 +79,7 @@ onBeforeUnmount(() => {
           data-testid="back-to-menu"
           @click="emit('quit')"
         >
-          Wróć do menu
+          Back to menu
         </Button>
       </div>
     </div>

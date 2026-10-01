@@ -49,7 +49,7 @@ function toggleRun() {
   version.value++
 }
 const MENU = [
-  ['inventory', 'Ekw.'], ['character', 'Postać'], ['craft', 'Wytw.'], ['build', 'Budowa'], ['quick', 'Akcje'], ['quests', 'Zadania'], ['map', 'Mapa'], ['menu', 'Menu'],
+  ['inventory', 'Inv.'], ['character', 'Char.'], ['craft', 'Craft'], ['build', 'Build'], ['quick', 'Actions'], ['quests', 'Quests'], ['map', 'Map'], ['menu', 'Menu'],
 ] as const
 </script>
 
@@ -76,35 +76,35 @@ const MENU = [
         data-testid="touch-sneak"
         @click="game.toggleSneak()"
       >
-        Skrad.
+        Sneak
       </button>
       <button
         class="h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
         :class="state.combat ? 'ring-2 ring-red-400' : ''"
         @click="game.toggleCombat(); version++"
       >
-        Walka
+        Combat
       </button>
       <button
         class="h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
         :class="state.run ? 'ring-2 ring-yellow-400' : ''"
         @click="toggleRun"
       >
-        Bieg
+        Run
       </button>
       <button
         class="h-12 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
         data-testid="touch-weapon"
         @click="game.switchWeapon(); version++"
       >
-        Broń
+        Weapon
       </button>
       <button
         class="h-12 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
         data-testid="touch-next-target"
         @click="game.cycleTarget()"
       >
-        Cel
+        Target
       </button>
       <div />
       <button
@@ -113,7 +113,7 @@ const MENU = [
         data-testid="touch-interact"
         @click="game.interact()"
       >
-        Akcja
+        Action
       </button>
       <button
         class="h-16 w-16 rounded-full bg-red-700/80 text-sm font-bold text-white"
@@ -122,7 +122,7 @@ const MENU = [
         @pointerup="attackUp"
         @pointercancel="attackUp"
       >
-        {{ ranged ? 'Naciąg' : 'Atak' }}
+        {{ ranged ? 'Draw' : 'Attack' }}
       </button>
     </div>
     <div class="pointer-events-auto absolute left-1/2 top-2 flex max-w-[56vw] -translate-x-1/2 flex-wrap justify-center gap-0.5">

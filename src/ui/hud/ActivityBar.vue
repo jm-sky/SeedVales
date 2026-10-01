@@ -11,7 +11,7 @@ const a = computed(() => {
   return { label: act.label, frac: Math.min(1, act.elapsed / act.total), accel: game.value.sim.timeScale }
 })
 function cancel() {
-  cancelActivity(game.value.sim, 'Przerwano.')
+  cancelActivity(game.value.sim, 'Cancelled.')
 }
 </script>
 
@@ -22,13 +22,13 @@ function cancel() {
     data-testid="activity-bar"
   >
     <div class="mb-1 flex items-center justify-between text-xs">
-      <span>{{ a.label }}<span v-if="a.accel > 1"> (czas ×{{ a.accel }})</span></span>
+      <span>{{ a.label }}<span v-if="a.accel > 1"> (time ×{{ a.accel }})</span></span>
       <button
         class="rounded bg-white/15 px-2 py-0.5 hover:bg-white/25"
         data-testid="activity-cancel"
         @click="cancel"
       >
-        Przerwij [Esc]
+        Cancel [Esc]
       </button>
     </div>
     <div class="h-2 overflow-hidden rounded bg-white/15">

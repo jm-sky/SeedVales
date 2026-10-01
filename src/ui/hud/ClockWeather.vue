@@ -15,7 +15,7 @@ const s = computed(() => {
     clock: formatClock(t),
     date: formatDate(t),
     season: SEASON_NAMES[seasonOf(t)],
-    weather: WEATHER_NAMES[w.kind] + (w.fog > 0.4 ? ', mgła' : ''),
+    weather: WEATHER_NAMES[w.kind] + (w.fog > 0.4 ? ', fog' : ''),
     temp: Math.round(w.temp),
     scale: sim.timeScale,
     place: reputationLabel(sim),

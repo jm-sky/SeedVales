@@ -10,7 +10,7 @@ const s = computed(() => {
   const g = game.value
   const p = g.sim.player
   return {
-    main: p.eq.main ? itemDef(p.eq.main.id).name : 'pięści',
+    main: p.eq.main ? itemDef(p.eq.main.id).name : 'fists',
     off: p.eq.off ? itemDef(p.eq.off.id).name : '',
     combat: p.combat,
     sneak: g.sim.state.px.sneaking,
@@ -30,15 +30,15 @@ const s = computed(() => {
     <span
       v-if="s.combat"
       class="rounded bg-bad/70 px-1.5 py-0.5 font-semibold"
-    >Walka</span>
+    >Combat</span>
     <span
       v-if="s.sneak"
       class="rounded bg-sky-800/80 px-1.5 py-0.5 font-semibold"
-    >Skradanie</span>
+    >Sneak</span>
     <span class="rounded bg-black/40 px-1.5 py-0.5 text-quest">{{ s.money }}</span>
     <span
       v-if="s.draw > 0"
       class="rounded bg-yellow-700/80 px-1.5 py-0.5"
-    >Naciąg {{ Math.round(s.draw * 100) }}%</span>
+    >Draw {{ Math.round(s.draw * 100) }}%</span>
   </div>
 </template>

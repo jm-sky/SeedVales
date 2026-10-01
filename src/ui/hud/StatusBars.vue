@@ -7,11 +7,11 @@ import type { BarKind } from '../types'
 const { game, version } = useGameStrict()
 
 const BARS: { kind: BarKind; label: string; color: string }[] = [
-  { kind: 'hp', label: 'Zdrowie', color: 'bg-red-500' },
+  { kind: 'hp', label: 'Health', color: 'bg-red-500' },
   { kind: 'stamina', label: 'Stamina', color: 'bg-yellow-400' },
-  { kind: 'vigor', label: 'Wigor', color: 'bg-sky-400' },
-  { kind: 'hunger', label: 'Sytość', color: 'bg-orange-400' },
-  { kind: 'thirst', label: 'Nawodnienie', color: 'bg-blue-500' },
+  { kind: 'vigor', label: 'Vigor', color: 'bg-sky-400' },
+  { kind: 'hunger', label: 'Satiety', color: 'bg-orange-400' },
+  { kind: 'thirst', label: 'Hydration', color: 'bg-blue-500' },
 ]
 
 const values = computed(() => {
@@ -30,11 +30,11 @@ const flags = computed(() => {
   void version.value
   const v = game.value.sim.player.vitals
   const f: string[] = []
-  if (v.bleeding > 0.05) f.push('Krwawienie')
-  if (v.illness) f.push(v.illness.kind === 'poison' ? 'Zatrucie' : 'Choroba')
-  if (v.vigor <= 0) f.push('Wyczerpanie')
-  if (v.convalescenceH > 0) f.push('Rekonwalescencja')
-  if (v.ko && v.ko.protectUntil > game.value.sim.state.time.play) f.push(`Ochrona ${Math.ceil(v.ko.protectUntil - game.value.sim.state.time.play)} s`)
+  if (v.bleeding > 0.05) f.push('Bleeding')
+  if (v.illness) f.push(v.illness.kind === 'poison' ? 'Poisoned' : 'Ill')
+  if (v.vigor <= 0) f.push('Exhausted')
+  if (v.convalescenceH > 0) f.push('Convalescing')
+  if (v.ko && v.ko.protectUntil > game.value.sim.state.time.play) f.push(`Protected ${Math.ceil(v.ko.protectUntil - game.value.sim.state.time.play)} s`)
   return f
 })
 </script>
