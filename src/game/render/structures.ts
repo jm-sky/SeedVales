@@ -12,6 +12,7 @@ import { hash01, hashString } from '../core/rng'
 import { blueprintById } from '../data/recipes'
 import { perf } from '../diag/perf'
 import { groundHeight } from '../sim/collision'
+import { HOUSE_CHIMNEY, HOUSE_CORNER, PROPS_NODES, ROOFS, VILLAGE_PROPS, WALL_STYLES } from './assetNames'
 import { loadGltf, mat4, mergeTemplate, packNode, part, type TemplatePart } from './assets'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
@@ -70,14 +71,12 @@ function proceduralTemplates(): Record<string, Item[]> {
 function composeHouse(v: GLTF, W: number, D: number, style: 'plaster' | 'brick', roof: string, roofRot: number, roofScale: number, seed: number): Item[] {
   const items: Item[] = []
   const n = (name: string) => packNode(v, name)!
-  const wall = style === 'plaster' ? 'Wall_Plaster_Straight' : 'Wall_UnevenBrick_Straight'
-  const door = style === 'plaster' ? 'Wall_Plaster_Door_Round' : 'Wall_UnevenBrick_Door_Flat'
-  const win = style === 'plaster' ? 'Wall_Plaster_Window_Wide_Round' : 'Wall_UnevenBrick_Window_Wide_Flat'
+  const { wall, door, win, grid } = WALL_STYLES[style]
   const nx = Math.round(W / 2)
   const nz = Math.round(D / 2)
   const pick = (i: number, count: number, front: boolean) => {
     if (front && i === Math.floor(count / 2)) return door
-    return hash01(seed, i, front ? 1 : 2) < 0.45 ? win : style === 'plaster' && hash01(seed, i, 3) < 0.3 ? 'Wall_Plaster_WoodGrid' : wall
+    return hash01(seed, i, front ? 1 : 2) < 0.45 ? win : grid && hash01(seed, i, 3) < 0.3 ? grid : wall
   }
   for (let i = 0; i < nx; i++) {
     const x = -W / 2 + 1 + i * 2
@@ -89,10 +88,9 @@ function composeHouse(v: GLTF, W: number, D: number, style: 'plaster' | 'brick',
     items.push({ obj: n(i === 1 ? win : wall), matrix: mat4(W / 2, 0, -z, Math.PI / 2) })
     items.push({ obj: n(wall), matrix: mat4(-W / 2, 0, z, -Math.PI / 2) })
   }
-  const corner = style === 'plaster' ? 'Corner_Exterior_Wood' : 'Corner_Exterior_Wood'
-  for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) items.push({ obj: n(corner), matrix: mat4((cx * W) / 2, 0, (cz * D) / 2) })
+  for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) items.push({ obj: n(HOUSE_CORNER), matrix: mat4((cx * W) / 2, 0, (cz * D) / 2) })
   items.push({ obj: n(roof), matrix: mat4(0, 3.1, 0, roofRot, roofScale, 1, roofScale) })
-  items.push({ obj: n('Prop_Chimney'), matrix: mat4(W / 4, 3.4, -D / 4) })
+  items.push({ obj: n(HOUSE_CHIMNEY), matrix: mat4(W / 4, 3.4, -D / 4) })
   return items
 }
 
@@ -118,17 +116,17 @@ export class Structures {
     try {
       const [v, p] = await Promise.all([loadGltf('village.glb'), loadGltf('props.glb')])
       const T = (k: string, items: Item[]) => this.templates.set(k, mergeTemplate(items))
-      T('house_a', composeHouse(v, 8, 6, 'plaster', 'Roof_RoundTiles_6x8', Math.PI / 2, 1, 1))
-      T('house_b', composeHouse(v, 8, 6, 'brick', 'Roof_RoundTiles_6x8', Math.PI / 2, 1, 2))
-      T('house_c', composeHouse(v, 8, 6, 'plaster', 'Roof_RoundTiles_6x8', Math.PI / 2, 1, 3))
-      T('warehouse', composeHouse(v, 10, 8, 'brick', 'Roof_RoundTiles_8x10', Math.PI / 2, 1, 4))
-      T('inn', composeHouse(v, 12, 10, 'plaster', 'Roof_RoundTiles_8x10', Math.PI / 2, 1.22, 5))
-      T('shed', composeHouse(v, 4, 4, 'brick', 'Roof_RoundTiles_4x4', 0, 1, 6))
-      T('market', [{ obj: packNode(p, 'Stall_Cart_Empty')!, matrix: mat4(0.6, 0, 0) }, { obj: packNode(p, 'Barrel')!, matrix: mat4(-2.4, 0, 0.4) }, { obj: packNode(p, 'FarmCrate_Carrot')!, matrix: mat4(-2.2, 0, -0.6) }])
-      T('anvil', [{ obj: packNode(p, 'Anvil_Log')!, matrix: mat4() }, { obj: packNode(p, 'Workbench')!, matrix: mat4(0, 0, -1.4) }, { obj: packNode(p, 'Barrel')!, matrix: mat4(1.2, 0, 0.6) }])
-      T('fence', [{ obj: packNode(v, 'Prop_WoodenFence_Single')!, matrix: mat4() }])
-      T('crates', [{ obj: packNode(v, 'Prop_Crate')!, matrix: mat4(0, 0, 0) }, { obj: packNode(v, 'Prop_Crate')!, matrix: mat4(1.1, 0, 0.2, 0.3) }, { obj: packNode(p, 'Barrel')!, matrix: mat4(0.4, 0, 1.1) }])
-      T('wagon', [{ obj: packNode(v, 'Prop_Wagon')!, matrix: mat4() }])
+      T('house_a', composeHouse(v, 8, 6, 'plaster', ROOFS.r6x8, Math.PI / 2, 1, 1))
+      T('house_b', composeHouse(v, 8, 6, 'brick', ROOFS.r6x8, Math.PI / 2, 1, 2))
+      T('house_c', composeHouse(v, 8, 6, 'plaster', ROOFS.r6x8, Math.PI / 2, 1, 3))
+      T('warehouse', composeHouse(v, 10, 8, 'brick', ROOFS.r8x10, Math.PI / 2, 1, 4))
+      T('inn', composeHouse(v, 12, 10, 'plaster', ROOFS.r8x10, Math.PI / 2, 1.22, 5))
+      T('shed', composeHouse(v, 4, 4, 'brick', ROOFS.r4x4, 0, 1, 6))
+      T('market', [{ obj: packNode(p, PROPS_NODES.stall)!, matrix: mat4(0.6, 0, 0) }, { obj: packNode(p, PROPS_NODES.barrel)!, matrix: mat4(-2.4, 0, 0.4) }, { obj: packNode(p, PROPS_NODES.carrots)!, matrix: mat4(-2.2, 0, -0.6) }])
+      T('anvil', [{ obj: packNode(p, PROPS_NODES.anvil)!, matrix: mat4() }, { obj: packNode(p, PROPS_NODES.workbench)!, matrix: mat4(0, 0, -1.4) }, { obj: packNode(p, PROPS_NODES.barrel)!, matrix: mat4(1.2, 0, 0.6) }])
+      T('fence', [{ obj: packNode(v, VILLAGE_PROPS.fence)!, matrix: mat4() }])
+      T('crates', [{ obj: packNode(v, VILLAGE_PROPS.crate)!, matrix: mat4(0, 0, 0) }, { obj: packNode(v, VILLAGE_PROPS.crate)!, matrix: mat4(1.1, 0, 0.2, 0.3) }, { obj: packNode(p, PROPS_NODES.barrel)!, matrix: mat4(0.4, 0, 1.1) }])
+      T('wagon', [{ obj: packNode(v, VILLAGE_PROPS.wagon)!, matrix: mat4() }])
       this.loaded = true
       perf.count('assets.structuresReady')
     } catch (e) {

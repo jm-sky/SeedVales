@@ -178,6 +178,7 @@ W takich sytuacjach zwierzęta mogą stawać się bardziej agresywne.
 
 - Określenie `low poly` nie powinno ograniczać ładnego i realistycznego designu oraz grafiki tam, gdzie nie powoduje to dużego spadku FPS.
 - Przykład: ogień może korzystać z particles i mieć iskry.
+- Modele (D-REN-10, 2026-10-01): kierunek na realistyczne modele, jeśli koszt CPU/GPU jest mały (pomiar, instancing, LOD, profile jakości); wymiana całymi klasami, bez mieszania stylów.
 
 
 ## Gotowanie przy ognisku
