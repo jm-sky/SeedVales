@@ -41,6 +41,7 @@ function bestStack(sim: Sim, id: string): ItemStack | undefined {
  */
 export function switchWeapon(sim: Sim, kind?: WeaponKind): string {
   const p = sim.player
+  if (sim.state.px.cart) return 'Both hands are on the cart — park it first.'
   const cur = p.eq.main ? weaponKindOf(p.eq.main.id) : undefined
   const want: WeaponKind = kind ?? (cur === 'melee' ? 'ranged' : 'melee')
   const prim = sim.state.px.primary?.[want]

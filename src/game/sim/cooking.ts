@@ -8,7 +8,7 @@
 import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { Human, ItemStack } from './types'
-import { CALENDAR_SPEED, ROAST } from '../config/calibration'
+import { CALENDAR_SPEED, ROAST, SPOILED_FRAC } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { train } from './actions'
 import { giveOrDrop } from './actions'
@@ -43,8 +43,9 @@ export const roastSeconds = () => (ROAST.calMin * 60) / CALENDAR_SPEED
 export function cookedFreshness(raw: ItemStack): number {
   const rawLife = itemDef('raw_meat').food!.spoilH
   const cookedLife = itemDef('cooked_meat').food!.spoilH
-  const f = Math.max(ROAST.minFreshFrac, Math.min(1, (raw.fresh ?? rawLife) / rawLife))
-  return cookedLife * f
+  const f = Math.min(1, (raw.fresh ?? rawLife) / rawLife)
+  // Roasting extends the shelf life of good meat (floor), but spoiled meat stays spoiled (review 006 #8).
+  return cookedLife * (f < SPOILED_FRAC ? f : Math.max(ROAST.minFreshFrac, f))
 }
 
 /** Completes a roast of up to `n` pieces (least fresh first). Inputs are taken only now (interrupt-safe). */

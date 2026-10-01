@@ -95,6 +95,16 @@ export const FEAR = { humanM: 16, aggressiveAttackM: 6, fireM: 14, penM: 10, des
  */
 export const ROAST = { calMin: 30, vesselSlots: 2, spitSlots: 5, spitM: 3, minFreshFrac: 0.2 }
 
+/** Food below this share of its shelf life is spoiled (extra illness chance when eaten). */
+export const SPOILED_FRAC = 0.15
+
+/**
+ * Warehouse goodwill (D-ECON-4): helpfulness = value / `coinsPerPoint` per deposit (only from `minValue`
+ * coins, at most `maxPerDeposit`); taking goods out costs the same rate without the cap or threshold,
+ * so depositing and taking back never gains anything.
+ */
+export const WAREHOUSE = { coinsPerPoint: 20, minValue: 10, maxPerDeposit: 3 }
+
 /** Fog of war (MAP-01): map cell size (m) and how far around the player the map gets revealed (m). */
 export const FOG = { cellM: 64, revealM: 180 }
 
@@ -145,7 +155,11 @@ export const FOOD = {
  * Trade with any NPC (TRADE-02): what a household keeps for itself and never sells.
  * Food reserve per household member; work kit and the main weapon are always kept.
  */
-export const TRADE = { foodReservePerMember: 3 }
+/**
+ * Trade (TRADE-02): food reserve kept per household member; an NPC farther than `homeReachM` from its house
+ * trades only from/into its own pack; buy price multiplier bounds (sell prices stay below the lowest buy price).
+ */
+export const TRADE = { foodReservePerMember: 3, homeReachM: 150, minBuyMul: 0.95, plentyScarcity: 0.9 }
 
 /**
  * Gifts (SOC-01): opinion gain = clamp(base + perLog·log2(1 + value/valueUnit)) × preference × personality,
@@ -169,4 +183,17 @@ export const COMPANION = {
   bondCap: 60,
   killBond: 2,
   maxCompanions: 3,
+  /** Provisions packed from the household store on hiring/joining (meals per day, cap; free companions: days). */
+  foodPerDay: 2,
+  maxProvisions: 8,
+  freeProvisionDays: 2,
+  /** Beyond this distance from home a companion lives from its pack (no walking home to eat). */
+  awayM: 150,
+  /** Away from home: water farther than this is not worth leaving the player for. */
+  awayDrinkM: 60,
+  /** Stuck while following: pause following (s), repeat the message at most this often (s). */
+  stuckWaitS: 8,
+  stuckMsgS: 60,
+  /** Hunger below which a companion with an empty pack leaves for home. */
+  starveLeave: 5,
 }

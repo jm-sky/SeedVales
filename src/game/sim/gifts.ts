@@ -52,6 +52,16 @@ export function wantedItem(npc: Human): string | undefined {
   return undefined
 }
 
+/** Favours (gifts, purchases) the NPC already received today — each further one counts less. */
+export function goodwillToday(sim: Sim, npc: Human): number {
+  const today = Math.floor(sim.state.time.cal / DAY_S)
+  return npc.gifts?.day === today ? npc.gifts.n : 0
+}
+
+export function countGoodwill(sim: Sim, npc: Human) {
+  npc.gifts = { day: Math.floor(sim.state.time.cal / DAY_S), n: goodwillToday(sim, npc) + 1 }
+}
+
 /** Value of a stack for gift purposes (price × quality, spoiled food and worn gear count less). */
 export function giftValue(s: ItemStack, qty = s.qty): number {
   const d = itemDef(s.id)
@@ -66,8 +76,7 @@ export function giftGain(sim: Sim, npc: Human, s: ItemStack, qty = s.qty): numbe
   if (value <= 0) return 0
   const want = wantedItem(npc)
   const pref = s.id === want ? GIFT.wantedMul : want && itemDef(want).category === itemDef(s.id).category ? GIFT.likedMul : 1
-  const today = Math.floor(sim.state.time.cal / DAY_S)
-  const given = npc.gifts?.day === today ? npc.gifts.n : 0
+  const given = goodwillToday(sim, npc)
   // The value part is capped first, so a wished-for item still counts more than an expensive random one.
   const byValue = Math.min(GIFT.maxGain, GIFT.base + GIFT.perLog * Math.log2(1 + value / GIFT.valueUnit))
   return (byValue * pref * (0.7 + npc.big5.a * 0.6)) / (1 + given)
@@ -82,8 +91,7 @@ export function giveGift(sim: Sim, npc: Human, stack: ItemStack, qty = stack.qty
   const wanted = stack.id === wantedItem(npc)
   const given = removeStack(p.inv, stack, q)!
   addItem(npc.inv, given)
-  const today = Math.floor(sim.state.time.cal / DAY_S)
-  npc.gifts = { day: today, n: (npc.gifts?.day === today ? npc.gifts.n : 0) + 1 }
+  countGoodwill(sim, npc)
   npc.opinion = Math.min(100, npc.opinion + gain)
   equipReceived(npc)
   const name = itemDef(given.id).name

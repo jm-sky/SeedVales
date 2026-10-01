@@ -19,7 +19,7 @@ import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from '
 import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
 import { acceptQuest } from './quests'
-import { addRep, addStat } from './reputation'
+import { addRep, addStat, depositGoodwill, takeGoodwill } from './reputation'
 import { hourOf, isNight } from './time'
 import { payToTreasury } from './treasury'
 import { heal } from './vitals'
@@ -386,7 +386,8 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     }
     case 'market': {
       const b = sim.building((t as { id: string }).id)
-      const trader = b ? sim.npcsOf(b.settlementId).find((n) => n.profession === 'trader') : undefined
+      const trader = b ? sim.npcsOf(b.settlementId).find((n) => n.profession === 'trader' && !n.vitals.dead) : undefined
+      if (trader && b && Math.hypot(trader.x - b.x, trader.z - b.z) > 60) return `The stall is empty — ${trader.name} is away.`
       return trader ? `Trader: ${trader.name} — go and talk to them (Trade).` : 'The stall is empty.'
     }
     case 'mine':
@@ -483,7 +484,8 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
     if (!s) return ''
     const moved = removeStack(p.inv, s)!
     addItem(b.inv, moved)
-    if (b.kind === 'warehouse' && itemDef(moved.id).price * moved.qty >= 10) addRep(sim, b.settlementId, { helpfulness: 1 })
+    const g = b.kind === 'warehouse' ? depositGoodwill(itemDef(moved.id).price * moved.qty) : 0
+    if (g > 0) addRep(sim, b.settlementId, { helpfulness: g })
     return `Stored: ${itemDef(moved.id).name}`
   }
   const s = b.inv.items[stackIdx]
@@ -492,8 +494,9 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
   if (n <= 0) return 'You cannot carry any more.'
   if (b.owner.startsWith('household') && checkTheft(sim, b)) return 'You were caught!'
   if (b.kind === 'warehouse') {
+    // Taking back costs what depositing gave (no deposit/take loop, review 006 #5); without standing it also looks like theft.
     const rep = sim.state.settlements[b.settlementId]!.rep
-    if (rep.helpfulness < 10) addRep(sim, b.settlementId, { honesty: -1, helpfulness: -1 })
+    addRep(sim, b.settlementId, { helpfulness: -takeGoodwill(itemDef(s.id).price * n), ...(rep.helpfulness < 10 ? { honesty: -1 } : {}) })
   }
   const partial = n < s.qty
   const moved = removeStack(b.inv, s, n)!

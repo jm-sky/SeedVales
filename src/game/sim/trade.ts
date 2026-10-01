@@ -11,12 +11,25 @@ import { TRADE } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { PROFESSIONS } from '../data/professions'
 import { train } from './actions'
+import { countGoodwill, goodwillToday } from './gifts'
 import { addItem, countItem, fitQty, qualityMult, removeStack } from './inventory'
-import { household, houseOf } from './npc/queries'
+import { doorOf, household, houseOf } from './npc/queries'
 
-/** Where goods bought from the player go: the household store (children: their own pack). */
-export function tradeInventory(sim: Sim, npc: Human): Inventory | undefined {
-  return npc.age === 'child' ? npc.inv : (houseOf(sim, npc)?.inv ?? npc.inv)
+/**
+ * The household store the NPC trades from, or undefined: children trade from their pack, and so does an NPC
+ * away from home (e.g. a companion on the road) — the store is not a remote stash (review 006 #6).
+ */
+function tradeStore(sim: Sim, npc: Human): Inventory | undefined {
+  if (npc.age === 'child') return undefined
+  const house = houseOf(sim, npc)
+  if (!house?.inv) return undefined
+  const door = doorOf(house)
+  return Math.hypot(npc.x - door.x, npc.z - door.z) <= TRADE.homeReachM ? house.inv : undefined
+}
+
+/** Where goods bought from the player go: the household store when at home, otherwise the NPC's own pack. */
+export function tradeInventory(sim: Sim, npc: Human): Inventory {
+  return tradeStore(sim, npc) ?? npc.inv
 }
 
 export interface StockEntry {
@@ -36,7 +49,7 @@ export function tradeStock(sim: Sim, npc: Human): StockEntry[] {
   let food = (hh?.memberIds.length ?? 1) * TRADE.foodReservePerMember
   let skin = 1
   const out: StockEntry[] = []
-  const store = npc.age === 'child' ? undefined : houseOf(sim, npc)?.inv
+  const store = tradeStore(sim, npc)
   for (const inv of store && store !== npc.inv ? [npc.inv, store] : [npc.inv]) {
     for (const s of inv.items) {
       const d = itemDef(s.id)
@@ -66,7 +79,7 @@ export function tradeStock(sim: Sim, npc: Human): StockEntry[] {
 function stockOf(sim: Sim, npc: Human, stack: ItemStack): { inv: Inventory; max: number } | undefined {
   const e = tradeStock(sim, npc).find((x) => x.stack === stack)
   if (!e) return undefined
-  return { inv: npc.inv.items.includes(stack) ? npc.inv : houseOf(sim, npc)!.inv!, max: e.max }
+  return { inv: npc.inv.items.includes(stack) ? npc.inv : tradeStore(sim, npc)!, max: e.max }
 }
 
 function mood(sim: Sim, npc: Human): number {
@@ -78,11 +91,14 @@ function mood(sim: Sim, npc: Human): number {
 export function buyPrice(sim: Sim, npc: Human, s: ItemStack): number {
   const d = itemDef(s.id)
   const inv = tradeInventory(sim, npc)
-  const stock = inv ? countItem(inv, s.id) + (inv === npc.inv ? 0 : countItem(npc.inv, s.id)) : 0
-  const scarcity = stock > 10 ? 0.9 : stock <= 1 ? 1.15 : 1
+  const stock = countItem(inv, s.id) + (inv === npc.inv ? 0 : countItem(npc.inv, s.id))
+  const scarcity = stock > 10 ? TRADE.plentyScarcity : stock <= 1 ? 1.15 : 1
   const m = 1.3 - sim.player.skills.trade * 0.002 - mood(sim, npc)
-  return Math.max(1, Math.round(d.price * qualityMult(s) * scarcity * Math.min(1.8, Math.max(0.95, m))))
+  return Math.max(1, Math.round(d.price * qualityMult(s) * scarcity * Math.min(1.8, Math.max(TRADE.minBuyMul, m))))
 }
+
+/** The cheapest this stack could ever be bought for (plenty of stock, best mood and skill). */
+const lowestBuyPrice = (s: ItemStack) => Math.max(1, Math.round(itemDef(s.id).price * qualityMult(s) * TRADE.plentyScarcity * TRADE.minBuyMul))
 
 /** Price the NPC pays the player for one unit. */
 export function sellPrice(sim: Sim, npc: Human, s: ItemStack): number {
@@ -91,7 +107,8 @@ export function sellPrice(sim: Sim, npc: Human, s: ItemStack): number {
   const spoiled = s.fresh !== undefined && d.food && s.fresh < d.food.spoilH * 0.3 ? 0.4 : 1
   const worn = s.dur !== undefined && d.durability ? 0.4 + 0.6 * (s.dur / d.durability) : 1
   const v = d.price * qualityMult(s) * spoiled * worn * Math.min(0.9, Math.max(0.3, m))
-  return d.price > 0 ? Math.max(1, Math.round(v)) : 0
+  // Always below the lowest buy price of the same item, so buying and reselling never pays (review 006 #4).
+  return d.price > 0 ? Math.max(1, Math.min(Math.round(v), lowestBuyPrice(s) - 1)) : 0
 }
 
 export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): ActionResult {
@@ -105,14 +122,16 @@ export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): Act
   sim.player.money -= price
   npc.money += price
   addItem(sim.player.inv, taken)
-  npc.opinion = Math.min(100, npc.opinion + 1)
+  // Goodwill from a purchase shares the daily favour counter with gifts (diminishing, review 006 #3).
+  npc.opinion = Math.min(100, npc.opinion + 1 / (1 + goodwillToday(sim, npc)))
+  countGoodwill(sim, npc)
   train(sim.player, 'trade', 0.3)
   return { ok: true, msg: `Bought: ${itemDef(taken.id).name} ×${q} for ${price} c` }
 }
 
 export function sellToNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): ActionResult {
   const inv = tradeInventory(sim, npc)
-  if (!inv || !sim.player.inv.items.includes(stack)) return { ok: false, msg: 'You don\'t have that.' }
+  if (!sim.player.inv.items.includes(stack)) return { ok: false, msg: 'You don\'t have that.' }
   const q = Math.min(qty, stack.qty)
   const price = sellPrice(sim, npc, stack) * q
   if (npc.money < price) return { ok: false, msg: `${npc.name} doesn't have that much money.` }

@@ -21,6 +21,8 @@ import { threatNear } from './queries'
 import { WORK_ACTS } from './works'
 
 const REPLAN_S = 12
+/** Goals a companion is not pulled out of by the leave-behind check. */
+const COMPANION_BUSY = new Set(['drink', 'eat', 'fight', 'flee', 'follow', 'sleep'])
 const FAIL_COOLDOWN_S = 60
 
 export function planNpc(sim: Sim, h: Human, force = false) {
@@ -121,6 +123,7 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
   const step = ai.steps[ai.stepIdx]
   let ex: Exertion = 'idle'
   if (step?.op === 'goto') ex = step.run ? 'run' : 'walk'
+  else if (step?.op === 'work' && step.act === 'follow') ex = h.moving === 'idle' ? 'idle' : h.moving === 'run' ? 'run' : 'walk'
   else if (step?.op === 'work') ex = step.act === 'sleep' || step.act === 'camp' ? 'sleep' : step.act === 'rest' || step.act === 'socialize' || step.act === 'shelter' ? 'rest' : 'work'
   const pen = updateVitals(h.vitals, dt, ex, step?.op === 'work' && step.act === 'sleep' ? 0.8 : step?.op === 'work' && step.act === 'camp' ? 0.45 : 0.5)
   // Bleeding/illness/starvation can also bring an NPC down (same rules as hits).
@@ -139,8 +142,9 @@ export function updateNpc(sim: Sim, h: Human, dt: number, full: boolean) {
     ai.decideAt = now + decisionInterval(h)
     perf.count('ai.decisions')
     if (ai.goal !== 'fight' && ai.goal !== 'flee' && threatNear(sim, h, h.profession === 'guard' ? 45 : 22)) ai.replanAt = 0
-    // A companion left behind reacts at the decision cadence, not after the 12 s replan.
-    else if (h.companion && ai.goal !== 'follow' && ai.goal !== 'fight' && ai.goal !== 'flee' && companionDist(sim, h) > COMPANION.followM * 1.5) ai.replanAt = 0
+    // A companion left behind reacts at the decision cadence, not after the 12 s replan — unless it is
+    // seeing to a need (eat/drink/sleep), which it finishes first (no need/follow flapping, review 006 #1).
+    else if (h.companion && !COMPANION_BUSY.has(ai.goal ?? '') && companionDist(sim, h) > COMPANION.followM * 1.5) ai.replanAt = 0
   }
   if (!ai.goal || now >= ai.replanAt || ai.stepIdx >= ai.steps.length) {
     planNpc(sim, h, ai.stepIdx >= ai.steps.length || !ai.goal)

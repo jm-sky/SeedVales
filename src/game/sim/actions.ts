@@ -7,7 +7,7 @@
 import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
 import type { Building, Corpse, DenState, GroundItem, Human, ItemStack } from './types'
-import { ROCK } from '../config/calibration'
+import { ROCK, SPOILED_FRAC } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { skillGain } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
@@ -367,7 +367,7 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
   if (d.food) {
     removeStack(h.inv, stack, 1)
     eat(target.vitals, d.food.nutrition, d.food.water ?? 0)
-    const spoiled = (stack.fresh ?? 999) < d.food.spoilH * 0.15
+    const spoiled = (stack.fresh ?? 999) < d.food.spoilH * SPOILED_FRAC
     const chance = (d.food.illnessChance ?? 0) + (spoiled ? 0.35 : 0)
     if (chance > 0 && sim.rng.chance(chance)) {
       makeIll(target.vitals, 'stomach', 25)

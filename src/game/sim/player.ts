@@ -128,9 +128,9 @@ export function playerSystem(sim: Sim, dt: number) {
     }
   }
 
-  // Bow draw (hold primary).
+  // Bow draw (hold primary) — not while both hands push a cart.
   const w = weaponOf(p)
-  if (w.kind === 'ranged') {
+  if (w.kind === 'ranged' && !px.cart) {
     if (inp.drawing && now >= p.attackReadyAt && !isProtected(sim, p)) {
       px.bowDraw = Math.min(1, px.bowDraw + dt / (w.drawTime ?? 1))
       p.vitals.stamina = Math.max(0, p.vitals.stamina - dt * 3)

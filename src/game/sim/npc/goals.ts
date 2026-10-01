@@ -42,7 +42,9 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const onTrip = h.profession === 'trader' && Math.hypot(h.x - homeS.x, h.z - homeS.z) > homeS.radius + 200
   // Companion (COMP-01/02): follows the player instead of duties, social life and wandering.
   const comp = h.companion
-  const away = onTrip || (!!comp && Math.hypot(h.x - door.x, h.z - door.z) > 150)
+  // A companion far from home lives from its pack: it never walks back to eat or drink (D-NPC-6).
+  const compAway = !!comp && Math.hypot(h.x - door.x, h.z - door.z) > COMPANION.awayM
+  const away = onTrip || compAway
 
   // --- Safety ---
   const threat = threatNear(sim, h, isGuard ? 45 : 22)
@@ -86,7 +88,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       plan: () => {
         if (h.inv.items.some((s) => (s.water ?? 0) > 0)) return { label: 'Drinking from a waterskin', steps: [work('drink_skin', 2, 'Drinking')] }
         const src = waterSources(sim, h)[0]
-        if (!src) return null
+        if (!src || (compAway && Math.hypot(src.x - h.x, src.z - h.z) > COMPANION.awayDrinkM)) return null
         return src.wellId
           ? { label: 'Going to the well', steps: [go(src.x, src.z, 1.8), work('drink_well', 4, 'Drinking water', src.wellId, 'interact')] }
           : { label: 'Fetching water', steps: [go(src.x, src.z, 1.2), work('drink_water', 4, 'Drinking from the river', `${src.x},${src.z}`, 'kneel')] }
@@ -100,6 +102,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       score: hungerU,
       plan: () => {
         if (findFood(h.inv)) return { label: 'Eating', steps: [work('eat_inv', 4, 'Having a meal', undefined, 'eat')] }
+        if (compAway) return null
         if (house && householdFoodCount(sim, h) > 0) return { label: 'Going for a meal', steps: [go(door.x, door.z), work('eat_store', 6, 'Eating at home', house.id, 'eat')] }
         // Buy from a trader/household with food.
         if (h.money >= 6) {
@@ -125,7 +128,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const sleepU = sleepTime ? (v.vigor < 90 ? 0.55 + (1 - v.vigor / 100) * 0.4 : 0.25) : v.vigor < 10 ? 0.85 : 0
   if (comp) {
     const d = companionDist(sim, h)
-    if (d > COMPANION.followM) opts.push({ id: 'follow', score: d > COMPANION.catchUpM ? 0.95 : 0.72, plan: () => ({ label: 'Following you', steps: [] }) })
+    if (d > COMPANION.followM) opts.push({ id: 'follow', score: d > COMPANION.catchUpM ? 0.95 : 0.72, plan: () => ({ label: 'Following you', steps: [work('follow', 1e9, 'Following you')] }) })
     opts.push({ id: 'wait', score: 0.12, plan: () => ({ label: 'Waiting for you', steps: [work('rest', 8, 'Waiting')] }) })
   }
   if (sleepU > 0 && house && (!away || v.vigor < (night ? 75 : 12))) {

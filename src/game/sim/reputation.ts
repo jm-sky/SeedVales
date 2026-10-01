@@ -6,6 +6,7 @@
  */
 import type { Sim } from './sim'
 import type { RepDim } from './types'
+import { WAREHOUSE } from '../config/calibration'
 import { payToTreasury } from './treasury'
 import { REP_DIMS } from './types'
 
@@ -113,3 +114,9 @@ export function tryApologize(sim: Sim, badgeId: string): string {
   sim.state.px.stats[def.stat] = 0
   return 'Apology accepted — the badge is removed.'
 }
+
+/** Helpfulness for depositing goods worth `value` coins into a settlement warehouse (D-ECON-4). */
+export const depositGoodwill = (value: number) => (value < WAREHOUSE.minValue ? 0 : Math.min(WAREHOUSE.maxPerDeposit, value / WAREHOUSE.coinsPerPoint))
+
+/** Helpfulness lost by taking goods worth `value` coins out — never less than depositing them gave. */
+export const takeGoodwill = (value: number) => value / WAREHOUSE.coinsPerPoint

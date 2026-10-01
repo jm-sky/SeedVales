@@ -5,11 +5,11 @@
 ## Teraz
 
 - **D-LANG-1 (2026-10-01): English everywhere** — UI, proper names (English first name + occupational surname; home guard = Mark Hornblower), docs, plans, comments. Polish docs are legacy. Open follow-up: switch NPC/settlement name pools in code to English (`GEN_VERSION` bump).
-- Verification (latest, 2026-10-01, checkpoint): `pnpm check` 146/146, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` ok (on rerun; the first WSL run was noise).
+- Verification (latest, 2026-10-01, session 4 after review 006 triage): `pnpm check` 160/160, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
 - Formats: `SAVE_VERSION` 7, `GEN_VERSION` 7.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
-- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` done / `npc--001` done (review 006 received, triage pending); 4a `render--002` in progress (step 0 code done, step 2 started), 4b `render--001`, 5, 6 — not started.
-- Next step: triage review 006 (plan below), then finish `render--002` (clean baselines, A/B review of step 2).
+- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (step 0 code done, step 2 started), 4b `render--001`, 5, 6 — not started.
+- Next step: `render--002` — step 0 clean baselines + PERF.md in English, then step 2 A/B review.
 - ❓ dla użytkownika: akceptacja wyglądu po A/B (gładki teren, tone mapping); pomiar na urządzeniu (D-PERF-2).
 - Starsze sekcje (sesja przygotowawcza, stan po sesji 1): [progress-log.md](progress-log.md).
 
@@ -48,17 +48,8 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **Wave 3 review 006** (`docs/reviews/2026-10-01--006--wave3-review.md`): 15 findings (8 ✅ reproduced). Worktree removed. **Triage not started.**
 - **`render--002` started:** step 0 metrics committed (`089bfae`); step 2 sky/atmosphere/tone-mapping scaffolding behind `sv-visual` flags (defaults unchanged) + A/B script `scripts/e2e/ab.mjs`. Details in the plan's "Wynik".
 
-### Triage plan for review 006 (next session, do first)
+### Session 4
 
-1+2. `follow` plan gets a persistent step (e.g. `work('follow', 1e9, …)`, executed by `follow()`), so `planNpc(force)` no longer runs every tick; the forced replan at 1.5× `followM` must skip need goals (eat/drink/sleep). Companions eat from their pack only when away from home; on hire take provisions (≈2 food/day + a waterskin) from the household store into the pack (conservation: store → pack).
-3. Opinion from buying: share the daily goodwill counter with gifts (`npc.gifts`, gain 1/(1+n)) — no new field.
-4. Arbitrage: cap `sellPrice` below the lowest possible `buyPrice` of the same stack (min scarcity 0.9 × min multiplier 0.95), sell < buy whenever price > 1.
-5. Cart/warehouse loop: make helpfulness symmetric — taking goods back from the warehouse removes what depositing/unloading them would give (also for `transferToStorage`), regardless of current helpfulness.
-6. Trade distance: NPC farther than ~150 m from its house (or a companion away) trades only from/into `npc.inv`; `market` option requires the trader near the stall.
-7. `switchWeapon`/`setPrimary` and bow draw blocked (or cart parked) while pushing a cart.
-8. Roasting: keep the spoiled state — apply `minFreshFrac` floor only when raw freshness ≥ 15%; update D-FOOD-3.
-9. Cache the companion list (rebuilt on hire/join/dismiss/death and in `companionSystem`).
-10. `follow` on `'stuck'`: short cooldown + message "X can't follow you here".
-12. Add v5→v6 migration test (`delete st.carts`).
-11 reject (by design, covered by the COMP-03 fight test); 13–15 info (cart wear, boulder yield, UI calling sim mutators directly) → DECISIONS/defer.
+- **Review 006 triaged (2026-10-01):** 11 fixed with failing-first regression tests (`src/game/sim/review006.test.ts`, 14 tests), #11 rejected (D-NPC-8), #13–#15 info/deferred (D-TRANS-2, D-ECON-5 note, D-UI-5). New decisions D-NPC-6 (companions live from their pack away from home, persistent `follow` step, stuck cooldown), D-NPC-7 (trading away from home uses the pack only), D-ECON-4 (symmetric warehouse goodwill), D-ECON-5 (no circular-trade profit), D-FOOD-3 updated (spoiled meat stays spoiled). No save format change (`ai.cooldowns` keys only). Wave 3 → done.
+- e2e harness fixes found on the way: acceptance 17 targeted the closest villager instead of the son (pinned by id now; float tolerance on the contract length); acceptance 8b missed rats the nest bred during the repair (kill loop runs again after the repair).
 

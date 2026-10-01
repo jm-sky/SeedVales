@@ -11,7 +11,7 @@ import type { Building, Cart, Human, Inventory, ItemStack } from './types'
 import { CART } from '../config/calibration'
 import { HEAVY_GOODS, itemDef } from '../data/items'
 import { addItem, fitQty, invWeight, removeStack } from './inventory'
-import { addRep } from './reputation'
+import { addRep, depositGoodwill } from './reputation'
 
 export const cartDef = (c: Cart) => itemDef(c.item).cart!
 export const cartLoad = (c: Cart) => invWeight(c.inv)
@@ -106,7 +106,8 @@ export function unloadToBuilding(sim: Sim, c: Cart, b: Building): string {
   const value = c.inv.items.reduce((v, s) => v + itemDef(s.id).price * s.qty, 0)
   const kg = unloadInto(c, b.inv)
   if (!kg) return 'The cart is empty.'
-  if (b.kind === 'warehouse' && value >= 10) addRep(sim, b.settlementId, { helpfulness: Math.min(3, Math.floor(value / 40) + 1) })
+  const g = b.kind === 'warehouse' ? depositGoodwill(value) : 0
+  if (g > 0) addRep(sim, b.settlementId, { helpfulness: g })
   return `Unloaded ${Math.round(kg)} kg.`
 }
 

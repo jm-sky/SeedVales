@@ -16,7 +16,10 @@ const key = async (k, wait = 700) => {
 /** Wait until the UI target is set (5 Hz refresh at low FPS). */
 const waitTarget = async (pred) => {
   for (let i = 0; i < 20; i++) {
-    const t = await S(() => ({ label: window.__sv.game.target?.label ?? '', opts: window.__sv.game.options.map((o) => o.id) }))
+    const t = await S(() => {
+      const g = window.__sv.game
+      return { label: g.target?.label ?? '', ref: g.target ? `${g.target.ref.type}:${g.target.ref.id}` : '', opts: g.options.map((o) => o.id) }
+    })
     if (t.label && (!pred || pred(t))) return t
     await page.waitForTimeout(250)
   }
@@ -268,30 +271,34 @@ try {
       const b = sim.building(bid)
       return { q: q && { status: q.status, kills: q.kills }, nest: !!b.ratNest, dur: Math.round(b.durability), rats: sim.state.animals.filter((a) => a.species === 'rat').map((a) => `${a.denId}:${Math.round(Math.hypot(a.x - b.x, a.z - b.z))}`) }
     }, questInfo.b)))
-    // Kill rats: approach each rat and click (UI attack).
     await S(() => {
       window.__sv.pause(false)
       window.__sv.game.sim.player.eq.main = { id: 'club', qty: 1, dur: 200 }
     })
-    for (let i = 0; i < 40; i++) {
-      const left = await S((bid) => {
-        const sv = window.__sv
-        const sim = sv.game.sim
-        const b = sim.building(bid)
-        const rat = sim.state.animals.find((a) => a.species === 'rat' && (a.denId === `nest:${bid}` || Math.hypot(a.x - b.x, a.z - b.z) < 20))
-        if (!rat) return 0
-        sv.pause(false)
-        sv.simStep(1.2)
-        sv.pause(true)
-        if (rat.vitals.dead) return 1
-        sv.approach(rat.x, rat.z, 0.9)
-        return 1
-      }, questInfo.b)
-      if (!left) break
-      await page.mouse.click(640, 360)
-      await page.waitForTimeout(80)
-      if (i === 5) console.log('rat loop', JSON.stringify(await S(() => Object.fromEntries(Object.entries(window.__sv.perf.report().counters).filter(([k]) => k.startsWith('combat'))))))
+    // Kill rats of this nest: approach each rat and click (UI attack). Runs again after the repair,
+    // because the nest keeps breeding while the repair is under way.
+    const killRats = async () => {
+      for (let i = 0; i < 80; i++) {
+        const left = await S((bid) => {
+          const sv = window.__sv
+          const sim = sv.game.sim
+          const b = sim.building(bid)
+          const rat = sim.state.animals.find((a) => a.species === 'rat' && !a.vitals.dead && (a.denId === `nest:${bid}` || Math.hypot(a.x - b.x, a.z - b.z) < 20))
+          if (!rat) return 0
+          sv.pause(false)
+          sv.simStep(1.2)
+          sv.pause(true)
+          if (rat.vitals.dead) return 1
+          sv.approach(rat.x, rat.z, 0.9)
+          return 1
+        }, questInfo.b)
+        if (!left) break
+        await page.mouse.click(640, 360)
+        await page.waitForTimeout(80)
+        if (i === 5) console.log('rat loop', JSON.stringify(await S(() => Object.fromEntries(Object.entries(window.__sv.perf.report().counters).filter(([k]) => k.startsWith('combat'))))))
+      }
     }
+    await killRats()
     // Repair the warehouse (hammer + branches) through the interaction menu until the nest is gone.
     await S((bid) => {
       const sv = window.__sv
@@ -309,6 +316,7 @@ try {
       await finishActivity()
       await S(() => window.__sv.pause(true))
     }
+    await killRats()
     await S(() => {
       window.__sv.pause(false)
       window.__sv.simStep(15)
@@ -316,7 +324,9 @@ try {
     const q = await S((id) => {
       const sim = window.__sv.game.sim
       const qq = sim.state.quests.find((x) => x.id === id)
-      return { status: qq.status, kills: qq.kills, sid: qq.settlementId, rep: sim.state.settlements[qq.settlementId].rep, nest: !!sim.building(qq.buildingId).ratNest, dur: sim.building(qq.buildingId).durability }
+      const b = sim.building(qq.buildingId)
+      const left = sim.state.animals.filter((a) => a.species === 'rat' && !a.vitals.dead && (a.denId === `nest:${b.id}` || (!a.denId && Math.hypot(a.x - b.x, a.z - b.z) < 20)))
+      return { status: qq.status, kills: qq.kills, sid: qq.settlementId, rep: sim.state.settlements[qq.settlementId].rep, nest: !!b.ratNest, dur: b.durability, left: left.map((a) => ({ id: a.id, d: Math.round(Math.hypot(a.x - b.x, a.z - b.z)), den: a.denId, st: a.state })) }
     }, questInfo.id)
     check(results, '8b. zadanie ukończone i reputacja wzrosła', q.status === 'done' && q.rep.helpfulness >= 12, q)
   }
@@ -509,15 +519,19 @@ try {
   })
 
   // 17. COMP-01 / SOC-01: hire a companion and give a gift through the UI (npc--001).
-  await S(() => {
+  const sonId = await S(() => {
     const sv = window.__sv
     const son = sv.game.sim.state.npcs.find((n) => n.kin === 'son' && n.settlementId === 0)
     son.big5.n = 0.3
-    window.__son = son.id
     sv.pause(true)
     sv.approach(son.x, son.z, 1.4)
+    sv.face(son.x, son.z)
+    // Another villager may stand closer than the son; pin him as the target (same as cycling with Tab).
+    sv.game.pinnedTarget = `npc:${son.id}`
+    return son.id
   })
-  await waitTarget((t) => t.opts.includes('hire'))
+  const sonRef = `npc:${sonId}`
+  await waitTarget((t) => t.ref === sonRef && t.opts.includes('hire'))
   await key('KeyE')
   await clickTest('opt-hire')
   await clickTest('hire-days-3')
@@ -526,19 +540,20 @@ try {
   await shot(page, 'acc-17-hire')
   const m17 = await S(() => window.__sv.game.sim.player.money)
   await clickTest('hire-confirm')
-  const hired = await S(() => {
+  const hired = await S((id) => {
     const sim = window.__sv.game.sim
-    const n = sim.state.npcs.find((x) => x.kin === 'son' && x.settlementId === 0)
+    const n = sim.human(id)
     return { c: n.companion, money: sim.player.money }
-  })
-  await waitTarget((t) => t.opts.includes('gift'))
+  }, sonId)
+  await S((ref) => { window.__sv.game.pinnedTarget = ref }, sonRef)
+  await waitTarget((t) => t.ref === sonRef && t.opts.includes('gift'))
   await key('KeyE')
   await clickTest('opt-gift')
-  const op0 = await S(() => window.__sv.game.sim.state.npcs.find((x) => x.kin === 'son' && x.settlementId === 0).opinion)
+  const op0 = await S((id) => window.__sv.game.sim.human(id).opinion, sonId)
   await clickTest('gift-bread')
-  const op1 = await S(() => window.__sv.game.sim.state.npcs.find((x) => x.kin === 'son' && x.settlementId === 0).opinion)
+  const op1 = await S((id) => window.__sv.game.sim.human(id).opinion, sonId)
   await clickTest('panel-close')
-  check(results, '17. najem towarzysza (3 dni, eskorta) i prezent przez UI', hired.c?.kind === 'hired' && hired.c.until - hired.c.since === 3 * 86400 && hired.money < m17 && op1 > op0, { hired, op0, op1 })
+  check(results, '17. najem towarzysza (3 dni, eskorta) i prezent przez UI', hired.c?.kind === 'hired' && Math.abs(hired.c.until - hired.c.since - 3 * 86400) < 1e-3 && hired.money < m17 && op1 > op0, { hired, op0, op1 })
   await S(() => window.__sv.pause(false))
 
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.

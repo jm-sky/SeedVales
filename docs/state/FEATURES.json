@@ -719,7 +719,7 @@
    "behavior": "Pełny zapis/odczyt zmiennego stanu w IndexedDB (wersjonowany format); brak odtworzenia zużytych zasobów/pokonanych wrogów",
    "verify": "vitest round-trip + e2e reload",
    "status": "verified",
-   "evidence": "save.test.ts: round-trip (felled tree, killed animal, terrain edit, inventory) + SAVE-01 genVersion/seed mismatch → SaveError, migrate v1→v2 backfill + reject newer/unknown, missing/corrupt slot → SaveError, new game = new unique slot (review #4/#5/#14/#15 fixed, game--002 A4/A5); acceptance step 9 reload | save.test.ts: meta store list/delete, QuotaExceeded → SaveError (Game.save shows it, no false success), snapshot is a detached copy (review #16/#17/#31)"
+   "evidence": "save.test.ts: round-trip (felled tree, killed animal, terrain edit, inventory) + SAVE-01 genVersion/seed mismatch → SaveError, migrate v1→v2 backfill + reject newer/unknown, missing/corrupt slot → SaveError, new game = new unique slot (review #4/#5/#14/#15 fixed, game--002 A4/A5); acceptance step 9 reload | save.test.ts: meta store list/delete, QuotaExceeded → SaveError (Game.save shows it, no false success), snapshot is a detached copy (review #16/#17/#31) review006.test.ts \"SAVE-01: v5 → v6 migration backfills an empty cart list\"."
   },
   {
    "id": "SAVE-02",
@@ -791,7 +791,7 @@
    "behavior": "Systemy per-tick nie skanują wszystkich obiektów świata; zapytania przestrzenne (sim.actors.query / nodes.query) w zasięgu",
    "verify": "audyt w PERF.md + bench:sim przed/po",
    "status": "verified",
-   "evidence": "Audit table in docs/state/PERF.md: per-actor/per-tick full scans replaced by spatial queries/indices (sim.actors.query, groundNear/corpsesNear, building/household/settlement/NPC indices); remaining full loops justified (LOD scheduler, calendar systems, rare acts); bench:sim before/after ×2 in PERF.md"
+   "evidence": "Audit table in docs/state/PERF.md: per-actor/per-tick full scans replaced by spatial queries/indices (sim.actors.query, groundNear/corpsesNear, building/household/settlement/NPC indices); remaining full loops justified (LOD scheduler, calendar systems, rare acts); bench:sim before/after ×2 in PERF.md Companion list cached: review006.test.ts \"PERF-01: the companion list is cached…\"."
   },
   {
    "id": "PERF-02",
@@ -935,7 +935,7 @@
    "behavior": "Handel możliwy z każdym NPC (nadwyżki); mechanizm handlu służy też do przekazywania przedmiotów",
    "verify": "vitest + e2e",
    "status": "verified",
-   "evidence": "vitest appendix-npc.test.ts \"TRADE-02: every adult offers a surplus…\", \"TRADE-02: buying from a non-trader…\", \"TRADE-02: talking, trading, gifts and hiring are offered…\"; trade panel with Give button (e2e acceptance 4a/4d/17)"
+   "evidence": "vitest appendix-npc.test.ts \"TRADE-02: every adult offers a surplus…\", \"TRADE-02: buying from a non-trader…\", \"TRADE-02: talking, trading, gifts and hiring are offered…\"; trade panel with Give button (e2e acceptance 4a/4d/17) Review 006 fixes (D-ECON-5, D-NPC-7): review006.test.ts \"TRADE-02: selling and buying back … does not farm opinion\", \"…sell price never reaches the buy price…\", \"…NPC far from home trades only from and into its own pack\"."
   },
   {
    "id": "SOC-01",
@@ -998,7 +998,7 @@
    "behavior": "Taczka i wózek ręczny zwiększają udźwig ciężkich surowców (wózek pod osła/konia → later, zależny od WORLD-09)",
    "verify": "vitest",
    "status": "verified",
-   "evidence": "sim/cart.ts (push from pack or parked, both hands, load heavy goods up to capacity: wheelbarrow 80 kg ×0.8 speed, handcart 160 kg ×0.68; no running; steep rise > CART.maxRise or water > 0.25 m blocks; park/stow; unload into warehouse (+helpfulness) or own storage), Cart in px.cart / state.carts (SAVE_VERSION 6 + migration), items + recipes + trader stock, render/carts.ts; appendix-economy.test.ts TRANS-01 (3 tests: capacity/hands, speed + slope block, park/unload/stow/save); e2e acceptance step 16 (Push from inventory → Quick actions load → Unload at warehouse); screenshot acc-16-cart. Donkey/horse carts → later (WORLD-09 deferred)"
+   "evidence": "sim/cart.ts (push from pack or parked, both hands, load heavy goods up to capacity: wheelbarrow 80 kg ×0.8 speed, handcart 160 kg ×0.68; no running; steep rise > CART.maxRise or water > 0.25 m blocks; park/stow; unload into warehouse (+helpfulness) or own storage), Cart in px.cart / state.carts (SAVE_VERSION 6 + migration), items + recipes + trader stock, render/carts.ts; appendix-economy.test.ts TRANS-01 (3 tests: capacity/hands, speed + slope block, park/unload/stow/save); e2e acceptance step 16 (Push from inventory → Quick actions load → Unload at warehouse); screenshot acc-16-cart. Donkey/horse carts → later (WORLD-09 deferred) Review 006 fixes (D-ECON-4, D-TRANS-1): review006.test.ts \"TRANS-01: unloading into the warehouse and taking it back never raises helpfulness\", \"…depositing a stack and taking it back…\", \"…no weapon switch or bow shot while both hands push a cart\"."
   },
   {
    "id": "FOOD-03",
@@ -1007,7 +1007,7 @@
    "behavior": "Ognisko: 1 kawałek mięsa; z naczyniem/patelnią 2; z rusztem więcej. Pieczone mięso zachowuje gatunek i świeżość",
    "verify": "vitest + e2e",
    "status": "verified",
-   "evidence": "sim/cooking.ts (roastCapacity 1/2/5: fire, pan|pot, spit ≤ 3 m; roastSeconds from calendar minutes; completeRoast least-fresh first, inherits sp + relative freshness), ItemStack.sp (butcher tags species, stacks of different species never merge), items pan/pot, blueprint „Ruszt”, trader stocks a pan, anvil recipe; appendix-economy.test.ts FOOD-03 (3 tests incl. save round-trip); item label/details show species; e2e acceptance step 15 (campfire → „Piecz mięso” with a pan → 2 pieces, deer + boar kept); D-FOOD-3"
+   "evidence": "sim/cooking.ts (roastCapacity 1/2/5: fire, pan|pot, spit ≤ 3 m; roastSeconds from calendar minutes; completeRoast least-fresh first, inherits sp + relative freshness), ItemStack.sp (butcher tags species, stacks of different species never merge), items pan/pot, blueprint „Ruszt”, trader stocks a pan, anvil recipe; appendix-economy.test.ts FOOD-03 (3 tests incl. save round-trip); item label/details show species; e2e acceptance step 15 (campfire → „Piecz mięso” with a pan → 2 pieces, deer + boar kept); D-FOOD-3 Review 006 fix (D-FOOD-3): review006.test.ts \"FOOD-03: roasting spoiled raw meat gives spoiled cooked meat…\"."
   },
   {
    "id": "COMP-01",
@@ -1016,7 +1016,7 @@
    "behavior": "Najem towarzysza na czas, za kwotę, z zadaniem i poziomem ryzyka; wspólna podróż buduje relację",
    "verify": "vitest + e2e",
    "status": "verified",
-   "evidence": "vitest appendix-npc.test.ts \"COMP-01: hiring pays the NPC 1:1, the companion follows and the contract ends…\", \"COMP-01: risk raises the wage…\"; e2e acceptance 17 (hiring through the UI)"
+   "evidence": "vitest appendix-npc.test.ts \"COMP-01: hiring pays the NPC 1:1, the companion follows and the contract ends…\", \"COMP-01: risk raises the wage…\"; e2e acceptance 17 (hiring through the UI) Review 006 fixes (D-NPC-6): review006.test.ts \"COMP-01: hiring packs provisions…\", \"…hungry companion far from home eats from its pack…\", \"…starving companion…stays with the player\", \"COMP-01 / PERF-01: a following companion plans at the decision cadence…\", \"COMP-01: a companion that cannot reach the player gives up…\"."
   },
   {
    "id": "COMP-02",

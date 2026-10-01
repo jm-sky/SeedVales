@@ -8,14 +8,15 @@
  */
 import type { ActionResult } from '../actions'
 import type { Sim } from '../sim'
-import type { CompanionRisk, CompanionTask, Human } from '../types'
+import type { CompanionRisk, CompanionTask, Human, ItemStack } from '../types'
 import { COMPANION, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { isDown } from '../combat'
-import { wearBetterArmor, wieldBest } from '../inventory'
+import { addItem, findFood, removeStack, wearBetterArmor, wieldBest } from '../inventory'
 import { steerTo } from '../movement'
 import { dayIndex } from '../time'
 import { penalty } from '../vitals'
+import { houseOf } from './queries'
 
 const DAY_S = 86400
 const HOUR_S = 3600
@@ -23,7 +24,19 @@ const HOUR_S = 3600
 export const TASK_NAMES: Record<CompanionTask, string> = { escort: 'Escort', guard: 'Protection' }
 export const RISK_NAMES: Record<CompanionRisk, string> = { low: 'Low risk', medium: 'Some risk', high: 'Dangerous' }
 
-export const companionsOf = (sim: Sim): Human[] => sim.state.npcs.filter((n) => n.companion && !n.vitals.dead)
+/** Derived list of living companions, cached per sim (PERF-01): rebuilt on hire/join/dismiss and by `companionSystem`. */
+const companionCache = new WeakMap<Sim, Human[]>()
+
+export function companionsOf(sim: Sim): Human[] {
+  let list = companionCache.get(sim)
+  if (!list || list.some((n) => n.vitals.dead || !n.companion)) {
+    list = sim.state.npcs.filter((n) => n.companion && !n.vitals.dead)
+    companionCache.set(sim, list)
+  }
+  return list
+}
+
+const invalidateCompanions = (sim: Sim) => companionCache.delete(sim)
 
 /** Daily wage in copper for a task and risk level. */
 export function dailyWage(npc: Human, task: CompanionTask, risk: CompanionRisk): number {
@@ -66,7 +79,8 @@ export function hireCompanion(sim: Sim, npc: Human, task: CompanionTask, risk: C
   npc.money += price
   const cal = sim.state.time.cal
   npc.companion = { kind: 'hired', task, risk, since: cal, until: cal + days * DAY_S, paid: price, bondAt: cal }
-  startFollowing(npc)
+  packProvisions(sim, npc, days)
+  startFollowing(sim, npc)
   sim.message(`${npc.name} joins you for ${days} ${days === 1 ? 'day' : 'days'} (${price} c).`, 'good')
   return { ok: true, msg: `${npc.name} will go with you.` }
 }
@@ -99,7 +113,8 @@ export function askToJoin(sim: Sim, npc: Human): ActionResult {
   if (!sim.rng.chance(joinChance(sim, npc))) return { ok: false, msg: `${npc.name}: "No, I have my own business here."` }
   const cal = sim.state.time.cal
   npc.companion = { kind: 'free', task: 'escort', risk: 'medium', since: cal, paid: 0, bondAt: cal }
-  startFollowing(npc)
+  packProvisions(sim, npc, COMPANION.freeProvisionDays)
+  startFollowing(sim, npc)
   sim.message(`${npc.name} decides to travel with you.`, 'good')
   return { ok: true, msg: `${npc.name}: "Why not — I'll come along!"` }
 }
@@ -107,6 +122,7 @@ export function askToJoin(sim: Sim, npc: Human): ActionResult {
 export function dismissCompanion(sim: Sim, npc: Human, reason = 'You part ways with'): string {
   if (!npc.companion) return ''
   npc.companion = undefined
+  invalidateCompanions(sim)
   npc.ai.goal = null
   npc.ai.steps = []
   npc.ai.replanAt = 0
@@ -115,11 +131,34 @@ export function dismissCompanion(sim: Sim, npc: Human, reason = 'You part ways w
   return msg
 }
 
-function startFollowing(npc: Human) {
+function startFollowing(sim: Sim, npc: Human) {
+  invalidateCompanions(sim)
   npc.ai.goal = null
   npc.ai.steps = []
   npc.ai.replanAt = 0
   npc.ai.decideAt = 0
+}
+
+/**
+ * Provisions for the road (D-NPC-6): food for `COMPANION.foodPerDay` meals a day (capped) moves from the
+ * household store into the companion's pack, so away from home it eats from the pack instead of walking back.
+ */
+function packProvisions(sim: Sim, npc: Human, days: number) {
+  const store = houseOf(sim, npc)?.inv
+  if (!store) return
+  let want = Math.min(COMPANION.maxProvisions, Math.ceil(days * COMPANION.foodPerDay)) - npc.inv.items.filter((s) => isMeal(s)).reduce((a, s) => a + s.qty, 0)
+  while (want > 0) {
+    const s = findFood(store)
+    if (!s) break
+    const moved = removeStack(store, s, Math.min(want, s.qty))!
+    addItem(npc.inv, moved)
+    want -= moved.qty
+  }
+}
+
+const isMeal = (s: ItemStack) => {
+  const d = itemDef(s.id)
+  return !!d.food && d.category !== 'herb' && !d.food.raw
 }
 
 /** Gear handed over by the player is put on / wielded when better (COMP-03, shared weapon score). */
@@ -131,6 +170,7 @@ export function equipReceived(npc: Human) {
 
 /** Contracts, bonding: expiry and slow opinion growth from travelling together. */
 export function companionSystem(sim: Sim) {
+  invalidateCompanions(sim)
   const cal = sim.state.time.cal
   const p = sim.player
   for (const n of sim.state.npcs) {
@@ -138,10 +178,16 @@ export function companionSystem(sim: Sim) {
     if (!c) continue
     if (n.vitals.dead) {
       n.companion = undefined
+      invalidateCompanions(sim)
       continue
     }
     if (c.until !== undefined && cal >= c.until) {
       dismissCompanion(sim, n, 'The contract ends:')
+      continue
+    }
+    // Starving with an empty pack: the companion ends the journey and goes home to eat (review 006 #1).
+    if (n.vitals.hunger < COMPANION.starveLeave && !n.inv.items.some(isMeal)) {
+      dismissCompanion(sim, n, 'Starving, you are left by')
       continue
     }
     if (c.kind === 'free' && n.opinion < 0) {
@@ -183,6 +229,20 @@ export function follow(sim: Sim, h: Human, dt: number, full: boolean) {
   const run = d > COMPANION.catchUpM || sim.player.moving === 'run'
   const speed = (run ? RUN_SPEED_MPS : WALK_SPEED_MPS * 1.1) * penalty(h.vitals)
   const r = steerTo(sim, h, t.x, t.z, speed, dt, 0.8, full)
+  if (r === 'stuck') {
+    // Unreachable (deep water, cliff): wait a while instead of pressing into the obstacle every tick.
+    const now = sim.state.time.play
+    h.ai.cooldowns.follow = now + COMPANION.stuckWaitS
+    if ((h.ai.cooldowns.followMsg ?? 0) <= now) {
+      h.ai.cooldowns.followMsg = now + COMPANION.stuckMsgS
+      sim.message(`${h.name} can't follow you here.`, 'bad')
+    }
+    h.moving = 'idle'
+    h.ai.goal = null
+    h.ai.steps = []
+    h.ai.replanAt = 0
+    return
+  }
   if (r === 'arrived' || d < COMPANION.followM * 0.6) {
     h.moving = 'idle'
     h.ai.goal = null

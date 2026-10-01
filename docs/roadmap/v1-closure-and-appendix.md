@@ -38,8 +38,10 @@ Wyjście z etapu 0: `pnpm check` + `pnpm e2e` zielone, FEATURES bez fałszywych 
 
 | Plan | Zakres |
 |---|---|
-| [economy--001--gathering-cooking-transport](../plans/economy--001--gathering-cooking-transport.md) | ścinanie → pień, rozbijanie skał (weryfikacja istniejącego), gotowanie przy ognisku/patelni/ruszcie z parametrami produktu, taczka/wózek |
-| [npc--001--trade-gifts-companions](../plans/npc--001--trade-gifts-companions.md) | handel z każdym NPC, prezenty i preferencje, towarzysze (najem/darmowe dołączenie), przekazanie i użycie ekwipunku |
+| [economy--001--gathering-cooking-transport](../plans/economy--001--gathering-cooking-transport.md) (done) | ścinanie → pień, rozbijanie skał (weryfikacja istniejącego), gotowanie przy ognisku/patelni/ruszcie z parametrami produktu, taczka/wózek |
+| [npc--001--trade-gifts-companions](../plans/npc--001--trade-gifts-companions.md) (done) | handel z każdym NPC, prezenty i preferencje, towarzysze (najem/darmowe dołączenie), przekazanie i użycie ekwipunku |
+
+**Wave 3 done (2026-10-01):** review [006](../reviews/2026-10-01--006--wave3-review.md) triaged — 11 fixed with regression tests, 1 rejected, 3 info/deferred.
 
 ## Fala 4 — oprawa wizualna
 
