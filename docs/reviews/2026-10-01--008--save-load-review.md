@@ -121,3 +121,15 @@ Oba pliki miały ID `007`: `agent-workflow-roi` oraz ten save/load. Zgodnie z `d
 Hotkey save przy działającej symulacji, brak mutexa zapisu, quota/transakcje IDB — zgodne z opisem w review / bez nowego High/Medium.
 
 — Grok / Scribe, 2026-10-01
+
+## Triage result (2026-10-01, session 4)
+
+| Finding | Verdict | Fix | Regression test (`src/game/save/save.test.ts`) |
+|---|---|---|---|
+| SAVE-07-1 incomplete saves crash in `Sim` | fixed | `save/validate.ts` `assertSaveShape` after migration; migration exceptions become `SaveError` (D-SAVE-4) | `SAVE-01: structurally broken saves are rejected as corrupted before a Sim is built` (9 malformed payloads) |
+| SAVE-07-2 slot id collision | fixed | `newSlotId` adds a session counter + random suffix (D-SAVE-5) | `SAVE-01: new slot ids stay unique for the same seed and the same millisecond` |
+| SAVE-07-3 migration fixtures | deferred | Historical per-version fixtures planned in `save--001` (D-SAVE-6); the v5→v6 carts test already exists (`review006.test.ts`), as Grok noted | — |
+| Grok #2 incomplete old-version save → `TypeError` in `migrate` | fixed | Same path as SAVE-07-1 (migration wrapped) | case `old-version-incomplete` in the test above |
+| Grok #3 `TerrainEdits.fromJSON` accepts wrong-length arrays | fixed | Validator checks each edit chunk length = `EDIT_N²` and finite values | case `terrain-edit-short` |
+
+Verification: `pnpm check` green (see PROGRESS); no format change, `SAVE_VERSION` stays 7.

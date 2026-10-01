@@ -84,14 +84,16 @@ export class Game {
   private audioEvents: SimEvent[] = []
   isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
+  /** Kept as a field so `stop()` can remove it if no gesture happened (no retained closure, review 009 F-05). */
+  private unlockAudio = () => this.audio.start()
+
   private constructor(canvas: HTMLCanvasElement, sim: Sim, renderer: Renderer, slot: string) {
     this.canvas = canvas
     this.sim = sim
     this.renderer = renderer
     this.slot = slot
-    const unlockAudio = () => this.audio.start()
-    window.addEventListener('pointerdown', unlockAudio, { once: true })
-    window.addEventListener('keydown', unlockAudio, { once: true })
+    window.addEventListener('pointerdown', this.unlockAudio, { once: true })
+    window.addEventListener('keydown', this.unlockAudio, { once: true })
     this.detach = attachControls(canvas, {
       onAction: (a) => this.onKey(a),
       onAttack: () => this.attack(),
@@ -157,12 +159,15 @@ export class Game {
     this.running = false
     cancelAnimationFrame(this.raf)
     this.detach()
+    window.removeEventListener('pointerdown', this.unlockAudio)
+    window.removeEventListener('keydown', this.unlockAudio)
     this.audio.dispose()
     document.exitPointerLock?.()
     this.renderer.gpu.dispose()
     this.renderer.renderer.dispose()
     // Release the WebGL context now (in-game "new game" remounts; browsers cap live contexts).
     this.renderer.renderer.forceContextLoss()
+    this.renderer.dispose()
   }
 
   /** One frame: input → sim → render → UI sync. Exposed for tests/benchmarks. */

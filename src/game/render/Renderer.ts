@@ -28,6 +28,7 @@ const DAY_SKY = new THREE.Color(0x9cc4e4)
 const DUSK_SKY = new THREE.Color(0xe0a070)
 const NIGHT_SKY = new THREE.Color(0x0b1224)
 const STORM_SKY = new THREE.Color(0x5a6470)
+const STORM_TMP = new THREE.Color()
 
 export class Renderer {
   renderer: THREE.WebGLRenderer
@@ -129,6 +130,16 @@ export class Renderer {
     }
   }
 
+  /**
+   * Drops the scene graph after the WebGL context was released (review 009 F-05). GPU resources go with
+   * the context; geometries created per chunk are disposed explicitly. Shared asset caches (`assets.ts`)
+   * are intentionally kept for the next game.
+   */
+  dispose() {
+    this.terrain.dispose()
+    this.scene.clear()
+  }
+
   resize(w: number, h: number) {
     this.renderer.setSize(w, h, false)
     this.rig.camera.aspect = w / Math.max(1, h)
@@ -167,7 +178,7 @@ export class Renderer {
     } else {
       const dusk = Math.max(0, 1 - Math.abs(dl - 0.35) * 3) * (dl > 0 && dl < 1 ? 1 : 0)
       this.sky.copy(NIGHT_SKY).lerp(DAY_SKY, dl).lerp(DUSK_SKY, dusk * 0.5)
-      this.sky.lerp(STORM_SKY.clone().multiplyScalar(0.3 + dl * 0.7), overcast)
+      this.sky.lerp(STORM_TMP.copy(STORM_SKY).multiplyScalar(0.3 + dl * 0.7), overcast)
       this.scene.background = this.sky
       fog.color.copy(this.sky)
       // Sun path (east → west), moonlight at night.

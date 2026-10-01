@@ -10,6 +10,7 @@ import { perf } from '../diag/perf'
 import { GEN_VERSION } from '../world/types'
 import { SaveError } from './errors'
 import { migrate } from './migrate'
+import { assertSaveShape } from './validate'
 
 export { SaveError } from './errors'
 export { checkWorldCompat, migrate } from './migrate'
@@ -118,8 +119,14 @@ export interface SaveRecord {
   json: string
 }
 
-/** Unique slot id for a new playthrough (a new game never overwrites an existing save). */
-export const newSlotId = (seed: number, now = Date.now()) => `slot-${seed}-${now.toString(36)}`
+let slotSeq = 0
+
+/**
+ * Unique slot id for a new playthrough (a new game never overwrites an existing save). Time alone is not
+ * identity: a per-session counter and a random suffix keep same-millisecond ids apart (review 008 SAVE-07-2).
+ */
+export const newSlotId = (seed: number, now = Date.now()) =>
+  `slot-${seed}-${now.toString(36)}-${(slotSeq++).toString(36)}${Math.floor(Math.random() * 36 ** 4).toString(36).padStart(4, '0')}`
 
 export async function writeSave(slot: string, state: GameState, info: SaveInfo = {}): Promise<SaveMeta> {
   const t0 = performance.now()
@@ -153,7 +160,15 @@ export async function readSave(slot: string): Promise<GameState> {
     throw new SaveError('The save is corrupted (unreadable data).')
   }
   if (!raw || typeof raw !== 'object' || typeof raw.saveVersion !== 'number' || !raw.player) throw new SaveError('The save is corrupted (required fields missing).')
-  const st = migrate(raw)
+  let st: GameState
+  try {
+    st = migrate(raw)
+  } catch (e) {
+    // A migration tripping over missing/wrong fields means a damaged save, not a game bug to surface.
+    if (e instanceof SaveError) throw e
+    throw new SaveError('The save is corrupted (migration failed on missing data).')
+  }
+  assertSaveShape(st)
   perf.record('save.read', performance.now() - t0)
   return st
 }

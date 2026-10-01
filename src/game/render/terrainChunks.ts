@@ -60,6 +60,9 @@ export class TerrainChunks {
   private terrain: Terrain
   private lods: { maxDist: number; step: number }[]
   private viewDist: number
+  private lastX = -1e9
+  private lastZ = -1e9
+  private pending = 1
 
   constructor(terrain: Terrain, q: QualitySettings) {
     this.terrain = terrain
@@ -80,6 +83,7 @@ export class TerrainChunks {
   setQuality(q: QualitySettings) {
     this.lods = q.lods.map((d, i) => ({ maxDist: d, step: STEPS[i]! }))
     this.viewDist = q.viewDist
+    this.lastX = -1e9 // re-evaluate the wanted chunks on the next update
   }
 
   markDirty(key: string) {
@@ -106,6 +110,14 @@ export class TerrainChunks {
       this.builtTint = this.seasonTint + this.snowCover * 2
       this.chunks.forEach((c) => this.dirty.add(c.key))
     }
+    // Steady state: nothing dirty or pending and the player barely moved → the wanted set cannot have
+    // changed; skip rebuilding it (no per-frame Map/sort allocation, review 009 F-04).
+    if (!this.dirty.size && this.pending === 0 && Math.hypot(px - this.lastX, pz - this.lastZ) < 4) {
+      perf.gauge('chunks.pending', 0)
+      return
+    }
+    this.lastX = px
+    this.lastZ = pz
     // Far rings use 2×2 "superchunks" (256 m) → ~4× fewer draw calls where detail is low.
     const SC = CHUNK_M * 2
     const psx = Math.floor(px / SC)
@@ -142,7 +154,7 @@ export class TerrainChunks {
     // Remove chunks out of range.
     for (const [k, c] of this.chunks) {
       if (!want.has(k)) {
-        this.dispose(c)
+        this.disposeChunk(c)
         this.chunks.delete(k)
       }
     }
@@ -158,18 +170,28 @@ export class TerrainChunks {
     for (const [k, w] of todo) {
       if (built > 0 && performance.now() - t0 > budgetMs) break
       const old = this.chunks.get(k)
-      if (old) this.dispose(old)
+      if (old) this.disposeChunk(old)
       const entry = perf.measure('chunks.build', () => this.build(w.cx, w.cz, w.lod, w.span))
       entry.key = k
       this.chunks.set(k, entry)
       this.dirty.delete(k)
       built++
     }
+    this.pending = Math.max(0, todo.length - built)
     perf.gauge('chunks.active', this.chunks.size)
-    perf.gauge('chunks.pending', Math.max(0, todo.length - built))
+    perf.gauge('chunks.pending', this.pending)
   }
 
-  private dispose(c: ChunkEntry) {
+  /** Releases every chunk geometry (game stop). */
+  dispose() {
+    this.chunks.forEach((c) => this.disposeChunk(c))
+    this.chunks.clear()
+    this.ocean.geometry.dispose()
+    this.mat.dispose()
+    this.waterMat.dispose()
+  }
+
+  private disposeChunk(c: ChunkEntry) {
     this.group.remove(c.mesh)
     c.mesh.geometry.dispose()
     if (c.water) {

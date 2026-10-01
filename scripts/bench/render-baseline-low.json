@@ -1,0 +1,80 @@
+{
+ "quality": "low",
+ "commit": "c5ed00c",
+ "date": "2026-10-01T09:15:29.052Z",
+ "note": "render.prep p95 per scene = higher of two clean runs (session 4, before render--002 steps 1-4); update only after two confirming runs with a recorded reason",
+ "scenes": {
+  "small-settlement": {
+   "prepP95": 3.82,
+   "prepMedian": 0.7,
+   "samples": 60,
+   "vegP95": 0,
+   "drawCalls": 148,
+   "programs": 10
+  },
+  "crowded-settlement": {
+   "prepP95": 6.14,
+   "prepMedian": 0.4,
+   "samples": 62,
+   "vegP95": 10.08,
+   "drawCalls": 147,
+   "programs": 11
+  },
+  "dense-forest": {
+   "prepP95": 1.8,
+   "prepMedian": 0.3,
+   "samples": 60,
+   "vegP95": 3.3,
+   "drawCalls": 58,
+   "programs": 11
+  },
+  "night-campfires": {
+   "prepP95": 1.39,
+   "prepMedian": 0.3,
+   "samples": 62,
+   "vegP95": 1.7,
+   "drawCalls": 133,
+   "programs": 11
+  },
+  "water-shore": {
+   "prepP95": 0.61,
+   "prepMedian": 0.2,
+   "samples": 60,
+   "vegP95": 4.2,
+   "drawCalls": 113,
+   "programs": 11
+  },
+  "rain": {
+   "prepP95": 2.62,
+   "prepMedian": 0.7,
+   "samples": 60,
+   "vegP95": 2.78,
+   "drawCalls": 141,
+   "programs": 12
+  },
+  "snow": {
+   "prepP95": 4.22,
+   "prepMedian": 1.31,
+   "samples": 60,
+   "vegP95": 8.77,
+   "drawCalls": 139,
+   "programs": 12
+  },
+  "march-10mps": {
+   "prepP95": 24.09,
+   "prepMedian": 3.01,
+   "samples": 56,
+   "vegP95": 22.7,
+   "drawCalls": 127,
+   "programs": 12
+  },
+  "teleport-hitch": {
+   "prepP95": 51.12,
+   "prepMedian": 10.08,
+   "samples": 17,
+   "vegP95": 41.94,
+   "drawCalls": 97,
+   "programs": 12
+  }
+ }
+}

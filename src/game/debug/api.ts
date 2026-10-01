@@ -134,5 +134,10 @@ export function installDebugApi(game: Game) {
       game.renderer.rig.yaw = p.rot
     },
   }
-  ;(window as unknown as { __sv: DebugApi }).__sv = api
+  const w = window as unknown as { __sv?: DebugApi }
+  w.__sv = api
+  // Uninstall on unmount so a stopped game is not kept alive by the global (review 009 F-05).
+  return () => {
+    if (w.__sv === api) delete w.__sv
+  }
 }

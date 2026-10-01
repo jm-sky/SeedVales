@@ -5,13 +5,19 @@
  * metric of D-PERF-2), terrain/vegetation/chunk work — and renderer.info counts (draw calls, triangles,
  * shader programs, lights). `render.draw`, RAF pacing, GPU time and FPS are NOT representative here.
  * Starts its own Vite server (no HMR) unless SV_URL is set.
- * Usage: pnpm bench:render [low|medium|high]
+ * Each scene starts from the same calendar time and clear weather; a scene whose locator finds no
+ * place fails the run. Results are compared with `scripts/bench/render-baseline-<quality>.json`
+ * (gate: `render.prep` p95 ≤ +10%; +10…+20% or < 20 samples = inconclusive, repeat; > +20% = regression).
+ * Usage: pnpm bench:render [low|medium|high] [--update-baseline]
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { startServer } from '../e2e/server.mjs'
 
-const quality = process.argv[2] ?? 'medium'
+const args = process.argv.slice(2)
+const quality = args.find((a) => !a.startsWith('--')) ?? 'medium'
+const updateBaseline = args.includes('--update-baseline')
+const BASELINE = path.resolve(import.meta.dirname, `render-baseline-${quality}.json`)
 const server = process.env.SV_URL ? null : await startServer()
 if (server) process.env.SV_URL = server.url
 const { launch, newGame, shot, sv } = await import('../e2e/lib.mjs')
@@ -28,8 +34,8 @@ const scenes = [
   ['dense-forest', (sv) => {
     const s = sv.game.sim
     sv.setHour(12)
-    for (let i = 0; i < 20000; i++) { const x = 500 + ((i * 97) % 7000); const z = 500 + ((i * 131) % 7000); if (s.terrain.biomeAt(x, z) === 7) return sv.teleport(x, z) }
-    sv.teleport(4000, 4000)
+    for (let i = 0; i < 20000; i++) { const x = 500 + ((i * 97) % 7000); const z = 500 + ((i * 131) % 7000); if (s.terrain.biomeAt(x, z) === 7) { sv.teleport(x, z); return true } }
+    return false
   }],
   ['night-campfires', (sv) => { const st = sv.game.sim.world.settlements[2]; sv.setHour(22); sv.teleport(st.x, st.z + 10) }],
   ['water-shore', (sv) => {
@@ -40,9 +46,11 @@ const scenes = [
       const z = 400 + ((i * 151) % 7400)
       if (t.waterDepthAt(x, z) > 0.8 && !t.isSeaAt(x, z) && t.waterDepthAt(x + 12, z) === 0) {
         sv.teleport(x + 14, z)
-        return sv.face(x, z)
+        sv.face(x, z)
+        return true
       }
     }
+    return false
   }],
   ['rain', (sv) => {
     const s = sv.game.sim
@@ -72,7 +80,7 @@ const collect = (name) => sv(page, (n) => {
     scene: n,
     frame: pick('frame'), raf: pick('raf.interval'), prep: pick('render.prep'), renderCpu: pick('render.cpu'), draw: pick('render.draw'),
     terrain: pick('render.terrain'), actors: pick('render.actors'), vegetation: pick('render.vegetationRebuild'), chunkBuild: pick('chunks.build'), sim: pick('sim.tick'),
-    drawCalls: r.gauges['render.drawCalls'], triangles: r.gauges['render.triangles'], programs: r.gauges['render.programs'], lights: r.gauges['render.lights'],
+    drawCalls: r.gauges['render.drawCalls'], triangles: r.gauges['render.triangles'], programs: r.gauges['render.programs'], lights: r.gauges['render.lights'], activeLights: r.gauges['render.pointLights'],
     geometries: r.gauges['render.geometries'], textures: r.gauges['render.textures'], chunks: r.gauges['chunks.active'],
     gpuTimer: r.gauges['gpu.timerAvailable'] === 1,
     heapMB: performance.memory ? +(performance.memory.usedJSHeapSize / 1e6).toFixed(1) : null,
@@ -106,9 +114,20 @@ async function measureFrames() {
   }
 }
 
+/** Same start for every scene (review 009 F-09): initial calendar time, clear weather, camera defaults. */
+const initialCal = await sv(page, () => window.__sv.game.sim.state.time.cal)
+const resetScene = () => sv(page, (cal) => {
+  const s = window.__sv.game.sim
+  s.state.time.cal = cal
+  Object.assign(s.state.weather, { kind: 'clear', intensity: 0, wetness: 0, fog: 0, until: cal + 30 * 86400 })
+  window.__sv.setHour(12)
+}, initialCal)
+
 const results = []
 for (const [name, setup] of scenes) {
-  await sv(page, (src) => new Function('sv', `(${src})(sv)`)(window.__sv), setup.toString())
+  await resetScene()
+  const ok = await sv(page, (src) => new Function('sv', `return (${src})(sv)`)(window.__sv), setup.toString())
+  if (ok === false) throw new Error(`bench:render — scene "${name}": locator found no place (seed changed?)`)
   await settle() // warm-up: chunk streaming, asset instancing, shader compilation
   await sv(page, () => window.__sv.perf.reset())
   await measureFrames()
@@ -117,6 +136,7 @@ for (const [name, setup] of scenes) {
 }
 
 // March: steady movement along the first road at 10 m/s for 30 s (chunk borders crossed; no teleport).
+await resetScene()
 await sv(page, () => {
   const s = window.__sv.game.sim
   s.state.weather.kind = 'clear'
@@ -170,16 +190,39 @@ await browser.close()
 await server?.close()
 
 const env = { quality, browser: 'Chrome headless + SwiftShader (software GPU)', date: new Date().toISOString(), note: 'gate metric: render.prep p95; render.draw/RAF/GPU/FPS not representative headless' }
-fs.writeFileSync(path.join(OUT, `render-${quality}-latest.json`), JSON.stringify({ env, results, consoleErrors: logs.filter((l) => l.startsWith('[error]') || l.startsWith('[pageerror]')) }, null, 1))
+const consoleErrors = logs.filter((l) => l.startsWith('[error]') || l.startsWith('[pageerror]'))
+fs.writeFileSync(path.join(OUT, `render-${quality}-latest.json`), JSON.stringify({ env, results, consoleErrors }, null, 1))
+
+// Baseline comparison (review 009 F-10): gate = render.prep p95; small samples or noise band = inconclusive.
+const base = fs.existsSync(BASELINE) ? JSON.parse(fs.readFileSync(BASELINE, 'utf8')) : null
+const verdict = (r) => {
+  const b = base?.scenes?.[r.scene]
+  if (!b || !r.prep) return '—'
+  if (r.prep.samples < 20) return `inconclusive (n=${r.prep.samples})`
+  const d = (r.prep.p95 - b.prepP95) / Math.max(0.1, b.prepP95)
+  const pct = `${d >= 0 ? '+' : ''}${Math.round(d * 100)}%`
+  return d <= 0.1 ? `ok ${pct}` : d <= 0.2 ? `inconclusive ${pct} (repeat)` : `⚠️ ${pct} (confirm)`
+}
 const f = (t) => (t ? `${t.median}/${t.p95}` : '—')
 const lines = [
   `# Render benchmark (${quality}, ${env.browser})`, '',
-  '| Scene | render.prep med/p95 | frame CPU | render.cpu | draw (SwiftShader) | terrain | veg rebuild | chunk build | draw calls | triangles | programs | lights | textures |',
-  '|---|---|---|---|---|---|---|---|---:|---:|---:|---:|---:|',
+  `Baseline: ${base ? `${path.basename(BASELINE)} (${base.commit}, ${base.date.slice(0, 10)})` : 'none'} · console errors: ${consoleErrors.length}`, '',
+  '| Scene | frames | render.prep med/p95 | vs baseline | frame CPU | render.cpu | draw (SwiftShader) | terrain | veg rebuild | chunk build | draw calls | triangles | programs | lights (active) | textures |',
+  '|---|---:|---|---|---|---|---|---|---|---|---:|---:|---:|---|---:|',
 ]
 for (const r of results) {
-  lines.push(`| ${r.scene} | ${f(r.prep)} | ${f(r.frame)} | ${f(r.renderCpu)} | ${f(r.draw)} | ${f(r.terrain)} | ${f(r.vegetation)}${r.vegetation ? ` (n=${r.vegetation.samples}, max ${r.vegetation.max})` : ''} | ${f(r.chunkBuild)} | ${r.drawCalls ?? '—'} | ${r.triangles ?? '—'} | ${r.programs ?? '—'} | ${r.lights ?? '—'} | ${r.textures ?? '—'} |`)
+  lines.push(`| ${r.scene} | ${r.prep?.samples ?? 0} | ${f(r.prep)} | ${verdict(r)} | ${f(r.frame)} | ${f(r.renderCpu)} | ${f(r.draw)} | ${f(r.terrain)} | ${f(r.vegetation)}${r.vegetation ? ` (n=${r.vegetation.samples}, max ${r.vegetation.max})` : ''} | ${f(r.chunkBuild)} | ${r.drawCalls ?? '—'} | ${r.triangles ?? '—'} | ${r.programs ?? '—'} | ${r.lights ?? '—'} (${r.activeLights ?? '—'}) | ${r.textures ?? '—'} |`)
 }
 const md = lines.join('\n')
 fs.writeFileSync(path.join(OUT, `render-${quality}-latest.md`), md)
 console.log(md)
+if (updateBaseline) {
+  const commit = (await import('node:child_process')).execSync('git rev-parse --short HEAD').toString().trim()
+  const scenesOut = Object.fromEntries(results.map((r) => [r.scene, { prepP95: r.prep?.p95 ?? 0, prepMedian: r.prep?.median ?? 0, samples: r.prep?.samples ?? 0, vegP95: r.vegetation?.p95 ?? 0, drawCalls: r.drawCalls, programs: r.programs }]))
+  fs.writeFileSync(BASELINE, `${JSON.stringify({ quality, commit, date: env.date, note: 'render.prep p95 per scene; update only after two confirming runs with a recorded reason', scenes: scenesOut }, null, 1)}\n`)
+  console.log(`Baseline updated: ${BASELINE}`)
+}
+if (consoleErrors.length) {
+  console.error(`bench:render — ${consoleErrors.length} console error(s):\n${consoleErrors.slice(0, 5).join('\n')}`)
+  process.exitCode = 1
+}

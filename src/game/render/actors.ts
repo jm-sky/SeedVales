@@ -18,6 +18,8 @@ import { isDown } from '../sim/combat'
 import { loadGltf } from './assets'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+/** Scratch vector for the per-frame interpolation (no allocation per actor, review 009 F-04). */
+const SIM_POS = new THREE.Vector3()
 const PLACEHOLDER_DIST = 320
 
 interface Visual {
@@ -324,8 +326,9 @@ export class Actors {
       }
       // Smooth interpolation towards sim position (sim ticks at LOD rate).
       const k = Math.min(1, dt * (a.kind === 'player' ? 30 : 10))
-      v.pos.lerp(new THREE.Vector3(a.x, a.y, a.z), k)
-      if (v.pos.distanceTo(new THREE.Vector3(a.x, a.y, a.z)) > 6) v.pos.set(a.x, a.y, a.z)
+      SIM_POS.set(a.x, a.y, a.z)
+      v.pos.lerp(SIM_POS, k)
+      if (v.pos.distanceTo(SIM_POS) > 6) v.pos.copy(SIM_POS)
       let dr = a.rot - v.rot
       while (dr > Math.PI) dr -= Math.PI * 2
       while (dr < -Math.PI) dr += Math.PI * 2

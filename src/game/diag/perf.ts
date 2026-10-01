@@ -1,5 +1,5 @@
 /**
- * Shared lightweight diagnostics: timers with bounded ring buffers, gauges and counters.
+ * Shared lightweight diagnostics: timers (whole-run log histograms), gauges and counters.
  * CPU timings (performance.now). GPU time comes from render/gpuTimer when the browser exposes
  * EXT_disjoint_timer_query_webgl2 (recorded as `gpu.frame`); otherwise there is no GPU data.
  * @domain diag
@@ -8,7 +8,11 @@
 /**
  * Quantiles come from a log-bucket histogram of the whole run (since the last reset), so median/p95/p99,
  * max, mean and overBudget all describe the same window (PERF-02). Bucket width 2% → quantile error ≤ 2%.
+ * Percentiles use the nearest-rank convention: pN = the ⌈N/100 · n⌉-th smallest sample (clamped to the
+ * observed min/max), so with few samples p95 is not automatically the max. Shares above the frame-pacing
+ * thresholds (16.7 / 33.3 / 50 ms) are counted exactly; other thresholds are bucket-approximate.
  */
+const FRAME_THRESHOLDS = [16.7, 33.3, 50] as const
 const H_MIN = 1e-3
 const H_STEP = Math.log(1.02)
 const H_BUCKETS = Math.ceil(Math.log(1e5 / H_MIN) / H_STEP) + 1
@@ -35,6 +39,9 @@ class Timer {
   overBudget = 0
   total = 0
   max = 0
+  min = Infinity
+  /** Exact counts of samples strictly above FRAME_THRESHOLDS. */
+  above = new Uint32Array(FRAME_THRESHOLDS.length)
   name: string
   budget?: number
   constructor(name: string, budget?: number) {
@@ -47,25 +54,33 @@ class Timer {
     this.count++
     this.total += v
     if (v > this.max) this.max = v
+    if (v < this.min) this.min = v
+    for (let i = 0; i < FRAME_THRESHOLDS.length; i++) if (v > FRAME_THRESHOLDS[i]!) this.above[i]!++
     if (this.budget !== undefined && v > this.budget) this.overBudget++
   }
 
   quantile(p: number): number {
     if (!this.count) return 0
-    const target = Math.min(this.count - 1, Math.floor(p * this.count))
+    // Nearest rank (zero-based index ⌈p·n⌉ − 1).
+    const target = Math.min(this.count - 1, Math.max(0, Math.ceil(p * this.count) - 1))
     let acc = 0
     for (let i = 0; i < H_BUCKETS; i++) {
       acc += this.hist[i]!
-      if (acc > target) return Math.min(this.max, bucketValue(i))
+      if (acc > target) return Math.max(this.min, Math.min(this.max, bucketValue(i)))
     }
     return this.max
   }
 
-  /** Share of samples above `ms` (bucket resolution). */
+  /**
+   * Share of samples strictly above `ms`: exact for FRAME_THRESHOLDS, otherwise bucket-approximate and
+   * conservative (the bucket containing `ms` counts as above).
+   */
   shareAbove(ms: number): number {
     if (!this.count) return 0
+    const k = FRAME_THRESHOLDS.indexOf(ms as (typeof FRAME_THRESHOLDS)[number])
+    if (k >= 0) return this.above[k]! / this.count
     let n = 0
-    for (let i = bucketOf(ms) + 1; i < H_BUCKETS; i++) n += this.hist[i]!
+    for (let i = bucketOf(ms); i < H_BUCKETS; i++) n += this.hist[i]!
     return n / this.count
   }
 

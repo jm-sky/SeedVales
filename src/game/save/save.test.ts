@@ -158,4 +158,32 @@ describe('save / load', () => {
     expect(sim.state.terrainEdits).toBe(live)
     expect(Object.keys(snap.terrainEdits).length).toBeGreaterThan(0)
   })
+
+  it('SAVE-01: structurally broken saves are rejected as corrupted before a Sim is built (review 008 SAVE-07-1)', async () => {
+    const sim = testSim()
+    const good = JSON.parse(JSON.stringify(snapshot(sim))) as Record<string, unknown>
+    const cases: [string, (st: Record<string, unknown>) => unknown][] = [
+      ['bare', () => ({ saveVersion: SAVE_VERSION, seed: 1, time: { cal: 0, play: 0 }, player: {} })],
+      ['no-npcs', (st) => { delete st.npcs; return st }],
+      ['animals-not-array', (st) => { st.animals = {}; return st }],
+      ['no-px', (st) => { delete st.px; return st }],
+      ['time-nan', (st) => { st.time = { cal: 'x', play: 0 }; return st }],
+      ['player-no-inv', (st) => { (st.player as Record<string, unknown>).inv = null; return st }],
+      ['npc-bad-pos', (st) => { (st.npcs as Record<string, unknown>[])[0]!.x = null; return st }],
+      ['terrain-edit-short', (st) => { st.terrainEdits = { '3,4': [1, 2, 3] }; return st }],
+      ['old-version-incomplete', (st) => { st.saveVersion = 1; delete st.settlements; delete st.buildings; return st }],
+    ]
+    for (const [name, mutate] of cases) {
+      const st = mutate(JSON.parse(JSON.stringify(good)))
+      await writeSave(`bad-${name}`, st as never)
+      await expect(readSave(`bad-${name}`), name).rejects.toThrow(SaveError)
+      await expect(readSave(`bad-${name}`), name).rejects.toThrow(/corrupted/)
+      await deleteSave(`bad-${name}`)
+    }
+  })
+
+  it('SAVE-01: new slot ids stay unique for the same seed and the same millisecond (review 008 SAVE-07-2)', () => {
+    const ids = new Set(Array.from({ length: 200 }, () => newSlotId(1337, 1000)))
+    expect(ids.size).toBe(200)
+  })
 })

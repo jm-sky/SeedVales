@@ -36,6 +36,8 @@ const STORM = C(0x5a6470)
 const SUN_DAY = C(0xfff2dd)
 const SUN_DUSK = C(0xffb27a)
 const MOON = C(0x8899cc)
+const HEMI_SKY = C(0xbfd8ff)
+const STORM_TMP = new THREE.Color()
 
 export function overcastOf(w: WeatherState): number {
   return w.kind === 'clear' ? 0 : w.kind === 'overcast' ? 0.4 : 0.7
@@ -51,7 +53,7 @@ export function atmosphere(dl: number, hour: number, w: WeatherState, out?: Atmo
   const dusk = Math.max(0, 1 - Math.abs(dl - 0.35) * 3) * (dl > 0 && dl < 1 ? 1 : 0)
   a.zenith.copy(ZENITH_NIGHT).lerp(ZENITH_DAY, dl).lerp(ZENITH_DUSK, dusk * 0.4)
   a.horizon.copy(HORIZON_NIGHT).lerp(HORIZON_DAY, dl).lerp(HORIZON_DUSK, dusk * 0.55)
-  const storm = STORM.clone().multiplyScalar(0.25 + dl * 0.75)
+  const storm = STORM_TMP.copy(STORM).multiplyScalar(0.25 + dl * 0.75)
   a.zenith.lerp(storm, overcast)
   a.horizon.lerp(storm, overcast * 0.9)
   a.fog.copy(a.horizon)
@@ -64,7 +66,7 @@ export function atmosphere(dl: number, hour: number, w: WeatherState, out?: Atmo
   a.sunColor.copy(dl > 0.2 ? SUN_DAY : MOON)
   if (dl > 0.2) a.sunColor.lerp(SUN_DUSK, dusk * 0.6)
   a.sunIntensity = dl * 2.2 * (1 - overcast * 0.6) + 0.12
-  a.hemiSky.copy(a.zenith).lerp(C(0xbfd8ff), 0.5)
+  a.hemiSky.copy(a.zenith).lerp(HEMI_SKY, 0.5)
   a.hemiGround.set(0x5a4a30)
   a.hemiIntensity = 0.35 + dl * 0.9 * (1 - overcast * 0.3)
   a.overcast = overcast

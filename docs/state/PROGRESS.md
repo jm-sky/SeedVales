@@ -5,7 +5,7 @@
 ## Teraz
 
 - **D-LANG-1 (2026-10-01): English everywhere** — UI, proper names (English first name + occupational surname; home guard = Mark Hornblower), docs, plans, comments. Polish docs are legacy. Open follow-up: switch NPC/settlement name pools in code to English (`GEN_VERSION` bump).
-- Verification (latest, 2026-10-01, session 4 after review 006 triage): `pnpm check` 160/160, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
+- Verification (latest, 2026-10-01, session 4 after reviews 006/008/009 triage): `pnpm check` 165/165, `pnpm e2e:run`: acceptance 30/30, mobile 10/10, smoke 3/3, 0 console errors; `check-layers` OK; `bench:sim` within budget (p95 flags vs the old baseline also appear on unmodified `ffa2380` — whole-run quantiles; baseline refresh pending in `render--002` step 0).
 - Formats: `SAVE_VERSION` 7, `GEN_VERSION` 7.
 - v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
 - Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done (review 006 triaged); 4a `render--002` in progress (step 0 code done, step 2 started), 4b `render--001`, 5, 6 — not started.
@@ -52,4 +52,7 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 
 - **Review 006 triaged (2026-10-01):** 11 fixed with failing-first regression tests (`src/game/sim/review006.test.ts`, 14 tests), #11 rejected (D-NPC-8), #13–#15 info/deferred (D-TRANS-2, D-ECON-5 note, D-UI-5). New decisions D-NPC-6 (companions live from their pack away from home, persistent `follow` step, stuck cooldown), D-NPC-7 (trading away from home uses the pack only), D-ECON-4 (symmetric warehouse goodwill), D-ECON-5 (no circular-trade profit), D-FOOD-3 updated (spoiled meat stays spoiled). No save format change (`ai.cooldowns` keys only). Wave 3 → done.
 - e2e harness fixes found on the way: acceptance 17 targeted the closest villager instead of the son (pinned by id now; float tolerance on the contract length); acceptance 8b missed rats the nest bred during the repair (kill loop runs again after the repair).
+- **render--002 step 0 done:** clean baselines (PERF.md in English, device checklist ❓ user); `bench:render` measures ≥ 60 frames; render baseline files + verdict (D-PERF-3). March vegetation rebuild p95 9.8–38.7 ms > 8 ms → step 1 needed.
+- **Review 008 (save/load, arrived on main) triaged:** SAVE-07-1 fixed (structural validation after migration, D-SAVE-4), SAVE-07-2 fixed (collision-proof slot ids, D-SAVE-5), SAVE-07-3 deferred to plan `save--001` (D-SAVE-6); Grok's extra notes fixed via the same validator.
+- **Review 009 (render performance, arrived on main as `docs/review/…`, filed as 009) triaged:** F-03/F-04/F-05/F-10/F-11 fixed, F-01 → render--002 step 1, the measurement-tooling rest → plan `diag--002`; F-06/F-07/F-16 conditional / user step.
 

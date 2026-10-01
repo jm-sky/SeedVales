@@ -15,6 +15,16 @@ import { sharedColorMat } from './assets'
 
 const MAX_LIGHTS = 6
 
+// Scratch objects for the per-frame update.
+const M = new THREE.Matrix4()
+const POS = new THREE.Vector3()
+const SCL = new THREE.Vector3()
+const DIR = new THREE.Vector3()
+const ONE = new THREE.Vector3(1, 1, 1)
+const AXIS_Z = new THREE.Vector3(0, 0, 1)
+const Q0 = new THREE.Quaternion()
+const QR = new THREE.Quaternion()
+
 const ITEM_COL = new THREE.Color(0xc8a060)
 const STONE_COL = new THREE.Color(0x8c8a84)
 
@@ -30,6 +40,10 @@ export class Dynamics {
   private rainPos: Float32Array
   private sim: Sim
   private cropTimer = 0
+  /** Reused per-frame buffers (no allocation in the frame loop, review 009 F-04). */
+  private fireBuf: { pos: THREE.Vector3; d2: number }[] = []
+  private seen = new Set<number>()
+  private activeLights = 0
   playerLight: THREE.PointLight
 
   constructor(sim: Sim) {
@@ -67,7 +81,7 @@ export class Dynamics {
   update(dt: number, camPos: THREE.Vector3) {
     const sim = this.sim
     const p = sim.player
-    const m = new THREE.Matrix4()
+    const m = M
     // Crops (refresh every 2 s).
     this.cropTimer -= dt
     if (this.cropTimer <= 0) {
@@ -78,12 +92,13 @@ export class Dynamics {
         const s = 0.2 + b.field.growth
         const c = Math.cos(b.rot)
         const si = Math.sin(b.rot)
+        SCL.set(s, s * (b.field.crop === 'grain' ? 1.6 : 1), s)
         for (let x = -b.hw + 0.8; x < b.hw; x += 1.3) {
           for (let z = -b.hd + 0.8; z < b.hd; z += 1.1) {
             if (n >= 6000) break
             const wx = b.x + x * c + z * si
             const wz = b.z - x * si + z * c
-            m.compose(new THREE.Vector3(wx, sim.terrain.heightAt(wx, wz), wz), new THREE.Quaternion(), new THREE.Vector3(s, s * (b.field.crop === 'grain' ? 1.6 : 1), s))
+            m.compose(POS.set(wx, sim.terrain.heightAt(wx, wz), wz), Q0, SCL)
             this.crops.setMatrixAt(n++, m)
           }
         }
@@ -91,39 +106,53 @@ export class Dynamics {
       this.crops.count = n
       this.crops.instanceMatrix.needsUpdate = true
     }
-    // Fires & lights.
-    const fires: THREE.Vector3[] = []
-    for (const b of sim.buildingsNear(p.x, p.z, 200)) {
-      if ((b.kind === 'campfire' || b.kind === 'torchpost') && b.lit) fires.push(new THREE.Vector3(b.x, sim.terrain.heightAt(b.x, b.z) + (b.kind === 'torchpost' ? 2.5 : 0.1), b.z))
+    // Fires & lights — buildings and dropped torches in range only (spatial queries, review 009 F-03).
+    let nf = 0
+    const fire = (x: number, y: number, z: number) => {
+      const f = (this.fireBuf[nf++] ??= { pos: new THREE.Vector3(), d2: 0 })
+      f.pos.set(x, y, z)
+      f.d2 = f.pos.distanceToSquared(camPos)
     }
-    for (const g of sim.state.ground) if (g.lit) fires.push(new THREE.Vector3(g.x, sim.terrain.heightAt(g.x, g.z) + 0.1, g.z))
+    for (const b of sim.buildingsNear(p.x, p.z, 200)) {
+      if ((b.kind === 'campfire' || b.kind === 'torchpost') && b.lit) fire(b.x, sim.terrain.heightAt(b.x, b.z) + (b.kind === 'torchpost' ? 2.5 : 0.1), b.z)
+    }
+    for (const g of sim.groundNear(p.x, p.z, 200)) if (g.lit) fire(g.x, sim.terrain.heightAt(g.x, g.z) + 0.1, g.z)
+    const fires = this.fireBuf
     const flick = 0.85 + Math.sin(performance.now() / 90) * 0.1
-    fires.forEach((f, i) => {
-      if (i >= 200) return
-      m.compose(f, new THREE.Quaternion(), new THREE.Vector3(1, flick, 1).multiplyScalar(f.y > 1 && fires.length ? 0.6 : 1))
+    const nFlames = Math.min(200, nf)
+    for (let i = 0; i < nFlames; i++) {
+      const f = fires[i]!.pos
+      const k = f.y > 1 ? 0.6 : 1
+      m.compose(f, Q0, SCL.set(k, flick * k, k))
       this.flames.setMatrixAt(i, m)
-    })
-    this.flames.count = Math.min(200, fires.length)
+    }
+    this.flames.count = nFlames
     this.flames.instanceMatrix.needsUpdate = true
     const night = isNight(sim.state.time.cal) ? 1 : 0.25
-    fires.sort((a, b) => a.distanceToSquared(camPos) - b.distanceToSquared(camPos))
+    // Nearest fires get the pooled lights (partial selection — only MAX_LIGHTS are needed).
+    for (let i = 0; i < Math.min(MAX_LIGHTS, nf); i++) {
+      let best = i
+      for (let j = i + 1; j < nf; j++) if (fires[j]!.d2 < fires[best]!.d2) best = j
+      if (best !== i) [fires[i], fires[best]] = [fires[best]!, fires[i]!]
+    }
+    let active = 0
     this.lights.forEach((l, i) => {
-      const f = fires[i]
-      if (f) {
-        l.position.copy(f).add(new THREE.Vector3(0, 0.6, 0))
+      if (i < nf) {
+        l.position.copy(fires[i]!.pos).y += 0.6
         l.intensity = 14 * night * flick
+        active++
       } else l.intensity = 0
     })
     // Player torch.
     const torch = p.eq.off?.id === 'torch' || p.eq.main?.id === 'torch'
     this.playerLight.intensity = torch ? 16 * flick * (1 - daylight(sim.state.time.cal) * 0.85) : 0
     this.playerLight.position.set(p.x, p.y + 1.8, p.z)
-    // Ground items.
+    // Ground items in range.
     let n = 0
-    for (const g of sim.state.ground) {
-      if (n >= 400 || Math.abs(g.x - p.x) > 150 || Math.abs(g.z - p.z) > 150) continue
+    for (const g of sim.groundNear(p.x, p.z, 150)) {
+      if (n >= 400) break
       const s = itemDef(g.stack.id).weight > 5 ? 2.5 : 1
-      m.compose(new THREE.Vector3(g.x, groundHeight(sim, g.x, g.z), g.z), new THREE.Quaternion(), new THREE.Vector3(s, s, s))
+      m.compose(POS.set(g.x, groundHeight(sim, g.x, g.z), g.z), Q0, SCL.set(s, s, s))
       this.items.setColorAt(n, g.stack.id === 'stone' || g.stack.id === 'rock_chunk' ? STONE_COL : ITEM_COL)
       this.items.setMatrixAt(n++, m)
     }
@@ -134,16 +163,16 @@ export class Dynamics {
     n = 0
     for (const pr of sim.projectiles) {
       if (n >= 64) break
-      const dir = new THREE.Vector3(pr.vx, pr.vy, pr.vz).normalize()
-      m.compose(new THREE.Vector3(pr.x, pr.y, pr.z), new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir), new THREE.Vector3(1, 1, 1))
+      DIR.set(pr.vx, pr.vy, pr.vz).normalize()
+      m.compose(POS.set(pr.x, pr.y, pr.z), QR.setFromUnitVectors(AXIS_Z, DIR), ONE)
       this.arrows.setMatrixAt(n++, m)
     }
     this.arrows.count = n
     this.arrows.instanceMatrix.needsUpdate = true
-    // Corpses.
-    const seen = new Set<number>()
-    for (const c of sim.state.corpses) {
-      if (Math.abs(c.x - p.x) > 200 || Math.abs(c.z - p.z) > 200) continue
+    // Corpses in range.
+    const seen = this.seen
+    seen.clear()
+    for (const c of sim.corpsesNear(p.x, p.z, 200)) {
       seen.add(c.id)
       let o = this.corpses.get(c.id)
       if (!o) {
@@ -161,6 +190,7 @@ export class Dynamics {
         this.corpses.delete(id)
       }
     }
+    this.activeLights = active
     // Precipitation around camera.
     const w = sim.weather
     const wet = w.kind === 'rain' || w.kind === 'storm' || w.kind === 'snow'
@@ -180,6 +210,6 @@ export class Dynamics {
       this.rain.position.set(camPos.x, camPos.y, camPos.z)
       ;(this.rain.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
     }
-    perf.gauge('render.pointLights', this.lights.filter((l) => l.intensity > 0).length)
+    perf.gauge('render.pointLights', this.activeLights + (this.playerLight.intensity > 0 ? 1 : 0))
   }
 }

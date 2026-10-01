@@ -18,6 +18,7 @@ const loading = ref('Preparing…')
 const error = ref('')
 const { game, version } = provideGame()
 let ro: ResizeObserver | null = null
+let uninstallDebug: (() => void) | null = null
 
 onMounted(async () => {
   const c = canvas.value!
@@ -26,7 +27,7 @@ onMounted(async () => {
     game.value = g
     g.onUi(() => version.value++)
     g.applySettings({ ...loadSettings(g.isTouch), quality: props.request.quality ?? loadSettings(g.isTouch).quality })
-    installDebugApi(g)
+    uninstallDebug = installDebugApi(g)
     ro = new ResizeObserver(() => g.renderer.resize(c.clientWidth, c.clientHeight))
     ro.observe(c)
     g.start()
@@ -39,6 +40,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   ro?.disconnect()
+  uninstallDebug?.()
   game.value?.stop()
 })
 </script>
