@@ -4,7 +4,7 @@
 **Model:** sonnet — generator change, tests, calibration re-check; opus — look keep/drop from the A/B frames  
 **Domain:** world  
 **Sub domains:** generator, terrain, roads, settlements  
-**Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) — wave 4n "nature pass", first item (before [`render--006`](render--006--nature-pass.md) grass/trees, which sit on this terrain)  
+**Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) — wave 4n "nature pass", first item (before [`render--007`](render--007--nature-pass.md) grass/trees, which sit on this terrain)  
 **Created:** 2026-10-01 (session 8, user feedback: "terrain might be too flat")  
 **Finished:** —
 

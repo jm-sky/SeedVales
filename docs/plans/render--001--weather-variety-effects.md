@@ -12,7 +12,7 @@
 ---
 
 Source: [VISION-APPENDIX.md](../VISION-APPENDIX.md) — "Character models", "Animals", "Traces", "Weather", "Graphics direction". Research: [002](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md), [review 005](../reviews/2026-10-01--005--rendering-research-critical-review.md).
-FEATURES: `RENDER-03`, `TRACE-01` (render), `WEATHER-01`, `WEATHER-02`, `CHAR-01`, `FAUNA-09` (`RENDER-05` moved to `render--006`).
+FEATURES: `RENDER-03`, `TRACE-01` (render), `WEATHER-01`, `WEATHER-02`, `CHAR-01`, `FAUNA-09` (`RENDER-05` moved to `render--007`).
 Decisions: **D-REN-5** (effects behind quality profiles), **D-REN-7** (no point-light shadows, fixed light pool per profile, at most one post pass), **D-REN-13** (terrain shader path is the default), **D-FIRE-1** (fire sim), **D-PERF-2/3/5** (what headless can and cannot prove).
 
 **Dependency:** `render--002` exit gate (closed in the cloud on 2026-10-01; WSL numbers ❓ user — see that plan). Steps 4 (CHAR-01) and 5 (FAUNA-09) do not depend on the foundation.
@@ -31,7 +31,7 @@ Decisions: **D-REN-5** (effects behind quality profiles), **D-REN-7** (no point-
 
 Step numbers are kept (other plans and the roadmap cite them); execute in this order:
 
-**(after `world--002` + `render--006`) 1a → 1b → 8 → 3 → 2 → 4 → 5**
+**(after `world--002` + `render--007`) 1a → 1b → 8 → 3 → 2 → 4 → 5**
 
 Reasoning: the nature pass comes first (user, 2026-10-01: grass/trees/water fill most of the screen); then fire (1) — an effect the user explicitly asked for — consuming the newest sim state; decals (8) are small and consume the same sim hand-off; wet/snow (3) is a few uniforms on the material that is now the default; clouds/precipitation (2) need the sky material only; variety (4, 5) is independent.
 
@@ -108,9 +108,9 @@ Hair colour (blond/brown/black/red/grey), beard/no beard (render--005 step 3 hai
 
 Young: scale down; prime/alpha: scale up + ~10 % darker. Needs sim traits `young`/`prime` (shared with sim--001 step 3); if `prime` is new saved state → `SAVE_VERSION` bump (no migration, D-SAVE-7) — coordinate with `world--001` step 3 (8 → 9) so the two do not collide (whichever lands second bumps again). All fauna is rigged now (D-REN-12), scale/tint does not touch the rig.
 
-### 6, 7, 9 — moved to [`render--006`](render--006--nature-pass.md) (session 8, user: nature first)
+### 6, 7, 9 — moved to [`render--007`](render--007--nature-pass.md) (session 8, user: nature first)
 
-Vegetation wind (6) is `render--006` step 1 (shared wind module for grass and trees), water (7) is `render--006` step 4 (now with transparency/depth colour and a planar reflection on high — user decision), ground clumps (9) became real grass (`render--006` step 2). Numbers kept here so older references resolve.
+Vegetation wind (6) is `render--007` step 1 (shared wind module for grass and trees), water (7) is `render--007` step 4 (now with transparency/depth colour and a planar reflection on high — user decision), ground clumps (9) became real grass (`render--007` step 2). Numbers kept here so older references resolve.
 
 ## Light and overdraw budget (whole wave)
 

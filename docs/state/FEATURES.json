@@ -908,7 +908,7 @@
    "behavior": "Życie sceny: roślinność porusza się na wietrze (czas renderu, siła z pogody, zgodne cienie); woda z normalnymi, Fresnelem i odbiciem nieba bez drugiego renderu sceny; water transparent with depth colour and shore fade, planar reflection on high only (D-REN-14)",
    "verify": "zrzuty/film sceny las + brzeg wody + bench:render",
    "status": "planned",
-   "evidence": "plan: docs/plans/render--006--nature-pass.md (steps 1, 4; moved from render--001 steps 6–7, D-REN-14)"
+   "evidence": "plan: docs/plans/render--007--nature-pass.md (steps 1, 4; moved from render--001 steps 6–7, D-REN-14)"
   },
   {
    "id": "RENDER-06",
@@ -917,7 +917,7 @@
    "behavior": "Grass on the ground: instanced blade clumps near the camera with distance LOD (dense blades → crossed-quad clumps → terrain colour), placed from biome/road/slope/footprint masks, wind in the shader, season tint and hidden under snow; per-profile rings and caps",
    "verify": "A/B frames meadow-grass/summer/autumn/winter on 3 seeds + bench:render per profile (cloud same container; WSL ❓ user) + caps test",
    "status": "planned",
-   "evidence": "plan: docs/plans/render--006--nature-pass.md step 2 (D-REN-14)"
+   "evidence": "plan: docs/plans/render--007--nature-pass.md step 2 (D-REN-14)"
   },
   {
    "id": "RENDER-07",
@@ -926,7 +926,7 @@
    "behavior": "Trees with branches and alpha-cutout leaf cards (CC0/CC-BY models, LOD0/LOD1, wind), real models to ~120 m medium / ~200 m high, baked multi-view impostors beyond with a dithered transition (no procedural cone/blob impostors)",
    "verify": "A/B frames forest-edge/dense-forest/meadow-hills + draw calls/render.prep per profile + asset budget table",
    "status": "planned",
-   "evidence": "plan: docs/plans/render--006--nature-pass.md step 3 (D-REN-14)"
+   "evidence": "plan: docs/plans/render--007--nature-pass.md step 3 (D-REN-14)"
   },
   {
    "id": "WORLD-11",
