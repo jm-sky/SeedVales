@@ -8,16 +8,23 @@
  * Each scene starts from the same calendar time and clear weather; a scene whose locator finds no
  * place fails the run. Results are compared with `scripts/bench/render-baseline-<quality>.json`
  * (gate: `render.prep` p95 ≤ +10%; +10…+20% or < 20 samples = inconclusive, repeat; > +20% = regression).
- * Usage: pnpm bench:render [low|medium|high] [--update-baseline]
+ * A baseline is valid only on the machine it was taken on (D-PERF-2: comparable within one environment);
+ * on another machine the verdict is `n/a` — measure a reference commit there and pass it with
+ * `--baseline=<file>` (e.g. a run of the older commit with `--update-baseline` in a worktree).
+ * Usage: pnpm bench:render [low|medium|high] [--update-baseline] [--baseline=<file>]
  */
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { startServer } from '../e2e/server.mjs'
 
 const args = process.argv.slice(2)
 const quality = args.find((a) => !a.startsWith('--')) ?? 'medium'
 const updateBaseline = args.includes('--update-baseline')
-const BASELINE = path.resolve(import.meta.dirname, `render-baseline-${quality}.json`)
+const baselineArg = args.find((a) => a.startsWith('--baseline='))?.slice('--baseline='.length)
+const BASELINE = baselineArg ? path.resolve(baselineArg) : path.resolve(import.meta.dirname, `render-baseline-${quality}.json`)
+/** Machine fingerprint: CPU model × logical cores (render baselines are per machine). */
+const MACHINE = `${os.cpus()[0]?.model.trim() ?? 'unknown'} ×${os.cpus().length}`
 const server = process.env.SV_URL ? null : await startServer()
 if (server) process.env.SV_URL = server.url
 const { launch, newGame, shot, sv } = await import('../e2e/lib.mjs')
@@ -189,14 +196,16 @@ results.push(await collect('teleport-hitch'))
 await browser.close()
 await server?.close()
 
-const env = { quality, browser: 'Chrome headless + SwiftShader (software GPU)', date: new Date().toISOString(), note: 'gate metric: render.prep p95; render.draw/RAF/GPU/FPS not representative headless' }
+const env = { quality, machine: MACHINE, browser: 'Chrome headless + SwiftShader (software GPU)', date: new Date().toISOString(), note: 'gate metric: render.prep p95; render.draw/RAF/GPU/FPS not representative headless' }
 const consoleErrors = logs.filter((l) => l.startsWith('[error]') || l.startsWith('[pageerror]'))
 fs.writeFileSync(path.join(OUT, `render-${quality}-latest.json`), JSON.stringify({ env, results, consoleErrors }, null, 1))
 
 // Baseline comparison (review 009 F-10): gate = render.prep p95; small samples or noise band = inconclusive.
 const base = fs.existsSync(BASELINE) ? JSON.parse(fs.readFileSync(BASELINE, 'utf8')) : null
+const sameMachine = !!base && base.machine === MACHINE
 const verdict = (r) => {
   const b = base?.scenes?.[r.scene]
+  if (b && !sameMachine) return 'n/a (other machine)'
   if (!b || !r.prep) return '—'
   if (r.prep.samples < 20) return `inconclusive (n=${r.prep.samples})`
   const d = (r.prep.p95 - b.prepP95) / Math.max(0.1, b.prepP95)
@@ -206,7 +215,8 @@ const verdict = (r) => {
 const f = (t) => (t ? `${t.median}/${t.p95}` : '—')
 const lines = [
   `# Render benchmark (${quality}, ${env.browser})`, '',
-  `Baseline: ${base ? `${path.basename(BASELINE)} (${base.commit}, ${base.date.slice(0, 10)})` : 'none'} · console errors: ${consoleErrors.length}`, '',
+  `Machine: ${MACHINE} · baseline: ${base ? `${path.basename(BASELINE)} (${base.commit}, ${base.date.slice(0, 10)}, ${base.machine ?? 'machine unknown'})` : 'none'} · console errors: ${consoleErrors.length}`,
+  ...(base && !sameMachine ? ['', `**Baseline is from another machine — no verdict.** Measure a reference commit on this machine and pass \`--baseline=<file>\`.`] : []), '',
   '| Scene | frames | render.prep med/p95 | vs baseline | frame CPU | render.cpu | draw (SwiftShader) | terrain | veg rebuild | chunk build | draw calls | triangles | programs | lights (active) | textures |',
   '|---|---:|---|---|---|---|---|---|---|---|---:|---:|---:|---|---:|',
 ]
@@ -219,7 +229,7 @@ console.log(md)
 if (updateBaseline) {
   const commit = (await import('node:child_process')).execSync('git rev-parse --short HEAD').toString().trim()
   const scenesOut = Object.fromEntries(results.map((r) => [r.scene, { prepP95: r.prep?.p95 ?? 0, prepMedian: r.prep?.median ?? 0, samples: r.prep?.samples ?? 0, vegP95: r.vegetation?.p95 ?? 0, drawCalls: r.drawCalls, programs: r.programs }]))
-  fs.writeFileSync(BASELINE, `${JSON.stringify({ quality, commit, date: env.date, note: 'render.prep p95 per scene; update only after two confirming runs with a recorded reason', scenes: scenesOut }, null, 1)}\n`)
+  fs.writeFileSync(BASELINE, `${JSON.stringify({ quality, commit, machine: MACHINE, date: env.date, note: 'render.prep p95 per scene; update only after two confirming runs with a recorded reason', scenes: scenesOut }, null, 1)}\n`)
   console.log(`Baseline updated: ${BASELINE}`)
 }
 if (consoleErrors.length) {

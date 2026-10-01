@@ -1,6 +1,7 @@
 {
  "quality": "low",
  "commit": "c5ed00c",
+ "machine": "Intel(R) Core(TM) Ultra 7 268V ×8",
  "date": "2026-10-01T09:15:29.052Z",
  "note": "render.prep p95 per scene = higher of two clean runs (session 4, before render--002 steps 1-4); update only after two confirming runs with a recorded reason",
  "scenes": {
