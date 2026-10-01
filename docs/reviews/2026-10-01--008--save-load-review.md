@@ -133,3 +133,6 @@ Hotkey save przy działającej symulacji, brak mutexa zapisu, quota/transakcje I
 | Grok #3 `TerrainEdits.fromJSON` accepts wrong-length arrays | fixed | Validator checks each edit chunk length = `EDIT_N²` and finite values | case `terrain-edit-short` |
 
 Verification: `pnpm check` green (see PROGRESS); no format change, `SAVE_VERSION` stays 7.
+
+
+**Update 2026-10-01:** SAVE-07-3 closed as not needed — no save compatibility before the first release (D-SAVE-7, `save--001` closed).

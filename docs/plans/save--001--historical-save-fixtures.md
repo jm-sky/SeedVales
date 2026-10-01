@@ -1,10 +1,10 @@
 # Save: historical save fixtures for every format version
 
-**Status:** planned  
+**Status:** done  
 **Domain:** save  
 **Roadmap:** side track — before the next `SAVE_VERSION` bump, latest at the start of wave 5 (D-SAVE-7); quality debt from [review 008](../reviews/2026-10-01--008--save-load-review.md) SAVE-07-3  
 **Created:** 2026-10-01  
-**Finished:** —
+**Finished:** 2026-10-01 (closed without implementation)
 
 FEATURES: `SAVE-01`. Decisions: D-SAVE-2, D-SAVE-4, D-SAVE-6, D-SAVE-7.
 
@@ -34,4 +34,4 @@ Fixtures for v6 and v5 committed and loading; v1–v4 committed or recorded as n
 
 ## Wynik
 
-*(not started)*
+Closed without implementation (user, 2026-10-01): nothing has been released, so no save compatibility is needed — D-SAVE-7. Format changes bump `SAVE_VERSION` and reject older saves cleanly. Reopen at the first release.

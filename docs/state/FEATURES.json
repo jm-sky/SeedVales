@@ -1071,6 +1071,51 @@
    "verify": "e2e + przegląd zrzutów",
    "status": "verified",
    "evidence": "All player-facing strings translated to English without an i18n layer (D-UI-4, glossary docs/design/ui-english-glossary.md): data (items, recipes, blueprints, species, skills, professions), sim messages/labels/quests/reasons, calendar and weather names, Game toasts and loading text, save errors, all Vue UI. Sweep: remaining diacritics in src only in proper nouns (settlement/NPC names) and comments. Behaviour that keyed off Polish labels (shepherd sheep, talk/eat animations) updated. pnpm check 127/127, e2e smoke 3/3, acceptance 28/28, mobile 10/10, screenshots reviewed (character, trade, mobile HUD)"
+  },
+  {
+   "id": "CRAFT-03",
+   "vision": "APPX: Follow-up 2026-10-01 (survival)",
+   "scope": "v2",
+   "behavior": "Waterskins (S/M/L) are craftable from hide (sew tool, survival skill)",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "plan survival--001"
+  },
+  {
+   "id": "FIRE-01",
+   "vision": "APPX: Follow-up 2026-10-01 (survival)",
+   "scope": "v2",
+   "behavior": "Campfire needs starter fuel (3 branches) and fire_start; burns for calendar hours; adding fuel extends burn time and raises fire size/light (high cap), shrinking back as fuel burns; when out it leaves an ash trace that fades in ~12 h, faster in rain",
+   "verify": "vitest + e2e + screenshot",
+   "status": "planned",
+   "evidence": "plan survival--001"
+  },
+  {
+   "id": "FIRE-02",
+   "vision": "APPX: Follow-up 2026-10-01 (survival)",
+   "scope": "v2",
+   "behavior": "Stone hearth (3-5 stones): permanent, dismantle returns the stones, faster relighting, better base for a spit; settlement hearths fed by an NPC duty",
+   "verify": "vitest + e2e",
+   "status": "planned",
+   "evidence": "plan survival--001"
+  },
+  {
+   "id": "FIRE-03",
+   "vision": "APPX: Follow-up 2026-10-01 (survival)",
+   "scope": "v2",
+   "behavior": "Standing torch (cheap lantern): plant a torch upright on the ground, light/extinguish it, it burns 4-6 calendar hours while lit; only a lit torch gives light and scares animals",
+   "verify": "vitest + e2e (incl. mobile)",
+   "status": "planned",
+   "evidence": "plan survival--001"
+  },
+  {
+   "id": "FIRE-04",
+   "vision": "APPX: Follow-up 2026-10-01 (survival)",
+   "scope": "v2",
+   "behavior": "Standing-torch refuel with a fuel material (cloth, wool/yarn, resin, tar — TBD) instead of a fresh torch",
+   "verify": "design pending",
+   "status": "planned",
+   "evidence": "plan survival--001 (design only)"
   }
  ]
 }

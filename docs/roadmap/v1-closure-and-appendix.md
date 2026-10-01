@@ -2,7 +2,7 @@
 
 **Created:** 2026-09-30  
 **Domains:** all  
-**Updated:** 2026-10-01 — (1) wave 4 split (foundation → effects), new wave 6 (visual polish/optimisation) and perf gates per [research 002](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md) / [review 005](../reviews/2026-10-01--005--rendering-research-critical-review.md); (2) side tracks from [review 008](../reviews/2026-10-01--008--save-load-review.md) (save fixtures), [review 009](../reviews/2026-10-01--009--render-performance-and-measurement-review.md) (benchmark trust) and [research 003](../research/2026-10-01--003--blender-mcp.md) (offline asset pipeline) scheduled against the waves — see "Side tracks". Translated to English (D-LANG-1).  
+**Updated:** 2026-10-01 — (1) wave 4 split (foundation → effects), new wave 6 (visual polish/optimisation) and perf gates per [research 002](../research/2026-10-01--002--realistic-visuals-practical-roadmap.md) / [review 005](../reviews/2026-10-01--005--rendering-research-critical-review.md); (2) side tracks from [review 009](../reviews/2026-10-01--009--render-performance-and-measurement-review.md) (benchmark trust) and [research 003](../research/2026-10-01--003--blender-mcp.md) (offline asset pipeline) scheduled against the waves — see "Side tracks"; [review 008](../reviews/2026-10-01--008--save-load-review.md) needs no further work (no save compatibility before release, D-SAVE-7); (3) survival follow-up from VISION-APPENDIX (campfire fuel, hearth, standing torches, waterskins) as stage 4s `survival--001` (D-PLAN-6). Translated to English (D-LANG-1).  
 **Sources:** [VISION.md](../VISION.md), [VISION-APPENDIX.md](../VISION-APPENDIX.md), [review v1](../reviews/2026-09-30--001--v1-review.md), [DEVELOPER-CALIBRATION-TOOLS.md](../DEVELOPER-CALIBRATION-TOOLS.md)
 
 Order agreed with the user on 2026-09-30: **close v1 first, then the vision appendix in waves**. A wave starts only when the previous one is `done` (or its leftovers are explicitly deferred in DECISIONS). Plans inside a wave can go in any order if they are independent. Side tracks are not waves: each is tied to a **trigger** (the wave step it must precede), not to a calendar slot.
@@ -49,6 +49,7 @@ The order inside the wave is a technical dependency (D-REN-7): weather and fire 
 |---|---|---|
 | 4a | [render--002--visual-foundation-and-render-metrics](../plans/render--002--visual-foundation-and-render-metrics.md) (in progress, steps 0–1 done) | render metrics + baseline gate (done) → time-sliced vegetation rebuild (done) → light, tone mapping, sky, fog → smooth terrain normals + ground detail + tint via uniforms → selective PBR+IBL pilot on one asset → (optional) ground contact |
 | 4b | [render--001--weather-variety-effects](../plans/render--001--weather-variety-effects.md) | fire flipbook + per-profile light pool, clouds in the sky material + better precipitation, wet ground/snow on uniforms, character variety (no extra draw calls), animal scale/tint, vegetation wind, water without a scene reflection render, blood decals |
+| 4s | [survival--001--fire-fuel-torches-waterskins](../plans/survival--001--fire-fuel-torches-waterskins.md) | *(sim, after 4a, before 4b)* campfire fuel/burn time/size + ash trace, stone hearth (settlement hearths fed by NPC duty), standing torch (plant, light/extinguish, 4–6 h burn), waterskin recipes; one `SAVE_VERSION` bump. Feeds `render--001` step 1 (`fireLevel`) and step 8 (ash decals). Waterskin recipe may go any time. |
 | — | [tools--001--calibration-lab](../plans/tools--001--calibration-lab.md) | *(optional, before/with 4b)* Asset/Character/Equipment Lab on production code — helps calibrating character variants and held weapons |
 
 CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in parallel. Exit gates of 4a and 4b: in the plans (≤ 10% p95 regression of `render.prep` per package vs the render baseline, D-PERF-3; screenshots from the same frames; device performance as ❓ for the user — D-PERF-2).
@@ -62,7 +63,7 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 | [world--001--landmarks-and-treasure](../plans/world--001--landmarks-and-treasure.md) | generator landmarks, treasure (buried, chests, rarely inside a predator), valuables |
 | [settlement--001--mayor](../plans/settlement--001--mayor.md) | *(draft)* player becomes mayor at high reputation/relations; expansion decisions — depends on SET-04 (settlement growth, deferred) |
 
-**Side-track triggers for wave 5:** `save--001` (at least v6, v5) **before** the first `SAVE_VERSION` bump — LOOT-01 "opened/dug" state is the expected first one (FAUNA-09 `prime` in 4b may come earlier; whichever bumps first waits for the fixtures). Landmark models (stone circle, shipwreck, boat wreck, ruins beyond partial village modules) come from `render--004` step 3 — or procedural geometry if that step is skipped.
+**Side-track triggers for wave 5:** landmark models (stone circle, shipwreck, boat wreck, ruins beyond partial village modules) come from `render--004` step 3 — or procedural geometry if that step is skipped.
 
 ## Wave 6 — visual polish and graphics optimisation (conditional)
 
@@ -72,7 +73,7 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 
 After wave 5, because only then the scene has its target density. No measured problem = item closed as "not needed". **Inputs required before it leaves `draft`:** `diag--002` steps 2–4 (transitions, diagnostics overhead, lifecycle/memory) and the `render--004` audit table; device data (D-PERF-2) when the user provides it.
 
-## Side tracks (from reviews 008/009 and research 003)
+## Side tracks (from review 009 and research 003)
 
 Critical assessment, in short: the cheap, high-value parts go early and are tied to the step whose risk they cover; the expensive or speculative parts wait for evidence. Nothing here changes a budget or baseline to absorb a result.
 
@@ -81,15 +82,14 @@ Critical assessment, in short: the cheap, high-value parts go early and are tied
 | [diag--002--render-benchmark-trust](../plans/diag--002--render-benchmark-trust.md) — **tier A** (steps 1, 5) | startup result class; real-input travel | step 1 before `render--002` step 3; step 5 before `render--001` step 6 | The steady-state gate cannot see the two places where the upcoming work adds cost: chunk/terrain build at startup and streaming while walking (F-01 was found exactly there). |
 | `diag--002` — **tier B** (steps 2–4) | quality transitions, diagnostics overhead, lifecycle/memory | before `render--003` leaves `draft` (wave 6) | Only needed to decide adaptive resolution / quality switching and to trust long sessions; nothing earlier depends on them. |
 | `diag--002` — **tier C** (steps 6–7) | fresh context per scene; per-variant A/B metrics table | only if a verdict comes out `inconclusive` twice or scene contamination is suspected | Partly covered already (scene reset, failing locators, console errors fail the run). Otherwise closed as "not needed". |
-| [save--001--historical-save-fixtures](../plans/save--001--historical-save-fixtures.md) | real historical save fixtures through `readSave` → `Sim` | before the next `SAVE_VERSION` bump (latest: start of wave 5) | Fixtures are worth most right before the format changes again. D-SAVE-4 already turns broken old saves into a clean rejection, so there is no urgency now; v1–v3 are best-effort. |
 | [render--004--asset-pipeline-and-audit](../plans/render--004--asset-pipeline-and-audit.md) | asset audit, node-name guard test, source/credits rules (step 1–2); authoring of missing models with Blender as an offline tool (step 3); geometry/texture optimisation (step 4) | steps 1–2 during 4b; step 3 before/with `world--001` step 1 and when rigs for boar/bear are wanted; step 4 only via `render--003` | Blender is a dev tool, never a build/CI/e2e dependency (D-REN-8). Optimising assets without a measured problem contradicts wave 6's rule, so the audit is measurement, optimisation stays conditional. |
 
 Other pending work outside the waves (needs a plan before starting): D-LANG-1 follow-up (English NPC/settlement name pools, `GEN_VERSION` bump — best combined with `world--001` step 1, which bumps `GEN_VERSION` anyway), MAP-02 sensory visibility, quest packs in `docs/design/quests/`.
 
 ## Cross-cutting rules
 
-- Every new system: cost measurement (diag), rule test, save/load of new state (`SAVE_VERSION` bump + migration/rejection per game--002 A4 **and a fixture of the previous format, `save--001` step 4**), mobile support where the player is involved.
-- Generator changes (landmarks, treasure, name pools) → `GEN_VERSION` bump. Batch them into one bump where possible (each bump invalidates every existing save, D-SAVE-1).
+- Every new system: cost measurement (diag), rule test, save/load of new state (`SAVE_VERSION` bump; until the first release older saves are rejected cleanly, no migrations — D-SAVE-7), mobile support where the player is involved.
+- Generator changes (landmarks, treasure, name pools) → `GEN_VERSION` bump. Batch them into one bump where possible (each bump rebuilds the world cache and invalidates saves, D-SAVE-1).
 - **Graphics (from wave 4):** every visual change behind a quality profile, with `bench:render` before/after (render--002 step 0 scenes, verdict vs baseline, D-PERF-3) and screenshots from the same frames. Changes to chunk/terrain build or asset loading also need the startup result (`diag--002` step 1) once it exists. Plans adding geometry or world objects (wave 5: landmarks, chests; grass clumps) — `bench:render` in a scene with the new objects; exceeding the render-prep budget or `render.vegetationRebuild` while walking → reduce cost first (render--003), do not keep adding.
 - New or replaced `.glb` assets: credits/licence in `public/assets/CREDITS-CC-BY.txt` or the CC0 licence file, row in `docs/assets/README.md`, node names required by render code preserved (guard test from `render--004` step 2).
 - Low has no composer/postprocessing; one shadow-casting directional light; no point-light shadows (D-REN-7).
