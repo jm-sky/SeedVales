@@ -1,5 +1,7 @@
 # Review — 02 Rusty Debt
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 The premise is promising: a blacksmith, a customer, an escrowed payment, and a quality dispute can produce a grounded economic quest with no combat. This fits SeedVales very well.

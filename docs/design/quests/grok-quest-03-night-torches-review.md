@@ -1,5 +1,7 @@
 # Review — 03 Night Torches
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 This is one of the stronger concepts in the pack. The cause is human, small-scale, emotionally understandable, and directly tied to a simulation-visible object: torches going dark. Halina is not evil or foolish; she is frightened after losing Szarik.

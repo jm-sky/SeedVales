@@ -1,5 +1,7 @@
 # Review — 05 Disputed Oak
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 The premise fits SeedVales very well: a mundane resource dispute becomes a social problem between two settlements. It can teach evidence gathering, negotiation, reputation, and the fact that not every conflict has a clean factual winner.

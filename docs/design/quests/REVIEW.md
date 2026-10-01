@@ -1,5 +1,7 @@
 # Rejestr review i stan pracy
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 **2026-09-30.** Review autorskie, bez niezależnego recenzenta. Nie jest testem implementacji ani testem grywalności z graczem.
 
 Każdy quest przechodzi trzy przebiegi: R1 fabuła/przyczynowość, R2 dialog/głos, R3 grywalność/warunki/zgodność ze źródłami. W każdym przebiegu sprawdzamy również pozostałe dwa obszary; zapisujemy tylko rzeczywiste ustalenia i zastosowane poprawki. Nie dopisujemy usterki tam, gdzie kontrola jej nie wykazała.

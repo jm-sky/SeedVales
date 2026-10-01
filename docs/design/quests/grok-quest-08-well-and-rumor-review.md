@@ -1,5 +1,7 @@
 # Review — 08 Well and Rumor
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 This is one of the best high-level premises in the set. A health scare, rumor pressure, a mundane real cause, and the possibility of damaging inter-settlement trade all fit the grounded simulation direction.

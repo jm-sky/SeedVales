@@ -47,6 +47,7 @@
 | trader, kupiec-inwestor | **Zbigniew** | Q10, Q11, Q12, Q13 (kupiec przy zakończeniach sprzedażowych) | Codex: Corvin, Soren, Olek (Q11) |
 | guard | **Wisława** (dowodzi strażą drogi) | Q12 | Codex: Nela |
 | hunter / przewodniczka górska | **Milena** | Q12 | Codex: Vika |
+| były strażnik drogi (senior w household strażnika) | **Dobromir** | Q12 (zleceniodawca) | nowa postać zamiast „kamienia cmentarnego” jako źródła tropu |
 | woodcutter-cieśla | **Sławomir** | Q13 | Codex: Tomas |
 | górniczka (D: `NPC-06`) | **Agnieszka** | Q10 | Codex: Ysra |
 | sołtys/wójt T (rola) | **Bolesław** | Q10 | Codex: Bram jako przedstawiciel (zastąpiony — H jest za daleko na outpost) |

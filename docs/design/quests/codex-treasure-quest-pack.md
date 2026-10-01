@@ -1,42 +1,33 @@
 # Codex Treasure Quest Pack — Index
 
-**Status:** independent second narrative pass; proposal for review, not established canon.
-
-**Authoring rule:** this pack adds new content beside the existing `q01`–`q10` files and the `grok-quest-*` files. It does not rewrite them. The existing `Q05 — The Map That Missed the River` and `Q10 — What the Mountain Owes` were treated as protected scope, so this pack avoids both a map-led treasure hunt and a gold-mine claim.
+**Status:** proposal (N), not canon. Pack C (Codex round 2). Reworked 2026-10-01 — see [REVIEW-2026-10-01](REVIEW-2026-10-01.md). Cast, places, links and reward calibration are shared with the other packs: [QUEST-WORLD](QUEST-WORLD.md). Index of all quests: [README](README.md).
 
 ## Shared assumptions
 
-- The game remains grounded medieval simulation without fantasy or magic.
-- Dialogues are in English; implementation notes use the vocabulary already established in the quest README: stages, flags, named purses, real inventory items, and `roadActive`.
-- “Boss animal” means an unusually dangerous persistent animal, not a supernatural creature. It can be killed, driven away, trapped, or avoided when the mechanics support that choice.
-- Monetary rewards are proposals. They must be paid from a named purse, settlement treasury, sale, or contract; no quest creates money from nowhere.
-- New settlement names, NPC names, ownership claims, and reward values are proposals. They are not additions to canon until accepted by the author.
+- Grounded medieval simulation; no fantasy or magic; no human killing required; no betrayal plots.
+- Dialogue in English; settlement names as `{H}`, `{V}`, `{T}` (generated).
+- A "big animal" is an unusually large or dangerous ordinary animal (prime bear, bull moose, rutting stag). It can be avoided, waited out, driven off or fought.
+- Treasure is an explicit external source of value (D-ECON-1 allows found coin, as with ITEM-04 digging). Every payout names its purse or treasury.
+- The three quests are expeditions with **real, large rewards** — see the table below and [calibration](QUEST-WORLD.md#kalibracja-nagród-propozycja-do-decyzji).
 
-## Quest overview
+## Quests
 
-| ID | Title | Main terrain | Treasure / value | Core decision | Distinctive outcome |
-|---|---|---|---|---|---|
-| 11 | `The Bell in Blackwater` | Marsh, cemetery, drowned chapel | Silver-clad bell, sealed toll chest, ferry rights | Restore the crossing, sell the relic, or fund a seasonal partnership | Changes whether the route returns to use and who benefits from it |
-| 12 | `The Iron Under the Pine` | Forest, ruined watchtower, mountain cave | Masterwork long sword and old guard equipment | Give the sword to the guard, sell it, or claim it under a witnessed license | Changes local security, the player’s equipment, or the town’s cash |
-| 13 | `The Ash House Vault` | Ruined manor, family cemetery, wooded road | Coin reserve, jewels, heirloom armour and deed | Return the estate, divide lawful claims, or sell the whole find | Changes a household’s future, a public ruin, and the player’s wealth |
+| ID | Title | Where | Lead | Danger | Find | Core decision | Best player outcome (proposal) |
+|---|---|---|---|---|---|---|---|
+| 11 | [The Bell in Blackwater](codex-quest-11-bell-in-blackwater.md) | marsh between H and V | a boat-builder sees a drowned chapel roof in a dry year | bog, black pool, bull moose | silver-clad bell, toll chest, drowned causeway | rebuild the crossing / sell to a city buyer / player invests in the ferry | 120–150 c (sale) or a toll share over time |
+| 12 | [The Iron Under the Pine](codex-quest-12-iron-under-the-pine.md) | mountains beyond T | an old guard's memory of sealing his captain's sword | climb, cold, prime bear | masterwork longsword, guard cache, captain's badge | give to the road patrol / sell / carry it yourself | the sword itself (450–600) or a mail shirt/crossbow |
+| 13 | [The Ash House Vault](codex-quest-13-ash-house-vault.md) | manor ruin near T | a seamstress's family saying | rutting stag, collapsing cellar | 180 c, two rubies, fine cuirass, deed, unpaid wage packet | rebuild as a waystation / pay every old debt / sell the estate | a ruby or the cuirass or 100 c (+50 c on sale) |
 
-## Variety check
+## Variety check (after rework)
 
-- Quest 11 is a public-infrastructure and recovery story. Its tension is practical: mud, ownership, transport, and a route that could become useful again.
-- Quest 12 is a focused expedition with a strong item reward. Its tension is between public safety, fair ownership, and the temptation to keep an exceptional weapon.
-- Quest 13 is a provenance and settlement-repair story. Its tension is not “find the evil person”, but deciding what a lawful old claim means when several living needs are real.
-- The endings are not good/evil copies. They alter transport access, guard capability, household security, public heritage, and the player’s finances in different ways.
-
-## Suggested implementation order
-
-1. Prototype the shared quest state and dialogue condition format with Quest 12.
-2. Add persistent landmark and animal-den state for Quest 11.
-3. Add provenance, multi-owner loot, and deed/contract state for Quest 13.
+- **Leads differ:** an exposed landmark (11), a living witness (12), a family saying plus a scribe's margin note (13). The earlier version used a cemetery record in all three.
+- **Terrain and danger differ:** wetland and deep water (11), climb and a sleeping predator (12), a structure that can collapse (13).
+- **Decisions differ:** public infrastructure and an investment (11); public safety vs a personal weapon (12); debts across generations and what a ruin should become (13).
+- **One recurring buyer** (Zbigniew of {T}) appears in 11–13 and Q10; he is a consistent character, not a new "rich buyer" each time.
+- Paperwork, licences and witnessed counts were cut back to single lines where they matter.
 
 ## Open author decisions
 
-- Whether the three proposed settlements are fixed named locations or role-tagged generated settlements.
-- Whether `roadActive` should block all three quests during their travel stages or whether only the active expedition stage should hold the mutex.
-- Exact coin values and item stat ranges after the currency and equipment catalogues are calibrated.
-- Whether a settlement may own a unique weapon permanently, or whether every such transfer must remain a normal trade/gift transaction.
-
+- Values of the bell, gems, cuirass and the Pinewatch Longsword (proposed in [QUEST-WORLD](QUEST-WORLD.md)).
+- Whether a settlement armoury can hand out items (Q12 E1) and whether a waystation can be a new building (Q13 E1).
+- Whether seasonal water level (Q11) and new road segments (Q11 causeway) enter the world generator or remain quest flags.

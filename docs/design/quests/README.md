@@ -40,7 +40,7 @@ Historical reviews (pre-rework, not evidence of quality): [REVIEW.md](REVIEW.md)
 | G07 | [Trail of Siwy](grok-quest-07-trail-of-siwy.md) | H forest | medium | Jarosław |
 | G08 | [Well and Rumor](grok-quest-08-well-and-rumor.md) | H (V optional) | medium | Radosław |
 | Q11 | [The Bell in Blackwater](codex-quest-11-bell-in-blackwater.md) | marsh near V | treasure | Ewa |
-| Q12 | [The Iron Under the Pine](codex-quest-12-iron-under-the-pine.md) | mountains beyond T | treasure | Wisława |
+| Q12 | [The Iron Under the Pine](codex-quest-12-iron-under-the-pine.md) | mountains beyond T | treasure | Dobromir |
 | Q13 | [The Ash House Vault](codex-quest-13-ash-house-vault.md) | ruin near T | treasure | Irena |
 
 IDs: pack B keeps its own numbers with a `G` prefix in cross-references (G01–G08) to avoid clashing with Q01–Q13.

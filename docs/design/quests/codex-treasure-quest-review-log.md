@@ -1,5 +1,7 @@
 # Codex Treasure Quest Pack — Review Log
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 This is a compact record of real changes made during the design pass. It records issues found and the resulting edits; it is not a hidden chain-of-thought log.
 
 ## Quest 11 — The Bell in Blackwater

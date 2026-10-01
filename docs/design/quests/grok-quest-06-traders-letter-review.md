@@ -1,5 +1,7 @@
 # Review — 06 Trader's Letter
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 This is a strong type of quest for SeedVales: no combat, a physical object with state, a meaningful temptation to inspect it, and economic consequences that persist after the conversation.

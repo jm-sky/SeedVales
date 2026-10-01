@@ -1,5 +1,7 @@
 # Review — 04 Root by the Stream
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 The quest has a solid survival-sim premise: a time-limited request for ordinary resources, multiple acquisition routes, and a late-but-not-catastrophic outcome. It is useful as a tutorial for gathering, barter, travel, and reputation.

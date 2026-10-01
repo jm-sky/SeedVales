@@ -1,5 +1,7 @@
 # Review — 07 Trail of Siwy
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 The quest has a good survival/hunting skeleton and fits the project better than a generic "kill N wolves" task. A named animal, identifiable signs, optional hunter assistance, and a non-lethal solution are all useful.

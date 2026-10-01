@@ -1,5 +1,7 @@
 # Review — 01 Lost Lamb
 
+> **Historyczne (sprzed przeróbki 2026-10-01).** Dotyczy wcześniejszej wersji scenariusza; nie jest dowodem jakości obecnej wersji. Aktualny rejestr: [REVIEW-2026-10-01](REVIEW-2026-10-01.md).
+
 ## Overall
 
 The quest has a strong starter-quest core: a small local problem, a readable physical clue (the latch), one witness, one identifiable animal, and several ways to recover it. The structure is easy to implement and fits SeedVales better than a large scripted mystery.
