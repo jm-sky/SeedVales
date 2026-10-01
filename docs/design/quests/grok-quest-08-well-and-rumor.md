@@ -2,171 +2,130 @@
 created: 2026-09-30
 created_by: Grok / Scribe (Grok Bot)
 lang: en
-status: pass-with-nits
+status: revised
 provider_reviews:
-  - note: Prior Polish pack PL rounds 1–3 (pass-with-nits). New EN review wave below.
-  - round: EN-R1
-    by: executor (clarity / implementability)
-    result: revise-heavy — applied
-  - round: EN-R2
-    by: executor (cross-quest consistency)
-    result: revise-light — applied
-  - round: EN-R3
-    by: executor (dialog aloud / ship readiness)
-    result: pass-with-nits — applied
-  - round: DIALOG-R1
-    by: executor (opening / stage dialog coverage)
-    result: revise — applied
-  - round: DIALOG-R2
-    by: executor (voice / implementability / cross-quest)
-    result: pass-with-nits — applied
+  - note: Earlier Grok rounds (PL R1–R3, EN-R1–R3, DIALOG-R1–R2) are historical; see git history.
+  - round: CROSS-PACK-2026-10-01
+    by: Claude Code (three-round rework, see REVIEW-2026-10-01.md)
+    result: rewritten — planted-evidence path removed, Tomasz moved to the shepherd household (single farmer in SM), truth no longer punishes him arbitrarily, roadActive removed
 ---
 
 # 08 — Well and Rumor
 
-**Premise:** Village head **Radosław** fears the Domowice well is poisoned after several people fall sick. The authored truth is a **spoiled shared barrel**, not the well — and a false accusation toward Brzeżyna can start a cold trade war.
+**Premise:** Radosław's wife and Stanisław fall sick on the same night, and {H} starts saying the well is poisoned — by someone from {V}, naturally. The truth is a barrel of Tomasz's small beer that went bad. The player can find it before the rumor finds a culprit.
+
+Cast and places: [QUEST-WORLD.md](QUEST-WORLD.md).
 
 ## Meta
 
 | Field | Value |
 |-------|-------|
-| Level | Domowice honesty ≥5 **or** Radosław relation ≥10 |
-| Stages | 4 |
-| Settlements | Domowice; optional Brzeżyna on accusation path |
-| Giver | **Radosław** — sołtys-on-farmer (**sołtys** = village head role on a farmer NPC) |
-| Others | **Tomasz** (farmer, household by the square); **Dobrawa** (medical/spoilage opinion) |
-| Authored setup | `spoiledBarrel=true`; `sickCount ≥ 2` |
-| `roadActive` | **Only** if the player takes the Brzeżyna **accusation** path |
-| Friction flag | `tradeFriction` (v1 "cold war" between settlements) |
+| Scale | Medium; H, optionally V |
+| Start | After the player has spent 3+ days in H; Tomasz's household alive |
+| Stages | 3 (+ optional trip to V) |
+| Giver | **Radosław** (H farmer, sołtys — village head) |
+| Others | **Tomasz** (Mira's husband, brews small beer), **Dobrawa** (herbalist), **Stanisław** (sick), Radosław's wife (sick), **Małgorzata** (V sołtys, accusation path only) |
+| Mechanics status | I: well, illness from food, reputation. N: authored spoiled barrel, rumor state, `tradeFriction` between settlements |
 
 ## Characters
 
-- **Radosław** — Domowice sołtys (village head); cares about calm around the well as much as water quality.
-- **Tomasz** — Farmer whose household shares the spoiled barrel; may be shamed or quietly walked back in mediation.
-- **Dobrawa** — Herbalist; can confirm spoilage vs well water (opinion / simple check).
-- Sick villagers — at least two authored sick NPCs sharing the barrel (names flexible; non-lock).
+- **Radosław** — worried for his wife, more worried about the square. Wants calm and facts, in that order.
+- **Tomasz** — kind, a bit vague; brews small beer for half the village and doesn't always scald the barrels. Mortified when he understands.
+- **Dobrawa** — practical; she's seen this before.
 
 ## World truth
 
-The well water is fine. A shared **barrel** of food/drink spoiled and made people sick. Tomasz looks guilty under rumor pressure but is not a poisoner. Framing Brzeżyna or skipping proof can set `tradeFriction`.
+Tomasz's last barrel was filled into a cask that hadn't been scalded. It went sour and slimy at the bottom. He sold jugs from it to three households on market day: Radosław's (his wife drank it), Stanisław's, and his own (Mira won't drink beer, Tomasz drank only the top). The well is clean. A {V} carter did water his oxen at the well the day before — that's where the rumor came from.
 
-## Stage rules / flags (this quest)
+## Flags
 
 | Flag | Meaning |
 |------|---------|
-| `q08.stage` | 1 → 2 → 3 (optional) → 4. **Skip rule:** if `accuse=false` after stage 2, set `stage=4` directly (do not enter stage 3). If `accuse=true`, set `stage=3`, then 4 when back. |
-| `q08.clues` | Testimony gathered in stage 1 |
-| `q08.proof` | `barrel` \| `none` \| `false` |
-| `q08.stance` | `facts` \| `mediate` \| `fear` — set in dialog with Radosław |
-| `q08.accuse` | True if player goes to Brzeżyna to accuse |
-| `q08.path` | `truth` \| `mediation` \| `cold` \| `frame` |
-| Mediation gate | `proof=barrel` **and** `stance=mediate` |
-| `tradeFriction` | Set on cold / frame paths |
+| `q08.stage` | 1 → 2 → 3 |
+| `q08.facts` | set of `who_drank` (testimony), `well_clean` (inspect), `barrel_bad` (inspect), `dobrawa` (opinion) |
+| `q08.accused` | player went to {V} to accuse without `barrel_bad` |
+| `q08.result` | `truth` \| `quiet` \| `accusation` |
 
----
+## Stage 1 — Sick houses
 
-## Stages
+**Opening — Radosław by the well, a small crowd at a distance**
 
-### Stage 1 → 2 — Testimony (`clues`)
+> **Radosław:** My wife's been sick since midnight. So's Stanisław. And half the square's decided the well's been poisoned — there was a carter from {V} watering his oxen here yesterday. *(low)* I need to know what it really is before somebody says it out loud to the wrong person.
+> **Player:** Where do I start?
+> **Radosław:** Anywhere but the square.
 
-**Opening (giver) — Radosław (sołtys / village head)**
+- A: "I'll find out." → quest starts; `stage=2`.
+- B: "Maybe it *was* the carter." → Radosław: "Maybe. Find out. Don't guess." → quest starts; `stage=2`.
+- C: "Not my business." → refuse; see Refusal.
 
-> Radosław: "Two households are sick. People whisper poison in the well — and eye Brzeżyna. I'm sołtys here, the village head. Dig for facts before the square tips over. Will you?"
+## Stage 2 — Facts
 
-- A: "I'll dig for facts. Where do I start?" → continue to stance; quest starts.
-- B: "If Brzeżyna did this, we should say so." → Radosław−5; continue (fear-leaning).
-- C: "Not my square." → refuse; quest stays available if honesty/relation gates hold.
+**Stanisław, in bed** → `facts+=who_drank`
 
-**Stance — Radosław (stage-1)**
+> **Stanisław:** Water? I drink from the well every day of my life and I've never — no. Beer. Tomasz's small beer, a jug on market day. It tasted… thick. I thought it was the new barley.
 
-> Radosław: "The well is not only water. It is calm. Bring me facts from the storehouse, not shouts from the square."
+**Radosław's wife (through Radosław, or directly)** → (confirms `who_drank`)
 
-- A: "You'll get facts from the storehouse, not a shout from the square." → `stance=facts`; Radosław+5; pushes barrel investigation; `stage=2`.
-- B: "Tomasz apologizes — or he carries buckets for a week." → `stance=mediate`; unlocks mediation later when `proof=barrel`; `stage=2`.
-- C: "We can frighten Brzeżyna without proof." → `stance=fear`; Radosław−5; unlocks accuse/cold; moral test; `stage=2`.
+> **Radosław:** She had a cup of Tomasz's beer with her bread. Same as me — no, I had water. I'm not sick.
 
-Gather clues: talk to sick villagers (shared barrel); Dobrawa on spoilage; Tomasz without hard proof yet.
+**Dobrawa** → `facts+=dobrawa`
 
-**Dialog — Sick villager (testimony)**
+> **Dobrawa:** Cramps, fever, and they both drank the same thing. A poisoned well makes the whole village sick, not two houses. Look at what they shared.
 
-> Villager: "We drank from the barrel by Tomasz's wall — same as always. By morning the belly turned. Well I can't swear to. That barrel smelled wrong when I thought back."
+**The well (environmental)** → `facts+=well_clean`
 
-- A: "I'll check Tomasz's barrel and the well." → clue +1 (shared barrel testimony).
-- B: "Sounds like Brzeżyna mischief." → clue +1 but lean toward accuse; honesty risk later if no proof.
+> *(self)* Cold, clear, smells of stone. A ladle of it tastes like it always has.
 
-**Dialog — Dobrawa (opinion beat)**
+**Tomasz's cellar (environmental, with Tomasz's leave or by looking)** → `facts+=barrel_bad`
 
-> Dobrawa: "Fever after shared drink looks like spoilage. Your well still smells clean when I ladle it. Check the barrel by Tomasz's wall before you blame a neighbor village."
+> *(self)* The end barrel smells sharp and wrong. At the bottom there's a grey slime. The cask was never scalded.
 
-- A: "I'll inspect that barrel." → progress toward `proof=barrel`.
+**Tomasz — when shown the barrel**
 
-### Stage 2 → 3 — Investigation (`proof`)
+> **Tomasz:** Oh. Oh, no. I was in a hurry — Mira was at the lambing and I just… I didn't scald it. *(sits down)* Radosław's wife. Is she bad?
+> **Player:** Dobrawa says she'll mend.
+> **Tomasz:** I'll pour the lot out. I'll go and tell them. I'll — what do I do?
 
-| Result | `proof` value |
-|--------|----------------|
-| Well OK, barrel bad | `barrel` |
-| Skipped investigation | `none` |
-| Planted / forged evidence | `false` (heavy honesty hit) |
+- A: "Tell Radosław yourself. I'll come with you." → unlocks `quiet`.
+- B: "Radosław needs to hear this from me, and the square needs to hear it from him." → leads to `truth`.
 
-**Discovery — Inspect well and barrel** (environmental)
+**Accusation (alternative)** — the player goes to {V} with fewer than two facts, or ignores them:
 
-> *(self)* Well water ladles clean. The shared barrel by Tomasz's wall is sour — spoiled drink, not a foreign poison.
+> **Małgorzata:** You've come to tell me someone from {V} poisoned your well. On what? A carter watering his oxen? *(cold)* Bring me something better than a rumor, or don't bring me anything.
+> - "We'll see what {H} says about it." → `accused=true`; `result=accusation`; return to H.
+> - "You're right. I'm sorry — I'll find out properly." → no penalty; return to Stage 2.
 
-- A: "Proof enough — barrel spoiled, well fine." → `proof=barrel`.
-- B: "Skip it. Accuse first, dig later." → `proof=none`; may set `accuse=true`.
-- C: *(forge)* "Plant something that points at Brzeżyna." → `proof=false`; Domowice honesty−25 (or per frame row at close).
+## Stage 3 — What the square hears
 
-**Dialog — Tomasz (farmer)**
+**Radosław** (needs `barrel_bad` and at least one more fact for `truth`/`quiet`)
 
-> Tomasz: "I poured from the same barrel as always. If it's foul, I didn't cook poison — I kept a lid badly. Don't hang Brzeżyna for my sour beer."
+> **Radosław:** Well? What do I tell them?
 
-- A: "Then help me show the square the barrel, not a foreign plot." → Tomasz cooperates; prefer `path=truth` / mediation at close; Tomasz+5.
-- B: "People want a name. Give them one." → pressure toward `accuse` / `proof=false`; Domowice honesty−5; Tomasz−10.
+- **truth** — "The well's clean. A barrel of Tomasz's beer went bad because the cask wasn't scalded. Everyone who's sick drank from it." → Radosław says it on the square; Tomasz pours out the barrel publicly.
+  > **Radosław:** *(after)* Some of them were disappointed. A carter from {V} is a better story than a dirty cask.
+- **quiet** — *(Tomasz came along)* Tomasz tells Radosław himself; Radosław tells the square only that the well is clean and the cause is found.
+  > **Tomasz:** I'll bring your wife broth every day till she's up. And I'll scald every cask twice.
+  > **Radosław:** Once properly will do. *(to the player)* The square'll get "the well is clean and it's dealt with." That's all they need.
+- **accusation** — *(accused)* → Radosław: "You went to {V} and said what?" *(the truth comes out later anyway when Dobrawa talks; the trade cold spell stays)*
 
-**Dialog — Radosław (accuse decision after proof)**
+## Rewards and world effects
 
-> Radosław: "You have what you have. Do we keep this in Domowice — or do you ride to Brzeżyna with an accusation?"
+| result | World | Player | Reputation | Relations |
+|--------|-------|--------|------------|-----------|
+| truth | Rumor ends; Tomasz scalds his casks (no more beer sickness) | `from: treasury_home` 25 | honesty+10 (H) | Radosław+20; Tomasz−5 (embarrassed); Dobrawa+5 |
+| quiet | Rumor ends; Tomasz's name not said in public | `from: treasury_home` 20 + Tomasz gives a small cask of good beer | helpfulness+10 (H) | Radosław+15; Tomasz+20; Mira+10 |
+| accusation | `tradeFriction` H↔V for one season (N: V trader prices ×1.2 for H residents) | none | honesty−15 (H, V) | Małgorzata−25; Radosław−10 |
 
-- A: *(proof=barrel)* "We settle it here. No ride." → `accuse=false`; `stage=4`.
-- B: "I ride to Brzeżyna." → `accuse=true`; `stage=3`; set `roadActive` (if free).
-- C: *(if roadActive already)* blocked: "The road's spoken for — finish the other errand first."
+## Refusal, interruption, missing NPCs
 
-### Stage 3 — Optional Brzeżyna
-
-Only if `accuse=true` (player chooses to accuse Brzeżyna). Otherwise set `stage=4` immediately (skip stage 3). When `accuse=true`: set `roadActive`, run stage 3, then on return clear `roadActive` and set `stage=4`. On abandon during accuse path, clear `roadActive`.
-
-**Dialog — Brzeżyna sołtys (if accuse)**
-
-> Brzeżyna sołtys: "You ride here with sick neighbors and empty hands. I'm sołtys of Brzeżyna — village head. Where is your proof?"
-
-- A: "We're still gathering it — this was a warning." → return Domowice; `proof` may stay `none`; clear `roadActive` on leave; `stage=4` or back to investigate.
-- B: "We don't need your water in our trade." → `path=cold`; set `tradeFriction`; clear `roadActive` on leave; `stage=4`.
-
-### Stage 4 — Closing (gated)
-
-| Entry condition | Allowed path | Payout |
-|-----------------|--------------|--------|
-| `proof=barrel` + player tells the truth | **truth** (default) **or** **mediation** (if `stance=mediate` — Tomasz withdraws without public shame) | **truth:** `from: treasury_home` 35 (`if_empty: partial`) + optional bandage×2 from Dobrawa; honesty+15; Radosław+30; Tomasz−20. **mediation:** `from: treasury_home` 20 (`if_empty: partial`); helpfulness+12; roughly +10 with Radosław, Tomasz, Dobrawa |
-| `proof=none` + accuse | **cold** (`tradeFriction`) or return to investigate | **cold:** `from: tomasz_purse` 10 (`if_empty: 0`); honesty−20 |
-| `proof=false` | **frame** only | `from: treasury_home` 25 (`if_empty: partial`); honesty−40; negative badge stub; `tradeFriction` |
-| `proof=barrel` + accuse anyway | cold with **extra** honesty−10 | same money as cold |
-
-**Dialog — Radosław (final)**
-
-> Radosław: "Say it on the square or in my ear — but say what the barrel taught you."
-
-- A: *(proof=barrel)* "The well is clean. The barrel spoiled. Tomasz shares the fault of a bad lid, not a foreign poisoner." → `path=truth`; apply truth rewards; `done`.
-- B: *(mediation unlocked: `proof=barrel` + `stance=mediate`)* "No public hanging of a name. Tomasz makes it right quietly." → `path=mediation`; apply mediation rewards; `done`.
-- C: *(proof=none + accuse)* "Brzeżyna wanted us weak." → `path=cold`; set `tradeFriction`; apply cold rewards; `done`.
-- D: *(proof=false)* "Here's what points at Brzeżyna." → `path=frame`; set `tradeFriction`; apply frame rewards; `done`.
-- E: *(proof=barrel + accuse anyway)* "Barrel or not — Brzeżyna still eats the blame." → `path=cold`; honesty−10 extra; apply cold money; `done`.
-
----
+- If the player refuses, Dobrawa traces it to the barrel within two days (world event) and the rumor dies; no reward.
+- If the player starts the accusation path and then brings `barrel_bad` to Małgorzata within a day, she accepts an apology: no `tradeFriction`, honesty−5 instead.
+- If Tomasz is unavailable, `quiet` is not possible.
 
 ## Mechanisms
 
 | Tier | Content |
 |------|---------|
-| **Required** | Authored barrel + sick count; proof gate; named treasury; `tradeFriction`; mediation gate (`proof=barrel` + `stance=mediate`) |
-| **Stub** | Negative badge on frame |
-| **Out of scope** | Square crowd UI; full diplomacy matrix |
+| Required | Authored barrel state; sick NPCs tied to it; fact set; `tradeFriction` scalar |
+| Stub | Square announcement as a journal entry + reputation change |
+| Out of scope | Crowd simulation |

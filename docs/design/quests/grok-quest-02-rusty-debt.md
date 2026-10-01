@@ -2,161 +2,133 @@
 created: 2026-09-30
 created_by: Grok / Scribe (Grok Bot)
 lang: en
-status: pass-with-nits
+status: revised
 provider_reviews:
-  - note: Prior Polish pack PL rounds 1–3 (pass-with-nits). New EN review wave below.
-  - round: EN-R1
-    by: executor (clarity / implementability)
-    result: revise-heavy — applied
-  - round: EN-R2
-    by: executor (cross-quest consistency)
-    result: revise-light — applied
-  - round: EN-R3
-    by: executor (dialog aloud / ship readiness)
-    result: pass-with-nits — applied
-  - round: DIALOG-R1
-    by: executor (opening / stage dialog coverage)
-    result: revise — applied
-  - round: DIALOG-R2
-    by: executor (voice / implementability / cross-quest)
-    result: pass-with-nits — applied
+  - note: Earlier Grok rounds (PL R1–R3, EN-R1–R3, DIALOG-R1–R2) are historical; see git history.
+  - round: CROSS-PACK-2026-10-01
+    by: Claude Code (three-round rework, see REVIEW-2026-10-01.md)
+    result: rewritten — Bogdan moved to V (SM home has no blacksmith), debt direction reversed, plowshare has a real flaw, roadActive removed
 ---
 
 # 02 — Rusty Debt
 
-**Premise:** Bogdan the blacksmith wants the remaining pay for a plowshare; the farmer already paid into Brzeżyna's treasury, and the sołtys there is blocking the payout over "quality."
+**Premise:** Old Bogdan, the blacksmith in {V}, forged a plowshare for {H}'s common field. {H}'s village head is holding back the pay because the share "ploughs like a drunk." Bogdan wants his forty coppers. Both men are partly right.
+
+Cast and places: [QUEST-WORLD.md](QUEST-WORLD.md). Soft link: [Q04](q04-the-handle-remembers.md) (the cracked hammer).
 
 ## Meta
 
 | Field | Value |
 |-------|-------|
-| Level | Bogdan relation ≥5 **or** Domowice honesty ≥5 |
+| Scale | Medium, V ↔ H |
+| Start | After the player's first visit to {V}; Bogdan alive |
 | Stages | 3 |
-| Settlements | Domowice → Brzeżyna → Domowice |
-| Giver | **Bogdan** (blacksmith) — reserved; **Anna** (non-lock hint NPC) |
-| Others | Farmer who ordered the plowshare; **sołtys of Brzeżyna** (village head) / Brzeżyna treasury (debtor side). **No Janko** in this quest. |
-| `roadActive` | **Yes, from stage 2** |
-| Inspiration | Fallout 2 / Skyrim delivery-with-a-twist |
+| Giver | **Bogdan** (V blacksmith, elderly) |
+| Others | **Zofia** (Bogdan's daughter, runs the forge), **Radosław** (H farmer and sołtys — village head) |
+| Mechanics status | I: treasury payouts, trade, item transport. N: stages, item inspection, `plowshare_common` item state `flawed`/`mended` |
 
 ## Characters
 
-- **Bogdan** — Domowice blacksmith; insists the oral price was **40 copper** for the plowshare.
-- **Anna** — Local non-lock NPC who can hint that Bogdan may have padded the price (~10 copper over market).
-- **Farmer (Brzeżyna)** — Ordered the plowshare; already deposited **35 copper** into `treasury_brzezyna`.
-- **Sołtys of Brzeżyna** — Village head blocking payout to Bogdan, citing workmanship/"quality." Uses `soltys_purse` when a deal needs the last 5 copper.
+- **Bogdan** — proud, stubborn, honest in his own accounting. Named the price "forty, over the anvil" and won't take less without a reason he can respect.
+- **Zofia** — practical; loves her father and is tired of arguing with him. Knows the market price and suspects his recent work.
+- **Radosław** — careful with common money; ordered the share for the field all {H} households plough in turn. Holds 35 coppers set aside in `treasury_home`.
 
 ## World truth
 
-Market value of the plowshare is about **30 copper**. Bogdan demanded **40**. The farmer paid **35 into Brzeżyna's treasury**. Payout to Bogdan is frozen by the sołtys until someone mediates. There is no Janko / cartel angle here.
+Market price for a plowshare like this is about **30** coppers. Bogdan said **40** — he counted a better steel edge. The share does have a fault: a cold shut near the heel where two layers didn't weld properly, so it twists in heavy soil. It happened because Bogdan's old hammer has a cracked head (Q04) and he didn't notice. Radosław set aside **35** — what he thinks it's worth — and won't pay until something changes.
 
-## Stage rules / flags (this quest)
+## Flags
 
 | Flag | Meaning |
 |------|---------|
 | `q02.stage` | 1 → 2 → 3 |
-| `q02.heardHome` | True after stage-1 briefing with Bogdan |
-| `q02.annaHint` | True if player heard Anna's "you overcharged" line; softens Bogdan on deal S later |
-| `q02.plowshare_mark` | Optional recognition token item from Bogdan |
-| `q02.deal` | Exclusive enum: `U` (settlement 30) \| `B` (full 40 for Bogdan) \| `R` (recover the plowshare) \| `S` (Brzeżyna-sided: 25 copper + grain×6) |
-| `q02.iou30` | Set if treasury cannot pay full 30 on deal U (partial + IOU stub) |
+| `q02.priceKnown` | Zofia told the player the market price |
+| `q02.flawFound` | Player inspected the share in H (or Q04 `crackFound` and the player tells Bogdan) |
+| `q02.bogdanAdmits` | Bogdan accepts the flaw is his work |
+| `q02.outcome` | `settled30` \| `mended` \| `returned` \| `pressured` |
 
-Grain gate: deal **S** requires the player to supply **grain×6** (`from: player`). If the player cannot, **S is locked**.
+Item: `plowshare_common` (heavy: ~8 kg), states `flawed` → `mended`.
 
----
+## Stage 1 — The forge in {V}
 
-## Stages
+**Opening — Bogdan at the forge door**
 
-### Stage 1 → 2 (home briefing)
+> **Bogdan:** You're from {H}? Good. Then you can carry a message to your village head. I made him a plowshare in spring. Good steel edge, the best I had. Forty coppers, I said, over the anvil, and he nodded. Now he sends word it "ploughs like a drunk" and he'll pay thirty-five when he's minded to.
+> **Player:** What do you want me to do?
+> **Bogdan:** Get me my forty. Or get me my share back. I'd rather have the iron than the insult.
 
-Set `heardHome=true`. Optionally `annaHint=true`.
+- A: "I'll talk to Radosław." → quest starts; Bogdan+5; `stage=2`.
+- B: "Is the share any good?" → Bogdan: "It's mine. Of course it's good." *(Zofia, behind him, says nothing — and looks at the floor.)* → quest starts; `stage=2`.
+- C: "Not my business." → refuse; Bogdan: "Nobody's, apparently." Quest stays available.
 
-**Opening (giver) — Bogdan (blacksmith)**
+**Zofia (optional, out of Bogdan's earshot)** → `priceKnown=true`
 
-> Bogdan: "I forged a plowshare for a Brzeżyna farmer. He paid their chest — their sołtys won't release my pay over 'quality.' I want what's owed, or the share back."
+> **Zofia:** Thirty. That's what a share like that fetches in {T}. Forty's Father's price — he counts the edge as if it were a sword. *(pause)* And… his last few pieces haven't been right. I don't know why. If the share's bad, I'd rather you told me than him.
 
-- A: "I'll go to Brzeżyna and sort the debt." → Bogdan+5; continue to briefing; quest starts; set `roadActive` when stage 2 begins.
-- B: "Tell me the numbers first." → continue to briefing.
-- C: "I'm busy." → refuse; quest stays available if gates still hold.
+- A: "I'll look at it properly before I take sides." → Zofia+5.
+- B: "Shouldn't you tell him?" → Zofia: "I've told him his hammer's tired, his knees are tired and his prices are high. He hears one of the three, depending on the day."
 
-**Briefing — Bogdan (stage-1 home)**
+## Stage 2 — The field in {H}
 
-> Bogdan: "Forty copper. Said out loud over the anvil. Either I get paid, or that plowshare comes back to my rack."
+**Radosław by the common barn**
 
-- A: "I'll go with a scale, not a hammer." → Bogdan+5; `heardHome=true`; `stage=2`; set `roadActive`.
-- B: "Give me a mark so I know the plowshare is yours." → grant item `plowshare_mark`; `heardHome=true`; `stage=2`; set `roadActive`.
-- C: "Anna says you padded the price." → `annaHint=true`; Bogdan: "Maybe by ten. Still forty was the word."; `heardHome=true`; `stage=2`; set `roadActive`.
+> **Radosław:** Bogdan sent you? He'd send a mule if it could talk. — Look, I've no quarrel with the man. I've thirty-five set aside for him, from the village chest, and it's his the day that share ploughs straight.
+> **Player:** What's wrong with it?
+> **Radosław:** Hook it to the ox and see. In the heavy ground by the stream it twists, like it's trying to go home.
 
-**Dialog — Anna (optional, before or after Bogdan)**
+**Inspect the share (environmental)** → `flawFound=true`
 
-> Anna: "Market for a share like that is closer to thirty. Bogdan's pride costs about ten copper extra."
+> *(self)* Near the heel there's a fine dark seam where two layers of iron never truly joined. In soft soil it holds. In clay it flexes — you can see the polish where it's been rubbing.
 
-- A: "I'll remember that when I talk in Brzeżyna." → `annaHint=true` (if not already).
+Choices at Radosław (any order; one outcome is final):
 
-### Stage 2 — Brzeżyna (exclusive `deal`)
+- A: *(priceKnown)* "Bogdan asked forty; the market price is thirty. Pay him thirty for it as it is, and keep the share." → Radosław: "Thirty for a share that twists? …It still turns earth. All right, thirty, and I'll hear no more about it." → `outcome=settled30`; `stage=3`.
+- B: *(flawFound)* "Let me take it back to {V}. If it comes back mended, you pay the thirty-five." → Radosław: "If it comes back straight, I'll pay the thirty-five and I'll say thank you. Take the ox-path, it's drier." → player carries `plowshare_common` to {V}; go to **Mend** below.
+- C: "Give the share back to Bogdan. No pay, no quarrel." → Radosław: "And plough with what, the old wooden one? …Fine. I'll buy one in {T} next market. Take it." → player carries share to {V}; `outcome=returned`; `stage=3`.
+- D: *(pressure)* "Pay him forty or I tell the whole square you sit on a craftsman's money." → Radosław: "Do that, then. And tell them the share's cracked while you're at it." — If the player insists: Radosław pays 40 (`from: treasury_home` 35 + `from: radoslaw_purse` 5) with cold anger. → `outcome=pressured`; honesty−8 (H); Radosław−20; `stage=3`.
 
-Evidence the player can gather (any order): farmer confirms 35 went to the treasury; sołtys shows a ledger line (dialog stub); dirty pressure on the sołtys costs honesty.
+**Mend (only after B) — back at the forge**
 
-**Dialog — Sołtys of Brzeżyna (ledger / evidence stub)**
+> **Bogdan:** *(turns the share in his hands)* …That's a cold shut.
+> **Zofia:** It is.
+> **Bogdan:** I don't make cold shuts.
 
-> Sołtys: "Here's the ledger line — thirty-five copper from the farmer, held for Bogdan of Domowice. Ink doesn't lie. Whether the iron earns that ink is another talk."
+- A: *(flawFound)* "You made this one. It's not the iron." → Bogdan, after a long silence: "No. It's not the iron." → `bogdanAdmits=true`.
+- B: *(Q04 crackFound known to player)* "It's the hammer. The crack in the head — it's been throwing your welds." → Bogdan: "The hammer." *(he sits down)* "Months, she said. Months of shares." → `bogdanAdmits=true`.
+- C: "Just mend it, please." → Zofia mends it; Bogdan says nothing.
 
-- A: "Show me the line again. I need it straight." → evidence: ledger confirmed; unlock deal dialog.
-- B: *(dirty pressure)* "Open the chest or the square hears you sit on a man's pay." → Domowice honesty−10; Brzeżyna honesty−5; sołtys−10; unlock deal dialog.
-- C: "I'll bring the farmer's word too." → go to farmer dialog (no deal yet).
+Zofia re-welds the heel (half a day; I: craft time). `plowshare_common` becomes `mended`. Player carries it back to {H}: Radosław pays 35 (`from: treasury_home`). If `bogdanAdmits`: Bogdan says he'll take thirty-five and call it even. Otherwise Bogdan grumbles but accepts 35 "for the trouble." → `outcome=mended`; `stage=3`.
 
-**Dialog — Farmer (Brzeżyna), evidence beat**
+## Stage 3 — Close at the forge
 
-> Farmer: "I paid thirty-five copper into the village chest. The sołtys — our village head — holds it. I won't pay twice. Bogdan can argue quality with the chest, not my purse."
+> **Bogdan:** Well? Is the man paying, or do I stop shoeing {H}'s horses?
 
-- A: "Show me who took the coin into the treasury." → evidence: farmer deposit confirmed; unlock deal dialog with sołtys.
-- B: "I'll talk to your sołtys." → go to sołtys ledger or deal dialog.
+- *(settled30)* "Thirty, and he keeps the share as it is." → Bogdan: "Thirty. For my best edge." *(Zofia: "It's the market price, Father.")* "…The market can choke on it. Fine."
+- *(mended)* "Thirty-five, and he says thank you." → Bogdan: "He said thank you?" → "He did." → "Hm. Then it was worth the walk."
+- *(returned)* "Here's your share. No pay." → Bogdan: "Iron's iron. I'll draw it into something." *(If `flawFound`, Zofia quietly: "You know why it came back.")*
+- *(pressured)* "He paid forty. He's not pleased." → Bogdan: "Pleased isn't in the price." *(Zofia frowns.)*
 
-**Dialog — Sołtys of Brzeżyna (deal)**
+## Rewards
 
-> Sołtys: "Thirty-five copper sits in our chest. Speak a deal I can write — settlement, full forty, return the iron, or your grain bargain."
+| outcome | Player | Bogdan receives | Reputation | Relations |
+|---------|--------|-----------------|------------|-----------|
+| settled30 | `from: bogdan_purse` 8 | 30 from `treasury_home` | honesty+5 (H, V) | Bogdan+5; Radosław+10; Zofia+5 |
+| mended | `from: bogdan_purse` 12 + Zofia sharpens one player weapon/tool (service) | 35 from `treasury_home` | helpfulness+8 (H, V), honesty+5 | Bogdan+15; Radosław+15; Zofia+15 |
+| returned | `from: bogdan_purse` 5 | share back, no coin | — | Bogdan+5; Radosław−5 |
+| pressured | `from: bogdan_purse` 12 | 40 (35 treasury + 5 Radosław) | honesty−8 (H), courage+3 (V) | Bogdan+15; Radosław−20; Zofia−5 |
 
-- A: "Split the difference — thirty to Bogdan, and we call the quality settled." → `deal=U`; pay Bogdan per U table now; `stage=3`.
-- B: "Pay the forty he was promised. Find the last five if you must." → `deal=B`; pay Bogdan per B table now; `stage=3`.
-- C: "Then give the plowshare back. Bogdan will take his iron home." → `deal=R`; item to Bogdan; `stage=3`.
-- D: "Twenty-five from your chest, and I'll cover six measures of grain myself." → if player has grain×6: `deal=S`; pay/grain per S table now; `stage=3`; else sołtys: "Without the grain, that bargain is empty." (stay stage 2).
+If `bogdanAdmits`, Bogdan from now on accepts Zofia's offer of a new hammer more readily (Q04 S7 has an extra line). No other cross-quest effects.
 
-Player tip from `bogdan_purse` is paid on **return** (stage 3), not here.
+## Refusal, interruption, missing NPCs
 
-| ID | Verdict | Money / items | Fallbacks |
-|----|---------|---------------|-----------|
-| **U** | Settlement at 30 | `from: treasury_brzezyna` 30 copper → Bogdan | If short: pay partial + set `iou30` |
-| **B** | 40 for Bogdan | `from: treasury_brzezyna` 35 + `from: soltys_purse` 5 → Bogdan | If sołtys purse empty: stop at what exists; Bogdan accepts **minimum 35** and grumbles |
-| **R** | Recover plowshare | Item returns to Bogdan (no coin transfer from Brzeżyna) | — |
-| **S** | Brzeżyna-sided | `from: treasury_brzezyna` 25 → Bogdan; `from: player` grain×6 → Bogdan | Treasury may partial; **without grain×6, S is blocked** |
-
-Set `deal=U|B|R|S`; `stage=3`. Keep `roadActive` until return completes.
-
-### Stage 3 — Return to Bogdan
-
-**Dialog — Bogdan (on return)**
-
-> Bogdan: "Well? Did Brzeżyna remember how to count, or do I heat the forge for a different kind of talk?"
-
-- A: *(deal=U)* "Thirty copper from their chest. Quality settled." → apply U rewards; clear `roadActive`; `done`.
-- B: *(deal=B)* "Forty — chest and sołtys purse covered it." → apply B rewards; clear `roadActive`; `done`.
-- C: *(deal=R)* "Here's your plowshare back. No coin from them." → apply R rewards; clear `roadActive`; `done`.
-- D: *(deal=S)* "Twenty-five from the chest, and six measures of grain from me." → apply S rewards; clear `roadActive`; `done`.
-- E: "Not finished yet." → leave; stay stage 3.
-- *(On fail/abandon at any stage ≥2)* clear `roadActive`.
-
-| deal | Player reward | Reputation | Relations |
-|------|---------------|------------|-----------|
-| U | `from: bogdan_purse` 10 copper (`if_empty: 0` + one craft discount on a knife) | honesty+8 (both settlements) | Bogdan+15; Brzeżyna sołtys+10 |
-| B | `from: bogdan_purse` 15 copper (`if_empty: 0`) | Domowice courage+5; Brzeżyna honesty−5 | Bogdan+25; sołtys−15 |
-| R | `from: bogdan_purse` 20 copper (`if_empty: treasury_home` max 15) | renown+5 | Farmer−20 |
-| S | Grant bread×3 from Bogdan's stock (inventory items — **not** a `bogdan_purse` debit) | Brzeżyna helpfulness+5 | Bogdan+10 if `annaHint` else +5 |
-
----
+- If the player abandons the share on the road, it stays there as a world item (heavy, not stolen by NPCs in v1). Radosław−10 if he learns.
+- If Radosław dies, the money stays in `treasury_home`; the next sołtys (if any) inherits the dispute with the same lines minus personal remarks.
+- If Bogdan dies, Zofia closes the quest with whatever the outcome is; payments go to the household purse.
 
 ## Mechanisms
 
 | Tier | Content |
 |------|---------|
-| **Required** | Named treasury transfers; `plowshare_mark` item; exclusive `deal` flags; grain×6 gate on S; `roadActive` from stage 2 |
-| **Stub** | Treasury ledger = dialog line |
-| **Out of scope** | Janko; full double-entry bookkeeping |
+| Required | Named treasury/purse transfers; carried item with two states; inspection flag |
+| Stub | Mending = timed craft by Zofia without player input |
+| Out of scope | Full contract/ledger system |

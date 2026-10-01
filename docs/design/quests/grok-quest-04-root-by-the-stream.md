@@ -2,159 +2,133 @@
 created: 2026-09-30
 created_by: Grok / Scribe (Grok Bot)
 lang: en
-status: pass-with-nits
+status: revised
 provider_reviews:
-  - note: Prior Polish pack PL rounds 1–3 (pass-with-nits). New EN review wave below.
-  - round: EN-R1
-    by: executor (clarity / implementability)
-    result: revise-heavy — applied
-  - round: EN-R2
-    by: executor (cross-quest consistency)
-    result: revise-light — applied
-  - round: EN-R3
-    by: executor (dialog aloud / ship readiness)
-    result: pass-with-nits — applied
-  - round: DIALOG-R1
-    by: executor (opening / stage dialog coverage)
-    result: revise — applied
-  - round: DIALOG-R2
-    by: executor (voice / implementability / cross-quest)
-    result: pass-with-nits — applied
+  - note: Earlier Grok rounds (PL R1–R3, EN-R1–R3, DIALOG-R1–R2) are historical; see git history.
+  - round: CROSS-PACK-2026-10-01
+    by: Claude Code (three-round rework, see REVIEW-2026-10-01.md)
+    result: rewritten — why Dobrawa can't go herself, any-source checklist (questTagged removed), hemlock look-alike instead of "fraud", roadActive removed
 ---
 
 # 04 — Root by the Stream
 
-**Premise:** Dobrawa the herbalist needs a short list of herbs for her sick son **Maciej**. The player has **two calendar days**. Maciej is ill but **there is no death path in v1** — late delivery means a worse recovery and a smaller pay, not a funeral.
+**Premise:** Dobrawa the herbalist can't leave her feverish son **Maciej**, and her shelves are empty after a cough went round {H}. She needs yarrow, mint and chamomile within two days.
+
+Cast and places: [QUEST-WORLD.md](QUEST-WORLD.md). Unlocks the poison option in [07](grok-quest-07-trail-of-siwy.md) (see flags).
 
 ## Meta
 
 | Field | Value |
 |-------|-------|
-| Timer | **2 calendar days** from quest start |
+| Scale | Medium; H, the marsh halfway to {V}, optionally {V} |
+| Timer | **2 calendar days** from acceptance (shown in the journal; warn on accept if another timed quest is active) |
 | Stages | 3 |
-| Settlements | Domowice; marsh halfway; optional Brzeżyna prices |
-| Giver | **Dobrawa** (herbalist) — reserved; **Maciej** (child, sick) |
-| `roadActive` | **Yes** for the duration |
-| v1 ingredients | yarrow×2, mint×2, chamomile×1 (existing item ids) |
-| Checklist rule | Only units gathered / bought / stolen **after quest start** count (`questTagged`). Free world loot from before start does **not** count. |
+| Giver | **Dobrawa** (H herbalist) |
+| Others | **Maciej** (her son, ~10), **Mira** (grows mint by her pen), the {V} herbalist (sells herbs) |
+| Items | yarrow×2, mint×2, chamomile×1 (existing ids in `items.ts`); hemlock (look-alike trap) |
+| Mechanics status | I: herbs, gathering, trade, healing. N: quest timer, look-alike identification, `q04.status` |
 
 ## Characters
 
-- **Dobrawa** — Domowice herbalist; quest giver; pays from `dobrawa_purse` (treasury fallback).
-- **Maciej** — Dobrawa's son; sick with a breathing fever. **He lives through all v1 outcomes.** "Maciej still lives" on a late delivery means recovery is harder, not that death was on the table.
-- Optional sellers: a Domowice shepherd trading rope/milk; Brzeżyna herb prices at ×2; a stealable herbalist chest in Brzeżyna.
+- **Dobrawa** — calm, quick, plain-spoken; hides fear under instructions. Has been awake two nights.
+- **Maciej** — feverish, wheezing, bored. Wants a story more than tea.
+- **Mira** — will give mint for nothing to a sick child, but only if asked.
 
 ## World truth
 
-Maciej needs a simple herbal set. The marsh halfway to Brzeżyna can supply it in about half a day. Buying in Brzeżyna is faster on feet but costs more. There is **no** scripted death; fail state is social/economic (Dobrawa relation hit, dirty advance), not a corpse.
+Maciej has a chest fever. Without the brew he'll still recover, but slowly and with a cough that lasts weeks. Dobrawa used her whole stock on neighbours. Yarrow grows on the marsh banks half a day from {H}; so does hemlock, which looks similar from a distance (white umbrella flowers) and is poisonous. Mint grows by Mira's pen. Chamomile grows in the dry meadow by the road; the {V} herbalist sells all three at a high price.
 
-## Stage rules / flags (this quest)
+**No death path.** Maciej lives in every outcome; lateness changes his recovery and Dobrawa's trust.
+
+## Flags
 
 | Flag | Meaning |
 |------|---------|
 | `q04.stage` | 1 → 2 → 3 |
-| `q04.deadline` | `calendar_start + 2 days` |
-| `q04.advance` | Copper taken up front. Design intent: advance **15** = **half of the on-time cash reward (30)**. |
-| `q04.mentorHope` | Soft hook; does not block delivery |
-| `q04.source` | Exclusive gather source once complete set obtained: `M` marsh \| `P` shepherd trade \| `B` Brzeżyna buy \| `K` theft |
-| `questTagged` | Item instances tagged as counting for this quest's checklist |
-| `q04.active` | True while quest is in progress (set on accept, clear on done/fail) |
-| `q04.status` | `done` on successful close; used by quest 07 poison gate |
+| `q04.deadline` | acceptance + 2 calendar days |
+| `q04.advance` | 0 or 10 coppers taken up front |
+| `q04.hemlockCaught` | Player handed hemlock as yarrow; Dobrawa caught it |
+| `q04.status` | `done` on successful delivery (on time or late); used by 07 |
+| `q04.active` | true between acceptance and close |
 
-**Advance vs final pay:** On-time cash is 30 copper. Advance is 15 (half). Final cash payout is **30 − advance** (on time) or **15 − advance** (late). **Worked example:** if `advance=15` and delivery is late ⇒ cash = **0** (fifteen minus fifteen). That is intentional, not a bug — the advance already paid half of the late fee. If advance was taken, the **item-alt** reward (salves/bandages) is **blocked** until the player either returns the advance (`to: dobrawa_purse`) or takes the cash payout with deduction.
+Checklist counts the herbs **handed over** at delivery, from any source (gathered, bought, given, or already in the player's bag).
 
----
+## Stage 1 — An empty shelf
 
-## Stages
+**Opening — Dobrawa at her door, a steaming pot behind her**
 
-### Stage 1 → 2 (accept + checklist start)
+> **Dobrawa:** You'll have to talk from there, he's coughing. — I need yarrow, two good handfuls. Mint, two. Chamomile, one. Everything I had went on the Tomasz household's cough and the hunter's girl. I can't leave him to go to the marsh.
+> **Player:** How long have I got?
+> **Dobrawa:** Two days and he's over the worst whatever I give him. Before that, the brew makes the difference between a week in bed and a month of coughing.
+> **Maciej:** *(from inside)* Is that someone? Can they tell me a story?
+> **Dobrawa:** They're going to the marsh, love. They'll tell you one after.
 
-Set `deadline=cal+2d`; start empty `questTagged` checklist; set `roadActive`.
+- A: "I'll go now." → `q04.active=true`; deadline set; Dobrawa+5; `stage=2`.
+- B: "Can you spare something up front? I'll need food for the road." → `from: dobrawa_purse` 10 → player; `advance=10`; `stage=2`.
+- C: "What does yarrow look like?" → Dobrawa: "Feathery leaves, like a fern's little sister. Flat white flowers. And it smells — crush a leaf, it smells green and bitter. If it smells of mice, drop it and wash your hands. That's hemlock." → (knowledge only); then A/B.
+- D: "I can't right now." → refuse; Dobrawa: "Then I'll ask Mira to sit with him while I go." Quest closes; Dobrawa goes herself (offscreen); no penalty.
 
-**Opening (giver) — Dobrawa (herbalist)**
+## Stage 2 — Gathering
 
-*(Designer note, not spoken: no death path in v1 — urgency only.)*
+Sources (mix freely):
 
-> Dobrawa: "My boy Maciej has a fever on the chest. I need yarrow, mint, and chamomile within two days. Will you fetch them so he sits up talking again?"
+| Herb | Where | Cost |
+|------|-------|------|
+| yarrow | marsh banks halfway to {V} (half a day) | time; hemlock grows beside it |
+| mint | Mira's pen garden (ask) or {V} herbalist | free if asked / ~4 c each in {V} |
+| chamomile | dry meadow by the road, or {V} herbalist, or Stanisław has a dried bundle | free / ~6 c / ~5 c |
 
-- A: "I'll get the herbs. Stay with him." → Dobrawa+8; continue to Terms (Terms sets `roadActive` / `stage=2` / deadline).
-- B: "What's the pay?" → continue to Terms.
-- C: "I can't leave Domowice right now." → refuse; quest stays available until timer window matters (implementer: re-offer while Maciej still needs the set).
+**Mira (mint)**
 
-**Terms — Dobrawa (accept / advance)**
+> **Mira:** For Dobrawa's boy? Take what you need — not the roots, mind, or I'll have none next year. *(she picks it herself, faster)* Tell him Miki says get well. She doesn't, she's a sheep. Tell him anyway.
 
-> Dobrawa: "I don't need a hero. I need someone who comes back with wet hands and a clear head. Two days. Yarrow twice, mint twice, chamomile once."
+→ gain mint×2.
 
-- A: "I'll go to the marsh. You stay with him." → Dobrawa+8; `stage=2`; set `roadActive`; set `deadline` / `q04.active`.
-- B: "Half the pay now." → advance `from: dobrawa_purse` **15** copper (`if_empty: treasury_home` max 15); set `q04.advance=15`; `stage=2`; set `roadActive`. *(Half of the 30 copper on-time reward.)*
-- C: "Teach me the brew when he's sitting up again." → `mentorHope=true` (non-blocking); `stage=2`; set `roadActive`.
+**Marsh (environmental)**
 
-### Stage 2 — Obtain the set (exclusive source)
+> *(self)* Two kinds of white flower nod over the water. One has feathery leaves and smells sharp when crushed. The other has spotted stems and smells faintly of mice.
 
-| ID | Source | Cost / time |
-|----|--------|-------------|
-| M | Marsh halfway to Brzeżyna | ~0.5 day gather |
-| P | Domowice shepherd trade | rope×1 **or** milk×1 |
-| B | Buy in Brzeżyna at ×2 prices | ~1 day road |
-| K | Steal Brzeżyna herbalist chest | Brzeżyna honesty−15 |
+- Gather the feathery, sharp-smelling one → yarrow.
+- Gather without checking → 50% yarrow, 50% hemlock (Survival raises the odds; N).
 
-**Dialog — Shepherd (optional trade)**
+**{V} herbalist (buy)** — standard trade window, prices ~×1.5 (N: urgency doesn't raise prices; the herbalist just charges town prices).
 
-> Shepherd: "For Dobrawa's boy I'll make the whole set — yarrow, mint, chamomile — for a length of rope or a skin of milk. No coin for sick-child herbs."
+**Theft** — the {V} herbalist's drying rack is unguarded at night. Taking herbs is ordinary theft under normal reputation rules (V honesty if seen). No special quest dialog.
 
-- A: *(have rope×1)* "Rope for the set." → spend rope×1; gain questTagged yarrow×2, mint×2, chamomile×1; `source=P`.
-- B: *(have milk×1)* "Milk for the set." → spend milk×1; same herbs; `source=P`.
-- C: "I don't have either yet." → leave; trade stays open.
+## Stage 3 — Delivery
 
-**Discovery — Marsh gather** (environmental)
+> **Dobrawa:** Show me. *(she checks each bundle, smelling the yarrow)*
 
-> *(self)* Wet banks, familiar leaves. Yarrow, mint, chamomile — enough for Dobrawa's brew if you take the half-day and keep the bundle dry.
+- *(complete, on time)* → Dobrawa: "Good. Good. That's all of it." *(she's already crushing it)* "Sit with him while it steeps. You promised him a story." → apply **on time**; `status=done`.
+- *(complete, late)* → Dobrawa: "He's through the worst on his own. This'll still shorten the cough." → apply **late**; `status=done`.
+- *(hemlock among the yarrow)* → Dobrawa: *(drops it, wipes her hands)* "That's hemlock. Smell it — mice. You couldn't have known, unless you'd been told." *(if the player asked in Stage 1: "I told you, didn't I.")* "Is there real yarrow?" → if yes, continue as complete; `hemlockCaught=true` (no penalty — she teaches the difference; the hemlock is now known to the player as poison, which matters in 07).
+- *(incomplete, deadline passed)* → Dobrawa: "Keep it. He's mending without it. I'll stock up when I can walk to the marsh myself." → fail; `active=false`; no `status=done`.
 
-- A: "Gather what Maciej needs." → ~0.5 day; gain questTagged set; `source=M`.
+**Maciej (after a successful delivery)**
 
-**Dialog — Brzeżyna herb seller** *(buy path)*
+> **Maciej:** *(hoarse)* Was there a monster at the marsh?
+> - "Only a heron. It looked at me like I owed it money." → Maciej laughs and coughs; Dobrawa+5.
+> - "A big one. With teeth." → Maciej: "You're lying. — Tell me anyway." → Maciej+10.
 
-> Seller: "Sick-child prices are still prices. Double what Domowice asks — yarrow, mint, chamomile, coin on the table."
+## Rewards
 
-- A: "I'll pay the double." → pay ×2 listed herb costs (`from: player`); gain questTagged set; `source=B`.
-- B: "Too rich. I'll find another way." → leave.
+| Result | Money | Alternative | Reputation (H) | Relations |
+|--------|-------|-------------|----------------|-----------|
+| On time | `from: dobrawa_purse` 30 − advance (`if_empty:` partial) | salve×2 instead of coin (advance still deducted from what's owed — Dobrawa keeps 1 salve if advance was taken) | helpfulness+10 | Dobrawa+30; Maciej+10 |
+| Late | `from: dobrawa_purse` 15 − advance (min 0) | bandage×2 | helpfulness+5 | Dobrawa+10 |
+| Failed | Advance stays with the player; Dobrawa doesn't ask | — | — | Dobrawa−10 |
 
-**Discovery — Steal Brzeżyna herbalist chest** (environmental / crime)
+On `done`: `q04.status=done`, `q04.active=false`. On fail: `q04.active=false`.
 
-> *(self)* A chest of dried bundles behind a loose latch. Taking it helps Maciej — and brands you a thief in Brzeżyna.
+## Refusal, interruption, missing NPCs
 
-- A: "Take the set and go." → gain questTagged set; `source=K`; Brzeżyna honesty−15.
-- B: "Leave it." → no theft.
-
-Once the checklist is complete, the player may proceed to stage 3 even after the deadline (see late row). Holding the complete set in inventory without delivering does **not** auto-resolve; "late" is judged **at delivery**.
-
-### Stage 3 — Delivery to Dobrawa
-
-**Dialog — Dobrawa (on delivery)**
-
-> Dobrawa: "Show me what you brought for Maciej. If the bundle is short, say so — don't dress grass as medicine."
-
-- A: *(complete, on time)* "Full set — yarrow, mint, chamomile. He's next." → apply on-time reward; set `q04.status=done`; clear `q04.active` / `roadActive`; `done`.
-- B: *(complete, late)* "I was late. The set is here — Maciej still needs it." → apply late reward; set `q04.status=done`; clear flags; `done`.
-- C: *(incomplete / past deadline)* "I don't have enough." → fail; Dobrawa−20; clear `q04.active` / `roadActive`.
-- D: *(fraud)* "This is what I found." *(wrong plants)* → honesty−25; Dobrawa−40; advance must be returned; fail dirty.
-
-| State at delivery | Result |
-|-------------------|--------|
-| Complete set **before** deadline | Cash: `from: dobrawa_purse` **30 − advance** (`if_empty: treasury_home` max **20 − advance**); **or** item-alt salve×2 + bandage×2 — but if advance > 0, item-alt is **unavailable** until advance is returned (`to: dobrawa_purse`) or player takes deducted cash; helpfulness+10; Dobrawa+35 |
-| Complete set **after** deadline (illness continues; **Maciej lives** — late, not death) | `from: dobrawa_purse` **15 − advance** (`if_empty: treasury_home` max **15 − advance**) **or** bandage×2 with the same advance clawback rule; Dobrawa+15 |
-| Incomplete after deadline | Fail; Dobrawa−20; advance stays with player as Dobrawa's loss (honesty−5 if not returned on fail) |
-| Hold: complete in inventory, not handed in | Still stage 2/3 pending; late only when handed in |
-| Fraud (grass / wrong plants) | honesty−25; Dobrawa−40; advance must be returned |
-
-On `done`: set `q04.status=done`, clear `q04.active`, clear `roadActive`. On fail: clear `q04.active`, clear `roadActive` (do not set `status=done`).
-
----
+- If Dobrawa dies, Maciej is cared for by Mira; quest closes.
+- KO during the trip doesn't stop the clock; it just costs time.
 
 ## Mechanisms
 
 | Tier | Content |
 |------|---------|
-| **Required** | 2-day timer; `questTagged` picks; late/hold delivery rules; advance clawback |
-| **Stub** | `sick` flag on Maciej (presentation only) |
-| **Out of scope** | Calamus; herb quality minigame; death path |
+| Required | Calendar timer; checklist of handed-over items; hemlock look-alike in gathering |
+| Stub | Maciej's sickness as a presentation state |
+| Out of scope | Full disease simulation for this child |

@@ -2,156 +2,129 @@
 created: 2026-09-30
 created_by: Grok / Scribe (Grok Bot)
 lang: en
-status: pass-with-nits
+status: revised
 provider_reviews:
-  - note: Prior Polish pack PL rounds 1–3 (pass-with-nits). New EN review wave below.
-  - round: EN-R1
-    by: executor (clarity / implementability)
-    result: revise-heavy — applied
-  - round: EN-R2
-    by: executor (cross-quest consistency)
-    result: revise-light — applied
-  - round: EN-R3
-    by: executor (dialog aloud / ship readiness)
-    result: pass-with-nits — applied
-  - round: DIALOG-R1
-    by: executor (opening / stage dialog coverage)
-    result: revise — applied
-  - round: DIALOG-R2
-    by: executor (voice / implementability / cross-quest)
-    result: pass-with-nits — applied
+  - note: Earlier Grok rounds (PL R1–R3, EN-R1–R3, DIALOG-R1–R2) are historical; see git history.
+  - round: CROSS-PACK-2026-10-01
+    by: Claude Code (three-round rework, see REVIEW-2026-10-01.md)
+    result: rewritten — extortion path removed, Halina placed in the hunter's household, outcomes differ in world effect not payout
 ---
 
 # 03 — Night Torches
 
-**Premise:** Child **Halina** has been putting out Domowice's night torches because she fears wolves will see the light — ever since the family dog **Szarik** was killed. Guard Wojciech needs the lights back without terrorizing the girl.
+**Premise:** Somebody keeps putting out {H}'s night torches. Wojciech the guard needs the lights back. The culprit is **Halina**, the hunter's young daughter, who believes darkness hides the village from the wolves that killed the family dog.
+
+Cast and places: [QUEST-WORLD.md](QUEST-WORLD.md). Soft link: [07 Trail of Siwy](grok-quest-07-trail-of-siwy.md) (same dog, same family).
 
 ## Meta
 
 | Field | Value |
 |-------|-------|
-| Level | Local night, calendar nights 1–3 |
+| Scale | Small, H only, night |
+| Start | Any of the first ten nights; torch posts exist (I: guard torch posts) |
 | Stages | 3 |
-| Settlements | Domowice only |
-| Giver | **Wojciech** (guard) — reserved |
-| Others | **Halina** (child); **Marta** (Halina's mother) — non-lock |
-| Soft-link | Fear after dog Szarik died (only wolf soft-link alongside quest 07) |
-| Ban | **No attack option on Halina** |
-| Casting note | **No Jarosław** in this quest (hunter stays in 07) |
-| `roadActive` | **No** |
+| Giver | **Wojciech** (H guard) |
+| Others | **Halina** (child), **Marta** (Halina's mother); **Jarosław** is away on night hunts and does not appear |
+| Ban | No attack, threat or payment involving the child or her mother |
+| Mechanics status | I: torch posts, night, guard NPC. N: stages, child NPC climbing posts (scripted), "board duty" scene |
 
 ## Characters
 
-- **Wojciech** — Domowice night guard; quest giver who notices torches going dark.
-- **Halina** — Child who extinguishes torches; believes darkness hides the village from wolves.
-- **Marta** — Halina's mother; can be threatened (extort path) or comforted (empathy path).
-- **Szarik** — Marta's family dog (Halina's household), already dead before the quest starts; remembered in dialog only. Same dog referenced as soft-link in quest 07 — do not invent a second named dead dog.
+- **Wojciech** — tired, decent, dry. Has no time for mysteries and no wish to frighten anyone.
+- **Halina** — about eight. Serious, logical in her own way, braver than she thinks.
+- **Marta** — the hunter's wife; holding the house together while Jarosław hunts at night after the grey wolf. Worried, a little ashamed.
+- **Szarik** — the family dog, killed by wolves at the edge of the village last autumn. Remembered only.
 
 ## World truth
 
-Halina is extinguishing torches out of fear, not sabotage for hire. Wolves are a real regional threat, but putting out torches makes night worse for the guard, not safer for the child. Szarik's death is the emotional cause — do not invent a second conspiracy.
+Since Szarik died, Halina has slipped out after her mother sleeps and smothered the torches nearest her house with an upturned clay cup. She reasons that if the wolves can't see the village, they won't come. Her father is out at night hunting the wolf he thinks killed Szarik (quest 07), so nobody at home has noticed.
 
-## Stage rules / flags (this quest)
+## Flags
 
 | Flag | Meaning |
 |------|---------|
 | `q03.stage` | 1 → 2 → 3 |
-| `q03.caughtHow` | How the player finds Halina: `watch` \| `sneak` \| `morning` |
-| `q03.childPath` | Exclusive: `empathy` \| `teach` \| `report` \| `extort` |
+| `q03.found` | `watch` \| `alone` \| `morning` |
+| `q03.path` | `together` \| `show` \| `tell` |
 
-**Cash equalization (EN rewrite):** empathy and report both pay **20 copper** from `treasury_home` at close (report previously paid 25 in the Polish pack; equalized by design request).
+## Stage 1 — Dark posts
 
----
+**Opening — Wojciech at the gate, dusk**
 
-## Stages
+> **Wojciech:** Third night this week. The posts by the hunter's house go dark before midnight. Not blown out — snuffed. Somebody climbs up there and puts a lid on them.
+> **Player:** Who'd do that?
+> **Wojciech:** Somebody who wants the dark. That's the bit I don't like. Help me find out — quietly. I don't want the whole square talking about thieves.
 
-### Stage 1 → 2 (catch how)
+- A: "I'll keep watch with you tonight." → `found=watch` path; `stage=2` after the night scene.
+- B: "I'll hide near the posts on my own." → Sneak check at night; success → `found=alone`; `stage=2`. Failure → nobody comes that night; try again.
+- C: "Let me look at the posts in the morning." → `found=morning`; go to Marta.
+- D: "Not tonight." → refuse; available while the torches keep going dark (until Wojciech solves it himself after ~10 nights — he catches Halina and Marta keeps her in; quest closes without the player).
 
-One branch only:
+**Night scene (watch or alone)**
 
-- **Watch** with Wojciech on night duty → `caughtHow=watch`.
-- **Sneak** alone and catch Halina at a torch → `caughtHow=sneak`.
-- **Morning** trail with Marta pointing to soot / moved stools → `caughtHow=morning`.
+> *(self)* A small shape climbs the post like a cat, a clay cup in one hand. The flame dies under it. She climbs down, looks toward the forest for a long moment — and only then sees you.
 
-**Opening (giver) — Wojciech (guard)**
+→ Halina dialog.
 
-> Wojciech: "Night torches keep going dark — third this week before midnight. Something small climbs the posts. Without light I can't guard Domowice. Help me find who — quietly."
+**Morning — Marta at her door (`found=morning`)**
 
-- A: "I'll help. How do we catch them?" → continue to approach choices.
-- B: "Not my watch." → refuse; quest stays available on nights 1–3.
+> **Marta:** Soot on our stool. And a cup from my shelf with black on the rim. *(she sits down heavily)* Halina. It's Halina, isn't it. She hasn't slept right since Szarik.
+> **Player:** I'd like to talk to her. Gently.
+> **Marta:** Please. And — not in front of the square. Jarosław's out every night after that wolf. I can't do this one alone too.
 
-**Approach — Wojciech (choose catch how)**
+→ Halina dialog (by the woodpile behind the house).
 
-> Wojciech: "I want eyes, not a panic on the square. Watch with me, sneak alone, or wait for morning trail with Marta — she lives by the dark post."
+## Stage 2 — Halina
 
-- A: "I'll stand the watch with you tonight." → `caughtHow=watch`; `stage=2`.
-- B: "I'll go quiet and catch them myself." → unlock sneak approach; on success `caughtHow=sneak`; `stage=2`.
-- C: "I'll look at first light with Marta." → `caughtHow=morning`; `stage=2`.
+> **Halina:** You're not going to tell Father?
+> **Player:** Tell me why first.
+> **Halina:** Because the wolves come where the light is. That's how they found Szarik — he was by the lamp in the yard. If it's dark, they can't see us. So they'll go somewhere else.
+> **Player:** Did someone tell you that?
+> **Halina:** No. I worked it out.
 
-**Dialog — Marta (Halina's mother), morning trail** *(if `caughtHow=morning`)*
+- A: "Let's go and tell Wojciech together. I'll stand next to you." → Halina: "…Will he shout?" → Player: "Not if I'm there." → `path=together`; Halina+20; Marta+10; `stage=3`.
+- B: "Wolves see better in the dark than we do. Come with me and Wojciech tomorrow at dusk — he'll show you." → Halina: "Show me how?" → `path=show`; Halina+10; `stage=3` after the dusk scene.
+- C: "I have to tell your mother and Wojciech. The guard needs the lights." → Halina: *(quietly)* "I knew you would." → `path=tell`; Halina−20; Wojciech+5; `stage=3`.
 
-> Marta: "Soot on the stool, little prints by the post. Halina — my girl — hasn't slept right since our dog Szarik died. Don't scare her harder than the dark does."
+**Dusk scene (`path=show`)** — Wojciech, Halina and the player at the edge of the woods
 
-- A: "Show me where she walks. I'll talk soft." → find Halina; `stage=2` ready for childPath.
-- B: "If she's harming the watch, the guard hears it." → Marta−5; still find Halina; `stage=2`.
+> **Wojciech:** See the prints along the ditch? A fox, and that bigger one there — wolf. Now see where they go. All the way round the lit posts, not between them. They don't like the light. They don't like us, either.
+> **Halina:** So the light keeps them out.
+> **Wojciech:** The light and me. I need both.
+> **Halina:** *(after a while)* Szarik was in the dark bit. By the woodpile. The lamp was on the other side.
+> **Wojciech:** *(gently)* Then the lamp wasn't what found him, was it.
 
-**Discovery — night watch / sneak** *(if `caughtHow=watch` or `sneak`)*
+## Stage 3 — Lights back
 
-> *(self / Wojciech aside)* A small figure climbs the post, cup over the flame. When the light dies, it's Halina — Marta's child — not a saboteur for hire.
+**Wojciech — close**
 
-- A: "Halina — wait. Nobody's going to hurt you." → enter Halina dialog; `stage=2`.
+- *(together)* > **Wojciech:** So it's you, little owl. Come here. No — I'm not angry. Can you climb that post and take the lid off? Good. From now on, the post by your house is yours. You light it at dusk with your mother. Every night. Can you do that?
+  > **Halina:** Every night.
+- *(show)* > **Wojciech:** You know what the light's for now. Leave the lids on your mother's shelf.
+  > **Halina:** Can I come again? To see the prints?
+  > **Wojciech:** Ask your father when he's home. He knows more than I do.
+- *(tell)* > **Marta:** She'll stay in at night until she understands. *(to the player, stiffly)* Thank you for telling me first, at least.
 
-### Stage 2 → 3 (`childPath`)
+## Rewards and world effects
 
-**Dialog — Halina (child), at a dark post**
+| path | World | Player | Reputation (H) | Relations |
+|------|-------|--------|----------------|-----------|
+| together | Torches stay lit; Halina lights the post by her house each dusk (N: child NPC routine) | `from: treasury_home` 15 (paid by Wojciech; partial if empty) | helpfulness+10, honesty+5 | Wojciech+20; Halina+20; Marta+15 |
+| show | Torches stay lit; Halina later asks Jarosław about tracks (unlocks one extra line in 07) | `from: treasury_home` 15 | helpfulness+8 | Wojciech+15; Halina+10; Marta+10 |
+| tell | Torches stay lit; Halina kept indoors at night for a week | `from: treasury_home` 15 | honesty+5 | Wojciech+10; Halina−20; Marta+0 |
 
-> Halina: "When it's bright, the forest can see us. When it's dark, maybe they won't find us. That's what I told our dog Szarik… before he was gone."
+Payment is the same — the guard pays for the lights, not for how the girl felt. What differs is the family's trust and Halina's later behaviour.
 
-- A: "A wolf sees in the dark anyway. Light bothers it more than it bothers us. Come — we'll ask Wojciech to show you why." → `childPath=teach`; Halina+15; `stage=3`.
-- B: "We'll go to Wojciech together. I'll speak first so you aren't alone." → `childPath=empathy`; Halina+25; Marta+10; `stage=3`.
-- C: "I'll tell the guard myself." → `childPath=report`; Halina−30; Marta−15; Wojciech+10; `stage=3`.
-- D: *(to Marta, private)* "Ten copper coins — and I keep quiet about your daughter." → go to Marta extort beat.
+## Refusal, interruption, missing NPCs
 
-**Dialog — Marta (extort path only)**
-
-> Marta: "Ten copper — and you swallow what you saw? Take it. Don't you dare smile at Halina afterward."
-
-- A: "Pay. I saw nothing." → `from: marta_purse` 10 copper (`if_empty: 0`); Domowice honesty−25; `childPath=extort`; `stage=3`.
-- B: "Keep your coin. I'll talk to Wojciech fair." → cancel extort; return to Halina options A–C.
-
-| ID | Choice | Immediate effects |
-|----|--------|-------------------|
-| A | Teach (Wojciech alone explains predators and torch light — **no Jarosław**) | Halina+15; `childPath=teach` |
-| B | Empathy + walk together to Wojciech | Halina+25, Marta+10; `childPath=empathy` |
-| C | Public report | Halina−30, Marta−15, Wojciech+10; `childPath=report` |
-| D | Extort Marta | `from: marta_purse` 10; honesty−25; `childPath=extort` |
-
-### Stage 3 — Close (different world outcomes per path)
-
-**Dialog — Wojciech (closing beat)**
-
-> Wojciech: "Torches are for the living. Tell me how this ends before I set the next watch."
-
-- A: *(empathy)* "Halina and I came together. She feared wolves after Szarik. Shorten the gaps — I'll bring two torches." → apply empathy row; `done`.
-- B: *(teach)* "She understands light better now. One torch from me; you show her the board duty." → apply teach row; `done`.
-- C: *(report)* "It was Halina. Keep her off the night square three days." → apply report row; `done`.
-- D: *(extort — if taken)* "I handled it. Don't ask how." → Wojciech−10 if he learns; apply extort dirty row; `done` dirty.
-
-Apply the row for `childPath`:
-
-| childPath | World change | Payout |
-|-----------|--------------|--------|
-| **empathy** | Wojciech shortens gaps between torches; player contributes torch×2 (`from: player`, or `from: treasury_home` up to 2 if stock exists) | `from: treasury_home` **20** copper (`if_empty: partial`); helpfulness+12; honesty+5; Wojciech+20 |
-| **teach** | Same torch spacing as empathy, but **no** treasury torch subsidy (player must supply torch×1 from inventory); Halina gets one daytime "board duty" helper shift | `from: treasury_home` **15** copper (`if_empty: partial`); helpfulness+8; honesty+8; Wojciech+15 |
-| **report** | Halina banned from night square for 3 days; torch layout unchanged | `from: treasury_home` **20** copper (`if_empty: partial`); honesty+10; helpfulness−5 |
-| **extort** | Problem returns; Wojciech finishes it himself / quest expires dirty | The 10 copper already taken; Wojciech−10; mark `done` dirty |
-
----
+- If Jarosław is home on the chosen night (e.g., quest 07 is finished), he catches Halina himself after the second night and the quest closes without the player.
+- If Marta is unavailable, Wojciech goes to Jarosław; the `together` ending still works.
+- The player cannot attack, threaten or take money from Halina or Marta in this quest (no dialog option exists; ordinary crimes follow normal rules).
 
 ## Mechanisms
 
 | Tier | Content |
 |------|---------|
-| **Required** | Night or morning beat; `childPath`; torch items / spacing flag |
-| **Stub** | Teach path = Wojciech dialog only (no hunter cameo) |
-| **Out of scope** | Patrol AI; Jarosław appearing in 03 |
+| Required | Night scheduling; torch post lit/unlit state; three paths |
+| Stub | Halina's climbing as a short scripted animation or offscreen |
+| Out of scope | Patrol AI changes beyond lit torches |

@@ -2,195 +2,148 @@
 created: 2026-09-30
 created_by: Grok / Scribe (Grok Bot)
 lang: en
-status: pass-with-nits
+status: revised
 provider_reviews:
-  - note: Prior Polish pack PL rounds 1–3 (pass-with-nits). New EN review wave below.
-  - round: EN-R1
-    by: executor (clarity / implementability)
-    result: revise-heavy — applied
-  - round: EN-R2
-    by: executor (cross-quest consistency)
-    result: revise-light — applied
-  - round: EN-R3
-    by: executor (dialog aloud / ship readiness)
-    result: pass-with-nits — applied
-  - round: DIALOG-R1
-    by: executor (opening / stage dialog coverage)
-    result: revise — applied
-  - round: DIALOG-R2
-    by: executor (voice / implementability / cross-quest)
-    result: pass-with-nits — applied
+  - note: Earlier Grok rounds (PL R1–R3, EN-R1–R3, DIALOG-R1–R2) are historical; see git history.
+  - round: CROSS-PACK-2026-10-01
+    by: Claude Code (three-round rework, see REVIEW-2026-10-01.md)
+    result: rewritten — cast/places aligned with QUEST-WORLD.md, roadActive removed, Wanda branch cut
 ---
 
 # 01 — Lost Lamb
 
-**Premise:** Mira the shepherd asks the player to find her stolen lamb **Miki** before the trail goes cold — a quiet gate theft at dawn, not a wolf raid.
+**Premise:** Mira the shepherd wakes to find her lamb **Miki** gone and the pen latch eased open, not broken. A hungry wanderer on the road has the lamb and a ready story about finding a stray.
+
+Cast and places: [QUEST-WORLD.md](QUEST-WORLD.md). Dialog uses `{H}` / `{V}` for generated settlement names.
 
 ## Meta
 
 | Field | Value |
 |-------|-------|
-| Level | Starter (calendar day 1–3) |
+| Scale | Small starter quest, H only |
+| Start | Calendar day 1–5, Mira alive, Piotr camping on the local road |
 | Stages | 3 |
-| Settlements | Domowice; confrontation with Piotr on the local road |
-| Giver | **Mira** (shepherd) — reserved home adult |
-| Others | **Wojciech** (guard, witness); **Piotr** (wanderer, thief); **Wanda** (optional false-ID in Brzeżyna) |
-| Requirements | None to start. If Mira relation ≥10, her tone is warmer. |
-| Conflicts | Wojciech is shared with quest 03 — do **not** block this quest's start |
-| Inspiration | Gothic / Fallout 2 style small investigation |
-| `roadActive` | **No**, except the optional Wanda hand-off in Brzeżyna |
+| Giver | **Mira** (H shepherd) |
+| Others | **Wojciech** (H guard, witness), **Piotr** (wanderer), **Tomasz** (Mira's husband, one line) |
+| Mechanics status | I: dialog with NPC, reputation, trade, sneak. N: quest stages/flags, item `lamb_miki` (a live animal that follows the player), evidence flags |
 
 ## Characters
 
-- **Mira** — Domowice shepherd; quest giver. She knows her pen latch by feel and will not accept "a wolf did it" without proof.
-- **Miki** — Mira's young lamb. Wears a small brass bell on a collar. **Alive** with Piotr after the theft (world truth).
-- **Wojciech** — Domowice guard; can give a witness lead about a stranger on the road at dawn.
-- **Piotr** — Wanderer camping on the local road; stole Miki at dawn by easing the gate open (not smashing it).
-- **Wanda** — Optional Brzeżyna contact. If the player hands her a lamb without checking the bell, she may take the wrong animal (false ID) — simplified stub, no two-settlement mediation in v1.
+- **Mira** — shepherd; knows her latch by feel and won't accept "a wolf did it" without proof. Quick, warm, sharp when worried.
+- **Miki** — Mira's lamb with a small brass bell on a cord. Alive with Piotr.
+- **Tomasz** — Mira's husband; slept through it and is embarrassed about that.
+- **Wojciech** — H guard; saw a stranger on the cart road before first light.
+- **Piotr** — wanderer, thin and hungry, heading for the market in {V} with a lamb to sell. Not violent; ashamed when cornered; would rather talk than run.
 
 ## World truth
 
-**Miki is alive with Piotr.** He eased Mira's pen latch open at dawn and walked off with the lamb. Scuff marks near the pen that look "wolfish" are **hare carrion** and a weak Survival misread — flag `q01.misreadWolf` — **not** a second true story. There is no wolf abduction in this quest.
+At dawn Piotr eased Mira's latch, led Miki out on a cord and walked off toward {V}. He camps by the ford on the local road, waiting for the morning market cart. The scuffs near the pen were made by a fox worrying a hare carcass the night before — they look like a struggle to an untrained eye. There was no wolf.
 
-## Stage rules / flags (this quest)
+## Flags
 
 | Flag | Meaning |
 |------|---------|
-| `q01.stage` | 1 → 2 → 3. Never decreases, **except** `q01.reopenTrack=true` returns the player to stage 2 (only after path D: believing the wolf lie and leaving without Miki). |
-| `q01.hasLead` | Enum lead id (need ≥1): **`latch`** = Mira's pen-latch / briefing; **`witness`** = Wojciech dawn stranger; **`track`** = Survival at pen. |
-| `q01.misreadWolf` | True if Survival check at the pen is weak — player may believe a wolf story. |
-| `q01.resolved` | `bought` \| `talked` \| `forced` once Miki is secured from Piotr. |
-| `q01.reopenTrack` | True after path D; stay on stage 2; Mira refuses stage-3 payout. |
-| `q01.givenWanda` | True if player handed a lamb to Wanda in Brzeżyna without inspecting the bell. |
-| `q01.advance` | Copper coins taken up front from Mira (0 or 10). |
+| `q01.stage` | 1 → 2 → 3 |
+| `q01.leads` | Set of `latch` (Mira), `witness` (Wojciech), `prints` (inspect pen: boot prints beside small hooves, no drag marks) |
+| `q01.misreadWolf` | Player inspected the pen with low Survival and concluded "wolf" |
+| `q01.resolved` | `evidence` \| `paid` \| `taken_back` \| `guard` |
+| `q01.piotrWork` | Mira offered Piotr a day's work (only after `evidence`) |
 
-Item: `lamb_miki` — the living lamb once recovered.
+`lamb_miki` follows the player once recovered (N: leash/follow for a single animal).
 
----
+## Stage 1 — The open pen
 
-## Stages
+**Opening — Mira at the pen**
 
-### Stage 1 → 2 (gather a lead)
+> **Mira:** Miki's gone. My lamb — the little one with the brass bell. The latch is up and the gate's shut behind her. Nobody shuts a gate behind themselves by accident.
+> **Player:** Could she have got out on her own?
+> **Mira:** And closed it after? No. Somebody walked her out.
+> **Tomasz:** *(from the door)* I didn't hear a thing. I'm sorry, Mira.
+> **Mira:** You never hear anything, love. That's not your fault, it's your ears.
 
-Change state: set at least one of `hasLead ∈ {latch, witness, track}`.
+- A: "I'll find her. Tell me everything." → quest starts; Mira+5; go to Briefing.
+- B: "What's it worth to you?" → Mira: "Fifteen coppers, and two fleeces when you bring her back. It's what I've got." → quest starts; go to Briefing.
+- C: "Wolves come down this time of year." → Mira: "Wolves don't lift latches. Come and look." → quest starts; go to Briefing.
+- D: "I can't now." → refuse; quest stays open while Miki is still missing.
 
-Ways to get a lead:
+**Briefing — Mira** → `leads+=latch`
 
-1. Talk to **Mira** at the pen → `hasLead=latch` (she describes the latch and Miki's bell).
-2. Talk to **Wojciech** → `hasLead=witness`. Public accusation of a named neighbor: Wojciech relation −5. Calm, factual talk: Wojciech +5.
-3. Survival check at the pen → `hasLead=track`. Low Survival also sets `misreadWolf=true`.
+> **Mira:** Feel this latch. You lift it and slide it — it doesn't swing up on its own, it's too stiff. And listen for the bell. It's not a cow bell, it's high and thin. If you hear that on the road, that's her, not the wind.
 
-**Opening (giver) — Mira (shepherd), at the pen**
+- A: "Don't go accusing anyone till I'm back." → Mira: "I won't. I'll just think it very loudly." → `stage=2`
+- B: "Who's been past lately?" → Mira: "Carters for the market. A man I didn't know yesterday evening, asking for water. Thin. Polite." → `stage=2`
 
-> Mira: "Miki's gone — my lamb. Brass bell on her collar. Someone took her before dawn. I need her back before the trail goes cold."
+**Wojciech (optional)** → `leads+=witness`
 
-Player options (accept / start):
+> **Wojciech:** Before first light, on the cart road, a man went by with a pack and something on a cord. I took it for a dog. He walked quick for someone with nowhere to be.
 
-- A: "I'll look for her. Tell me what you know." → Mira+5; continue to briefing below (briefing sets `hasLead` / `stage=2`).
-- B: "Ten copper coins up front; the rest when I bring Miki home." → `from: mira_purse` 10 copper (`if_empty: treasury_home`, max 10); Mira+0; `q01.advance=10`; continue to briefing; quest starts.
-- C: "Could be a wolf." → Mira: "A wolf doesn't ease latches. Come look."; continue to briefing.
+- A: "Thanks. I'll keep it quiet till I'm sure." → Wojciech+5.
+- B: "Come with me and arrest him." → Wojciech: "For walking a dog? Bring me something firmer and I'll come." *(unlocks `guard` outcome once player has ≥2 leads)*
 
-**Briefing — Mira (stage-1 latch lead)**
+**Inspect the pen (optional, Survival check)**
 
-> Mira: "I know that latch by feel. Someone eased it open — didn't smash it. Hear a brass bell on the road, it's Miki — not the wind."
+- Strong: *Two sets of tracks leave the gate together — small hooves, and boots beside them. Nothing was dragged.* → `leads+=prints`
+- Weak: *Torn fur and churned mud by the fence. Something fought here.* → `misreadWolf=true` (the player can still go to Mira with "wolf" — see below)
 
-- A: "Don't shout at people until I'm back with facts." → Mira+5; `hasLead=latch`; `stage=2`.
-- B: *(if advance not yet taken)* "I'll take the ten now and find her." → same advance rule as Opening B; `hasLead=latch`; `stage=2`.
-- C: "A wolf doesn't ease latches — I'll still check the trail carefully." → Set `misreadWolf=false` (clears a prior weak Survival misread); `hasLead=latch`; `stage=2`.
+If the player tells Mira "a wolf took her" (`misreadWolf`):
 
-**Dialog — Wojciech (guard), optional witness**
+> **Mira:** Then show me the blood. There's always blood with a wolf. *(silence)* No? Then it wasn't a wolf. Go and look on the road.
 
-> Wojciech: "Before first light I saw a stranger on the cart road — thin pack, quiet boots. He wasn't heading to our market."
+No penalty; `stage` stays 1 until the player gets any lead.
 
-- A: "Thanks. I'll ask around without naming names yet." → Wojciech+5; `hasLead=witness`; `stage=2`.
-- B: *(point at a neighbor)* "It was one of ours — say so on the square." → Wojciech−5; `hasLead=witness`; `stage=2`; Domowice honesty−5.
+## Stage 2 — The man by the ford
 
-**Discovery — Survival check at the pen** (environmental)
+Piotr sits by a small fire. Miki is tied to a willow, bell tinkling. He stands up when the player arrives.
 
-> *(self)* Scuffs in the mud look like claws at first glance — but the scrap is hare carrion, and the latch sits smooth, not broken.
+> **Piotr:** Morning. You'll be from {H}? I found this one wandering on the road at dawn. Thought I'd keep her safe till someone came asking. Feeding her's cost me, mind — a finder's fee wouldn't be out of place.
 
-- A: *(strong Survival)* "Not a wolf. Someone walked her out." → `hasLead=track`; `stage=2`.
-- B: *(weak Survival)* "Looks like a wolf drag to me." → `hasLead=track`; `misreadWolf=true`; `stage=2`.
+**With 2+ leads** (any combination):
 
-### Stage 2 — Confront Piotr (Miki must be resolved)
+- A: "Mira's latch was lifted, not broken. Wojciech saw you on the road with her on a cord. And your boot prints are next to her hoof prints all the way from the pen." *(uses whichever leads the player has)* → Piotr goes quiet, then: "…I was going to sell her in {V}. I haven't eaten properly in four days. I'm not a thief, I just — I am one, this morning. Take her." → `resolved=evidence`; gain `lamb_miki`; `stage=3`.
+- B: *(if Wojciech agreed to come)* "Wojciech's on his way. You can explain it to him." → Wojciech arrives, walks Piotr to the edge of {H} and tells him not to come back. → `resolved=guard`; gain `lamb_miki`; `stage=3`.
 
-Find Piotr on the local road. He has Miki (bell audible on success / inspect).
+**Any number of leads:**
 
-| ID | Action | Condition / cost | Result |
-|----|--------|------------------|--------|
-| A | Buy Miki back | `from: player` 22 copper → Piotr | `resolved=bought`; `stage=3`; gain `lamb_miki` |
-| B | Talk him into giving Miki back | Domowice courage ≥15 **or** player–Piotr relation ≥20 **or** mention Mira by name with `latch` or `witness` lead | `resolved=talked`; `stage=3`; gain `lamb_miki` |
-| C | Force / sneak the lamb | No coin cost | `resolved=forced`; Domowice honesty−15; `stage=3`; gain `lamb_miki` |
-| D | Believe the wolf story / leave without Miki | Requires `misreadWolf=true` | `reopenTrack=true`; **remain on stage 2**; do **not** go to stage 3 |
+- C: "Here's your fee. Ten coppers." → `from: player` 10 → Piotr; Piotr: "Ten's fair. She's a good lamb." → `resolved=paid`; gain `lamb_miki`; `stage=3`.
+- D: *(night, Sneak)* Wait until Piotr sleeps and untie Miki. → `resolved=taken_back`; gain `lamb_miki`; `stage=3`. If spotted: Piotr: "Hey! — oh. Hers, is it. Go on, then." (same result; Piotr+0).
 
-**Dialog — Piotr (wanderer)**
+**With 0 leads:**
 
-> Piotr: "Pretty brass bell — sounds like a shepherd's pet. Maybe Mira's lamb Miki followed me. Twenty-two copper and she's yours without a fuss."
+- E: "Where exactly did you find her?" → Piotr: "Up the road a way." → no progress; player can return with leads.
 
-- A: "Twenty-two copper. Hand over Mira's lamb — Miki." → pay 22; `resolved=bought`; `stage=3`.
-- B: "Mira knows that latch. Wojciech saw you at dawn. Give her back and walk on." → if talk gate passes: `resolved=talked`; `stage=3`; else Piotr refuses (stay stage 2).
-- C: *(force / sneak)* "I'm taking the lamb." → `resolved=forced`; honesty−15; `stage=3`.
-- D: *(only if `misreadWolf`)* "Keep her. The wolf trail at the pen is enough for me." → `reopenTrack=true`; stay stage 2.
+## Stage 3 — Home
 
-If D was chosen, next talk with Mira:
+**Mira — the lamb is back**
 
-> Mira: "I don't believe a wolf eased my latch. Go back to the road. Miki's bell is still out there."
+> **Mira:** *(hears the bell before she sees them)* That's her. That's — come here, you idiot sheep. *(to the player)* Where was she?
 
-- A: "I'll go back to the cart road." → stay `stage=2`; `reopenTrack` stays true until Piotr A/B/C.
-- B: "Then I'm done." → abandon available; no stage-3 pay; Mira−10 if abandoned with Miki still gone.
+- A: *(resolved=evidence)* "A wanderer had her. Piotr. He was going to sell her in {V} — he hadn't eaten in days." → Mira: "Hadn't eaten." *(long pause)* "…Is he still by the ford? We've a fence wants mending. A day's work for a day's food. If he steals the hammer, I'll know who to blame." → `piotrWork=true`; apply reward row `evidence`.
+- B: *(resolved=paid)* "I paid him a finder's fee to hand her over." → Mira: "You paid him for my lamb? …Well. She's back. Let me give you the fee back at least." → apply reward row `paid`.
+- C: *(resolved=taken_back)* "I took her back while he slept." → Mira: "Good. I'd have done the same, only louder." → apply row `taken_back`.
+- D: *(resolved=guard)* "Wojciech's sent him on his way." → Mira: "Good riddance. And thank Wojciech for me — no, I'll take him a cheese myself." → apply row `guard`.
 
-(Do not pay stage-3 rewards. Clear `reopenTrack` when the player returns to Piotr and resolves A/B/C.)
+## Rewards
 
-**Optional — Wanda (Brzeżyna), simplified after PL-R2**
+| resolved | Money | Items | Reputation (H) | Relations |
+|----------|-------|-------|----------------|-----------|
+| evidence | `from: mira_purse` 15 (`if_empty:` pay what's there) | wool×2 | helpfulness+10 | Mira+30 |
+| paid | `from: mira_purse` 15 + refund of the 10 paid to Piotr (`if_empty:` partial) | wool×2 | helpfulness+5 | Mira+20 |
+| taken_back | `from: mira_purse` 15 | wool×2 | helpfulness+8, courage+3 | Mira+25 |
+| guard | `from: mira_purse` 15 | wool×2 | helpfulness+8 | Mira+20; Wojciech+10 |
 
-This branch **takes the `roadActive` mutex**.
+**Epilogue `piotrWork`:** Piotr mends Mira's fence for a day (N: temporary NPC labour), eats with the family, and leaves for {V} next morning. Later in {V} the player may meet him again working at the smithy bellows (flavour line only, no quest).
 
-1. Player chooses to walk a lamb to Wanda in Brzeżyna.
-2. If `roadActive` is already true → **block** with refusal ("The road's spoken for — finish the other errand first."). Stay on current stage.
-3. Else set `roadActive=true` and travel (~1 day).
-4. **Inspect the brass bell** before handing over:
-   - Bell matches Miki → deliver real `lamb_miki`; do **not** set `givenWanda`; proceed toward Mira stage 3 as a normal return (still clear `roadActive` on leave Brzeżyna / on close).
-   - No inspect / wrong animal → set `givenWanda=true`; Mira−35; Domowice honesty−10; **no** two-settlement mediation in v1 (stub / cut); close dirty at Mira (see rewards).
-5. Always **clear `roadActive`** when leaving this branch (return home, dirty close, or abandon on the road).
+## Refusal, interruption, missing NPCs
 
-**Dialog — Wanda (Brzeżyna), optional hand-off**
-
-> Wanda: "You brought a lamb all this way? If it's Mira's Miki, the brass bell will say so. If you didn't look, that's on you — not on me."
-
-- A: *(inspect bell first; matches)* "Bell matches. Keep her safe till I tell Mira — or I'll walk her home myself." → deliver real `lamb_miki`; do not set `givenWanda`; clear `roadActive` on leave; proceed to Mira stage 3.
-- B: *(hand over without inspect)* "Take her. I'm done walking." → `givenWanda=true`; Mira−35; honesty−10; clear `roadActive`; dirty close at Mira.
-- C: "Road's wrong. I'm turning back with the lamb." → clear `roadActive`; keep `lamb_miki`; return toward Mira.
-
-### Stage 3 — Return to Mira (`done`)
-
-Player returns with `lamb_miki` (or with the Wanda failure state).
-
-**Dialog — Mira (successful return with `lamb_miki`)**
-
-> Mira: "That's her bell — that's my lamb Miki. Take what I promised. And no wolf stories about an open latch."
-
-- A: "She's safe. Glad the bell carried." → apply reward row for `resolved` (`bought` / `talked` / `forced`); `done`.
-- B: *(if advance was taken)* "Count the rest after the ten I already took." → same row with advance already subtracted.
-
-**Dialog — Mira (`givenWanda` dirty close)**
-
-> Mira: "That was not Miki's bell. You gave someone's child away on the Brzeżyna road. Leave the coin. Leave my gate."
-
-- A: "I'll make it right if I can." → apply `givenWanda` reward row (0 copper; Mira−35); `done` dirty.
-
-| Path | Money | Item | Reputation | Relations |
-|------|-------|------|------------|-----------|
-| `bought` or `talked`, lamb returned | `from: mira_purse` 25 copper (`if_empty: treasury_home` up to 25) **minus** any `q01.advance` already paid | wool×2 | helpfulness+10 | Mira+30 |
-| `forced`, lamb returned | Same money rule as above | wool×1 | helpfulness+5 | Mira+10; Wojciech−10 |
-| `givenWanda` | 0 | — | honesty−10 | Mira−35 |
-| Lied "wolf took her" while Miki still lives with Piotr | 0 | — | honesty−20 when the lie is exposed | Mira−40 |
-
----
+- If the player never comes, Piotr sells Miki at the {V} market after 2 days; Mira's opinion of the player doesn't change (they never promised). If the player accepted and didn't come back, Mira−5.
+- If Piotr is killed or chased off by animals, Miki stays tied at the ford; the player can simply bring her home (`taken_back`).
+- If Mira dies, Tomasz receives the lamb and pays from the household purse.
+- Attacking Piotr is possible through normal combat; it is a crime against a human under normal reputation rules and is not an authored outcome.
 
 ## Mechanisms
 
 | Tier | Content |
 |------|---------|
-| **Required** | Stage / `reopenTrack`; item `lamb_miki`; dialog; Wojciech witness; money from named purses |
-| **Stub** | Survival → `misreadWolf`; Wanda branch without mediation |
-| **Out of scope** | Blood-trail minigame; full two-settlement mediation |
+| Required | Stages and leads; `lamb_miki` follow; payment from named purse; Survival check result |
+| Stub | Piotr's fence work as a one-day scripted presence |
+| Out of scope | Blood-trail minigame; court/punishment system |
