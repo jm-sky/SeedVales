@@ -6,14 +6,14 @@
  */
 import type { Sim } from '../sim'
 import type { AiStep, Human } from '../types'
-import { COMPANION, RUN_SPEED_MPS } from '../../config/calibration'
+import { COMPANION, FIRE, RUN_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { countItem, findFood } from '../inventory'
 import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
 import { isBadWeather } from '../weather'
 import { companionDist } from './companions'
-import { deliverSurplus, dutyPlan } from './duties'
+import { deliverSurplus, dutyPlan, feedFirePlan } from './duties'
 import { doorOf, houseOf, settlementBuildings, threatNear, waterSources } from './queries'
 import { householdFoodCount } from './works'
 
@@ -160,6 +160,14 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
           return { label: 'Gathering at the campfire', steps: [go(spot.x + Math.cos(a) * 3.5, spot.z + Math.sin(a) * 3.5, 0.8), work('socialize', 90 + b5.e * 90, 'Talking', undefined, 'talk')] }
         },
       })
+    }
+  }
+
+  // --- Tend the settlement fire (FIRE-02 fallback): any adult steps in when it is nearly out and nobody is on it ---
+  if (!away && !comp && h.age === 'adult' && !isGuard && v.vigor > 20) {
+    const fire = settlementBuildings(sim, h.settlementId, 'campfire').find((b) => b.hearth && (b.fuel ?? 0) < FIRE.fallbackBelowH && (!b.tender || b.tender.until < cal))
+    if (fire) {
+      opts.push({ id: 'tend_fire', score: 0.3 + b5.c * 0.3 + (night ? 0.15 : 0), plan: () => feedFirePlan(sim, h, FIRE.fallbackBelowH) })
     }
   }
 

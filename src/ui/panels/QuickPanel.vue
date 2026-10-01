@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import PanelFrame from './PanelFrame.vue'
 
-type QuickId = 'park_cart' | 'load_cart' | 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'campfire'
+type QuickId = 'park_cart' | 'load_cart' | 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'plant_torch' | 'campfire'
 const { game } = useGameStrict()
 const GROUPS: { name: string; items: { id: QuickId | `bp:${string}`; label: string }[] }[] = [
-  { name: 'Fire', items: [{ id: 'campfire', label: 'Light a campfire' }, { id: 'torch', label: 'Light / stow torch' }, { id: 'drop_torch', label: 'Drop burning torch' }] },
+  { name: 'Fire', items: [{ id: 'campfire', label: 'Build a campfire' }, { id: 'torch', label: 'Light / stow torch' }, { id: 'drop_torch', label: 'Drop burning torch' }, { id: 'plant_torch', label: 'Plant torch' }, { id: 'bp:hearth', label: 'Build a stone hearth' }] },
   { name: 'Building', items: [{ id: 'bp:well', label: 'Build a well' }, { id: 'bp:trough', label: 'Build a trough' }, { id: 'bp:house', label: 'Build a house' }, { id: 'bp:palisade', label: 'Palisade' }] },
   { name: 'Terrain', items: [{ id: 'level', label: 'Level ground' }, { id: 'dig', label: 'Dig a hole' }, { id: 'raise', label: 'Raise ground' }] },
   { name: 'Cart', items: [{ id: 'load_cart', label: 'Load heavy goods into the cart' }, { id: 'park_cart', label: 'Park the cart' }] },

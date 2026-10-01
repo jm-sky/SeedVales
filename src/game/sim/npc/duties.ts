@@ -6,6 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { AiStep, Animal, Human } from '../types'
+import { FIRE } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, type SpeciesId } from '../../data/species'
 import { isTree } from '../../world/nodes'
@@ -95,7 +96,29 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   }
 }
 
+/**
+ * "Feeding the fire" (FIRE-02): a settlement hearth below `belowH` of fuel gets firewood from the warehouse. The hearth is
+ * reserved for the NPC while they walk, so two NPCs never fetch fuel for the same fire. No firewood in the stores → null
+ * (the fire goes out — the intended, visible consequence).
+ */
+export function feedFirePlan(sim: Sim, h: Human, belowH: number): DutyPlan {
+  const cal = sim.state.time.cal
+  const fire = settlementBuildings(sim, h.settlementId, 'campfire').find((b) => b.hearth && (b.fuel ?? 0) < belowH && (!b.tender || b.tender.id === h.id || b.tender.until < cal))
+  if (!fire) return null
+  const carried = countItem(h.inv, 'branch') + countItem(h.inv, 'log')
+  const wh = sim.building(sim.state.settlements[h.settlementId]?.warehouseId)
+  const stocked = !!wh?.inv && countItem(wh.inv, 'branch') + countItem(wh.inv, 'log') > 0
+  if (!carried && !stocked) return null
+  fire.tender = { id: h.id, until: cal + FIRE.tendHoldCalS }
+  const feed = [go(fire.x, fire.z, 1.6), work('feed_fire', 4, 'Feeding the fire', fire.id, 'interact')]
+  if (carried || !wh) return { label: 'Feeding the fire', steps: feed }
+  const wd = doorOf(wh)
+  return { label: 'Feeding the fire', steps: [go(wd.x, wd.z, 2), work('take_fuel', 3, 'Fetching firewood', wh.id, 'interact'), ...feed] }
+}
+
 function guard(sim: Sim, h: Human): DutyPlan {
+  const feed = feedFirePlan(sim, h, FIRE.tendBelowH)
+  if (feed) return feed
   const posts = settlementBuildings(sim, h.settlementId, 'torchpost')
   const night = isNight(sim.state.time.cal) || daylight(sim.state.time.cal) < 0.4
   const toLight = posts.find((p) => night && !p.lit)

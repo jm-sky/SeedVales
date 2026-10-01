@@ -21,6 +21,7 @@ import { placeSite, startBuildWork } from './sim/build'
 import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
 import { canCraft, craftTime } from './sim/craft'
+import { plantTorch } from './sim/fire'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
@@ -511,7 +512,7 @@ export class Game {
     this.notify()
   }
 
-  quick(action: 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'campfire') {
+  quick(action: 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'plant_torch' | 'campfire') {
     const p = this.sim.player
     const fx = p.x + Math.sin(p.rot) * 2
     const fz = p.z + Math.cos(p.rot) * 2
@@ -527,6 +528,9 @@ export class Game {
         break
       case 'level':
         startActivity(this.sim, { kind: 'level', label: 'Leveling', total: 6, data: `${fx},${fz},${this.sim.terrain.heightAt(p.x, p.z)}` })
+        break
+      case 'plant_torch':
+        this.showToast(plantTorch(this.sim, p).msg)
         break
       case 'raise':
         startActivity(this.sim, { kind: 'raise', label: 'Raising ground', total: 4, data: `${fx},${fz}` })

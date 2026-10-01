@@ -184,7 +184,6 @@ try {
     const sv = window.__sv
     const o = sv.openSpot(30)
     sv.teleport(o.x, o.z)
-    sv.give('stone', 4)
     sv.pause(false)
   })
   await key('KeyB')
@@ -474,6 +473,7 @@ try {
     const p = sim.player
     const f = sim.state.buildings.filter((b) => b.kind === 'campfire').sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0]
     f.lit = true
+    f.fuel = Math.max(f.fuel ?? 0, 10) // the step-5 campfire may have burnt down by now
     p.inv.items = p.inv.items.filter((x) => x.id !== 'raw_meat' && x.id !== 'cooked_meat')
     sim.player.inv.items.push({ id: 'raw_meat', qty: 1, fresh: 48, sp: 'deer' }, { id: 'raw_meat', qty: 2, fresh: 48, sp: 'boar' })
     sv.give('pan')
@@ -559,6 +559,73 @@ try {
   const op1 = await S((id) => window.__sv.game.sim.human(id).opinion, sonId)
   await clickTest('panel-close')
   check(results, '17. najem towarzysza (3 dni, eskorta) i prezent przez UI', hired.c?.kind === 'hired' && Math.abs(hired.c.until - hired.c.since - 3 * 86400) < 1e-3 && hired.money < m17 && op1 > op0, { hired, op0, op1 })
+  await S(() => window.__sv.pause(false))
+
+  // 18. FIRE-01 / FIRE-03: plant a torch from the quick panel, light / extinguish / burn it out; feed and burn out a campfire.
+  await S(() => {
+    const sv = window.__sv
+    const p = sv.game.sim.player
+    sv.pause(true)
+    p.eq.off = undefined
+    p.inv.items = p.inv.items.filter((x) => x.id !== 'torch' && x.id !== 'branch')
+    sv.give('torch', 1)
+    sv.give('flint', 1)
+    sv.give('branch', 6)
+  })
+  await key('KeyQ')
+  await clickTest('quick-plant_torch')
+  const torchId = await S(() => window.__sv.game.sim.state.ground.find((g) => g.planted)?.id)
+  await S((id) => { window.__sv.game.pinnedTarget = `ground:${id}` }, torchId)
+  await waitTarget((t) => t.ref === `ground:${torchId}` && t.opts.includes('light_planted'))
+  await key('KeyE')
+  await clickTest('opt-light_planted')
+  const torchLit = await S((id) => window.__sv.game.sim.state.ground.find((g) => g.id === id)?.lit, torchId)
+  await waitTarget((t) => t.ref === `ground:${torchId}` && t.opts.includes('douse_planted'))
+  await key('KeyE')
+  await clickTest('opt-douse_planted')
+  const torchOut = await S((id) => window.__sv.game.sim.state.ground.find((g) => g.id === id)?.lit, torchId)
+  const burnLeft = await S((id) => window.__sv.game.sim.state.ground.find((g) => g.id === id)?.burnH, torchId)
+  await waitTarget((t) => t.ref === `ground:${torchId}` && t.opts.includes('light_planted'))
+  await key('KeyE')
+  await clickTest('opt-light_planted')
+  await shot(page, 'acc-18-planted-torch')
+  const torchGone = await S((id) => {
+    window.__sv.pause(false)
+    window.__sv.simStep(6 * 150)
+    return !window.__sv.game.sim.state.ground.some((g) => g.id === id)
+  }, torchId)
+  check(results, '18a. latarnia: wbicie, zapalenie, zgaszenie (zachowuje czas), wypalenie po upływie czasu', torchLit === true && torchOut === false && burnLeft > 4.9 && torchGone, { torchLit, torchOut, burnLeft, torchGone })
+
+  await S(() => {
+    window.__sv.pause(false)
+  })
+  await key('KeyB')
+  await clickTest('place-campfire')
+  await waitTarget((t) => t.opts.includes('build'))
+  await key('KeyE')
+  if (await page.$('[data-testid="opt-build"]')) await clickTest('opt-build')
+  await finishActivity()
+  await S(() => window.__sv.pause(true))
+  const fire0 = await S(() => {
+    const sim = window.__sv.game.sim
+    const f = sim.state.buildings.filter((b) => b.playerBuilt && b.kind === 'campfire').pop()
+    return f ? { id: f.id, fuel: f.fuel, lit: f.lit, x: f.x, z: f.z } : { missing: JSON.stringify({ sites: sim.state.sites, act: sim.state.px.activity, inv: sim.player.inv.items.map((x) => x.id + x.qty).join(), hour: (sim.state.time.cal / 3600) % 24 }) }
+  })
+  if (fire0.missing) throw new Error('18b: no campfire built ' + fire0.missing)
+  await S((f) => { window.__sv.approach(f.x, f.z, 1.8) }, fire0)
+  await S((id) => { window.__sv.game.pinnedTarget = `building:${id}` }, fire0.id)
+  await waitTarget((t) => t.ref === `building:${fire0.id}` && t.opts.includes('add_fuel'))
+  await key('KeyE')
+  await clickTest('opt-add_fuel')
+  const fire1 = await S((id) => window.__sv.game.sim.building(id)?.fuel, fire0.id)
+  const burnt = await S((f) => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    sv.pause(false)
+    sv.simStep((sim.building(f.id).fuel + 1) * 150)
+    return { gone: !sim.building(f.id), ash: sim.tracesNear(f.x, f.z, 2).some((t) => t.kind === 'ash') }
+  }, fire0)
+  check(results, '18b. ognisko: start na 3 gałęziach, dokładanie opału (UI), wypalenie → popiół', fire0.lit === true && fire1 > fire0.fuel + 2 && burnt.gone && burnt.ash, { fire0, fire1, burnt })
   await S(() => window.__sv.pause(false))
 
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.

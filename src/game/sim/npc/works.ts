@@ -6,12 +6,13 @@
  */
 import type { Sim } from '../sim'
 import type { Animal, Human } from '../types'
-import { CARAVAN_FEE, DECISION, WOOL_REGROW_DAYS } from '../../config/calibration'
+import { CARAVAN_FEE, DECISION, FIRE, WOOL_REGROW_DAYS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
 import { alertAround } from '../alerts'
 import { applyDamage, weaponOf } from '../combat'
+import { npcFeedFire } from '../fire'
 import { addItem, countItem, findFood, newStack, removeItem, wieldBest } from '../inventory'
 import { forgeOrder } from '../orders'
 import { growthFactor } from '../time'
@@ -180,6 +181,23 @@ export const WORK_ACTS: Record<string, Act> = {
   fill_trough: (sim, h, ref) => {
     const b = sim.building(ref)
     return !!b && fillTrough(sim, h, b).ok
+  },
+  /** Takes firewood from the settlement warehouse (conservation: the branches leave the stores, the fire burns them). */
+  take_fuel: (sim, h, ref) => {
+    const b = sim.building(ref)
+    if (!b?.inv) return false
+    for (const id of ['branch', 'log']) {
+      const n = Math.min(countItem(b.inv, id), FIRE.carryMax - countItem(h.inv, 'branch') - countItem(h.inv, 'log'))
+      if (n <= 0) continue
+      for (const r of removeItem(b.inv, id, n)) addItem(h.inv, r)
+    }
+    return countItem(h.inv, 'branch') + countItem(h.inv, 'log') > 0
+  },
+  feed_fire: (sim, h, ref) => {
+    const b = sim.building(ref)
+    if (!b) return false
+    if (b.tender?.id === h.id) b.tender = undefined
+    return npcFeedFire(h, b)
   },
   light_torch: (sim, _h, ref) => {
     const b = sim.building(ref)

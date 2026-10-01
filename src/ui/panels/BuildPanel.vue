@@ -53,7 +53,7 @@ const list = computed(() => {
           >{{ m.name }} {{ m.have }}/{{ m.qty }}</span>
         </div>
         <div class="text-[11px] text-muted-foreground">
-          Stages: {{ e.b.stages.map((s) => `${s.name} (${s.hours} h, ${s.tool})`).join(' → ') }}
+          Stages: {{ e.b.stages.map((s) => `${s.name} (${s.hours} h${s.tool ? ', ' + s.tool : ''})`).join(' → ') }}
         </div>
       </div>
     </div>

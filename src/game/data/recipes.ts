@@ -63,7 +63,8 @@ export interface BuildStage {
   name: string
   /** Calendar hours of work at construction skill 0 (skill speeds up to 2×). */
   hours: number
-  tool: Capability
+  /** Missing = no tool needed (stacking stones). */
+  tool?: Capability
 }
 
 export interface Blueprint {
@@ -78,7 +79,8 @@ export interface Blueprint {
 }
 
 export const BLUEPRINTS: Blueprint[] = [
-  { id: 'campfire', name: 'Campfire', kind: 'campfire', materials: [{ item: 'stone', qty: 4 }, { item: 'branch', qty: 3 }], stages: [{ name: 'Laying the fire', hours: 0.25, tool: 'fire_start' }], hw: 1, hd: 1, category: 'fire' },
+  { id: 'campfire', name: 'Campfire', kind: 'campfire', materials: [{ item: 'branch', qty: 3 }], stages: [{ name: 'Laying the fire', hours: 0.25, tool: 'fire_start' }], hw: 1, hd: 1, category: 'fire' },
+  { id: 'hearth', name: 'Stone hearth', kind: 'campfire', materials: [{ item: 'stone', qty: 4 }], stages: [{ name: 'Stacking the stones', hours: 0.5 }], hw: 1, hd: 1, category: 'fire' },
   { id: 'trough', name: 'Trough', kind: 'trough', materials: [{ item: 'log', qty: 2 }], stages: [{ name: 'Hewing', hours: 1, tool: 'chop' }], hw: 1.2, hd: 0.5, category: 'build' },
   { id: 'well', name: 'Well', kind: 'well', materials: [{ item: 'stone', qty: 12 }, { item: 'log', qty: 2 }, { item: 'rope', qty: 1 }], stages: [{ name: 'Digging the shaft', hours: 4, tool: 'dig' }, { name: 'Lining', hours: 4, tool: 'hammer' }], hw: 1.1, hd: 1.1, category: 'build' },
   { id: 'palisade', name: 'Palisade (4 m)', kind: 'palisade', materials: [{ item: 'log', qty: 4 }], stages: [{ name: 'Setting the stakes', hours: 1.5, tool: 'dig' }], hw: 2, hd: 0.3, category: 'build' },

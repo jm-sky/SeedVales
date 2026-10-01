@@ -1087,8 +1087,8 @@
    "scope": "v2",
    "behavior": "Campfire needs starter fuel (3 branches) and fire_start; burns for calendar hours; adding fuel extends burn time and raises fire size/light (high cap), shrinking back as fuel burns; when out it leaves an ash trace that fades in ~12 h, faster in rain",
    "verify": "vitest + e2e + screenshot",
-   "status": "planned",
-   "evidence": "plan survival--001"
+   "status": "verified",
+   "evidence": "src/game/sim/survival.test.ts FIRE-01 (campfire = 3 branches, starts lit on starter fuel, burns in calendar hours, cap, fireLevel, burn-out removes it and leaves ash that fades in ~12 h and faster in rain, ash is no blood); sim/fire.ts + traces.ts; e2e acceptance 18b"
   },
   {
    "id": "FIRE-02",
@@ -1096,8 +1096,8 @@
    "scope": "v2",
    "behavior": "Stone hearth (3-5 stones): permanent, dismantle returns the stones, faster relighting, better base for a spit; settlement fires and torches kept by the guard, optionally a cleaner, fallback any NPC who feels the need (fuel from warehouse branches)",
    "verify": "vitest + e2e",
-   "status": "planned",
-   "evidence": "plan survival--001"
+   "status": "verified",
+   "evidence": "src/game/sim/survival.test.ts FIRE-02 (settlement fires are hearths, hearth survives burn-out and is relit/dismantled for 4 stones, guard feeds from warehouse branches, fallback NPC when no guard, empty stores = fire goes out, reservation); npc/duties.ts feedFirePlan, goals.ts tend_fire; spit-next-to-hearth discount not done"
   },
   {
    "id": "FIRE-03",
@@ -1105,8 +1105,8 @@
    "scope": "v2",
    "behavior": "Standing torch (cheap lantern): plant a torch upright on the ground, light/extinguish it, it burns 4-6 calendar hours while lit; only a lit torch gives light and scares animals",
    "verify": "vitest + e2e (incl. mobile)",
-   "status": "planned",
-   "evidence": "plan survival--001"
+   "status": "verified",
+   "evidence": "src/game/sim/survival.test.ts FIRE-03 (plant from pack/hand, light/extinguish/pick up, burns only while lit, remaining time kept through pickup, burn-out removes light and fear, thrown torch burns out, save keeps burnH/planted); e2e acceptance 18a, mobile M10"
   },
   {
    "id": "FIRE-04",

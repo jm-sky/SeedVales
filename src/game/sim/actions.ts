@@ -13,6 +13,7 @@ import { skillGain } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { isTree } from '../world/nodes'
 import { Biome } from '../world/types'
+import { torchBurnH } from './fire'
 import { addItem, countItem, findTool, fitQty, newStack, removeItem, removeStack, wearTool } from './inventory'
 import { seasonOf } from './time'
 import { drink, eat, heal, makeIll } from './vitals'
@@ -58,7 +59,7 @@ export function fillTrough(sim: Sim, h: Human, trough: Building): ActionResult {
 export const TROUGH_CAPACITY = 12
 
 export function dropItem(sim: Sim, x: number, z: number, stack: ItemStack, lit = false) {
-  sim.addGround({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit })
+  sim.addGround({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit, burnH: stack.id === 'torch' ? torchBurnH(stack) : undefined })
 }
 
 export function nodeAvailable(sim: Sim, n: ResNode): boolean {

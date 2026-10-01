@@ -6,7 +6,7 @@
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { ProfessionId, WorldData } from '../world/types'
 import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, Kin, SettlementState } from './types'
-import { START_CALENDAR_S, TREASURY_START } from '../config/calibration'
+import { FIRE, START_CALENDAR_S, TREASURY_START } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { NAMES, PROFESSIONS } from '../data/professions'
 import { emptySkills } from '../data/skills'
@@ -90,7 +90,12 @@ export function createNewGame(world: WorldData): GameState {
     if (b.kind === 'field') b.field = { crop: rng.pick(['carrot', 'cabbage', 'grain', 'tomato'] as const), growth: rng.range(0.1, 0.6), moisture: 0.5 }
     if (b.kind === 'trough') b.water = 10
     if (b.kind === 'torchpost') b.lit = false
-    if (b.kind === 'campfire') b.lit = true
+    if (b.kind === 'campfire') {
+      // Settlement fires are stone hearths, lit at generation (FIRE-02).
+      b.hearth = true
+      b.fuel = FIRE.settlementStartH
+      b.lit = true
+    }
     if (b.kind === 'house' || b.kind === 'inn') b.inv = { items: [] }
   }
 

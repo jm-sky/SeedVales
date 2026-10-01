@@ -6,7 +6,6 @@ import type { Sim } from './sim'
 import type { Human } from './types'
 import { COMPANION } from '../config/calibration'
 import { PROFESSIONS } from '../data/professions'
-import { migrate } from '../save/migrate'
 import { roundTrip } from '../save/snapshot'
 import { giftGain, giveGift, wantedItem } from './gifts'
 import { targetOptions } from './interact'
@@ -14,7 +13,6 @@ import { addItem, newStack } from './inventory'
 import { askToJoin, companionDist, companionSystem, dailyWage, hireCompanion, hireRefusal, joinChance } from './npc/companions'
 import { run, testSim } from './testWorld'
 import { buyFromNpc, tradeStock } from './trade'
-import { SAVE_VERSION } from './types'
 
 const totalMoney = (sim: Sim) => sim.player.money + sim.state.npcs.reduce((s, n) => s + n.money, 0) + sim.state.settlements.reduce((s, x) => s + x.treasury, 0)
 
@@ -223,15 +221,5 @@ describe('npc--001: companions (COMP-01/02/03)', () => {
     addItem(sim.player.inv, newStack('apple'))
     giveGift(sim, n, sim.player.inv.items.find((s) => s.id === 'apple')!)
     expect(n.eq.main).toBe(sword)
-  })
-
-  it('SAVE-01: v6 → v7 migration derives household roles for old populations', () => {
-    const sim = testSim()
-    const st = roundTrip(sim)
-    st.saveVersion = 6
-    for (const n of st.npcs) delete n.kin
-    const m = migrate(st)
-    expect(m.saveVersion).toBe(SAVE_VERSION)
-    for (const n of m.npcs) expect(n.kin).toBe(n.profession ? 'head' : n.age === 'adult' ? 'spouse' : n.age)
   })
 })

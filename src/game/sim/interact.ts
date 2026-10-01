@@ -15,6 +15,7 @@ import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, unloadInto, unloadToBuilding } from './cart'
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
+import { addFuelFromPack, canLightTorch, dismantleHearth, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
@@ -164,7 +165,9 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
             o.push(opt('roast', `Roast meat (${n}/${cap} pcs)`, n > 0, cap ? 'No raw meat' : 'Move closer to the fire'))
           }
           o.push(opt('craft', 'Cook / craft', true, undefined, 'craft'), opt('rest', 'Rest by the fire (speed up time)'), opt('camp_sleep', 'Sleep by the campfire'))
+          o.push(opt('add_fuel', `Add fuel (${(b.fuel ?? 0).toFixed(1)} h left)`, countItem(p.inv, 'branch') + countItem(p.inv, 'log') > 0, 'You have no branches or logs'))
           if (!b.lit) o.unshift(toolOpt(sim, 'light', 'Light', 'fire_start', 'flint and steel'))
+          if (b.hearth && !b.lit) o.push(opt('dismantle_hearth', 'Dismantle the hearth (get the stones back)'))
           break
         case 'house':
         case 'shed':
@@ -225,6 +228,12 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
     case 'ground': {
       const g = sim.state.ground.find((gg) => gg.id === t.id)
       if (g?.stack.id === 'rock_chunk') return [toolOpt(sim, 'break_chunk', 'Break into stones with a pickaxe', 'mine', 'pickaxe'), opt('pickup', 'Pick up (heavy)')]
+      if (g?.planted) {
+        return [
+          g.lit ? opt('douse_planted', 'Extinguish') : canLightTorch(sim, p, g) ? opt('light_planted', 'Light') : opt('light_planted', 'Light', false, 'You need flint and steel or a fire next to it'),
+          opt('pickup', 'Pick up the torch'),
+        ]
+      }
       return [opt('pickup', 'Pick up')]
     }
     case 'node': {
@@ -272,6 +281,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
   }
   const at = (x: number, z: number) => `${x.toFixed(2)},${z.toFixed(2)}`
   switch (optionId) {
+    case 'add_fuel': {
+      const b = sim.building((t as { id: string }).id)
+      return b ? addFuelFromPack(p, b).msg : ''
+    }
     case 'ask_join': {
       const n = sim.human((t as { id: number }).id)
       return n ? askToJoin(sim, n).msg : ''
@@ -316,6 +329,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       equip('chop')
       startActivity(sim, { kind: 'chop', ref: (t as { id: string }).id, label: 'Felling the tree', total: Math.max(6, 18 - p.skills.woodcutting / 8) })
       return ''
+    case 'dismantle_hearth': {
+      const b = sim.building((t as { id: string }).id)
+      return b ? dismantleHearth(sim, p, b).msg : ''
+    }
     case 'dismiss': {
       const n = sim.human((t as { id: number }).id)
       return n ? dismissCompanion(sim, n) : ''
@@ -324,6 +341,11 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       const b = sim.building((t as { id: string }).id)
       if (b) b.lit = false
       return 'Put out.'
+    }
+    case 'douse_planted': {
+      const g = sim.state.ground.find((gg) => gg.id === (t as { id: number }).id)
+      if (g) extinguishGroundTorch(g)
+      return 'You put the torch out.'
     }
     case 'drink':
     case 'drink_well':
@@ -375,8 +397,14 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       return 'Rats have nested in the warehouse wall. Kill the rats and repair the building (hammer + branches).'
     case 'light': {
       const b = sim.building((t as { id: string }).id)
-      if (b) b.lit = true
+      if (!b) return ''
+      if (b.kind === 'campfire') return lightFire(p, b).msg
+      b.lit = true
       return 'Lit.'
+    }
+    case 'light_planted': {
+      const g = sim.state.ground.find((gg) => gg.id === (t as { id: number }).id)
+      return g && lightGroundTorch(g) ? 'The torch flares up.' : 'The torch is spent.'
     }
     case 'load_cart': {
       const c = sim.state.carts.find((x) => x.id === (t as { id: number }).id)
@@ -403,7 +431,9 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (!g) return ''
       const n = fitQty(p, g.stack)
       if (n <= 0) return 'You cannot carry any more.'
-      addItem(p.inv, { ...g.stack, qty: n })
+      const taken = { ...g.stack, qty: n }
+      restoreTorchDur(g, taken)
+      addItem(p.inv, taken)
       g.stack.qty -= n
       if (g.stack.qty <= 0) sim.removeGround(g)
       return `Picked up: ${itemDef(g.stack.id).name}${g.stack.qty > 0 ? ` ×${n} (the rest is too heavy)` : ''}`

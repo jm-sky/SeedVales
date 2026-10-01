@@ -48,39 +48,13 @@ describe('save / load', () => {
     expect(() => checkWorldCompat({ ...st, genVersion: sim.world.version, seed: 7 }, sim.world)).toThrow(/different world/)
   })
 
-  it('SAVE-01: migrate backfills v1 saves and rejects newer/unknown versions', () => {
+  it('SAVE-01: older save formats are rejected cleanly, newer ones too (D-SAVE-7)', () => {
     const sim = testSim()
     const st = JSON.parse(JSON.stringify(snapshot(sim)))
-    st.saveVersion = 1
-    for (const s of st.settlements) delete s.treasury // a real v1 save has no treasuries
-    st.px.orders = [{ id: 'o1', npcId: 1, recipe: 'knife', paid: 5, price: 10, readyAt: 0, status: 'ready' }, { id: 'o2', npcId: 1, recipe: 'axe', paid: 5, price: 10, readyAt: 0, status: 'collected' }]
-    st.npcs[0].ai.cooldowns.caravan_back = 123
-    const m = migrate(st)
-    expect(m.saveVersion).toBe(SAVE_VERSION)
-    expect(m.px.orders[0]!.status).toBe('waiting')
-    expect(m.px.orders.length).toBe(1) // collected dropped
-    expect(m.px.orders[0]!.recipeId).toBe('knife')
-    expect(m.px.orders[0]!.itemId).toBe('knife')
-    expect(m.settlements.every((s) => s.treasury > 0)).toBe(true)
-    expect(m.npcs[0]!.ai.cooldowns.caravan_back).toBeUndefined()
+    expect(migrate({ ...st }).saveVersion).toBe(SAVE_VERSION)
+    for (const v of [0, 1, SAVE_VERSION - 1]) expect(() => migrate({ ...st, saveVersion: v }), `v${v}`).toThrow(SaveError)
+    expect(() => migrate({ ...st, saveVersion: SAVE_VERSION - 1 })).toThrow(/outdated or corrupted/)
     expect(() => migrate({ ...st, saveVersion: SAVE_VERSION + 1 })).toThrow(SaveError)
-    expect(() => migrate({ ...st, saveVersion: 0 })).toThrow(SaveError)
-  })
-
-  it('SAVE-01: v4 → v5 migration ties old rats to the nearest rat nest (review 003 #6)', () => {
-    const sim = testSim()
-    const st = JSON.parse(JSON.stringify(snapshot(sim)))
-    st.saveVersion = 4
-    delete st.traces
-    const b = st.buildings.find((x: { kind: string }) => x.kind === 'warehouse')
-    b.ratNest = { strength: 1, since: 0 }
-    const rat = { ...st.animals[0], id: 999_999, species: 'rat', x: b.x + 10, z: b.z, denId: undefined }
-    const far = { ...rat, id: 999_998, x: b.x + 300 }
-    st.animals.push(rat, far)
-    const m = migrate(st)
-    expect(m.traces).toEqual([])
-    expect(m.animals.find((a) => a.id === 999_999)!.denId).toBe(`nest:${b.id}`)
-    expect(m.animals.find((a) => a.id === 999_998)!.denId).toBeUndefined()
   })
 
   it('SAVE-01: missing or corrupt slot → SaveError, not a silent new game', async () => {

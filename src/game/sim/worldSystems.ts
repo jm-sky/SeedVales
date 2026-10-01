@@ -5,11 +5,13 @@
  */
 import type { SpeciesId } from '../data/species'
 import type { Sim, SimSystem } from './sim'
+import type { Building } from './types'
 import { CALENDAR_SPEED, FOOD } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { regrowNodes } from './actions'
 import { projectileSystem } from './combat'
 import { faunaSystem } from './fauna/ai'
+import { burnFuel, burnGroundTorch, removeBurntOut } from './fire'
 import { addItem, newStack, spoilInventory } from './inventory'
 import { navigationSystem } from './navigation'
 import { makeAnimal, rollVariant } from './newGame'
@@ -31,7 +33,9 @@ function ecology(sim: Sim, dt: number) {
   const bad = isBadWeather(s.weather)
   const g = growthFactor(s.time.cal)
   const perNest = s.buildings.some((b) => b.ratNest) ? countByDen(sim) : undefined
+  const burntOut: Building[] = []
   for (const b of s.buildings) {
+    if (b.lit && b.kind === 'campfire' && burnFuel(b, h)) burntOut.push(b)
     if (b.field) {
       b.field.moisture = Math.max(b.field.moisture - 0.02 * h, s.weather.wetness)
       // Natural growth: ~4 days to mature with moisture; tending speeds up.
@@ -66,12 +70,17 @@ function ecology(sim: Sim, dt: number) {
     }
     if (b.kind === 'torchpost' && b.lit && b.durability < 5) b.lit = false
   }
+  removeBurntOut(sim, burntOut)
   // Spoilage.
   spoilInventory(s.player.inv, h)
   for (const n of s.npcs) spoilInventory(n.inv, h)
   for (const b of s.buildings) if (b.inv) spoilInventory(b.inv, h, FOOD.chestSpoilFactor)
   for (let i = s.ground.length - 1; i >= 0; i--) {
     const gi = s.ground[i]!
+    if (gi.lit && burnGroundTorch(gi, h)) {
+      sim.removeGround(gi)
+      continue
+    }
     if (gi.stack.fresh !== undefined) {
       gi.stack.fresh -= h * 1.2
       if (gi.stack.fresh <= 0) sim.removeGround(gi)

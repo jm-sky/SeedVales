@@ -7,7 +7,7 @@ import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 7
+export const SAVE_VERSION = 8
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -240,6 +240,12 @@ export interface Building {
   owner: 'settlement' | 'player' | `household:${number}`
   inv?: Inventory
   lit?: boolean
+  /** Campfire / hearth fuel in calendar hours (FIRE-01); the fire is lit while > 0. */
+  fuel?: number
+  /** Stone hearth: permanent, relit with fuel, dismantled for its stones (FIRE-02). */
+  hearth?: boolean
+  /** NPC currently feeding this fire (reservation, FIRE-02); ignored once `until` (calendar s) has passed. */
+  tender?: { id: number; until: number }
   /** Water level (drinks) for troughs. */
   water?: number
   field?: { crop: FieldCrop; growth: number; moisture: number }
@@ -272,6 +278,10 @@ export interface GroundItem {
   /** Calendar s. */
   droppedAt: number
   lit?: boolean
+  /** Torch standing upright in the ground (FIRE-03). */
+  planted?: boolean
+  /** Remaining burn time in calendar hours of a torch lying/standing in the world; decreases only while lit. */
+  burnH?: number
 }
 
 export interface Corpse {
@@ -305,6 +315,8 @@ export interface Trace {
   id: number
   x: number
   z: number
+  /** 'blood' (default) lures predators; 'ash' is what a burnt-out campfire leaves (FIRE-01). */
+  kind?: 'ash' | 'blood'
   /** 0..1, fades over calendar time (faster in rain). */
   intensity: number
   /** Calendar s of the last addition. */

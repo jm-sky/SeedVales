@@ -44,7 +44,7 @@ names. The current Polish name pools in code (`professions.ts`, `settlements.ts`
 ## Buildings and places
 
 House, Well, Campfire, Notice board, Settlement warehouse, Market stall, Inn, Field, Pen, Anvil, Woodpile,
-Drying rack, Herb garden, Torch post, Trough, Palisade, Shed, Bridge, Spit (roasting spit), Building site,
+Drying rack, Herb garden, Torch post, Stone hearth, Trough, Palisade, Shed, Bridge, Spit (roasting spit), Building site,
 Den / Lair, Rat nest. Settlement sizes: SM/MD/LG/XL shown as-is.
 
 ## Game terms
@@ -70,3 +70,4 @@ Den / Lair, Rat nest. Settlement sizes: SM/MD/LG/XL shown as-is.
 | Professions | Farmer, Woodcutter, Hunter, Blacksmith, Trader, Herbalist, Shepherd, Guard (match ids in `data/professions.ts`) |
 | Companions (npc--001) | Companion / Hire / Escort / Protection / Risk (Low risk / Some risk / Dangerous) |
 | Gifts / contracts (npc--001) | Gift / Give / End the contract / Part ways |
+| Fire and torches (survival--001) | Campfire / Stone hearth (Hearth) / Fuel (Add fuel) / Ash / Light / Extinguish / Plant torch / Pick up the torch / Feeding the fire / Fetching firewood / Dismantle the hearth |

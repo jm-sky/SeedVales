@@ -158,6 +158,17 @@ try {
   await tap('panel-close')
   await tap('panel-close')
   check(results, 'M9. ustawienia dostępne z menu dotykowego', settings)
+  // M10. FIRE-03: the quick panel is reachable from the touch menu and plants a torch.
+  await S(() => {
+    const sv = window.__sv
+    sv.game.sim.player.eq.off = undefined
+    sv.game.sim.player.inv.items = sv.game.sim.player.inv.items.filter((x) => x.id !== 'torch')
+    sv.give('torch', 1)
+  })
+  await tap('touch-menu-quick')
+  await tap('quick-plant_torch')
+  const planted = await S(() => window.__sv.game.sim.state.ground.some((g) => g.planted && g.stack.id === 'torch'))
+  check(results, 'M10. menu dotykowe → szybkie akcje → wbicie pochodni', planted)
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 300))
   await shot(page, 'mob-error')

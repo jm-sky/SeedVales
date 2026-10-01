@@ -7,7 +7,7 @@ import type { Blueprint } from '../data/recipes'
 import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { Building, ConstructionSite } from './types'
-import { ACCEL, CALENDAR_SPEED } from '../config/calibration'
+import { ACCEL, CALENDAR_SPEED, FIRE } from '../config/calibration'
 import { distToSegment } from '../core/math'
 import { CAPABILITY_NAMES, itemDef } from '../data/items'
 import { blueprintById } from '../data/recipes'
@@ -89,7 +89,7 @@ export function startBuildWork(sim: Sim, site: ConstructionSite): ActionResult {
   const missing = deliverMaterials(sim, site)
   if (missing.length) return { ok: false, msg: 'Missing: ' + missing.map((m) => `${itemDef(m.item).name} ×${m.qty}`).join(', ') }
   const stage = bp.stages[site.stage]!
-  if (!findTool(sim.player, stage.tool)) return { ok: false, msg: `The "${stage.name}" stage needs a tool: ${CAPABILITY_NAMES[stage.tool]}` }
+  if (stage.tool && !findTool(sim.player, stage.tool)) return { ok: false, msg: `The "${stage.name}" stage needs a tool: ${CAPABILITY_NAMES[stage.tool]}` }
   const speed = 1 + sim.player.skills.construction / 100
   const remainingH = Math.max(0, stage.hours - site.progressH) / speed
   const playS = (remainingH * 3600) / CALENDAR_SPEED
@@ -106,7 +106,7 @@ export function applyBuildProgress(sim: Sim, siteId: string, playS: number): Act
   site.progressH += ((playS * CALENDAR_SPEED) / 3600) * speed
   train(sim.player, 'construction', 0.5, Math.max(1, playS / 60))
   const stage = bp.stages[site.stage]!
-  const tool = findTool(sim.player, stage.tool)
+  const tool = stage.tool ? findTool(sim.player, stage.tool) : undefined
   if (tool?.dur !== undefined) tool.dur = Math.max(0, tool.dur - playS / 60)
   if (site.progressH + 1e-6 < stage.hours) return { ok: true, msg: `Progress: ${Math.round((site.progressH / stage.hours) * 100)}%` }
   site.stage++
@@ -118,7 +118,12 @@ export function applyBuildProgress(sim: Sim, siteId: string, playS: number): Act
     id: `pb-${sim.nextId()}`, kind: bp.kind, x: site.x, z: site.z, rot: site.rot, hw: bp.hw, hd: bp.hd,
     settlementId: site.settlementId, durability: 100, owner: 'player', playerBuilt: true,
   }
-  if (bp.kind === 'campfire') b.lit = true
+  if (bp.kind === 'campfire') {
+    // A campfire starts lit on its starter fuel; a stone hearth starts cold and empty (FIRE-01/02).
+    b.hearth = bp.id === 'hearth'
+    b.fuel = b.hearth ? 0 : FIRE.starterBranches * FIRE.branchH
+    b.lit = !b.hearth
+  }
   if (bp.kind === 'trough') b.water = 0
   if (bp.kind === 'house' || bp.kind === 'shed') b.inv = { items: [] }
   sim.state.buildings.push(b)

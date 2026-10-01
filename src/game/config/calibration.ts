@@ -123,6 +123,32 @@ export const CARRION = { eatS: 25, hungerPerMeat: 15, lureEatS: 6 }
  */
 export const TRACE = { dmgFull: 20, mergeM: 1.5, decayPerH: 0.05, rainMul: 4, max: 300, smellM: 70 }
 
+/**
+ * Fires and torches (FIRE-01..03, plan survival--001). All durations are calendar hours (world-calendar domain):
+ * at 24x a branch burns ~1.7 real minutes. fuelCapH = most fuel a fire holds; levelFullH = fuel at which the flame is at
+ * full size (fireLevel 1), levelMin = flame size of a nearly spent fire; ash fades like blood but slower (x ashRainMul in rain).
+ * tendBelowH = guard feeds the settlement hearth below this; fallbackBelowH = any NPC steps in below this.
+ */
+export const FIRE = {
+  fuelCapH: 24,
+  branchH: 0.7,
+  logH: 2.5,
+  starterBranches: 3,
+  hearthStones: 4,
+  levelFullH: 6,
+  levelMin: 0.2,
+  ashFadePerH: 1 / 12,
+  ashRainMul: 3,
+  tendBelowH: 6,
+  fallbackBelowH: 2,
+  settlementStartH: 12,
+  tendHoldCalS: 3600,
+  carryMax: 10,
+}
+
+/** Standing / thrown torch: calendar hours of burn time while lit. */
+export const TORCH = { burnH: 5 }
+
 /** Predator hunting: chase limit (gameplay s), give-up distance (× perception), retry cooldown (gameplay s). */
 export const HUNT = {
   chaseMaxS: 40,

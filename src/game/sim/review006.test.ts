@@ -7,8 +7,6 @@ import type { Human } from './types'
 import { COMPANION } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { perf } from '../diag/perf'
-import { migrate } from '../save/migrate'
-import { roundTrip } from '../save/snapshot'
 import { pushFromPack, unloadToBuilding } from './cart'
 import { cookedFreshness } from './cooking'
 import { transferToStorage } from './interact'
@@ -20,7 +18,6 @@ import { doorOf, houseOf } from './npc/queries'
 import { playerInput } from './player'
 import { run, testSim } from './testWorld'
 import { buyFromNpc, buyPrice, sellPrice, sellToNpc, tradeStock } from './trade'
-import { SAVE_VERSION } from './types'
 
 function npcWhere(sim: Sim, pred: (n: Human) => boolean): Human {
   const n = sim.state.npcs.find((x) => !x.vitals.dead && pred(x))
@@ -300,17 +297,5 @@ describe('review 006: carts, warehouse, food (TRANS-01, FOOD-03)', () => {
     expect(spoiled).toBeLessThan(cookedLife * 0.15)
     const ok = cookedFreshness(newStack('raw_meat', 1, { fresh: rawLife * 0.16 }))
     expect(ok).toBeCloseTo(cookedLife * 0.2)
-  })
-})
-
-describe('review 006: saves (SAVE-01)', () => {
-  it('SAVE-01: v5 → v6 migration backfills an empty cart list', () => {
-    const sim = testSim()
-    const st = roundTrip(sim) as unknown as Record<string, unknown> & { saveVersion: number }
-    st.saveVersion = 5
-    delete st.carts
-    const m = migrate(st as never)
-    expect(m.saveVersion).toBe(SAVE_VERSION)
-    expect(m.carts).toEqual([])
   })
 })

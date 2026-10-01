@@ -7,13 +7,13 @@
  */
 import type { Sim } from './sim'
 import type { Trace } from './types'
-import { CALENDAR_SPEED, TRACE } from '../config/calibration'
+import { CALENDAR_SPEED, FIRE, TRACE } from '../config/calibration'
 import { perf } from '../diag/perf'
 
 export function bleedAt(sim: Sim, x: number, z: number, dmg: number) {
   if (dmg <= 0) return
   const add = Math.min(1, dmg / TRACE.dmgFull)
-  const near = sim.tracesNear(x, z, TRACE.mergeM)[0]
+  const near = sim.tracesNear(x, z, TRACE.mergeM).find((t) => t.kind !== 'ash')
   if (near) {
     near.intensity = Math.min(1, near.intensity + add)
     near.at = sim.state.time.cal
@@ -24,6 +24,12 @@ export function bleedAt(sim: Sim, x: number, z: number, dmg: number) {
   perf.count('traces.added')
 }
 
+/** Ash left by a burnt-out campfire (FIRE-01): same bounded list as blood, never smelled by predators. */
+export function addAsh(sim: Sim, x: number, z: number) {
+  if (sim.state.traces.length >= TRACE.max) sim.removeTrace(sim.state.traces[0]!)
+  sim.addTrace({ id: sim.nextId(), x, z, kind: 'ash', intensity: 1, at: sim.state.time.cal })
+}
+
 /** Calendar fading; rain washes blood away faster. */
 export function traceSystem(sim: Sim, dt: number) {
   const hours = (dt * CALENDAR_SPEED) / 3600
@@ -32,10 +38,11 @@ export function traceSystem(sim: Sim, dt: number) {
   // Any rain washes blood away; heavier rain faster (×rainMul at full intensity).
   const rainMul = raining ? 1 + (TRACE.rainMul - 1) * Math.max(0.5, Math.min(1, w.intensity)) : 1
   const rate = TRACE.decayPerH * rainMul * hours
+  const ashRate = FIRE.ashFadePerH * (raining ? FIRE.ashRainMul : 1) * hours
   const traces = sim.state.traces
   for (let i = traces.length - 1; i >= 0; i--) {
     const t = traces[i]!
-    t.intensity -= rate
+    t.intensity -= t.kind === 'ash' ? ashRate : rate
     if (t.intensity <= 0) sim.removeTrace(t)
   }
   perf.gauge('traces.count', traces.length)
@@ -46,7 +53,7 @@ export function smellTrace(sim: Sim, x: number, z: number, skipId?: number): Tra
   let best: Trace | null = null
   let score = 0
   for (const t of sim.tracesNear(x, z, TRACE.smellM)) {
-    if (t.id === skipId) continue
+    if (t.id === skipId || t.kind === 'ash') continue
     const d = Math.hypot(t.x - x, t.z - z)
     if (d > TRACE.smellM * t.intensity || d < 3) continue
     const s = t.intensity / (1 + d / 20)
