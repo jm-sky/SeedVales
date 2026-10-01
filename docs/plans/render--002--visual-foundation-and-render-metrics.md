@@ -229,3 +229,11 @@ export function disposeTerrainMaterial(m: THREE.MeshLambertMaterial) {
   m.dispose()
 }
 ```
+
+**Step 3 — terrain implemented behind flags (session 7, Sonnet; keep/drop = ❓ opus + user look):**
+- `render/terrainMaterial.ts` (draft module, `vViewDist` varying instead of `vViewPosition`), `TerrainChunks(terrain, quality, flags)`; new flag `tintUniforms` next to `smooth` and `detail` (`sv-visual`, e.g. `{"tintUniforms":true,"smooth":true,"detail":true}`); **defaults unchanged** (all false = the old baked, flat-shaded path verbatim). Any of the three flags selects the shader material; detail texture only when the profile has shadows (medium/high). Per-vertex `aTint` masks (x grass-fade share surviving the rock/road/beach blends, y snow-eligible), normals from a fixed 2 m central difference at every LOD (skirts copy edge normals).
+- Tests `render/terrain.test.ts` (RENDER-04): a season/snow change rebuilds 0 chunks with `tintUniforms` and >0 on the legacy path; normals are LOD-independent (fine vs coarse LOD at shared vertices), unit length, skirts copy.
+- Browser, medium, seed 1337 (cloud-only numbers): winter+snow switch = **19 terrain rebuilds (legacy) → 0**, thaw 19 → 0; `chunks.build` median **1.31 → 1.91 ms** per chunk (+46%, the analytic normals: 4 `heightAt` per vertex; streaming is budgeted per frame, vertex count at coarse LODs is small). Startup (`bench:startup`) not re-measured with the flags (defaults unchanged).
+- A/B montages (`scripts/e2e/ab.mjs`, new `SV_SEED` env and a winter-snow frame) on seeds 1337, 42, 777: `test-results/ab*/ab-*.png` (gitignored). Looked at meadow-hills ×2 seeds, winter settlement and mountain river: smooth normals remove the faceting, **no seams at LOD borders or chunk edges seen**, snow cover and palette identical to the baked path. (Frames start in winter, so the "season" fade itself was exercised by the thaw count only; detail texture is subtle at 1280×720.)
+- ❓ **Opus keep/drop** (hand-off): (1) make `tintUniforms` + `smooth` the default (evidence above: no rebuild wave on snow, nicer shading, +0.6 ms per chunk build), (2) whether `detail` is worth keeping (aesthetic, user look), (3) the rebuild cost of smooth normals vs the `render.prep` gate on the WSL laptop (❓ user).
+

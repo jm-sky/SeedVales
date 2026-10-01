@@ -1,0 +1,68 @@
+/**
+ * Terrain shader path (render--002 step 3, behind `sv-visual` flags): season/snow no longer rebuild chunks,
+ * normals do not depend on the LOD.
+ */
+import { describe, expect, it } from 'vitest'
+import { perf } from '../diag/perf'
+import { testSim } from '../sim/testWorld'
+import { QUALITY } from './quality'
+import { TerrainChunks } from './terrainChunks'
+
+const builds = () => perf.report().timers.find((t) => t.name === 'chunks.build')?.samples ?? 0
+
+function settle(tc: TerrainChunks, x: number, z: number) {
+  for (let i = 0; i < 400 && (i === 0 || (tc as unknown as { pending: number }).pending > 0); i++) tc.update(x, z, 1e6)
+}
+
+describe('render: terrain shading (RENDER-04)', () => {
+  const ON = { tintUniforms: true, smooth: true, detail: true }
+
+  it('RENDER-04: with tint uniforms a season/snow change rebuilds no chunk; the legacy path rebuilds them', () => {
+    const sim = testSim()
+    const p = sim.player
+    const count = (flags: typeof ON | undefined) => {
+      const tc = new TerrainChunks(sim.terrain, QUALITY.low, flags)
+      settle(tc, p.x, p.z)
+      const before = builds()
+      tc.seasonTint = 0.8
+      tc.snowCover = 0.8
+      tc.update(p.x, p.z, 1e6)
+      settle(tc, p.x, p.z)
+      const n = builds() - before
+      tc.dispose()
+      return n
+    }
+    expect(count(ON)).toBe(0)
+    expect(count(undefined)).toBeGreaterThan(0)
+  })
+
+  it('RENDER-04: smooth normals are LOD-independent and unit length; chunks carry tint masks and skirts copy edge normals', () => {
+    const sim = testSim()
+    const p = sim.player
+    const tc = new TerrainChunks(sim.terrain, QUALITY.low, ON)
+    type Build = (cx: number, cz: number, lod: number, span: number) => { mesh: { geometry: { attributes: Record<string, { array: Float32Array; count: number }> } } }
+    const build = (lod: number) => (tc as unknown as { build: Build }).build.call(tc, Math.floor(p.x / 128), Math.floor(p.z / 128), lod, 1)
+    const fine = build(0).mesh.geometry.attributes
+    const coarse = build(1).mesh.geometry.attributes
+    const nF = 128 / 2 + 1
+    const nC = 128 / 4 + 1
+    // Shared vertices: every 2nd fine vertex is a coarse vertex (interior, both use the 2 m central difference).
+    let checked = 0
+    for (let j = 2; j < nC - 2; j += 3) {
+      for (let i = 2; i < nC - 2; i += 3) {
+        const a = (j * 2 * nF + i * 2) * 3
+        const b = (j * nC + i) * 3
+        for (let k = 0; k < 3; k++) expect(coarse.normal!.array[b + k]).toBeCloseTo(fine.normal!.array[a + k]!, 4)
+        checked++
+      }
+    }
+    expect(checked).toBeGreaterThan(10)
+    const len = Math.hypot(fine.normal!.array[0]!, fine.normal!.array[1]!, fine.normal!.array[2]!)
+    expect(len).toBeCloseTo(1, 4)
+    expect(fine.aTint!.count).toBe(fine.position!.count)
+    // Skirt vertex = copy of its edge vertex.
+    const sk = nF * nF
+    expect(Array.from(fine.normal!.array.slice(sk * 3, sk * 3 + 3))).toEqual(Array.from(fine.normal!.array.slice(0, 3)))
+    tc.dispose()
+  })
+})

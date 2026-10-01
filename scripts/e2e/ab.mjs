@@ -2,6 +2,7 @@
 /**
  * Visual A/B (render--002): the same frames for several visual-flag variants, plus one side-by-side
  * montage per frame (test-results/ab/ab-<frame>.png). Starts its own Vite server unless SV_URL is set.
+ * Seed: SV_SEED=<n> (default 1337; other seeds write to test-results/ab-<n>).
  * Usage: node scripts/e2e/ab.mjs [quality] '<label>={"tone":"none"}' '<label>={"tone":"agx","sky":"dome"}' …
  */
 import fs from 'node:fs'
@@ -17,13 +18,24 @@ const variants = (args.length ? args : ['current={}']).map((a) => {
 const server = process.env.SV_URL ? null : await startServer()
 if (server) process.env.SV_URL = server.url
 const { BASE, launch, sv } = await import('./lib.mjs')
-const OUT = path.resolve(import.meta.dirname, '../../test-results/ab')
+const SEED = process.env.SV_SEED ?? '1337'
+const OUT = path.resolve(import.meta.dirname, SEED === '1337' ? '../../test-results/ab' : `../../test-results/ab-${SEED}`)
 fs.mkdirSync(OUT, { recursive: true })
 
 const FRAMES = [
   ['settlement-noon', (sv) => { const s = sv.game.sim.world.settlements[0]; sv.teleport(s.x - 18, s.z + 26); sv.face(s.x, s.z); sv.setHour(12); sv.game.renderer.rig.distance = 10; sv.game.renderer.rig.pitch = 0.35 }],
   ['settlement-dusk', (sv) => { sv.setHour(19.2) }],
   ['settlement-night', (sv) => { sv.setHour(22.5); for (const b of sv.game.sim.state.buildings) if (b.kind === 'torchpost' || b.kind === 'campfire') b.lit = true }],
+  ['winter-snow', (sv) => {
+    const sim = sv.game.sim
+    const cal = sim.state.time.cal
+    // Day 48 of the year = winter (season = 15 days).
+    sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 48 * 86400 + 12 * 3600
+    Object.assign(sim.state.weather, { kind: 'snow', intensity: 0.5, temp: -6, wetness: 0.5, fog: 0.05, until: sim.state.time.cal + 30 * 86400 })
+    const s = sim.world.settlements[0]
+    sv.teleport(s.x - 18, s.z + 26)
+    sv.face(s.x, s.z)
+  }],
   ['overcast', (sv) => { sv.setHour(13); Object.assign(sv.game.sim.state.weather, { kind: 'overcast', fog: 0.15, until: sv.game.sim.state.time.cal + 86400 }) }],
   ['meadow-hills', (sv) => {
     const sim = sv.game.sim
@@ -60,7 +72,7 @@ for (const v of variants) {
     localStorage.setItem('sv-visual', JSON.stringify(f))
   }, { q: quality, f: v.flags })
   await page.goto(BASE)
-  await page.fill('[data-testid=seed-input]', '1337')
+  await page.fill('[data-testid=seed-input]', SEED)
   await page.click('[data-testid=new-game]')
   await page.waitForSelector('[data-testid=status-bars]', { timeout: 120_000 })
   await page.waitForFunction(() => !!window.__sv, null, { timeout: 30_000 })

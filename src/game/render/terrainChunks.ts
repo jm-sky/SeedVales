@@ -8,12 +8,16 @@
 import * as THREE from 'three'
 import type { Terrain } from '../world/terrain'
 import type { QualitySettings } from './quality'
+import type { VisualFlags } from './visualFlags'
 import { Noise2D } from '../core/noise'
 import { perf } from '../diag/perf'
 import { idx } from '../world/grid'
 import { Biome, CHUNK_M, SEA_LEVEL } from '../world/types'
+import { createTerrainMaterial, type TerrainShading } from './terrainMaterial'
 
 const STEPS = [2, 4, 8, 16] as const
+/** Normals come from a central difference of this step (m), independent of the LOD. */
+const NORMAL_STEP = 2
 
 const C = (hex: number) => new THREE.Color(hex)
 const BIOME_COL: Record<number, THREE.Color> = {
@@ -49,6 +53,9 @@ export class TerrainChunks {
   group = new THREE.Group()
   private chunks = new Map<string, ChunkEntry>()
   private mat: THREE.MeshLambertMaterial
+  /** Shader path (render--002 step 3): season/snow as uniforms, smooth normals, ground detail. Null = legacy baked path. */
+  private shading: TerrainShading | null = null
+  private smooth = false
   waterMat: THREE.MeshLambertMaterial
   ocean: THREE.Mesh
   private patch: Noise2D
@@ -64,11 +71,19 @@ export class TerrainChunks {
   private lastZ = -1e9
   private pending = 1
 
-  constructor(terrain: Terrain, q: QualitySettings) {
+  constructor(terrain: Terrain, q: QualitySettings, flags?: Pick<VisualFlags, 'detail' | 'smooth' | 'tintUniforms'>) {
     this.terrain = terrain
     this.lods = q.lods.map((d, i) => ({ maxDist: d, step: STEPS[i]! }))
     this.viewDist = q.viewDist
-    this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
+    if (flags && (flags.tintUniforms || flags.smooth || flags.detail)) {
+      // Detail texture only where there is headroom (medium/high: the profiles with shadows, D-PERF-2).
+      const m = createTerrainMaterial({ smooth: flags.smooth, detail: flags.detail && q.shadows })
+      this.mat = m.material
+      this.shading = m.shading
+      this.smooth = flags.smooth
+    } else {
+      this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
+    }
     this.waterMat = new THREE.MeshLambertMaterial({ color: 0x3f7392, transparent: true, opacity: 0.78, depthWrite: false })
     this.patch = new Noise2D(terrain.world.seed ^ 0x77aa)
     const og = new THREE.PlaneGeometry(6000, 6000, 1, 1)
@@ -105,7 +120,11 @@ export class TerrainChunks {
   update(px: number, pz: number, budgetMs = 6) {
     this.ocean.position.x = px
     this.ocean.position.z = pz
-    const tintChanged = Math.abs(this.builtTint - (this.seasonTint + this.snowCover * 2)) > 0.15
+    if (this.shading) {
+      this.shading.season.value = this.seasonTint
+      this.shading.snow.value = this.snowCover
+    }
+    const tintChanged = !this.shading && Math.abs(this.builtTint - (this.seasonTint + this.snowCover * 2)) > 0.15
     if (tintChanged) {
       this.builtTint = this.seasonTint + this.snowCover * 2
       this.chunks.forEach((c) => this.dirty.add(c.key))
@@ -200,7 +219,11 @@ export class TerrainChunks {
     }
   }
 
-  private colorAt(x: number, z: number, h: number, slope: number, out: THREE.Color) {
+  /**
+   * Ground colour. With the shader path the season/snow lerps are skipped and `tint` gets the masks instead:
+   * x = share of the faded-grass tint that survives the later rock/road/beach blends, y = flat enough for snow.
+   */
+  private colorAt(x: number, z: number, h: number, slope: number, out: THREE.Color, tint?: { x: number; y: number }) {
     const t = this.terrain
     const b = t.biomeAt(x, z)
     out.copy(BIOME_COL[b] ?? BIOME_COL[Biome.Meadow]!)
@@ -208,13 +231,26 @@ export class TerrainChunks {
       const n = this.patch.fbm(x / 60, z / 60, 3)
       if (n > 0.25) out.lerp(DRY, Math.min(1, (n - 0.25) * 2.5) * 0.6)
       else if (n < -0.25) out.lerp(DARK, Math.min(1, (-n - 0.25) * 2.5) * 0.6)
-      if (this.seasonTint > 0) out.lerp(DRY, this.seasonTint * 0.45)
+      if (tint) tint.x = 1
+      else if (this.seasonTint > 0) out.lerp(DRY, this.seasonTint * 0.45)
     }
-    if (slope > 0.75 && b !== Biome.Snow) out.lerp(ROCK, Math.min(1, (slope - 0.75) * 2))
+    if (slope > 0.75 && b !== Biome.Snow) {
+      const w = Math.min(1, (slope - 0.75) * 2)
+      out.lerp(ROCK, w)
+      if (tint) tint.x *= 1 - w
+    }
     const road = t.roadAt(x, z)
-    if (road > 0.15) out.lerp(ROAD, Math.min(1, road * 1.3))
-    if (h < 1.2 && b !== Biome.Water && b !== Biome.Ocean) out.lerp(BIOME_COL[Biome.Beach]!, 0.5)
-    if (this.snowCover > 0 && slope < 0.9) out.lerp(SNOWC, this.snowCover * 0.85)
+    if (road > 0.15) {
+      const w = Math.min(1, road * 1.3)
+      out.lerp(ROAD, w)
+      if (tint) tint.x *= 1 - w
+    }
+    if (h < 1.2 && b !== Biome.Water && b !== Biome.Ocean) {
+      out.lerp(BIOME_COL[Biome.Beach]!, 0.5)
+      if (tint) tint.x *= 0.5
+    }
+    if (tint) tint.y = slope < 0.9 ? 1 : 0
+    else if (this.snowCover > 0 && slope < 0.9) out.lerp(SNOWC, this.snowCover * 0.85)
     const v = (this.patch.get(x * 0.7, z * 0.7) * 0.04)
     out.offsetHSL(0, 0, v)
   }
@@ -228,6 +264,9 @@ export class TerrainChunks {
     const vCount = n * n + 4 * n // + skirts
     const pos = new Float32Array(vCount * 3)
     const col = new Float32Array(vCount * 3)
+    const tintA = this.shading ? new Float32Array(vCount * 2) : null
+    const nrm = this.smooth ? new Float32Array(vCount * 3) : null
+    const tm = { x: 0, y: 0 }
     const heights = new Float32Array(n * n)
     const c = new THREE.Color()
     for (let j = 0; j < n; j++) {
@@ -249,7 +288,25 @@ export class TerrainChunks {
         const hx = heights[j * n + Math.min(n - 1, i + 1)]! - heights[j * n + Math.max(0, i - 1)]!
         const hz = heights[Math.min(n - 1, j + 1) * n + i]! - heights[Math.max(0, j - 1) * n + i]!
         const slope = Math.hypot(hx, hz) / (2 * step)
-        this.colorAt(x, z, h, slope, c)
+        if (tintA) {
+          tm.x = 0
+          tm.y = 0
+        }
+        this.colorAt(x, z, h, slope, c, tintA ? tm : undefined)
+        if (tintA) {
+          tintA[k * 2] = tm.x
+          tintA[k * 2 + 1] = tm.y
+        }
+        if (nrm) {
+          // Analytic normal from a fixed 2 m central difference: the same at every LOD, so chunk borders match.
+          const g = NORMAL_STEP
+          const dhx = (i > 0 && i < n - 1 && step === g ? hx : t.heightAt(x + g, z) - t.heightAt(x - g, z)) / (2 * g)
+          const dhz = (j > 0 && j < n - 1 && step === g ? hz : t.heightAt(x, z + g) - t.heightAt(x, z - g)) / (2 * g)
+          const il = 1 / Math.hypot(dhx, 1, dhz)
+          nrm[k * 3] = -dhx * il
+          nrm[k * 3 + 1] = il
+          nrm[k * 3 + 2] = -dhz * il
+        }
         col[k * 3] = c.r
         col[k * 3 + 1] = c.g
         col[k * 3 + 2] = c.b
@@ -283,6 +340,15 @@ export class TerrainChunks {
         col[sv * 3] = col[k * 3]!
         col[sv * 3 + 1] = col[k * 3 + 1]!
         col[sv * 3 + 2] = col[k * 3 + 2]!
+        if (tintA) {
+          tintA[sv * 2] = tintA[k * 2]!
+          tintA[sv * 2 + 1] = tintA[k * 2 + 1]!
+        }
+        if (nrm) {
+          nrm[sv * 3] = nrm[k * 3]!
+          nrm[sv * 3 + 1] = nrm[k * 3 + 1]!
+          nrm[sv * 3 + 2] = nrm[k * 3 + 2]!
+        }
         sv++
       }
       for (let q = 0; q < n - 1; q++) {
@@ -296,8 +362,10 @@ export class TerrainChunks {
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     g.setAttribute('color', new THREE.BufferAttribute(col, 3))
+    if (tintA) g.setAttribute('aTint', new THREE.BufferAttribute(tintA, 2))
     g.setIndex(indices)
-    g.computeVertexNormals()
+    if (nrm) g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3))
+    else g.computeVertexNormals()
     g.computeBoundingSphere()
     const mesh = new THREE.Mesh(g, this.mat)
     mesh.receiveShadow = lod === 0

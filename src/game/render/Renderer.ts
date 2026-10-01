@@ -85,7 +85,7 @@ export class Renderer {
     sc.near = 1
     sc.far = 300
     this.scene.add(this.sun, this.sun.target, this.hemi)
-    this.terrain = new TerrainChunks(sim.terrain, q)
+    this.terrain = new TerrainChunks(sim.terrain, q, this.visual)
     this.vegetation = new Vegetation(sim, q)
     this.structures = new Structures(sim)
     this.landmarks = new Landmarks(sim)

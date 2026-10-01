@@ -83,3 +83,6 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - Simplifications: no spit discount next to a hearth, no cleaner profession, burning torches scanned in the existing ground loop. FIRE-04 stays design-only. `fireLevel` and ash traces are exposed read-only (`sim/fire.ts`, `Trace.kind`) for `render--001` steps 1 and 8 — render code was not touched.
 - Unexplained once: one acceptance run lost step 18b's campfire (no building appeared); the next two runs were green. The step now throws a descriptive error with the sim state if it recurs.
 - Open `opus` items: wave review of `survival--001` (see below if done), keep/drop for `render--002` step 3 once built.
+- **diag--002 step 1 done:** `pnpm bench:startup` (cloud numbers in PERF.md "Startup").
+- **render--002 step 3 implemented behind `sv-visual` flags** (`tintUniforms`, `smooth`, `detail`; defaults unchanged): snow/season rebuilds 19 → 0, smooth normals LOD-independent, chunk build +46% (cloud). A/B montages looked at on 3 seeds, no seams. **Open `opus` item:** keep/drop + making it the default (details in the plan's "Wynik"); official gate numbers on WSL (❓ user).
+
