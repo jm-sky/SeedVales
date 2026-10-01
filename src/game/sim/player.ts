@@ -8,6 +8,7 @@ import type { Human, PlayerActivity } from './types'
 import { ACCEL, COMBAT, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_M, SWIM_SPEED_MPS, WALK_SPEED_MPS } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
+import { cartBlocked, cartDef } from './cart'
 import { moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
 import { carriedWeight, carryCapacity } from './inventory'
@@ -181,14 +182,18 @@ export function playerSystem(sim: Sim, dt: number) {
     } else if (px.sneaking) {
       speed = SNEAK_SPEED_MPS
       mode = 'sneak'
-    } else if (inp.run && p.vitals.stamina > 5 && overload === 1) {
+    } else if (inp.run && p.vitals.stamina > 5 && overload === 1 && !px.cart) {
       speed = RUN_SPEED_MPS
       mode = 'run'
     }
     if (sim.terrain.roadAt(p.x, p.z) > 0.4 && mode === 'walk') speed *= 1.1
     if (depth > 0.3 && !swimming) speed *= 0.7
+    if (px.cart) speed *= cartDef(px.cart).speed
     const d = speed * pen * overload * mag * dt
-    moveWithCollision(sim, p, (mx / mag) * d, (mz / mag) * d, 0.35, true)
+    const blocked = px.cart ? cartBlocked(sim, p.x, p.z, mx, mz) : null
+    if (blocked) {
+      if (Math.floor(now) !== Math.floor(now - dt)) sim.message(blocked, 'bad')
+    } else moveWithCollision(sim, p, (mx / mag) * d, (mz / mag) * d, 0.35, true)
     p.rot = Math.atan2(mx, mz)
     p.moving = mode
     ex = mode === 'run' ? 'run' : mode === 'swim' ? 'swim' : 'walk'

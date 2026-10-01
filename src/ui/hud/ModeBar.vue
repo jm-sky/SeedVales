@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
 import { formatCoins } from '@/game/data/items'
+import { cartLoad } from '@/game/sim/cart'
 
 const { game, version } = useGameStrict()
 const s = computed(() => {
@@ -16,6 +17,7 @@ const s = computed(() => {
     sneak: g.sim.state.px.sneaking,
     money: formatCoins(p.money),
     draw: g.sim.state.px.bowDraw,
+    cart: g.sim.state.px.cart ? `${itemDef(g.sim.state.px.cart.item).name} ${Math.round(cartLoad(g.sim.state.px.cart))}/${itemDef(g.sim.state.px.cart.item).cart!.capacity} kg` : '',
   }
 })
 </script>
@@ -36,6 +38,11 @@ const s = computed(() => {
       class="rounded bg-sky-800/80 px-1.5 py-0.5 font-semibold"
     >Sneak</span>
     <span class="rounded bg-black/40 px-1.5 py-0.5 text-quest">{{ s.money }}</span>
+    <span
+      v-if="s.cart"
+      class="rounded bg-amber-900/70 px-1.5 py-0.5"
+      data-testid="cart-status"
+    >🛒 {{ s.cart }}</span>
     <span
       v-if="s.draw > 0"
       class="rounded bg-yellow-700/80 px-1.5 py-0.5"

@@ -98,6 +98,9 @@ export const ROAST = { calMin: 30, vesselSlots: 2, spitSlots: 5, spitM: 3, minFr
 /** Fog of war (MAP-01): map cell size (m) and how far around the player the map gets revealed (m). */
 export const FOG = { cellM: 64, revealM: 180 }
 
+/** Carts (TRANS-01): steepest rise per metre a pushed cart can climb, deepest water (m) it can cross. */
+export const CART = { maxRise: 0.32, maxWaterM: 0.25 }
+
 /** Rocks (RES-07): boulders (scale ≥ boulderScale) break into chunks; a chunk breaks into `chunkStones` stones. */
 export const ROCK = { boulderScale: 2, chunkStones: 4, strikeS: 6, breakS: 4 }
 

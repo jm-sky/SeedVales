@@ -970,8 +970,8 @@
    "scope": "v2",
    "behavior": "Taczka i wózek ręczny zwiększają udźwig ciężkich surowców (wózek pod osła/konia → later, zależny od WORLD-09)",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/economy--001--gathering-cooking-transport.md"
+   "status": "verified",
+   "evidence": "sim/cart.ts (push from pack or parked, both hands, load heavy goods up to capacity: wheelbarrow 80 kg ×0.8 speed, handcart 160 kg ×0.68; no running; steep rise > CART.maxRise or water > 0.25 m blocks; park/stow; unload into warehouse (+helpfulness) or own storage), Cart in px.cart / state.carts (SAVE_VERSION 6 + migration), items + recipes + trader stock, render/carts.ts; appendix-economy.test.ts TRANS-01 (3 tests: capacity/hands, speed + slope block, park/unload/stow/save); e2e acceptance step 16 (Push from inventory → Quick actions load → Unload at warehouse); screenshot acc-16-cart. Donkey/horse carts → later (WORLD-09 deferred)"
   },
   {
    "id": "FOOD-03",

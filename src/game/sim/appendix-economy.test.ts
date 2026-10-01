@@ -4,16 +4,18 @@
 import { describe, expect, it } from 'vitest'
 import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
-import { ROAST, ROCK } from '../config/calibration'
-import { itemDef } from '../data/items'
+import { CART, ROAST, ROCK } from '../config/calibration'
+import { HEAVY_GOODS, itemDef } from '../data/items'
 import { roundTrip } from '../save/snapshot'
 import { isTree } from '../world/nodes'
 import { breakChunk, butcher, fellTree, isBoulder, mineRock, rockPieces } from './actions'
+import { cartBlocked, loadHeavy, parkCart, pushFromPack, pushParked, stowCart, unloadToBuilding } from './cart'
 import { killAnimal } from './combat'
 import { completeRoast, roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { findTargets } from './interact'
 import { addItem, countItem, newStack, stackLabel } from './inventory'
 import { makeAnimal } from './newGame'
+import { playerInput } from './player'
 import { testSim } from './testWorld'
 
 function findNode(sim: Sim, pred: (n: ResNode) => boolean): ResNode {
@@ -135,5 +137,87 @@ describe('wave 3: roasting at the campfire (FOOD-03)', () => {
     const c = sim.state.corpses.at(-1)!
     expect(butcher(sim, p, c).ok).toBe(true)
     expect(p.inv.items.find((s) => s.id === 'raw_meat' && s.sp === 'boar')).toBeDefined()
+  })
+})
+
+describe('wave 3: carts for heavy goods (TRANS-01)', () => {
+  function withCart(item = 'wheelbarrow') {
+    const sim = testSim()
+    const p = sim.player
+    p.inv.items = p.inv.items.filter((s) => !HEAVY_GOODS.has(s.id))
+    addItem(p.inv, newStack(item))
+    const s = p.inv.items.find((x) => x.id === item)!
+    return { sim, p, s }
+  }
+
+  it('pushing frees both hands, the cart takes heavy goods up to its capacity, not food', () => {
+    const { sim, p, s } = withCart()
+    p.eq.main = newStack('axe')
+    p.eq.off = newStack('torch')
+    expect(pushFromPack(sim, p, s)).toMatch(/push/i)
+    expect(p.eq.main).toBeUndefined()
+    expect(p.eq.off).toBeUndefined()
+    expect(countItem(p.inv, 'wheelbarrow')).toBe(0)
+    addItem(p.inv, newStack('log', 6)) // 108 kg
+    addItem(p.inv, newStack('bread', 2))
+    const c = sim.state.px.cart!
+    const kg = loadHeavy(p, c)
+    expect(kg).toBeLessThanOrEqual(itemDef('wheelbarrow').cart!.capacity)
+    expect(countItem(c.inv, 'log')).toBe(4) // 4 × 18 kg = 72 ≤ 80
+    expect(countItem(p.inv, 'log')).toBe(2)
+    expect(countItem(c.inv, 'bread')).toBe(0)
+  })
+
+  it('pushing is slower than walking and blocked on steep slopes', () => {
+    const walk = testSim()
+    const { sim, p, s } = withCart()
+    pushFromPack(sim, p, s)
+    const dist = (x: Sim) => {
+      const q = x.player
+      const x0 = q.x
+      for (let i = 0; i < 20; i++) {
+        playerInput.mx = 1
+        playerInput.mz = 0
+        x.step(0.1)
+      }
+      playerInput.mx = 0
+      return q.x - x0
+    }
+    const dw = dist(walk)
+    const dc = dist(sim)
+    expect(dc).toBeGreaterThan(0)
+    expect(dc).toBeLessThan(dw * 0.9)
+    // A steep rise in front of the cart stops it.
+    let steep: { x: number; z: number } | null = null
+    for (let i = 0; i < 4000 && !steep; i++) {
+      const x = 400 + ((i * 97) % 7400)
+      const z = 400 + ((i * 61) % 7400)
+      if (sim.terrain.heightAt(x + 1.2, z) - sim.terrain.heightAt(x, z) > CART.maxRise * 1.2 && sim.terrain.waterDepthAt(x, z) === 0) steep = { x, z }
+    }
+    expect(steep).not.toBeNull()
+    expect(cartBlocked(sim, steep!.x, steep!.z, 1, 0)).toMatch(/steep/i)
+  })
+
+  it('park, load, unload into the warehouse (goodwill), pick up again; saved with the game', () => {
+    const { sim, p, s } = withCart('handcart')
+    pushFromPack(sim, p, s)
+    addItem(p.inv, newStack('stone', 10))
+    loadHeavy(p, sim.state.px.cart!)
+    expect(parkCart(sim, p)).toMatch(/park/i)
+    expect(sim.state.carts).toHaveLength(1)
+    const saved = roundTrip(sim)
+    expect(saved.carts[0]!.inv.items[0]).toMatchObject({ id: 'stone', qty: 10 })
+    const c = sim.state.carts[0]!
+    expect(stowCart(sim, p, c.id)).toMatch(/unload/i)
+    expect(pushParked(sim, p, c.id)).toMatch(/push/i)
+    const wh = sim.state.buildings.find((b) => b.kind === 'warehouse' && b.inv)!
+    const stones = countItem(wh.inv!, 'stone')
+    const rep = sim.state.settlements[wh.settlementId]!.rep.helpfulness
+    expect(unloadToBuilding(sim, sim.state.px.cart!, wh)).toMatch(/Unloaded 30 kg/)
+    expect(countItem(wh.inv!, 'stone')).toBe(stones + 10)
+    expect(sim.state.settlements[wh.settlementId]!.rep.helpfulness).toBeGreaterThan(rep)
+    parkCart(sim, p)
+    expect(stowCart(sim, p, sim.state.carts[0]!.id)).toMatch(/pick up/i)
+    expect(countItem(p.inv, 'handcart')).toBe(1)
   })
 })

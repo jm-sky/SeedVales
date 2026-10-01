@@ -94,6 +94,8 @@ export interface ItemDef {
   heal?: number
   /** Extra carrying capacity (kg) when in inventory. */
   carryBonus?: number
+  /** Pushed cart (TRANS-01): heavy-goods capacity (kg) and walking-speed multiplier while pushing. */
+  cart?: { capacity: number; speed: number }
   /** Drinks held (waterskins/bucket). */
   waterCapacity?: number
   light?: number
@@ -172,6 +174,8 @@ const LIST: ItemDef[] = [
   tool('axe', 'Axe', 1.8, 'MD', 45, ['chop'], { weapon: { kind: 'melee', reach: 1.1, damage: 16, dmgType: 'cut', cooldown: 1.1, sharpness: 0.6, stamina: 14 } }),
   tool('shovel', 'Shovel', 2.2, 'LG', 30, ['dig']),
   tool('pickaxe', 'Pickaxe', 3, 'LG', 55, ['mine']),
+  { id: 'wheelbarrow', name: 'Wheelbarrow', category: 'tool', weight: 14, size: 'XL', price: 40, durability: 300, cart: { capacity: 80, speed: 0.8 } },
+  { id: 'handcart', name: 'Handcart', category: 'tool', weight: 28, size: 'XL', price: 75, durability: 400, cart: { capacity: 160, speed: 0.68 } },
   tool('pan', 'Pan', 1.5, 'MD', 30, ['cook_vessel']),
   tool('pot', 'Pot', 2.5, 'MD', 40, ['cook_vessel']),
   tool('hammer', 'Hammer', 1, 'SM', 20, ['hammer']),
@@ -227,6 +231,9 @@ const LIST: ItemDef[] = [
 ]
 
 export const ITEMS: Record<string, ItemDef> = Object.fromEntries(LIST.map((i) => [i.id, i]))
+
+/** Heavy goods that go into a cart (TRANS-01). */
+export const HEAVY_GOODS = new Set(['coal', 'copper_ore', 'gold_ore', 'iron_ingot', 'iron_ore', 'log', 'rock_chunk', 'stone'])
 
 export function itemDef(id: string): ItemDef {
   const d = ITEMS[id]

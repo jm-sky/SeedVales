@@ -7,7 +7,7 @@ import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 5
+export const SAVE_VERSION = 6
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -263,6 +263,18 @@ export interface Corpse {
 }
 
 /** Blood on the ground (TRACE-01); rendered as decals, attracts predators. */
+/** Wheelbarrow or handcart (TRANS-01): pushed by the player or parked in the world, with its own load. */
+export interface Cart {
+  id: number
+  /** Item id ('wheelbarrow' | 'handcart'). */
+  item: string
+  x: number
+  z: number
+  rot: number
+  dur?: number
+  inv: Inventory
+}
+
 export interface Trace {
   id: number
   x: number
@@ -362,6 +374,8 @@ export interface PlayerExtra {
   waypoint?: { x: number; z: number; label: string }
   /** Settlement ids the player has reached (map, UI-04). */
   visited?: number[]
+  /** Cart being pushed (TRANS-01). */
+  cart?: Cart
   /** Fog of war (MAP-01): explored map cells as a bitmask in 32-bit words (FOG.cellM grid). */
   explored?: number[]
 }
@@ -406,6 +420,8 @@ export interface GameState {
   ground: GroundItem[]
   corpses: Corpse[]
   traces: Trace[]
+  /** Parked carts in the world (TRANS-01). */
+  carts: Cart[]
   nodes: Record<string, NodeState>
   dens: DenState[]
   quests: Quest[]

@@ -1,11 +1,11 @@
 # Pozyskiwanie, gotowanie przy ognisku, transport ciężkich surowców
 
-**Status:** in_progress  
+**Status:** done  
 **Domain:** economy  
 **Sub domains:** resources, crafting, food, items, build  
 **Roadmap:** [../roadmap/v1-closure-and-appendix.md](../roadmap/v1-closure-and-appendix.md) (fala 3)  
 **Created:** 2026-09-30  
-**Finished:** —
+**Finished:** 2026-10-01
 
 ---
 
@@ -33,4 +33,5 @@ vitest reguł (pojemność ogniska, dziedziczenie meta, udźwig z taczką), save
 
 - **Krok 1 (RES-07) — done (2026-09-30):** pień istniał (stan `felled` w zapisie, render `far:stump`) — dodany test trwałości. Nowe: głazy (`scale ≥ ROCK.boulderScale`) przy każdym uderzeniu kilofem odłupują „Odłamek skały” (12 kg) obok skały; odłamek rozbija się kilofem na 4 kamienie (opcja w menu interakcji, aktywność 4 s). Mniejsze skały dają kamienie bezpośrednio. Wydobywana skała maleje w renderze. Test `appendix-economy.test.ts`, e2e acceptance krok 14.
 - **Krok 2 (FOOD-03) — done (2026-09-30):** `sim/cooking.ts`, opcja „Piecz mięso (n/N)” przy ognisku; pojemność 1 / 2 (patelnia, kociołek) / 5 (ruszt — nowa budowla); czas w kalendarzu (D-FOOD-3); produkt dziedziczy gatunek i względną świeżość (`ItemStack.sp`). Receptura `cook_meat` usunięta z wytwarzania. Test + e2e acceptance krok 15.
-- Pozostało: krok 3 (TRANS-01 taczka/wózek ręczny), krok 4 (opcjonalnie NPC z taczką).
+- **Krok 3 (TRANS-01) — done (2026-10-01):** `sim/cart.ts` — taczka (80 kg) i wózek ręczny (160 kg) pchane oburącz, ładunek ciężkich surowców, wolniej, bez biegu, stop na stromiźnie i w głębokiej wodzie, parkowanie, rozładunek w magazynie/własnym schowku. `SAVE_VERSION` 6. Test + e2e acceptance krok 16. Wózki pod osła/konia — later (WORLD-09).
+- Krok 4 (NPC z taczką) — **odłożony** (opcjonalny w planie; brak potrzeby w obecnej ekonomii NPC).

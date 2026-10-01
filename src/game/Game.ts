@@ -18,12 +18,13 @@ import { checkWorldCompat, loadWorldCache, newSlotId, readSave, readSaveMeta, st
 import { snapshot } from './save/snapshot'
 import { consume, dropItem } from './sim/actions'
 import { placeSite, startBuildWork } from './sim/build'
+import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
 import { canCraft, craftTime } from './sim/craft'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
-import { clearWaypoint, setWaypoint } from './sim/navigation'
+import { clearWaypoint, revealAround, setWaypoint } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
 import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/player'
 import { Sim } from './sim/sim'
@@ -110,6 +111,7 @@ export class Game {
     state ??= createNewGame(world)
     const sim = new Sim(world, state)
     installSystems(sim)
+    revealAround(sim) // the map around the start/save position is known right away (MAP-01)
     const renderer = new Renderer(canvas, sim, o.quality ?? 'medium')
     const game = new Game(canvas, sim, renderer, o.slot ?? newSlotId(seed))
     if (o.slot) game.saveName = (await readSaveMeta(o.slot).catch(() => undefined))?.name
@@ -322,6 +324,7 @@ export class Game {
   attack() {
     const p = this.sim.player
     if (this.sim.state.px.activity || p.vitals.ko) return
+    if (this.sim.state.px.cart) return this.showToast('Both hands are on the cart — park it first.')
     const w = p.eq.main ? itemDef(p.eq.main.id).weapon : undefined
     if (w?.kind === 'ranged') return // bow uses hold/release
     if (!p.combat) this.toggleCombat()
@@ -383,6 +386,7 @@ export class Game {
       return
     }
     const t = p.inv.items.find((s) => s.id === 'torch')
+    if (this.sim.state.px.cart) return this.showToast('Both hands are on the cart — park it first.')
     if (!t) return this.showToast('You don\'t have a torch.')
     if (p.eq.main && itemDef(p.eq.main.id).weapon?.twoHanded) return this.showToast('Both hands are busy (two-handed weapon).')
     p.eq.off = removeStack(p.inv, t, 1) ?? undefined
@@ -406,6 +410,12 @@ export class Game {
   useItem(s: ItemStack) {
     const p = this.sim.player
     const d = itemDef(s.id)
+    if (d.cart) {
+      this.showToast(pushFromPack(this.sim, p, s))
+      this.closePanel()
+      return
+    }
+    if (this.sim.state.px.cart && (d.weapon || d.caps?.length)) return this.showToast('Both hands are on the cart — park it first.')
     if (d.weapon || (d.caps && d.caps.length && !d.waterCapacity)) {
       const moved = removeStack(p.inv, s)!
       if (p.eq.main) addItem(p.inv, p.eq.main)
@@ -474,6 +484,20 @@ export class Game {
     this.showToast(r.msg)
     if (r.ok) this.sim.rebuildBuildingIndex()
     this.panel = null
+    this.notify()
+  }
+
+  /** Cart actions while pushing (TRANS-01). */
+  parkCart() {
+    this.showToast(parkCart(this.sim, this.sim.player))
+    this.notify()
+  }
+
+  loadPushedCart() {
+    const c = this.sim.state.px.cart
+    if (!c) return this.showToast('You are not pushing a cart.')
+    const kg = loadHeavy(this.sim.player, c)
+    this.showToast(kg ? `Loaded ${Math.round(kg)} kg into the cart.` : 'No heavy goods to load, or the cart is full.')
     this.notify()
   }
 

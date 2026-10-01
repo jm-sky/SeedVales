@@ -10,6 +10,7 @@ import { perf } from '../diag/perf'
 import { daylight, hourOf, seasonOf } from '../sim/time'
 import { Actors } from './actors'
 import { CameraRig } from './cameraRig'
+import { Carts } from './carts'
 import { Dynamics } from './dynamics'
 import { QUALITY, type QualityProfile } from './quality'
 import { Structures } from './structures'
@@ -34,6 +35,7 @@ export class Renderer {
   actors: Actors
   dynamics: Dynamics
   marker: TargetMarker
+  carts: Carts
   /** Where to draw the interaction-target ring (set by Game), or null. */
   markerAt: { x: number; z: number } | null = null
   sun = new THREE.DirectionalLight(0xfff2dd, 2)
@@ -69,7 +71,8 @@ export class Renderer {
     this.actors = new Actors(sim, q)
     this.dynamics = new Dynamics(sim)
     this.marker = new TargetMarker(sim.terrain)
-    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.actors.group, this.dynamics.group, this.marker.mesh)
+    this.carts = new Carts(sim)
+    this.scene.add(this.terrain.group, this.vegetation.group, this.structures.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
@@ -163,6 +166,7 @@ export class Renderer {
     perf.measure('render.actors', () => this.actors.update(dt, this.rig.camera))
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)
+    this.carts.update()
     perf.measure('render.draw', () => this.renderer.render(this.scene, this.rig.camera))
     perf.end('render.cpu')
     const info = this.renderer.info

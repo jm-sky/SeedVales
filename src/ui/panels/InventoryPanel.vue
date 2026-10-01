@@ -42,6 +42,7 @@ const slotLabel = (k: string) => {
 }
 const useLabel = (id: string) => {
   const d = itemDef(id)
+  if (d.cart) return 'Push'
   if (d.weapon || (d.caps?.length && !d.waterCapacity)) return 'Wield'
   if (d.armor) return 'Wear'
   if (d.waterCapacity) return 'Drink'

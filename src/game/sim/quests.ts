@@ -5,7 +5,7 @@
  */
 import type { Sim } from './sim'
 import type { Quest } from './types'
-import { animalsNear, countByDen, countNear, nestTag } from './queries'
+import { animalsNear, countByDen, nestTag } from './queries'
 import { addRep } from './reputation'
 import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
@@ -71,8 +71,10 @@ export function questSystem(sim: Sim) {
     if (q.status !== 'available' && q.status !== 'active') continue
     if (q.kind === 'rats') {
       const b = sim.building(q.buildingId)
-      // Rats of this nest wherever they roam/fled (plus stray rats right at the building).
-      const ratsLeft = b ? (perNest.get(nestTag(b.id)) ?? 0) + countNear(sim, b.x, b.z, 20, 'rat') : 0
+      // Rats of this nest wherever they roam/fled, plus untagged strays right at the building (old saves).
+      // Rats of another nest passing by do not keep the quest open.
+      const strays = b ? animalsNear(sim, b.x, b.z, 20, 'rat').filter((a) => !a.denId).length : 0
+      const ratsLeft = b ? (perNest.get(nestTag(b.id)) ?? 0) + strays : 0
       if (b && !b.ratNest && ratsLeft === 0) {
         if (q.status === 'active' && q.kills > 0) completeQuest(sim, q)
         else {

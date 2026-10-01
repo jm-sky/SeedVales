@@ -475,6 +475,39 @@ try {
   const roast = await S(() => ({ cooked: window.__sv.game.sim.player.inv.items.filter((x) => x.id === 'cooked_meat').map((x) => `${x.sp}×${x.qty}`), raw: window.__sv.count('raw_meat') }))
   check(results, '15. pieczenie 2 kawałków na raz (patelnia), mięso zachowuje gatunek', !!fireT && roast.raw === 1 && roast.cooked.length === 2, roast)
 
+  // 16. TRANS-01: push a wheelbarrow (inventory), load logs (quick actions), unload at the warehouse (interaction).
+  await S(() => {
+    const sv = window.__sv
+    sv.pause(true)
+    sv.give('wheelbarrow')
+    sv.give('log', 3)
+  })
+  await key('KeyI')
+  await clickTest('use-wheelbarrow')
+  await key('KeyQ')
+  await clickTest('quick-load_cart')
+  await clickTest('panel-close')
+  const cartLoaded = await S(() => window.__sv.game.sim.state.px.cart?.inv.items.map((x) => `${x.id}×${x.qty}`).join(','))
+  const whInfo = await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const p = sim.player
+    const wh = sim.state.buildings.filter((b) => b.kind === 'warehouse').sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0]
+    sv.approach(wh.x + Math.sin(wh.rot) * (wh.hd + 1.6), wh.z + Math.cos(wh.rot) * (wh.hd + 1.6), 0.2)
+    sv.face(wh.x, wh.z)
+    return { id: wh.id, logs: wh.inv.items.filter((x) => x.id === 'log').reduce((n, x) => n + x.qty, 0) }
+  })
+  await shot(page, 'acc-16-cart')
+  await waitTarget((t) => t.opts.includes('unload_cart_here'))
+  await key('KeyE')
+  if (await page.$('[data-testid="opt-unload_cart_here"]')) await clickTest('opt-unload_cart_here')
+  const whLogs = await S((id) => window.__sv.game.sim.building(id).inv.items.filter((x) => x.id === 'log').reduce((n, x) => n + x.qty, 0), whInfo.id)
+  check(results, '16. taczka: pchanie, załadunek belek, rozładunek w magazynie (UI)', (cartLoaded ?? '').includes('log×3') && whLogs === whInfo.logs + 3, { cartLoaded, logs: [whInfo.logs, whLogs] })
+  await S(() => {
+    window.__sv.game.parkCart()
+    window.__sv.pause(false)
+  })
+
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)

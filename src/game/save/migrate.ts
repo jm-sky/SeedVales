@@ -53,6 +53,10 @@ const MIGRATIONS: Record<number, Migration> = {
       if (b) a.denId = nestTag(b.id)
     }
   },
+  // v5 → v6: parked carts (TRANS-01).
+  5: (st) => {
+    st.carts ??= []
+  },
 }
 
 export function migrate(st: GameState): GameState {

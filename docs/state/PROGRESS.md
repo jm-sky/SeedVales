@@ -27,7 +27,8 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **Fala 3 `economy--001` w toku:** krok 1 RES-07 verified (głaz → odłamki → kamienie, pień), krok 2 FOOD-03 verified (pieczenie partiami: ognisko 1 / patelnia 2 / ruszt 5, gatunek i świeżość w produkcie — D-FOOD-3). `pnpm check` 126/126, e2e acceptance 27/27, mobile 10/10, smoke 3/3.
 - **Nowe wymagania z `docs/IMPORTANT-PRODUCT-NOTES.md` (dodane na main w trakcie sesji):** MAP-01 mgła wojny (v1) — **zrobione** (D-MAP-1, test + e2e); UI-LANG-01 cały tekst dla gracza po angielsku (v1) — **planned**, duża zmiana przekrojowa (wymaga planu: katalog tekstów, nazwy przedmiotów/receptur w `data/`, komunikaty sim, selektory tekstowe w e2e); MAP-02 widoczność aktorów wg zmysłów (v2) — planned. Status v1 w świetle nowych wymagań: **brakuje UI-LANG-01**.
 - **UI-LANG-01 verified (2026-10-01):** cały interfejs po angielsku (decyzja użytkownika: bez i18n, D-UI-4; słownik `docs/design/ui-english-glossary.md`). Nazwy własne bez zmian. Nowy tekst dla gracza pisz od razu po angielsku według słownika. **v1 znów kompletne** wg FEATURES (poza WORLD-10 — dźwięk nieodsłuchany).
-- Następny krok: `economy--001` krok 3 (TRANS-01 taczka / wózek ręczny: udźwig dla ciężkich surowców, spowolnienie, bez stromych zboczy/wody), potem `npc--001`, potem review fali 3.
+- **Fala 3 `economy--001` done (2026-10-01):** RES-07, FOOD-03, TRANS-01 verified (taczka/wózek, `SAVE_VERSION` 6). `pnpm check` 131/131, e2e acceptance 29/29, mobile 10/10, smoke 3/3.
+- Następny krok: `npc--001` (handel z każdym NPC, prezenty, towarzysze), potem review fali 3 (subagent w izolowanym worktree; zakres od `0514669^` / `2c6e4d6^` do HEAD w `src/game/sim/{actions,cooking,cart}.ts` i powiązanych).
 
 ## Sesja przygotowawcza 2026-09-30 (docs only, bez zmian w kodzie)
 

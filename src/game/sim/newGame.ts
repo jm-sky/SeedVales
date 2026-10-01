@@ -226,6 +226,7 @@ export function createNewGame(world: WorldData): GameState {
     ground: [],
     corpses: [],
     traces: [],
+    carts: [],
     nodes: {},
     dens,
     quests: [],

@@ -12,6 +12,7 @@ import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { isTree } from '../world/nodes'
 import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
+import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, unloadInto, unloadToBuilding } from './cart'
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
@@ -32,6 +33,7 @@ export type TargetRef =
   | { type: 'site'; id: string }
   | { type: 'den'; id: string }
   | { type: 'water'; x: number; z: number }
+  | { type: 'cart'; id: number }
 
 export type UiPanel = 'trade' | 'storage' | 'craft' | 'quests' | 'dialog' | 'orders'
 
@@ -102,6 +104,7 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   }
   for (const c of sim.corpsesNear(p.x, p.z, 7.1)) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Carcass: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)
   for (const g of sim.groundNear(p.x, p.z, 5.7)) if (Math.abs(g.x - p.x) < 4 && Math.abs(g.z - p.z) < 4) push({ type: 'ground', id: g.id }, itemDef(g.stack.id).name, g.x, g.z, 0.3)
+  for (const c of sim.state.carts) push({ type: 'cart', id: c.id }, itemDef(c.item).name, c.x, c.z, 0.6)
   for (const s of sim.state.sites) push({ type: 'site', id: s.id }, 'Building site', s.x, s.z, 1)
   for (const d of sim.state.dens) if (d.alive) push({ type: 'den', id: d.id }, `Den (${SPECIES[d.species === 'deer' ? 'deer' : d.species].name})`, d.x, d.z, 1.5)
   for (const b of sim.buildingsNear(p.x, p.z, maxDist + 6)) {
@@ -195,7 +198,24 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
         default:
           o.push(...repair)
       }
+      // A pushed cart can be emptied straight into the warehouse or your own storage (TRANS-01).
+      const cart = sim.state.px.cart
+      if (cart && b.inv && (b.kind === 'warehouse' || b.owner === 'player')) {
+        o.unshift(opt('unload_cart_here', `Unload the cart here (${Math.round(cartLoad(cart))} kg)`, cart.inv.items.length > 0, 'The cart is empty'))
+      }
       return o
+    }
+    case 'cart': {
+      const c = sim.state.carts.find((x) => x.id === t.id)
+      if (!c) return []
+      const load = `${Math.round(cartLoad(c))}/${cartDef(c).capacity} kg`
+      const heavy = p.inv.items.some((s) => isHeavy(s.id))
+      return [
+        opt('push_cart', `Push (${load})`, !sim.state.px.cart, 'You are already pushing a cart'),
+        opt('load_cart', 'Load heavy goods from your pack', heavy, 'No heavy goods in your pack'),
+        opt('unload_cart', 'Take the load into your pack', c.inv.items.length > 0, 'The cart is empty'),
+        opt('stow_cart', 'Pick up the empty cart', c.inv.items.length === 0, 'Unload it first'),
+      ]
     }
     case 'corpse':
       return [toolOpt(sim, 'butcher', 'Butcher', 'cut', 'knife'), toolOpt(sim, 'bury', 'Bury', 'dig', 'shovel')]
@@ -241,6 +261,8 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
 export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
   const p = sim.player
   const equip = (cap: Capability) => {
+    // Working with a tool needs both hands: a pushed cart is parked first.
+    if (sim.state.px.cart) parkCart(sim, p)
     const tool = findTool(p, cap)
     if (tool && p.eq.main !== tool && p.eq.off !== tool) equipToMain(p, tool)
     return tool
@@ -345,6 +367,12 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (b) b.lit = true
       return 'Lit.'
     }
+    case 'load_cart': {
+      const c = sim.state.carts.find((x) => x.id === (t as { id: number }).id)
+      if (!c) return ''
+      const kg = loadHeavy(p, c)
+      return kg ? `Loaded ${Math.round(kg)} kg into the cart.` : 'The cart is full.'
+    }
     case 'market': {
       const b = sim.building((t as { id: string }).id)
       const trader = b ? sim.npcsOf(b.settlementId).find((n) => n.profession === 'trader') : undefined
@@ -368,6 +396,8 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (g.stack.qty <= 0) sim.removeGround(g)
       return `Picked up: ${itemDef(g.stack.id).name}${g.stack.qty > 0 ? ` ×${n} (the rest is too heavy)` : ''}`
     }
+    case 'push_cart':
+      return pushParked(sim, p, (t as { id: number }).id)
     case 'repair':
       equip('hammer')
       startActivity(sim, { kind: 'repair', ref: (t as { id: string }).id, label: 'Repairing', total: 10 })
@@ -380,6 +410,19 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (!n) return 'You have no raw meat.'
       startActivity(sim, { kind: 'roast', label: `Roasting meat (${n} pcs)`, total: roastSeconds(), accel: ROAST_ACCEL, data: String(n) })
       return ''
+    }
+    case 'stow_cart':
+      return stowCart(sim, p, (t as { id: number }).id)
+    case 'unload_cart': {
+      const c = sim.state.carts.find((x) => x.id === (t as { id: number }).id)
+      if (!c) return ''
+      const kg = unloadInto(c, p.inv, p)
+      return kg ? `Took ${Math.round(kg)} kg from the cart.` : 'You cannot carry any more.'
+    }
+    case 'unload_cart_here': {
+      const b = sim.building((t as { id: string }).id)
+      const c = sim.state.px.cart
+      return b && c ? unloadToBuilding(sim, c, b) : ''
     }
     default:
       return ''
