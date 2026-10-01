@@ -52,3 +52,6 @@ test-results/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Raw downloaded assets before conversion (sources go to _temp/extracted/)
+_new_assets
