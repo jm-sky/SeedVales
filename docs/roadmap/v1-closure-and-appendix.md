@@ -74,7 +74,10 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 | [verify--001--soak-and-npc-life](../plans/verify--001--soak-and-npc-life.md) | multi-day soak run: sim event log + ledger, invariants (NPCs alive, working, eating/sleeping, not stuck, conservation, fires kept), report |
 | [review--001--review-fix-loop](../plans/review--001--review-fix-loop.md) | Sonnet/Opus code review + application review (gameplay, graphics, UX) → fix → re-review, ≤ 3 rounds per wave; first input = session 11 ultrareview |
 
-Order: finish `render--001` (4b) → `verify--001` steps 1–3 (cheap, protects everything after) → `quests--001` → first full `review--001` round → wave 5 continues. The loop repeats after every wave and before each release candidate.
+| [render--008--roads-banks-and-ground-textures](../plans/render--008--roads-banks-and-ground-textures.md) | *(draft, user notes 2026-10-02, wave 4c)* road relief/cobbles + town-square paving, ground/rock textures, river banks (beach / 0.3–0.5 m cut bank) with a channel, reeds and lilies; step 4 = `GEN_VERSION` bump |
+| [proposals--001--claude-proposals](../plans/proposals--001--claude-proposals.md) | **last stage:** Claude prepares 15–25 proposals from evidence (soak, reviews, vision gaps) autonomously; user picks a few; they are built and reviewed |
+
+Order: finish `render--001` (4b) → `render--008` (4c, user additions — only when it fits; it must not delay the main order) → `verify--001` steps 1–3 (cheap, protects everything after) → `quests--001` → first full `review--001` round → wave 5 continues. The loop repeats after every wave and before each release candidate.
 
 ## Wave 6 — visual polish and graphics optimisation (conditional)
 
