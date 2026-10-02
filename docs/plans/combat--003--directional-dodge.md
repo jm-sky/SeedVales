@@ -8,6 +8,11 @@
 
 ---
 
+## User decisions (2026-10-02)
+
+- Dodge is primarily physical displacement, not a Souls-like invulnerability mechanic.
+- Default is no i-frames; add only a very short ~50–100 ms grace window if playtesting proves it necessary for responsiveness.
+
 ## Goal
 
 Add a short directional combat dodge that rewards positioning and stamina management. The dodge should move the character physically out of an attack path, not rely on long Souls-like invulnerability windows.
