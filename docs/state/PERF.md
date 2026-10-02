@@ -272,3 +272,13 @@ The longer model ring waits for LOD1 meshes (Blender session, `docs/design/rende
 | high · march | 9.3 ms | 14.1 ms | same; equal triangles (≈ 2.05 M) → LOD1 card overdraw; high ring set to 120 m until tighter cards (contract "Round 2") |
 
 High runs on this laptop varied ±50 % on the same build (dense-forest 4.3 vs 8.3 ms in consecutive runs); quote alternating pairs only.
+
+### Draw-call attribution (session 11, `scripts/bench/draw-attribution.mjs`, main+shadow per subsystem)
+
+| scene (high) | total | actors | structures | terrain | vegetation |
+|---|---|---|---|---|---|
+| crowded-settlement, before | 934 | 356+347 | 59+59 | 77+0 | 18+11 |
+| crowded-settlement, actor culling + shadow radius | 363 | 144+13 | 59+59 | 52+0 | 18+11 |
+| small-settlement, before → after | 714 → 410 | 231+231 → 121+37 | 59+54 | 99+0 | 25+11 |
+
+Medium: crowded 578 → 342, small 525 → 296. GPU times for this change: pending (machine loaded during the session). Also measured under load: mobile/low SwiftShader frame 350–400 ms with grass + offline trees vs 250 ms with both off (software rendering, not representative of devices — D-PERF-5).

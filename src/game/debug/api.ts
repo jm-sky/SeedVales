@@ -30,6 +30,8 @@ export interface DebugApi {
   setNeeds(v: Partial<{ hunger: number; thirst: number; vigor: number; stamina: number }>): void
   face(x: number, z: number): void
   pause(on: boolean): void
+  /** Draw calls per render subsystem for one extra frame (render--003 attribution). */
+  drawAttribution(): ReturnType<Game['renderer']['drawAttribution']>
   /** Teleport next to a point and face it (distance d). */
   approach(x: number, z: number, d?: number): void
   /**
@@ -65,6 +67,7 @@ export function installDebugApi(game: Game) {
         gpu: gpu.available ? { available: true, samples: g?.samples ?? 0, p50: r2(g?.median), p95: r2(g?.p95), p99: r2(g?.p99), dropped: gpu.dropped } : null,
       }
     },
+    drawAttribution: () => game.renderer.drawAttribution(),
     openSpot: (minR, sid) => openSpot(sim(), minR, sid),
     teleportToSettlement: (id, dx = 0, dz = 20) => {
       const s = sim().world.settlements[id]!

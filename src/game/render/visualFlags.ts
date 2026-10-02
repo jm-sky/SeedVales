@@ -23,9 +23,11 @@ export interface VisualFlags {
   impostors: boolean
   /** Offline LOD0/LOD1 trees + baked atlas from `trees.glb` (session 12); false = the kit trees. */
   treeAssets: boolean
+  /** Actors: per-actor frustum culling + shadow radius (render--003); false = the old always-drawn actors (A/B). */
+  actorCull: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true, actorCull: true }
 
 export function readVisualFlags(): VisualFlags {
   try {

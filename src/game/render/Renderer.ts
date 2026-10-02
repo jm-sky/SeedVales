@@ -99,6 +99,7 @@ export class Renderer {
     this.structures = new Structures(sim)
     this.landmarks = new Landmarks(sim)
     this.actors = new Actors(sim, q)
+    this.actors.cull = this.visual.actorCull
     this.dynamics = new Dynamics(sim)
     this.marker = new TargetMarker(sim.terrain)
     this.carts = new Carts(sim)
@@ -235,6 +236,38 @@ export class Renderer {
     const gs = grassSeasonal((cal / 86400) / DAYS_PER_YEAR)
     this.terrain.flowers = gs.flowers
     this.grass?.setSeason(this.terrain.seasonTint, this.terrain.snowCover, gs.growth, gs.flowers)
+  }
+
+  /**
+   * Diagnostics (render--003, research 003 §10.1): draw calls per subsystem for one extra frame — main pass and
+   * shadow pass separately — via temporary per-object hooks (exact; a multi-material mesh counts once per draw).
+   */
+  drawAttribution(): { total: number; triangles: number; by: Record<string, { main: number; shadow: number }> } {
+    const groups: [THREE.Object3D | null | undefined, string][] = [
+      [this.terrain.group, 'terrain'], [this.vegetation.group, 'vegetation'], [this.grass?.group, 'grass'],
+      [this.structures.group, 'structures'], [this.landmarks.group, 'landmarks'], [this.actors.group, 'actors'],
+      [this.dynamics.group, 'dynamics'], [this.carts.group, 'carts'], [this.marker.mesh, 'marker'], [this.skyDome?.mesh, 'sky'],
+    ]
+    const tagOf = new Map<THREE.Object3D, string>()
+    for (const [o, t] of groups) if (o) tagOf.set(o, t)
+    const by: Record<string, { main: number; shadow: number }> = {}
+    const restore: (() => void)[] = []
+    this.scene.traverse((o) => {
+      const r = o as THREE.Mesh
+      if (!r.isMesh && !(o as THREE.Points).isPoints && !(o as THREE.Line).isLine && !(o as THREE.Sprite).isSprite) return
+      let p: THREE.Object3D | null = o
+      while (p && !tagOf.has(p)) p = p.parent
+      const tag = p ? tagOf.get(p)! : 'other'
+      const c = (by[tag] ??= { main: 0, shadow: 0 })
+      const br = o.onBeforeRender
+      const bs = o.onBeforeShadow
+      o.onBeforeRender = function (...a) { c.main++; br.apply(this, a) }
+      o.onBeforeShadow = function (...a) { c.shadow++; bs.apply(this, a) }
+      restore.push(() => { o.onBeforeRender = br; o.onBeforeShadow = bs })
+    })
+    this.renderer.render(this.scene, this.rig.camera)
+    for (const f of restore) f()
+    return { total: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles, by }
   }
 
   private lightCount(): number {

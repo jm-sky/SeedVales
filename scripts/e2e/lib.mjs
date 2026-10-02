@@ -40,6 +40,8 @@ export async function launch({ mobile = false } = {}) {
       ? { viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile' }
       : { viewport: { width: 1280, height: 720 } },
   )
+  // SV_VISUAL='{"actorCull":false}' → render A/B flags (localStorage `sv-visual`) for any script using launch().
+  if (process.env.SV_VISUAL) await context.addInitScript((v) => localStorage.setItem('sv-visual', v), process.env.SV_VISUAL)
   const page = await context.newPage()
   const logs = []
   page.on('console', (m) => {

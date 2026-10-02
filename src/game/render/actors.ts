@@ -35,7 +35,14 @@ interface Visual {
   kindKey: string
   pos: THREE.Vector3
   rot: number
+  /** Current castShadow state of the model meshes (toggled only when crossing `actorShadow`). */
+  shadow?: boolean
 }
+
+/** Per-actor visibility test (skinned meshes keep frustumCulled = false: their animated bounds are unreliable). */
+const FRUSTUM = new THREE.Frustum()
+const PROJ = new THREE.Matrix4()
+const SPHERE = new THREE.Sphere(new THREE.Vector3(), 3)
 
 type CharKey = `${'Male' | 'Female'}_${CharOutfit}`
 const CHAR_OUTFITS: CharOutfit[] = ['Peasant', 'Ranger', 'Ranger_NoHood', 'Knight', 'Wizard', 'Peasant_Boots', 'Blacksmith', 'Herbalist']
@@ -291,7 +298,13 @@ export class Actors {
     return 'Idle'
   }
 
+  /** Frustum culling + shadow radius on (sv-visual `actorCull`). */
+  cull = true
+
   update(dt: number, cam: THREE.Camera) {
+    cam.updateMatrixWorld()
+    FRUSTUM.setFromProjectionMatrix(PROJ.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse))
+    let culled = 0
     const sim = this.sim
     const p = sim.player
     const seen = new Set<number>()
@@ -340,6 +353,19 @@ export class Actors {
       v.root.position.copy(v.pos)
       v.root.rotation.y = v.rot
       if (a.kind === 'animal' && a.moving === 'swim') v.root.position.y -= 0.4
+      // Off-screen actors are not drawn (main + shadow pass) and not animated (render--003 attribution:
+      // actors were 75 % of the draw calls in a crowded settlement on high, many behind the camera).
+      SPHERE.center.set(v.pos.x, v.pos.y + 1, v.pos.z)
+      v.root.visible = !this.cull || a.kind === 'player' || FRUSTUM.intersectsSphere(SPHERE)
+      if (!v.root.visible) {
+        culled++
+        continue
+      }
+      const shadow = v.model && (!this.cull || a.kind === 'player' || d < this.q.actorShadow)
+      if (shadow !== v.shadow) {
+        v.shadow = shadow
+        v.root.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = shadow })
+      }
       if (v.mixer) {
         if (isHuman) {
           const [name, once] = this.humanAnim(a as Human)
@@ -357,7 +383,7 @@ export class Actors {
         this.visuals.delete(id)
       }
     }
-    void cam
+    perf.gauge('render.actorsCulled', culled)
     perf.gauge('render.activeMixers', mixers)
     perf.gauge('render.actorVisuals', this.visuals.size)
   }

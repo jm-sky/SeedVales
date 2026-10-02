@@ -35,10 +35,21 @@ try {
   await shot(page, 'mob-01-start')
 
   // Movement via joystick.
+  // Hold the stick forward until the character has moved > 1 m (max 10 s): a fixed 2.5 s drag depended on the
+  // software-rendering frame rate (session 11: 350–400 ms frames on a loaded machine → 0.56 m, test failed).
   const a = await S(() => window.__sv.state())
-  await drag('[data-testid=joystick]', 0, -60, 2500)
-  const b = await S(() => window.__sv.state())
-  const moved = Math.hypot(b.x - a.x, b.z - a.z)
+  const box = await page.locator('[data-testid=joystick]').boundingBox()
+  const jx = box.x + box.width / 2
+  const jy = box.y + box.height / 2
+  await page.dispatchEvent('[data-testid=joystick]', 'pointerdown', { pointerId: 7, pointerType: 'touch', clientX: jx, clientY: jy, isPrimary: true })
+  for (let i = 1; i <= 4; i++) await page.dispatchEvent('[data-testid=joystick]', 'pointermove', { pointerId: 7, pointerType: 'touch', clientX: jx, clientY: jy - 15 * i })
+  let moved = 0
+  for (let t = 0; t < 40 && moved <= 1; t++) {
+    await page.waitForTimeout(250)
+    const b = await S(() => window.__sv.state())
+    moved = Math.hypot(b.x - a.x, b.z - a.z)
+  }
+  await page.dispatchEvent('[data-testid=joystick]', 'pointerup', { pointerId: 7, pointerType: 'touch', clientX: jx, clientY: jy - 60 })
   check(results, 'M1. joystick porusza postacią', moved > 1, `${moved.toFixed(2)} m`)
 
   // Camera drag on the right half.

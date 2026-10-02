@@ -1,6 +1,6 @@
 # Render: wykończenie obrazu i optymalizacja grafiki (warunkowo)
 
-**Status:** draft  
+**Status:** in_progress  
 **Model:** opus to take it out of draft and pick items from measurements; sonnet implements the chosen items  
 **Domain:** render  
 **Sub domains:** postprocess, assets, perf, actors, vegetation, quality  
@@ -42,3 +42,11 @@ WebGPU/TSL (migracja materiałów i postprocessingu, fallback WebGL2), TAA/tempo
 ## Wynik
 
 —
+
+### Session 11 (2026-10-02, WSL) — settlement draw-call attribution and the actor fix
+
+- **Attribution tool:** `Renderer.drawAttribution()` (exposed as `window.__sv.drawAttribution()`) counts draws per render subsystem for one extra frame, main and shadow pass separately, via temporary `onBeforeRender` / `onBeforeShadow` hooks (exact). Script: `node scripts/bench/draw-attribution.mjs [low|medium|high]` → table + `test-results/bench/draws-<q>.json` (draw counts do not depend on the GPU).
+- **Finding:** actors owned the settlement cost — high crowded-settlement 934 draws, of which actors 356 main + 347 shadow (75 %); structures 59 + 59, terrain 77, vegetation 29, grass 3. Causes: actor meshes have `frustumCulled = false` (animated skinned bounds are unreliable), so every actor within the model range was drawn even behind the camera, and every body part of every model actor cast a shadow.
+- **Fix (`render/actors.ts`):** per-actor frustum test (sphere r = 3 m around the root; off-screen actors are not drawn and their mixers are not updated) and a shadow radius per profile (`quality.ts` `actorShadow`: low 0 / medium 30 / high 40 m, toggled only when crossing it). A/B flag `sv-visual {"actorCull":false}`; test `actors.test.ts`.
+- **Result (draw calls):** high crowded-settlement 934 → 363, high small-settlement 714 → 410, medium crowded 578 → 342, medium small 525 → 296; dense-forest unchanged (no actors). GPU confirmation pending: the machine was loaded by a parallel session (load average ~6), so the GPU runs of this step are invalid — next session: alternating pairs `SV_VISUAL='{"actorCull":false}'` vs default on `crowded-settlement`/`small-settlement`, medium and high, on an idle machine.
+- **Next candidates (by the table):** character part/material merge per skinned body (7–12 draws per character; asset work → Blender session), structures shadow pass (59 shadow draws), then high-only effects.
