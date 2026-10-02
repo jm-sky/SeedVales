@@ -176,8 +176,12 @@ export class SoakRecorder {
   /** Heap in MB after a GC; injected by Node callers (this module has no Node types). */
   private heapProbe?: () => number
 
-  constructor(sim: Sim, seed: number, opts: { heapMB?: () => number } = {}) {
+  /** Enforce the tick-time budget (off in the vitest variant, D-VERIFY-1). */
+  private readonly timing: boolean
+
+  constructor(sim: Sim, seed: number, opts: { heapMB?: () => number; timing?: boolean } = {}) {
     this.sim = sim
+    this.timing = opts.timing ?? true
     this.heapProbe = opts.heapMB
     this.seed = seed
     this.dayStartDead = sim.state.npcs.filter((n) => n.vitals.dead).length
@@ -424,7 +428,8 @@ export class SoakRecorder {
     // Perf: sim.tick p95 over the whole run, heap growth after day 1.
     const t = perf.report().timers.find((x) => x.name === 'sim.tick')
     const tick = { samples: t?.samples ?? 0, median: t?.median ?? 0, p95: t?.p95 ?? 0, p99: t?.p99 ?? 0, max: t?.max ?? 0 }
-    if (tick.p95 > SOAK_LIMITS.tickP95Ms) v('perf', `sim.tick p95 ${tick.p95.toFixed(2)} ms > budget ${SOAK_LIMITS.tickP95Ms} ms`)
+    // Wall-clock timing is a verdict only in a dedicated run (`pnpm soak`); inside vitest the workers share the CPU (D-VERIFY-1).
+    if (this.timing && tick.p95 > SOAK_LIMITS.tickP95Ms) v('perf', `sim.tick p95 ${tick.p95.toFixed(2)} ms > budget ${SOAK_LIMITS.tickP95Ms} ms`)
     const heapGrowthMB = this.heapDay1 ? this.heapPeak - this.heapDay1 : 0
     if (heapGrowthMB > SOAK_LIMITS.heapGrowthMB) v('perf', `heap grew ${heapGrowthMB.toFixed(0)} MB after day 1 (> ${SOAK_LIMITS.heapGrowthMB} MB)`)
     return {

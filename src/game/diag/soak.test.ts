@@ -1,6 +1,6 @@
 /**
  * verify--001: CI-sized soak — 2 game days, NPC-life invariants hold (nobody starves, everyone eats/drinks/sleeps, nobody stuck)
- * plus the ledger/economy/fire/perf invariants (conservation of every item and of money, hearths lit, tick p95 inside the budget).
+ * plus the ledger/economy/fire/perf invariants (conservation of every item and of money, hearths lit, tick p95 recorded; judged by `pnpm soak`).
  */
 import { describe, expect, it } from 'vitest'
 import { run, testSim } from '../sim/testWorld'
@@ -12,7 +12,8 @@ describe('diag: soak (verify--001)', () => {
     const s0 = sim.world.settlements[0]!
     sim.player.x = s0.x + 4
     sim.player.z = s0.z + 4
-    const rec = new SoakRecorder(sim, 1337)
+    // Tick time is measured but not judged here: vitest workers share the CPU; `pnpm soak` and `bench:sim` judge it (D-VERIFY-1).
+    const rec = new SoakRecorder(sim, 1337, { timing: false })
     for (let t = 0; t < 2 * DAY_S; t += 10) {
       run(sim, 10, 0.5)
       rec.sample(t + 10)
