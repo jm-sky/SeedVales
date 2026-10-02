@@ -1,41 +1,45 @@
-# Kick-off: session 11 — Opus look decisions, then trees (re-planned), water, fire
+# Kick-off: next WSL session — tree assets round 2, finish the nature pass, then fire
 
-*Written 2026-10-01 by the session-10 Sonnet run on WSL (the session-10 kick-off is in git history, `a2f460e`).*
+*Written 2026-10-02 by session 11 (Opus, WSL, real GPU). The session-11 kick-off is in git history (`7e4578b`).*
 
-You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State: v1 complete; waves 1–3, 4s, 4a done; nature pass (4n) has terrain relief (`world--002`, `GEN_VERSION` 9), shared wind and grass (`render--007` steps 1–2, RENDER-06 `implemented_unverified`). `SAVE_VERSION` 8. Session 10 closed the 4a gate, measured grass on a **real GPU** and re-tuned it (numbers: `docs/state/PERF.md` "WSL session 10", plan `render--007` "Session 10"). **Model split:** start with **Opus** for the keep/drop calls below (short, batch them), then **Sonnet** for implementation.
+You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State: v1 complete; waves 1–3, 4s, 4a done; **4n nature pass in progress** (`render--007`): wind, grass (16 thin blades/clump, seasonal height, flower/dark/soil patches shared with the ground, height classes), trees (offline LOD0/LOD1 from `trees.glb` + offline impostor atlas, dithered bands), water shader first pass. `GEN_VERSION` 9, `SAVE_VERSION` 8. A parallel Windows/Blender session works on **tree assets round 2** (tight-cut LOD1 leaf cards, lighter pine LOD1, optional normal atlas — `docs/design/render-tree-assets-contract.md` "Round 2 requests").
 
 **Language: English everywhere (D-LANG-1).** No save migrations before the first release (D-SAVE-7).
 
-## 0. Real GPU on WSL (new, use it)
+## 0. Environment notes (WSL)
 
-`SV_GPU=1` makes `scripts/e2e/lib.mjs` launch Chrome on the Intel Arc 140V through Mesa d3d12 (works for `bench:render`, `ab.mjs`, `tour.mjs`; frame-rate limit/vsync off → RAF interval = frame time; `gpu.frame` timer available). Default stays SwiftShader — the committed baselines are SwiftShader (D-PERF-5), do not mix. GPU runs are noisy on this laptop (host stalls of 100 ms–3 s appear): judge by medians and `gpu.frame`, repeat before claiming a regression. Bench env: `SV_VISUAL='{"grass":false}' SV_VISUAL_TAG=nograss`, `SV_SCENES=meadow` (march/teleport always run). Do not run benches in parallel with each other or with e2e.
+- Real GPU: `SV_GPU=1` for `bench:render`, `ab.mjs`, `tour.mjs` (Arc 140V via Mesa d3d12). Committed baselines are SwiftShader (D-PERF-5) — do not mix.
+- **GPU numbers on this laptop vary ±50 % run to run** (and another workload on the machine makes them meaningless — check `uptime` first). Quote only **alternating pairs** (A, B, A, B, A, B → medians), never single runs. Bench helpers: `SV_SCENES=dense-forest` (march/teleport always run), `SV_VISUAL='{"treeAssets":false}' SV_VISUAL_TAG=kit` for the kit-tree A/B. Visual flags: `grass`, `impostors`, `treeAssets` (`render/visualFlags.ts`).
+- World cache (new): tests and e2e reuse generated worlds from `node_modules/.cache/seedvales/` (CLAUDE.md "Commands"); `SV_WORLD_CACHE=0` disables it.
+- Check exit codes: never chain `grep` after a test run with `&&` to decide a commit (a failing e2e was pushed once that way) — use `pnpm e2e:run > log; echo $?`.
 
-## 1. Start (brief)
+## 1. Start
 
-1. Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 10"), `docs/plans/render--007--nature-pass.md` ("Result" → Session 10, incl. the **Step 3 re-plan**), `docs/state/PERF.md` ("WSL session 10"), `docs/design/DECISIONS.md` (D-REN-13/14, D-PERF-2/3/5), `docs/research/refs/`.
-2. `git status`, `git log --oneline | head`, merge `main`; a new review on main is triaged first (skill `wave-review` §3).
-3. `pnpm install --frozen-lockfile`; `pnpm check` (230), `pnpm e2e:run` (3/3 · 32/32 · 11/11, 0 console errors). Red = task one.
+1. Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 11"), `docs/plans/render--007--nature-pass.md` ("Result": Session 11, Session 12, Session 11 continued, and Session 14 if the Blender session wrote it), `docs/design/DECISIONS.md` (D-REN-14/15/16, D-TOOLS-1), `docs/state/PERF.md` (WSL session 11 sections), `docs/research/2026-10-02--003--threejs-graphics-techniques-and-optimization.md` (execution order §16).
+2. `git pull`; a new review on main is triaged first (skill `wave-review` §3).
+3. `pnpm install --frozen-lockfile`; `pnpm check` (237), `pnpm e2e:run` (3/3 · 32/32 · 11/11, 0 console errors). Red = task one.
 
 ## 2. Work order
 
-1. **Opus decisions (≤ 1 h, write into plan Result + DECISIONS):** (a) grass look keep/drop — look at `docs/state/frames/render--007/wsl/`; wanted: per-clump colour variation, flower/clover accents (step 5), (b) relief amplitude (`world--002`; make a **same-spot** A/B pair with `ab.mjs` first — the stored pairs are from different spots), (c) **trees decision A** (kit vs own generator; recommendation in the plan: own generator, kit as fallback), (d) the **settlement cost on high** (PERF.md: 16–29 ms RAF, 700–890 draw calls with grass off) — decide whether a `render--003` item (building/prop merging, shadow-caster limits) goes before trees.
-2. **Trees (`render--007` step 3, re-planned):** per the decision — generator or kit → leaf material (alpha-test, wind, back-light) → rings + baked impostors; measure on the GPU (`SV_GPU=1 bench:render` `dense-forest`, `forest-edge` frame) after each sub-step; add the missing `ab.mjs` frames `forest-edge`, `lake-shore`, `river-bank` first (also `diag--002` step 5, real-input travel).
-3. **Grass follow-ups if Opus keeps it:** per-clump colour variation (instance colour or hash in the shader), flowers (step 5).
-4. **Water (step 4):** cheap shader on every profile, planar reflection on high only — judge on the GPU; `water-shore` bench per profile.
-5. **If time remains:** `render--001` fire 1a/1b, English first names (NPC pools still Polish, `GEN_VERSION` bump), `world--001` steps 2–3. Harness: fix `tour-01-npcs-close` (camera ends inside a house wall).
+1. **Tree assets round 2** (if the Blender session pushed): check `node scripts/assets/validate-trees.mjs`; A/B frames `forest-edge`, `meadow-hills`, `lake-shore` (`SV_GPU=1 node scripts/e2e/ab.mjs medium 'kit={"treeAssets":false}' 'assets={}'`); alternating GPU pairs `dense-forest` (incl. `march-10mps`) on medium and high. If high march is within ~+1 ms of the kit, raise the high model ring (`quality.ts` `treeModel` 150–200 m, D-REN-16) and re-measure. Leaf back-light term (one line in the leaf material) if the new leaf material allows it.
+2. **Water:** judge the first pass on the GPU at noon and dusk (`lake-shore`, `river-bank`, `settlement-dusk`); planar reflection on **high only** per plan step 4.2 — implement only if a same-scene A/B shows a clear win and `water-shore` high stays within budget; otherwise record the drop.
+3. **Opus exit review of 4n** (skill `wave-review`) → triage → plan `render--007` done (exit gate in the plan; FEATURES RENDER-05/06/07 stay `implemented_unverified` until the user's look/device check).
+4. **`render--003` first item: settlement draw-call attribution** (research 003 §10: per-subsystem draw calls terrain / vegetation / grass / structures / actors / shadow pass) — before any high-only effect. High settlements are 16–29 ms on the laptop.
+5. **Fire (`render--001` 1a → 1b)** per its plan.
+6. If time remains: `world--001` steps 2–3; `diag--002` step 5 (real-input travel); harness: `tour-01-npcs-close` camera inside a house wall.
 
-After each item: skill `verify`, skill `handoff` (FEATURES evidence, plan "Result", PROGRESS), commit + push to `main`.
+After each item: skill `verify`, skill `handoff` (FEATURES evidence, plan "Result", PROGRESS), commit + push to `main` (pull first — the Blender session pushes to main too; resolve doc conflicts by keeping both sections).
 
 ## 3. Rules
 
-Standing rules: `CLAUDE.md` (layering — render may import sim, sim never imports render; save/`GEN_VERSION`; fog of war; no weakened tests/budgets/baselines; subagents only with `isolation: "worktree"` and no `git checkout/switch/reset/stash`; `pnpm e2e:run`). Do not end a turn with a plan or a "shall I continue?" question. Background commands: set `timeout` explicitly (the default 30 min killed a medium bench once).
+Standing rules: `CLAUDE.md` (layering; save/`GEN_VERSION`; fog of war; no weakened tests/budgets/baselines; "flaky" is not a diagnosis — e.g. acceptance 8b/18b were harness bugs found with a trace; subagents only with `isolation: "worktree"`; `pnpm e2e:run`). Do not end a turn with a plan or a "shall I continue?" question. Background commands: set `timeout` explicitly; never run benches in parallel with each other or with e2e.
 
 ## 4. End of session
 
-Skill `verify`, skill `handoff`; PROGRESS up to date (numbers, tuned values, Opus keep/drop notes, ❓ user items); commit + push to `main`; short report. Write the next kick-off here (new dated section).
+Skill `verify`, skill `handoff`; PROGRESS up to date (numbers, tuned values, Opus keep/drop notes, ❓ user items); commit + push to `main`; short report. Write the next kick-off here.
 
 ---
 
 **Start message (paste):**
 
-> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state (merge main; a new review on main is triaged first), then work through §2 in order. Don't stop at a plan or a question about continuing. Finish with the next kick-off, then commit and push to `main`.
+> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state (pull main; a new review on main is triaged first), then work through §2 in order. Don't stop at a plan or a question about continuing. Finish with the next kick-off, then commit and push to `main`.
