@@ -1,7 +1,9 @@
 /**
- * Vegetation & resource nodes: near ring uses Quaternius models (InstancedMesh per model/material),
- * far ring uses cheap procedural impostors (cone/blob trees). Rebuilt when the player's chunk
- * changes or nodes in visible chunks change (felled/harvested), so state edits persist visually.
+ * Vegetation & resource nodes: near ring uses Quaternius models (InstancedMesh per model/material). Trees
+ * beyond the profile's `treeModel` ring are impostors baked from the same models (`treeImpostors.ts`, one
+ * draw call), cross-faded by dither; procedural cone/blob impostors remain only until the atlas is baked and
+ * for rocks. Rebuilt after the player moved REBUILD_M or nodes changed (felled/harvested).
+ 
  * @domain render
  * @subdomain vegetation
  */
@@ -15,9 +17,13 @@ import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
 import { NATURE_MODEL } from './assetNames'
 import { loadGltf, mergeTemplate, part, type TemplatePart } from './assets'
+import { bakeImpostors, createImpostorMesh, type ImpostorAtlas, TREE_FADE_M, treeFadeUniforms, withTreeFadeOut } from './treeImpostors'
 
 /** Per-frame budget of a vegetation rebuild job (ms); terrain chunk builds have their own 5 ms. */
 const VEG_BUDGET_MS = 2.5
+/** Rebuild after moving this far (m); the model/impostor sets overlap by this margin, the shader fades exactly. */
+const REBUILD_M = 12
+const TREE_KINDS = ['tree_broad', 'tree_apple', 'tree_pine', 'tree_dead']
 
 
 function impostors(): Record<string, TemplatePart[]> {
@@ -46,11 +52,19 @@ export class Vegetation {
   private sim: Sim
   private nearM: number
   private farM: number
+  private treeM: number
+  private cell: number
+  private atlas: ImpostorAtlas | null = null
+  private imp: { mesh: THREE.InstancedMesh; imp: THREE.InstancedBufferAttribute } | null = null
+  private lastX = Number.NaN
+  private lastZ = Number.NaN
 
   constructor(sim: Sim, q: QualitySettings) {
     this.sim = sim
     this.nearM = q.vegNear
     this.farM = q.vegFar
+    this.treeM = q.treeModel
+    this.cell = q.impostorCell
     // Procedural near fallback until assets are ready.
     for (const [k, v] of Object.entries(this.far)) this.near.set(`${k}#0`, v)
   }
@@ -74,6 +88,44 @@ export class Vegetation {
   setQuality(q: QualitySettings) {
     this.nearM = q.vegNear
     this.farM = q.vegFar
+    this.treeM = q.treeModel
+    this.cell = q.impostorCell
+    this.markDirty()
+  }
+
+  /** Whether trees beyond the model ring are baked impostors (tests, diagnostics). */
+  get impostorsActive() {
+    return this.atlas !== null
+  }
+
+  /** Impostor instances of the last commit (tests, diagnostics). */
+  impostorInstances = 0
+
+  /** Keys of the instance sets currently visible, e.g. `near:tree_pine#0`, `far:rock` (tests). */
+  visibleSets(): string[] {
+    return [...this.pool].filter(([, ms]) => ms.some((m) => m.visible)).map(([k]) => k)
+  }
+
+  /**
+   * Bakes the tree impostor atlas from the loaded models (needs the GL renderer; once after `load`) and
+   * switches the tree models to the dithered fade-out materials.
+   */
+  bakeImpostors(renderer: THREE.WebGLRenderer) {
+    if (!this.loaded || this.atlas) return
+    const trees = new Map<string, TemplatePart[]>()
+    for (const [key, parts] of this.near) if (TREE_KINDS.includes(key.split('#')[0]!)) trees.set(key, parts)
+    perf.measure('render.impostorBake', () => (this.atlas = bakeImpostors(renderer, trees, this.cell)))
+    const fade = new Map<THREE.Material, THREE.Material>()
+    for (const [key, parts] of trees) {
+      this.near.set(key, parts.map((p) => {
+        let m = fade.get(p.material)
+        if (!m) fade.set(p.material, (m = withTreeFadeOut(p.material)))
+        return { geometry: p.geometry, material: m }
+      }))
+    }
+    // Pooled meshes still hold the old materials.
+    for (const [key, meshes] of this.pool) if (key.startsWith('near:tree_')) for (const im of meshes) { this.group.remove(im); im.dispose() }
+    for (const key of [...this.pool.keys()]) if (key.startsWith('near:tree_')) this.pool.delete(key)
     this.markDirty()
   }
 
@@ -92,9 +144,13 @@ export class Vegetation {
    * 009 F-01). Idle frames prefetch one missing node chunk around the view ring.
    */
   update(px: number, pz: number, budgetMs = VEG_BUDGET_MS) {
+    treeFadeUniforms.uTreeCenter.value.set(px, pz)
+    treeFadeUniforms.uTreeRing.value.set(this.treeM - TREE_FADE_M, this.treeM)
     const ck = `${Math.floor(px / (CHUNK_M / 2))},${Math.floor(pz / (CHUNK_M / 2))}`
-    if (ck !== this.lastChunk || this.dirty) {
+    if (ck !== this.lastChunk || this.dirty || !(Math.hypot(px - this.lastX, pz - this.lastZ) < REBUILD_M)) {
       this.lastChunk = ck
+      this.lastX = px
+      this.lastZ = pz
       this.dirty = false
       this.job = this.rebuildJob(px, pz)
       this.prefetchDone = ''
@@ -149,7 +205,11 @@ export class Vegetation {
       if (!a) sets.set(key, (a = []))
       a.push(x, y, z, rot, sc)
     }
-    const treeNear = this.nearM * 0.6
+    const atlas = this.atlas
+    // Without an atlas: the old split (models to 0.6 × vegNear, procedural impostors beyond).
+    const treeNear = atlas ? this.treeM + REBUILD_M + 2 : this.nearM * 0.6
+    const impFrom = this.treeM - TREE_FADE_M - REBUILD_M - 2
+    const imps: number[] = [] // [x, y, z, rot, scale, row]*
     const r = this.farM
     const r2 = r * r
     let count = 0
@@ -171,12 +231,17 @@ export class Vegetation {
           // A mined rock shrinks with the pieces taken (RES-07).
           const sc = n.kind === 'rock' && st?.kind === 'harvested' ? n.scale * (0.45 + 0.55 * (st.left ?? 0) / rockPieces(n)) : n.scale
           const nearR = tree ? treeNear : n.kind === 'rock' ? this.nearM : this.nearM * 1.4
+          const vi = n.variant % def.models.length
+          const key = this.near.has(`${n.kind}#${vi}`) ? `${n.kind}#${vi}` : `${n.kind}#0`
+          const row = tree && atlas ? atlas.rows.get(key) : undefined
+          if (row !== undefined && d > impFrom) {
+            imps.push(n.x, n.y - 0.1, n.z, n.rot, n.scale / def.baseH, row)
+            count++
+          }
           if (d < nearR) {
-            const vi = n.variant % def.models.length
-            const key = this.near.has(`${n.kind}#${vi}`) ? `${n.kind}#${vi}` : `${n.kind}#0`
             push(`near:${key}`, n.x, n.y - (tree ? 0.1 : 0.05), n.z, n.rot, tree ? n.scale / def.baseH : sc)
             count++
-          } else if (tree || n.kind === 'rock') {
+          } else if (row === undefined && (tree || n.kind === 'rock')) {
             push(`far:${n.kind}`, n.x, n.y - 0.2, n.z, n.rot, sc)
             count++
           }
@@ -203,7 +268,40 @@ export class Vegetation {
       staged.set(key, buf)
       yield
     }
+    const impBuf = new Float32Array((imps.length / 6) * 16)
+    const impRows = new Float32Array((imps.length / 6) * 2)
+    q.identity()
+    for (let i = 0; i < imps.length / 6; i++) {
+      const o = i * 6
+      p.set(imps[o]!, imps[o + 1]!, imps[o + 2]!)
+      sc.setScalar(imps[o + 4]!)
+      m.compose(p, q, sc).toArray(impBuf, i * 16)
+      impRows[i * 2] = imps[o + 5]!
+      impRows[i * 2 + 1] = imps[o + 3]!
+      if ((i & 1023) === 1023) yield
+    }
     this.commit(staged, count)
+    this.commitImpostors(impBuf, impRows)
+  }
+
+  /** Swaps the impostor instances in (grows the single impostor mesh when needed). */
+  private commitImpostors(buf: Float32Array, rows: Float32Array) {
+    if (!this.atlas) return
+    const n = buf.length / 16
+    if (!this.imp || this.imp.mesh.instanceMatrix.count < n) {
+      if (this.imp) { this.group.remove(this.imp.mesh); this.imp.mesh.dispose() }
+      this.imp = createImpostorMesh(this.atlas, Math.ceil(n * 1.3) + 64)
+      this.group.add(this.imp.mesh)
+    }
+    const { mesh, imp } = this.imp
+    ;(mesh.instanceMatrix.array as Float32Array).set(buf)
+    ;(imp.array as Float32Array).set(rows)
+    mesh.count = n
+    mesh.visible = n > 0
+    mesh.instanceMatrix.needsUpdate = true
+    imp.needsUpdate = true
+    this.impostorInstances = n
+    perf.gauge('render.impostorInstances', n)
   }
 
   /** Swaps the staged instance matrices into the pooled meshes in one go. */

@@ -596,8 +596,14 @@ try {
   }, torchId)
   check(results, '18a. latarnia: wbicie, zapalenie, zgaszenie (zachowuje czas), wypalenie po upływie czasu', torchLit === true && torchOut === false && burnLeft > 4.9 && torchGone, { torchLit, torchOut, burnLeft, torchGone })
 
+  // Placement goes 2.8 m in front of the player: start from an open spot like step 5, otherwise the spot left
+  // by 18a can be blocked (tree/rock/building) and no site is created (failure seen in session 11, sites: []).
   await S(() => {
-    window.__sv.pause(false)
+    const sv = window.__sv
+    const o = sv.openSpot(30)
+    sv.teleport(o.x, o.z)
+    sv.face(o.x, o.z + 10)
+    sv.pause(false)
   })
   await key('KeyB')
   await clickTest('place-campfire')
@@ -609,7 +615,7 @@ try {
   const fire0 = await S(() => {
     const sim = window.__sv.game.sim
     const f = sim.state.buildings.filter((b) => b.playerBuilt && b.kind === 'campfire').pop()
-    return f ? { id: f.id, fuel: f.fuel, lit: f.lit, x: f.x, z: f.z } : { missing: JSON.stringify({ sites: sim.state.sites, act: sim.state.px.activity, inv: sim.player.inv.items.map((x) => x.id + x.qty).join(), hour: (sim.state.time.cal / 3600) % 24 }) }
+    return f ? { id: f.id, fuel: f.fuel, lit: f.lit, x: f.x, z: f.z } : { missing: JSON.stringify({ sites: sim.state.sites, act: sim.state.px.activity, toast: window.__sv.game.toast, inv: sim.player.inv.items.map((x) => x.id + x.qty).join(), hour: (sim.state.time.cal / 3600) % 24 }) }
   })
   if (fire0.missing) throw new Error('18b: no campfire built ' + fire0.missing)
   await S((f) => { window.__sv.approach(f.x, f.z, 1.8) }, fire0)

@@ -85,7 +85,7 @@ const FRAMES = [
     sv.game.renderer.rig.distance = 14
     sv.game.renderer.rig.pitch = 0.3
   `)]),
-  // render--007 step 0: trees at 10–150 m — standing in a meadow, facing the nearest forest edge.
+  // render--007 step 0/3c: trees at 40–300 m — standing in open meadow ~70 m from a forest, facing it.
   ['forest-edge', (sv) => {
     const sim = sv.game.sim
     const t = sim.terrain
@@ -93,18 +93,18 @@ const FRAMES = [
     sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 20 * 86400 + 10 * 3600
     Object.assign(sim.state.weather, { kind: 'clear', intensity: 0, temp: 16, wetness: 0.1, fog: 0.05, until: sim.state.time.cal + 30 * 86400 })
     const s = sim.world.settlements[0]
+    const forest = (b) => b >= 5 && b <= 7
     for (let r = 150; r < 3000; r += 30) for (let a = 0; a < 6.28; a += 0.2) {
       const x = s.x + Math.cos(a) * r
       const z = s.z + Math.sin(a) * r
       if (t.biomeAt(x, z) !== 2 || t.roadAt(x, z) !== 0 || t.waterDepthAt(x, z) > 0) continue
       for (let b = 0; b < 6.28; b += 0.4) {
-        const fx = x + Math.cos(b) * 45
-        const fz = z + Math.sin(b) * 45
-        if (t.biomeAt(fx, fz) === 7 && t.biomeAt(x + Math.cos(b) * 20, z + Math.sin(b) * 20) === 2 && t.biomeAt(x + Math.cos(b) * 80, z + Math.sin(b) * 80) === 7) {
+        const at = (k) => t.biomeAt(x + Math.cos(b) * k, z + Math.sin(b) * k)
+        if (at(25) === 2 && at(50) === 2 && forest(at(80)) && forest(at(130)) && forest(at(200))) {
           sv.teleport(x, z)
-          sv.face(fx, fz)
-          sv.game.renderer.rig.distance = 8
-          sv.game.renderer.rig.pitch = 0.08
+          sv.face(x + Math.cos(b) * 100, z + Math.sin(b) * 100)
+          sv.game.renderer.rig.distance = 9
+          sv.game.renderer.rig.pitch = 0.05
           return
         }
       }

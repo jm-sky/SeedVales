@@ -19,9 +19,11 @@ export interface VisualFlags {
   detail: boolean
   /** Grass rings (render--007 step 2); false = the pre-grass look for A/B. */
   grass: boolean
+  /** Tree impostors baked from the models beyond the `treeModel` ring (render--007 step 3c); false = the old split. */
+  impostors: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true }
 
 export function readVisualFlags(): VisualFlags {
   try {
