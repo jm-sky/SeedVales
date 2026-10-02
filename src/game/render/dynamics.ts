@@ -1,6 +1,6 @@
 /**
  * Dynamic world bits: field crops (growth), fire flames + limited pool of point lights, ground items,
- * corpses, projectiles, precipitation particles. Cheap per-frame sync from sim state.
+ * corpses, projectiles, GPU precipitation. Cheap per-frame sync from sim state.
  * @domain render
  * @subdomain effects
  */
@@ -16,6 +16,7 @@ import { sharedColorMat } from './assets'
 import { TraceDecals } from './decals'
 import { FireParticles } from './fireParticles'
 import { collectFires, FIRE_LOOK, type FireEmitter, type FireKind, flicker, LIGHT_POOL, PLANTED_TORCH_H, selectLights } from './fireSources'
+import { isSheltered, Precipitation } from './precipitation'
 import { type QualityProfile } from './quality'
 
 /** Flame cone scale per kind (step 1b replaces the cone with particles). */
@@ -48,8 +49,8 @@ export class Dynamics {
   private particles: FireParticles
   private decals: TraceDecals
   private corpses = new Map<number, THREE.Object3D>()
-  private rain: THREE.Points
-  private rainPos: Float32Array
+  private precip: Precipitation
+  private profile: QualityProfile
   private sim: Sim
   private cropTimer = 0
   /** Reused per-frame buffers (no allocation in the frame loop, review 009 F-04). */
@@ -58,6 +59,7 @@ export class Dynamics {
 
   constructor(sim: Sim, profile: QualityProfile = 'medium') {
     this.sim = sim
+    this.profile = profile
     this.crops = new THREE.InstancedMesh(new THREE.ConeGeometry(0.18, 0.6, 5).translate(0, 0.3, 0), sharedColorMat(0x6a9a2a), 6000)
     this.flames = new THREE.InstancedMesh(
       new THREE.ConeGeometry(0.25, 0.8, 6).translate(0, 0.4, 0),
@@ -81,14 +83,8 @@ export class Dynamics {
     this.decals = new TraceDecals(sim)
     this.group.add(this.decals.group)
     this.setQuality(profile)
-    const N = 2500
-    this.rainPos = new Float32Array(N * 3)
-    for (let i = 0; i < N * 3; i++) this.rainPos[i] = (Math.random() - 0.5) * 60
-    const rg = new THREE.BufferGeometry()
-    rg.setAttribute('position', new THREE.BufferAttribute(this.rainPos, 3))
-    this.rain = new THREE.Points(rg, new THREE.PointsMaterial({ color: 0xaabbcc, size: 0.08, transparent: true, opacity: 0.6 }))
-    this.rain.frustumCulled = false
-    this.group.add(this.rain)
+    this.precip = new Precipitation()
+    this.group.add(this.precip.group)
   }
 
   /**
@@ -96,6 +92,7 @@ export class Dynamics {
    * removed only here — the light count is part of every lit program, so it never changes per frame.
    */
   setQuality(profile: QualityProfile) {
+    this.profile = profile
     this.particles?.setQuality(profile)
     const want = LIGHT_POOL[profile]
     while (this.lights.length > want) this.group.remove(this.lights.pop()!)
@@ -229,25 +226,8 @@ export class Dynamics {
         this.corpses.delete(id)
       }
     }
-    // Precipitation around camera.
-    const w = sim.weather
-    const wet = w.kind === 'rain' || w.kind === 'storm' || w.kind === 'snow'
-    this.rain.visible = wet
-    if (wet) {
-      const snow = w.kind === 'snow'
-      const mat = this.rain.material as THREE.PointsMaterial
-      mat.color.set(snow ? 0xffffff : 0x9aaabb)
-      mat.size = snow ? 0.18 : 0.07
-      const fall = (snow ? 1.5 : 14) * dt
-      const arr = this.rainPos
-      for (let i = 0; i < arr.length; i += 3) {
-        arr[i + 1]! -= fall * (0.8 + (i % 7) * 0.05)
-        if (snow) arr[i]! += Math.sin(performance.now() / 700 + i) * 0.01
-        if (arr[i + 1]! < -20) arr[i + 1] = 20
-      }
-      this.rain.position.set(camPos.x, camPos.y, camPos.z)
-      ;(this.rain.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
-    }
+    // Precipitation: GPU streaks/flakes around the camera; sheltered = inside a roofed footprint (one query).
+    this.precip.update(dt, sim.weather, this.profile, camPos, p, isSheltered(p.x, p.z, sim.buildingsNear(p.x, p.z, 20)))
     perf.gauge('render.pointLights', this.activeLights)
   }
 }
