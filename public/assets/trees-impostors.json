@@ -1,0 +1,56 @@
+{
+  "views": 8,
+  "cell": 256,
+  "rowOrigin": "bottom",
+  "rows": [
+    {
+      "name": "Broadleaf_A",
+      "kind": "tree_broad",
+      "halfWidth": 4.353,
+      "minY": 0,
+      "maxY": 11.913
+    },
+    {
+      "name": "Broadleaf_B",
+      "kind": "tree_broad",
+      "halfWidth": 4.041,
+      "minY": 0,
+      "maxY": 15.538
+    },
+    {
+      "name": "Broadleaf_C",
+      "kind": "tree_broad",
+      "halfWidth": 3.308,
+      "minY": 0,
+      "maxY": 13.867
+    },
+    {
+      "name": "Apple_A",
+      "kind": "tree_apple",
+      "halfWidth": 2.148,
+      "minY": 0,
+      "maxY": 6.449
+    },
+    {
+      "name": "Pine_A",
+      "kind": "tree_pine",
+      "halfWidth": 3.734,
+      "minY": 0,
+      "maxY": 14.532
+    },
+    {
+      "name": "Pine_B",
+      "kind": "tree_pine",
+      "halfWidth": 3.778,
+      "minY": 0,
+      "maxY": 18.558
+    },
+    {
+      "name": "Dead_A",
+      "kind": "tree_dead",
+      "halfWidth": 4.296,
+      "minY": 0,
+      "maxY": 9.398
+    }
+  ]
+}

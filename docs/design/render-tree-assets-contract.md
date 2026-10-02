@@ -81,3 +81,7 @@ More variants are welcome only if they share the same two material families (see
 ## Not needed from Blender
 
 Grass, flowers, rocks, bushes (separate later steps); wind animation (shader-side); LOD2 (impostors cover it); shadows/AO bakes beyond the soft albedo darkening above.
+
+## Delivery notes (session 12, asset side)
+
+Delivered per this contract; clarifications only (no contract change): `halfWidth` = radial max x 1.02, `minY` = 0 with the impostor clipped at y = 0, `COLOR_0` = (wind, AO, 1) so `vertexColors` must be disabled on load, Dead_A shares the bark texture, no normal atlas. Details: render--007 plan "Session 12".

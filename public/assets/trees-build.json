@@ -1,0 +1,323 @@
+{
+  "generator": "scripts/assets/build-trees.mjs",
+  "budget": {
+    "lod0": 3000,
+    "lod0Dead": 2000,
+    "lod1": 800
+  },
+  "atlas": {
+    "leaf": {
+      "broad": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "apple": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "pine": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 1024
+      }
+    }
+  },
+  "variants": [
+    {
+      "name": "Broadleaf_A",
+      "kind": "tree_broad",
+      "src": "CommonTree_1",
+      "scale": 1.697,
+      "cards": {
+        "src": 960,
+        "kept": 750,
+        "dropped": {
+          "invisible": 44,
+          "budget": 166
+        }
+      },
+      "lod0": {
+        "bark": 1460,
+        "leaf": 1500,
+        "tris": 2960
+      },
+      "bounds": {
+        "halfWidth": 4.353,
+        "minY": 0,
+        "maxY": 11.913,
+        "min": [
+          -3.735,
+          -0.412,
+          -3.808
+        ],
+        "max": [
+          3.579,
+          11.913,
+          3.958
+        ]
+      },
+      "lod1Iou": 0.888,
+      "lod1How": "merged",
+      "lod1Coverage": 1,
+      "lod1": {
+        "bark": 208,
+        "leaf": 592,
+        "tris": 800,
+        "kappa": 0.7
+      }
+    },
+    {
+      "name": "Broadleaf_B",
+      "kind": "tree_broad",
+      "src": "CommonTree_3",
+      "scale": 1.692,
+      "cards": {
+        "src": 900,
+        "kept": 750,
+        "dropped": {
+          "invisible": 10,
+          "budget": 140
+        }
+      },
+      "lod0": {
+        "bark": 1459,
+        "leaf": 1500,
+        "tris": 2959
+      },
+      "bounds": {
+        "halfWidth": 4.041,
+        "minY": 0,
+        "maxY": 15.538,
+        "min": [
+          -3.373,
+          -0.411,
+          -3.514
+        ],
+        "max": [
+          3.502,
+          15.538,
+          3.663
+        ]
+      },
+      "lod1Iou": 0.846,
+      "lod1How": "merged",
+      "lod1Coverage": 1.002,
+      "lod1": {
+        "bark": 219,
+        "leaf": 580,
+        "tris": 799,
+        "kappa": 0.7
+      }
+    },
+    {
+      "name": "Broadleaf_C",
+      "kind": "tree_broad",
+      "src": "CommonTree_4",
+      "scale": 1.508,
+      "cards": {
+        "src": 393,
+        "kept": 393,
+        "dropped": {
+          "invisible": 0,
+          "budget": 0
+        }
+      },
+      "lod0": {
+        "bark": 2173,
+        "leaf": 786,
+        "tris": 2959
+      },
+      "bounds": {
+        "halfWidth": 3.308,
+        "minY": 0,
+        "maxY": 13.867,
+        "min": [
+          -2.68,
+          -0.366,
+          -3.208
+        ],
+        "max": [
+          3.089,
+          13.867,
+          2.455
+        ]
+      },
+      "lod1Iou": 0.913,
+      "lod1How": "simplified",
+      "lod1Coverage": 0.948,
+      "lod1": {
+        "bark": 236,
+        "leaf": 564,
+        "tris": 800,
+        "kappa": null
+      }
+    },
+    {
+      "name": "Apple_A",
+      "kind": "tree_apple",
+      "src": "CommonTree_5",
+      "scale": 0.953,
+      "cards": {
+        "src": 650,
+        "kept": 648,
+        "dropped": {
+          "invisible": 2,
+          "budget": 0
+        }
+      },
+      "lod0": {
+        "bark": 1664,
+        "leaf": 1296,
+        "tris": 2960
+      },
+      "bounds": {
+        "halfWidth": 2.148,
+        "minY": 0,
+        "maxY": 6.449,
+        "min": [
+          -1.851,
+          -0.231,
+          -2.105
+        ],
+        "max": [
+          1.649,
+          6.449,
+          1.918
+        ]
+      },
+      "lod1Iou": 0.87,
+      "lod1How": "merged",
+      "lod1Coverage": 0.995,
+      "lod1": {
+        "bark": 200,
+        "leaf": 600,
+        "tris": 800,
+        "kappa": 0.7
+      }
+    },
+    {
+      "name": "Pine_A",
+      "kind": "tree_pine",
+      "src": "Pine_1",
+      "scale": 2.052,
+      "cards": {
+        "src": 35,
+        "kept": 35,
+        "dropped": {
+          "invisible": 0,
+          "budget": 0
+        }
+      },
+      "lod0": {
+        "bark": 2190,
+        "leaf": 770,
+        "tris": 2960
+      },
+      "bounds": {
+        "halfWidth": 3.734,
+        "minY": 0,
+        "maxY": 14.532,
+        "min": [
+          -3.113,
+          -0.482,
+          -3.155
+        ],
+        "max": [
+          3.178,
+          14.532,
+          2.619
+        ]
+      },
+      "lod1Iou": 0.966,
+      "lod1How": "simplified",
+      "lod1Coverage": 0.987,
+      "lod1": {
+        "bark": 197,
+        "leaf": 603,
+        "tris": 800,
+        "kappa": null
+      }
+    },
+    {
+      "name": "Pine_B",
+      "kind": "tree_pine",
+      "src": "Pine_4",
+      "scale": 1.856,
+      "cards": {
+        "src": 55,
+        "kept": 54,
+        "dropped": {
+          "invisible": 0,
+          "budget": 1
+        }
+      },
+      "lod0": {
+        "bark": 1772,
+        "leaf": 1188,
+        "tris": 2960
+      },
+      "bounds": {
+        "halfWidth": 3.778,
+        "minY": 0,
+        "maxY": 18.558,
+        "min": [
+          -3.197,
+          -0.436,
+          -3.261
+        ],
+        "max": [
+          3.262,
+          18.558,
+          2.719
+        ]
+      },
+      "lod1Iou": 0.952,
+      "lod1How": "simplified",
+      "lod1Coverage": 0.999,
+      "lod1": {
+        "bark": 190,
+        "leaf": 609,
+        "tris": 799,
+        "kappa": null
+      }
+    },
+    {
+      "name": "Dead_A",
+      "kind": "tree_dead",
+      "src": "DeadTree_2",
+      "scale": 0.852,
+      "lod0": {
+        "bark": 1959,
+        "leaf": 0,
+        "tris": 1959
+      },
+      "bounds": {
+        "halfWidth": 4.296,
+        "minY": 0,
+        "maxY": 9.398,
+        "min": [
+          -1.979,
+          -0.286,
+          -2.171
+        ],
+        "max": [
+          3.694,
+          9.398,
+          3.215
+        ]
+      },
+      "lod1Iou": 0.845,
+      "lod1": {
+        "bark": 759,
+        "leaf": 0,
+        "tris": 759,
+        "kappa": null
+      }
+    }
+  ]
+}
