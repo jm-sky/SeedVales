@@ -96,3 +96,7 @@ Measured on the Arc 140V (see render--007 plan "offline tree assets integrated")
 4. *(low)* Per-row cell aspect for tall variants (pines ≈ 18 px/m).
 
 Acceptance on the game side as before (ab frames, alternating GPU pairs of `dense-forest` incl. `march-10mps`, high and medium); the high model ring goes back up (150–200 m) only if march stays within ~+1 ms of the kit.
+
+## Round 2 delivery (session 14, asset side)
+
+Done: tight-cut LOD1 leaf cards (convex 4-8 vertex cuts, opaque ratio 0.18 -> 0.54-0.79 on broadleaf/apple, card area 2-6x smaller), lighter pine LOD1 (~446 tris), and the optional normal atlas `trees-impostors-normal.png` (layout and encoding as in "Impostor atlas"). **Budget change:** LOD1 <= 1000 tris for Broadleaf/Apple, <= 500 for pines (validator updated). Node names, axes, pivot, materials, `COLOR_0` unchanged. Per-row cell aspect not done. Numbers: render--007 plan "Session 14".
