@@ -52,6 +52,7 @@ function proceduralTemplates(): Record<string, Item[]> {
   t.soil = [part(box(2, 0.12, 2), 0x5a4128, mat4(0, -0.06, 0))]
   t.herbsoil = [part(box(2, 0.14, 2), 0x4a3a24, mat4(0, -0.06, 0))]
   t.woodpile = [0, 1, 2].flatMap((row) => [0, 1, 2, 3].map((c) => part(cyl(0.18, 2.6).rotateZ(Math.PI / 2).translate(1.3, 0, 0), 0x8a6a45, mat4(-1.3, 0.18 + row * 0.33, -0.5 + c * 0.36 + (row % 2) * 0.18))))
+  t.woodpile_base = [part(box(0.12, 1.1, 0.12), wood, mat4(-0.75, 0, -0.55)), part(box(0.12, 1.1, 0.12), wood, mat4(-0.75, 0, 0.55)), part(box(0.12, 1.1, 0.12), wood, mat4(0.75, 0, -0.55)), part(box(0.12, 1.1, 0.12), wood, mat4(0.75, 0, 0.55)), part(box(1.8, 0.06, 1.3), darkWood, mat4(0, 0, 0))]
   t.dryrack = [part(box(0.1, 1.8, 0.1), wood, mat4(-1.4, 0, 0)), part(box(0.1, 1.8, 0.1), wood, mat4(1.4, 0, 0)), part(box(3, 0.08, 0.08), wood, mat4(0, 1.6, 0)), part(box(0.4, 0.6, 0.05), 0x8a3a2a, mat4(-0.6, 0.95, 0)), part(box(0.4, 0.6, 0.05), 0x8a3a2a, mat4(0.5, 0.95, 0))]
   t.spit = [part(new THREE.CylinderGeometry(0.04, 0.04, 1.3, 5).rotateZ(0.35).translate(-0.9, 0.55, 0), darkWood), part(new THREE.CylinderGeometry(0.04, 0.04, 1.3, 5).rotateZ(-0.35).translate(0.9, 0.55, 0), darkWood), part(cyl(0.03, 2.2).rotateZ(Math.PI / 2).translate(1.1, 0, 0), wood, mat4(0, 1.05, 0)), part(box(1.4, 0.04, 0.5), 0x4a4a48, mat4(0, 0.6, 0))]
   t.torchpost = [part(cyl(0.07, 2.4), darkWood), part(cyl(0.12, 0.25), 0x3a3a3a, mat4(0, 2.35, 0))]
@@ -113,6 +114,8 @@ export class Structures {
   private templates = new Map<string, TemplatePart[]>()
   private meshes: THREE.InstancedMesh[] = []
   loaded = false
+  /** Stock piles are drawn by `Stockpiles` (render--009): the woodpile shows only its frame, the warehouse no fixed crates. */
+  pilesOn = false
   drawCalls = 0
   private sim: Sim
 
@@ -190,7 +193,9 @@ export class Structures {
       case 'shed':
         return [{ key: L ? 'shed' : 'house_fallback', matrix: base(L ? 1 : 0.5) }, { key: 'foundation', matrix: base(2.1, 1, 2.1) }]
       case 'warehouse':
-        return [{ key: L ? 'warehouse' : 'house_fallback', matrix: base(L ? 1 : 1.25) }, { key: 'foundation', matrix: base(5.1, 1, 4.1) }, ...(L ? [{ key: 'crates', matrix: mat4(b.x + Math.sin(b.rot) * 5.2 + 3, y, b.z + Math.cos(b.rot) * 5.2, b.rot) }] : [])]
+        return [{ key: L ? 'warehouse' : 'house_fallback', matrix: base(L ? 1 : 1.25) }, { key: 'foundation', matrix: base(5.1, 1, 4.1) }, ...(L && !this.pilesOn ? [{ key: 'crates', matrix: mat4(b.x + Math.sin(b.rot) * 5.2 + 3, y, b.z + Math.cos(b.rot) * 5.2, b.rot) }] : [])]
+      case 'woodpile':
+        return [{ key: this.pilesOn ? 'woodpile_base' : 'woodpile', matrix: base() }]
       default:
         return this.templates.has(b.kind) ? [{ key: b.kind, matrix: base() }] : []
     }

@@ -21,6 +21,7 @@ import { Landmarks } from './landmarks'
 import { QUALITY, type QualityProfile } from './quality'
 import { snapShadowCenter } from './shadowSnap'
 import { SkyDome } from './sky'
+import { Stockpiles } from './stockpiles'
 import { Structures } from './structures'
 import { TargetMarker } from './targetMarker'
 import { TerrainChunks } from './terrainChunks'
@@ -46,6 +47,7 @@ export class Renderer {
   grass: Grass | null
   structures: Structures
   landmarks: Landmarks
+  stockpiles: Stockpiles
   actors: Actors
   dynamics: Dynamics
   marker: TargetMarker
@@ -98,6 +100,9 @@ export class Renderer {
     this.grass = this.visual.grass ? new Grass(sim, quality) : null
     this.structures = new Structures(sim)
     this.landmarks = new Landmarks(sim)
+    this.stockpiles = new Stockpiles(sim, quality === 'high')
+    this.stockpiles.enabled = this.visual.stockpiles
+    this.structures.pilesOn = this.visual.stockpiles
     this.actors = new Actors(sim, q)
     this.actors.cull = this.visual.actorCull
     this.dynamics = new Dynamics(sim, quality)
@@ -107,13 +112,14 @@ export class Renderer {
       this.skyDome = new SkyDome()
       this.scene.add(this.skyDome.mesh)
     }
-    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.landmarks.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
+    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
     onProgress?.('Buildings…')
     await this.structures.load()
     await this.landmarks.load()
+    if (this.visual.stockpiles) await this.stockpiles.load()
     onProgress?.('Vegetation…')
     await this.vegetation.load({ treeAssets: this.visual.treeAssets, impostorNormals: this.visual.impostorNormals })
     if (this.visual.impostors) this.vegetation.bakeImpostors(this.renderer)
@@ -142,6 +148,7 @@ export class Renderer {
     this.dynamics.setQuality(quality)
     this.grass?.setQuality(quality)
     this.actors.setQuality(q)
+    this.stockpiles.setShadows(quality === 'high')
     if (shadowsChanged) {
       this.scene.traverse((o) => {
         const m = (o as THREE.Mesh).material
@@ -251,7 +258,7 @@ export class Renderer {
   drawAttribution(): { total: number; triangles: number; by: Record<string, { main: number; shadow: number }> } {
     const groups: [THREE.Object3D | null | undefined, string][] = [
       [this.terrain.group, 'terrain'], [this.vegetation.group, 'vegetation'], [this.grass?.group, 'grass'],
-      [this.structures.group, 'structures'], [this.landmarks.group, 'landmarks'], [this.actors.group, 'actors'],
+      [this.structures.group, 'structures'], [this.landmarks.group, 'landmarks'], [this.stockpiles.group, 'stockpiles'], [this.actors.group, 'actors'],
       [this.dynamics.group, 'dynamics'], [this.carts.group, 'carts'], [this.marker.mesh, 'marker'], [this.skyDome?.mesh, 'sky'],
     ]
     const tagOf = new Map<THREE.Object3D, string>()
@@ -303,6 +310,7 @@ export class Renderer {
     this.marker.update(dt, this.markerAt)
     this.carts.update()
     perf.measure('render.landmarks', () => this.landmarks.update(p.x, p.z))
+    this.stockpiles.update(dt, p.x, p.z)
     // Render preparation = render.cpu without draw submission (D-PERF-2 headless gate metric).
     perf.record('render.prep', performance.now() - t0)
     this.gpu.poll()

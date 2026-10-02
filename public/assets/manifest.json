@@ -234,6 +234,12 @@
    "kb": 61,
    "ratio": 0,
    "tex": 0
+  },
+  {
+   "src": "scripts/assets/blender-stockpiles.py (own models, no external source)",
+   "dst": "public/assets/stockpiles.glb",
+   "kb": 157,
+   "tex": 0
   }
  ]
 }

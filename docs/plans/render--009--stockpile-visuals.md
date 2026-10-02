@@ -1,6 +1,6 @@
 # Visible stores: stockpiles that show how much a household or settlement holds
 
-**Status:** draft  
+**Status:** in_progress  
 **Model:** opus — step 0 (tiers, slots, budget), look keep/drop; sonnet — render layer and tests; Blender session — models (step 2)  
 **Domain:** render  
 **Sub domains:** assets, structures, economy (read-only)  
@@ -57,3 +57,11 @@ Piles change visibly when wood is chopped/burnt and when the warehouse fills or 
 
 1. Are the goods in the table the right set, or only firewood first?
 2. Should the player's own house/shed show piles as well (same mechanism, slots by the door)?
+
+## Result (2026-10-02, Windows session, Blender MCP)
+
+- **Step 0 (partly):** contract written (`docs/design/render-stockpile-assets-contract.md`). Tiers and slots chosen by hand; **not yet checked against `pnpm soak` stock levels** (open).
+- **Step 1 done:** `render/stockpileTiers.ts` (+ test), `render/stockpiles.ts` (2 s refresh, 120 m recompute / 250 m last-known, signature-gated rebuild, shadows on `high` only), flag `sv-visual {"stockpiles":false}`. Woodpile keeps a procedural frame (`woodpile_base`); the warehouse's fixed `crates` are dropped when piles are on. Placeholders (stacked boxes) are used if the GLB fails to load.
+- **Step 2 done for firewood, stone, grain sacks, food crates/barrels** (17 models, 20–1 200 triangles, 157 KB, one vertex-colour material): `scripts/assets/blender-stockpiles.py` + `build-stockpiles.mjs`. Own geometry (existing `_temp/` packs and poly.pizza were checked; nothing fitted tiered stacks, so no third-party source). Hides/wool not done.
+- **Step 3 open:** not run on Windows (no e2e/bench here) — needs `pnpm check`/e2e, `ab.mjs` frames `stores-low`/`stores-full`, `bench:render` crowded-settlement A/B, PERF.md entry, look review ❓ user.
+

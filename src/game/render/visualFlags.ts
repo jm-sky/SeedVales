@@ -27,9 +27,11 @@ export interface VisualFlags {
   actorCull: boolean
   /** Impostors lit with the baked normal atlas (session 14 asset); false = up normal (A/B). */
   impostorNormals: boolean
+  /** Tiered stock piles at woodpiles and warehouses (render--009); false = the old fixed props (A/B). */
+  stockpiles: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true, actorCull: true, impostorNormals: true }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true, actorCull: true, impostorNormals: true, stockpiles: true }
 
 export function readVisualFlags(): VisualFlags {
   try {
