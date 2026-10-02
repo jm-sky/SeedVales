@@ -36,6 +36,19 @@ const FRAMES = [
     sv.teleport(s.x - 18, s.z + 26)
     sv.face(s.x, s.z)
   }],
+  // WEATHER-02: wet ground in rain vs the same view dry (summer, overcast).
+  ...[['summer-dry', 'overcast', 0], ['rain-wet', 'rain', 1]].map(([name, kind, wet]) => [name, new Function('sv', `
+    const sim = sv.game.sim
+    const cal = sim.state.time.cal
+    // Summer (day 20) so snow cover can never win; the calendar may have been left in winter by an earlier frame.
+    sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 20 * 86400 + 13 * 3600
+    Object.assign(sim.state.weather, { kind: '${kind}', intensity: 0.7, wetness: ${wet}, fog: 0.15, temp: 14, until: sim.state.time.cal + 86400 })
+    const s = sim.world.settlements[0]
+    sv.teleport(s.x - 18, s.z + 26)
+    sv.face(s.x, s.z)
+    sv.game.renderer.rig.distance = 10
+    sv.game.renderer.rig.pitch = 0.35
+  `)]),
   ['overcast', (sv) => { sv.setHour(13); Object.assign(sv.game.sim.state.weather, { kind: 'overcast', fog: 0.15, until: sv.game.sim.state.time.cal + 86400 }) }],
   ['meadow-hills', (sv) => {
     const sim = sv.game.sim

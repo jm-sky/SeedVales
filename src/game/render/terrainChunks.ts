@@ -69,6 +69,8 @@ export class TerrainChunks {
   snowCover = 0
   /** 0..1 flower season (meadow patch tint, shader path only). */
   flowers = 0
+  /** 0..1 ground wetness (WEATHER-02, shader path only; smoothed by the renderer). */
+  wetness = 0
   private builtTint = -1
   private terrain: Terrain
   private lods: { maxDist: number; step: number }[]
@@ -117,6 +119,8 @@ export class TerrainChunks {
       const m = createTerrainMaterial({ smooth: this.smooth, detail: this.hasDetail })
       m.shading.season.value = this.shading.season.value
       m.shading.snow.value = this.shading.snow.value
+      m.shading.wet.value = this.shading.wet.value
+      m.shading.flowers.value = this.shading.flowers.value
       this.mat.dispose()
       this.mat = m.material
       this.shading = m.shading
@@ -152,6 +156,7 @@ export class TerrainChunks {
       this.shading.season.value = this.seasonTint
       this.shading.snow.value = this.snowCover
       this.shading.flowers.value = this.flowers
+      this.shading.wet.value = this.wetness
     }
     const tintChanged = !this.shading && Math.abs(this.builtTint - (this.seasonTint + this.snowCover * 2)) > 0.15
     if (tintChanged) {

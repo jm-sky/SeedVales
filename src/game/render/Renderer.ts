@@ -182,7 +182,7 @@ export class Renderer {
     }
   }
 
-  private lighting() {
+  private lighting(dt = 1 / 60) {
     const sim = this.sim
     const cal = sim.state.time.cal
     const dl = daylight(cal)
@@ -234,6 +234,9 @@ export class Renderer {
     const season = seasonOf(cal)
     this.terrain.seasonTint = season === 'autumn' ? 0.6 : season === 'winter' ? 0.8 : 0
     this.terrain.snowCover = season === 'winter' && (w.kind === 'snow' || w.wetness > 0.2) ? 0.8 : 0
+    // WEATHER-02: ground wetness follows the weather over a few seconds (render-derived; nothing saved). Snow cover wins.
+    const wetTarget = this.terrain.snowCover > 0 ? 0 : Math.min(1, w.wetness)
+    this.terrain.wetness += (wetTarget - this.terrain.wetness) * Math.min(1, dt * 0.4)
     const gs = grassSeasonal((cal / 86400) / DAYS_PER_YEAR)
     this.terrain.flowers = gs.flowers
     this.grass?.setSeason(this.terrain.seasonTint, this.terrain.snowCover, gs.growth, gs.flowers)
@@ -285,7 +288,7 @@ export class Renderer {
     const p = this.sim.player
     this.handleEvents()
     this.rig.update(p.x, p.y, p.z, dt)
-    this.lighting()
+    this.lighting(dt)
     this.renderS += dt
     updateWind(this.renderS, this.sim.weather, this.sim.state.time.cal)
     waterUniforms.uWTime.value = this.renderS

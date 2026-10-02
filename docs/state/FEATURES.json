@@ -871,8 +871,8 @@
    "scope": "v2",
    "behavior": "Teren mokry po opadzie (zmiana wyglądu); biały pod śniegiem (opcjonalnie warstwa śniegu)",
    "verify": "screenshot tour",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+   "status": "implemented_unverified",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md step 3 (session 11): terrainMaterial.ts uWet (darker/saturated flat ground, no gloss) + snow normal falloff, Renderer smooths weather.wetness; terrain.test.ts RENDER-04 / WEATHER-02 (0 chunk rebuilds, uniform reaches the shader); frames docs/state/frames/render--001/s11-weather-*; look on a real screen pending (user)"
   },
   {
    "id": "CHAR-01",

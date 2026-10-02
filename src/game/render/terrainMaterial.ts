@@ -23,6 +23,8 @@ export interface TerrainShading {
   snow: { value: number }
   /** 0..1 flower season (meadow patches, shared with the grass). */
   flowers: { value: number }
+  /** 0..1 ground wetness (WEATHER-02, render-derived and smoothed from `weather.wetness`). */
+  wet: { value: number }
 }
 
 /** Small tiling value-noise texture (R fine grain, G coarse blotches), generated once — no asset needed. */
@@ -73,12 +75,13 @@ function detailTexture(): THREE.DataTexture {
 }
 
 export function createTerrainMaterial(opts: { smooth: boolean; detail: boolean }): { material: THREE.MeshLambertMaterial; shading: TerrainShading } {
-  const shading: TerrainShading = { season: { value: 0 }, snow: { value: 0 }, flowers: { value: 0 } }
+  const shading: TerrainShading = { season: { value: 0 }, snow: { value: 0 }, flowers: { value: 0 }, wet: { value: 0 } }
   const material = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !opts.smooth })
   const detail = opts.detail ? (sharedDetail ??= detailTexture()) : null
   material.onBeforeCompile = (sh) => {
     sh.uniforms.uSeason = shading.season
     sh.uniforms.uSnow = shading.snow
+    sh.uniforms.uWet = shading.wet
     sh.uniforms.uDry = { value: DRY }
     sh.uniforms.uSnowC = { value: SNOW }
     sh.uniforms.uFlowers = shading.flowers
@@ -88,7 +91,7 @@ export function createTerrainMaterial(opts: { smooth: boolean; detail: boolean }
       .replace('#include <common>', '#include <common>\nattribute vec2 aTint;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;\nvarying float vViewDist;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTint = aTint;\nvGroundXZ = position.xz;\nvViewDist = length((modelViewMatrix * vec4(position, 1.0)).xyz);')
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', `#include <common>\nuniform float uSeason;\nuniform float uSnow;\nuniform vec3 uDry;\nuniform vec3 uSnowC;\nuniform vec3 uSoilC;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;\nvarying float vViewDist;${detail ? '\nuniform sampler2D uDetail;' : ''}\n${GROUND_PATCH_GLSL}`)
+      .replace('#include <common>', `#include <common>\nuniform float uSeason;\nuniform float uSnow;\nuniform float uWet;\nuniform vec3 uDry;\nuniform vec3 uSnowC;\nuniform vec3 uSoilC;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;\nvarying float vViewDist;${detail ? '\nuniform sampler2D uDetail;' : ''}\n${GROUND_PATCH_GLSL}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb = mix(diffuseColor.rgb, uDry, uSeason * 0.45 * vTint.x);
 {
@@ -102,7 +105,19 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uDry, uSeason * 0.45 * vTint.x);
   // Yellow patches tint the ground; white/violet only slightly (a pale wash reads as grey on the ground).
   diffuseColor.rgb = mix(diffuseColor.rgb, fc, gp.x * uFlowers * (fc.b < 0.5 ? 0.18 : 0.06));
 }
-diffuseColor.rgb = mix(diffuseColor.rgb, uSnowC, uSnow * 0.85 * vTint.y);${detail ? `
+{
+  // WEATHER-02: snow only where the surface faces up (smooth normal; flat shading keeps the baked mask), and wet
+  // ground darker and slightly more saturated where it is flat enough to hold water — Lambert only darkens, no gloss.
+  float nUp = 1.0;
+  #ifndef FLAT_SHADED
+  nUp = dot(normalize(vNormal), normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz));
+  #endif
+  float snowK = uSnow * 0.85 * vTint.y * smoothstep(0.72, 0.9, nUp);
+  diffuseColor.rgb = mix(diffuseColor.rgb, uSnowC, snowK);
+  float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+  vec3 wetC = mix(vec3(lum), diffuseColor.rgb, 1.25) * 0.62;
+  diffuseColor.rgb = mix(diffuseColor.rgb, wetC, uWet * (0.4 + 0.6 * vTint.y) * (1.0 - snowK));
+}${detail ? `
 {
   // Ground detail in world metres: fine grain every ~3 m, blotches every ~40 m; fades out with distance (no moiré).
   float fine = texture2D(uDetail, vGroundXZ / 3.2).r;

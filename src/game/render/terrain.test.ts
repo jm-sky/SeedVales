@@ -19,7 +19,7 @@ function settle(tc: TerrainChunks, x: number, z: number) {
 describe('render: terrain shading (RENDER-04)', () => {
   const ON = { tintUniforms: true, smooth: true, detail: true }
 
-  it('RENDER-04: with tint uniforms a season/snow change rebuilds no chunk; the legacy path rebuilds them', () => {
+  it('RENDER-04 / WEATHER-02: with tint uniforms a season/snow/wetness change rebuilds no chunk; the legacy path rebuilds them', () => {
     const sim = testSim()
     const p = sim.player
     const count = (flags: typeof ON | undefined) => {
@@ -28,7 +28,10 @@ describe('render: terrain shading (RENDER-04)', () => {
       const before = builds()
       tc.seasonTint = 0.8
       tc.snowCover = 0.8
+      tc.wetness = 0.9 // WEATHER-02: wet ground is a uniform too
       tc.update(p.x, p.z, 1e6)
+      const sh = (tc as unknown as { shading: { wet: { value: number } } | null }).shading
+      if (sh) expect(sh.wet.value).toBe(0.9)
       settle(tc, p.x, p.z)
       const n = builds() - before
       tc.dispose()
