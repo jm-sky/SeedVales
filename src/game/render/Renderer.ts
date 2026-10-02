@@ -100,7 +100,7 @@ export class Renderer {
     this.landmarks = new Landmarks(sim)
     this.actors = new Actors(sim, q)
     this.actors.cull = this.visual.actorCull
-    this.dynamics = new Dynamics(sim)
+    this.dynamics = new Dynamics(sim, quality)
     this.marker = new TargetMarker(sim.terrain)
     this.carts = new Carts(sim)
     if (this.visual.sky === 'dome') {
@@ -139,6 +139,7 @@ export class Renderer {
     this.fogFar = q.fogFar
     this.terrain.setQuality(q)
     this.vegetation.setQuality(q)
+    this.dynamics.setQuality(quality)
     this.grass?.setQuality(quality)
     this.actors.setQuality(q)
     if (shadowsChanged) {

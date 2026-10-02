@@ -5,15 +5,19 @@
  * @subdomain effects
  */
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { Sim } from '../sim/sim'
 import { itemDef } from '../data/items'
 import { perf } from '../diag/perf'
 import { groundHeight } from '../sim/collision'
-import { daylight, isNight } from '../sim/time'
+import { daylight } from '../sim/time'
 import { Actors } from './actors'
 import { sharedColorMat } from './assets'
+import { collectFires, FIRE_LOOK, type FireEmitter, type FireKind, flicker, LIGHT_POOL, PLANTED_TORCH_H, selectLights } from './fireSources'
+import { type QualityProfile } from './quality'
 
-const MAX_LIGHTS = 6
+/** Flame cone scale per kind (step 1b replaces the cone with particles). */
+const FLAME_SCALE: Record<FireKind, number> = { hearth: 1.2, campfire: 1, torchpost: 0.6, planted: 0.5, held: 0.42 }
 
 // Scratch objects for the per-frame update.
 const M = new THREE.Matrix4()
@@ -35,18 +39,20 @@ export class Dynamics {
   private items: THREE.InstancedMesh
   private arrows: THREE.InstancedMesh
   private lights: THREE.PointLight[] = []
+  private torches: THREE.InstancedMesh
+  private fires: FireEmitter[] = []
+  private picked: number[] = []
+  private t = 0
   private corpses = new Map<number, THREE.Object3D>()
   private rain: THREE.Points
   private rainPos: Float32Array
   private sim: Sim
   private cropTimer = 0
   /** Reused per-frame buffers (no allocation in the frame loop, review 009 F-04). */
-  private fireBuf: { pos: THREE.Vector3; d2: number }[] = []
   private seen = new Set<number>()
   private activeLights = 0
-  playerLight: THREE.PointLight
 
-  constructor(sim: Sim) {
+  constructor(sim: Sim, profile: QualityProfile = 'medium') {
     this.sim = sim
     this.crops = new THREE.InstancedMesh(new THREE.ConeGeometry(0.18, 0.6, 5).translate(0, 0.3, 0), sharedColorMat(0x6a9a2a), 6000)
     this.flames = new THREE.InstancedMesh(
@@ -56,18 +62,17 @@ export class Dynamics {
     )
     this.items = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 0.15, 0.3).translate(0, 0.08, 0), sharedColorMat(0xffffff), 400)
     this.arrows = new THREE.InstancedMesh(new THREE.BoxGeometry(0.03, 0.03, 0.7), sharedColorMat(0x3a2a1a), 64)
-    for (const m of [this.crops, this.flames, this.items, this.arrows]) {
+    // Planted torch (FIRE-03): an upright stick with a wrapped head, its flame at PLANTED_TORCH_H.
+    const stick = new THREE.CylinderGeometry(0.025, 0.035, PLANTED_TORCH_H, 6).translate(0, PLANTED_TORCH_H / 2, 0)
+    const head = new THREE.CylinderGeometry(0.06, 0.045, 0.2, 7).translate(0, PLANTED_TORCH_H - 0.08, 0)
+    const torchGeo = mergeGeometries([stick.toNonIndexed(), head.toNonIndexed()])!
+    this.torches = new THREE.InstancedMesh(torchGeo, sharedColorMat(0x4a3322), 64)
+    for (const m of [this.crops, this.flames, this.items, this.arrows, this.torches]) {
       m.count = 0
       m.frustumCulled = false
       this.group.add(m)
     }
-    for (let i = 0; i < MAX_LIGHTS; i++) {
-      const l = new THREE.PointLight(0xffa050, 0, 18, 1.6)
-      this.lights.push(l)
-      this.group.add(l)
-    }
-    this.playerLight = new THREE.PointLight(0xffb060, 0, 16, 1.6)
-    this.group.add(this.playerLight)
+    this.setQuality(profile)
     const N = 2500
     this.rainPos = new Float32Array(N * 3)
     for (let i = 0; i < N * 3; i++) this.rainPos[i] = (Math.random() - 0.5) * 60
@@ -78,7 +83,26 @@ export class Dynamics {
     this.group.add(this.rain)
   }
 
+  /**
+   * Light pool per profile (D-REN-7: low 1 / medium 3 / high 4, the player's torch included). Lights are added or
+   * removed only here — the light count is part of every lit program, so it never changes per frame.
+   */
+  setQuality(profile: QualityProfile) {
+    const want = LIGHT_POOL[profile]
+    while (this.lights.length > want) this.group.remove(this.lights.pop()!)
+    while (this.lights.length < want) {
+      const l = new THREE.PointLight(0xffa050, 0, 18, 1.6)
+      this.lights.push(l)
+      this.group.add(l)
+    }
+  }
+
+  get lightPool() {
+    return this.lights.length
+  }
+
   update(dt: number, camPos: THREE.Vector3) {
+    this.t += dt
     const sim = this.sim
     const p = sim.player
     const m = M
@@ -106,51 +130,52 @@ export class Dynamics {
       this.crops.count = n
       this.crops.instanceMatrix.needsUpdate = true
     }
-    // Fires & lights — buildings and dropped torches in range only (spatial queries, review 009 F-03).
-    let nf = 0
-    const fire = (x: number, y: number, z: number) => {
-      const f = (this.fireBuf[nf++] ??= { pos: new THREE.Vector3(), d2: 0 })
-      f.pos.set(x, y, z)
-      f.d2 = f.pos.distanceToSquared(camPos)
-    }
-    for (const b of sim.buildingsNear(p.x, p.z, 200)) {
-      if ((b.kind === 'campfire' || b.kind === 'torchpost') && b.lit) fire(b.x, sim.terrain.heightAt(b.x, b.z) + (b.kind === 'torchpost' ? 2.5 : 0.1), b.z)
-    }
-    for (const g of sim.groundNear(p.x, p.z, 200)) if (g.lit) fire(g.x, sim.terrain.heightAt(g.x, g.z) + 0.1, g.z)
-    const fires = this.fireBuf
-    const flick = 0.85 + Math.sin(performance.now() / 90) * 0.1
+    // Fires & lights (render--001 step 1a): emitters from spatial queries only (fireSources.ts, PERF-01).
+    const fires = this.fires
+    const nf = collectFires(sim, p.x, p.z, 200, fires)
     const nFlames = Math.min(200, nf)
     for (let i = 0; i < nFlames; i++) {
-      const f = fires[i]!.pos
-      const k = f.y > 1 ? 0.6 : 1
-      m.compose(f, Q0, SCL.set(k, flick * k, k))
+      const e = fires[i]!
+      const k = FLAME_SCALE[e.kind] * (e.kind === 'campfire' || e.kind === 'hearth' ? 0.35 + 0.65 * e.level : 1)
+      m.compose(POS.set(e.x, e.y, e.z), Q0, SCL.set(k, k * (0.85 + 0.15 * flicker(this.t * 1.7, e.phase)), k))
       this.flames.setMatrixAt(i, m)
     }
     this.flames.count = nFlames
     this.flames.instanceMatrix.needsUpdate = true
-    const night = isNight(sim.state.time.cal) ? 1 : 0.25
-    // Nearest fires get the pooled lights (partial selection — only MAX_LIGHTS are needed).
-    for (let i = 0; i < Math.min(MAX_LIGHTS, nf); i++) {
-      let best = i
-      for (let j = i + 1; j < nf; j++) if (fires[j]!.d2 < fires[best]!.d2) best = j
-      if (best !== i) [fires[i], fires[best]] = [fires[best]!, fires[i]!]
-    }
+    // Night factor: fires light the world mostly after dusk (daylight 1 → 0.25).
+    const nightK = 1 - daylight(sim.state.time.cal) * 0.75
+    const picked = selectLights(fires, nf, this.lights.length, camPos.x, camPos.z, this.picked)
     let active = 0
     this.lights.forEach((l, i) => {
-      if (i < nf) {
-        l.position.copy(fires[i]!.pos).y += 0.6
-        l.intensity = 14 * night * flick
-        active++
-      } else l.intensity = 0
+      const idx = picked[i]
+      if (idx === undefined) {
+        l.intensity = 0
+        return
+      }
+      const e = fires[idx]!
+      const look = FIRE_LOOK[e.kind]
+      const fl = flicker(this.t, e.phase)
+      // A few centimetres of jitter so the shadows of nearby objects breathe with the flame.
+      l.position.set(e.x + Math.sin(this.t * 5.3 + e.phase) * 0.04, e.y + (e.kind === 'campfire' || e.kind === 'hearth' ? 0.6 : 0.2), e.z + Math.cos(this.t * 4.1 + e.phase) * 0.04)
+      l.intensity = look.intensity * e.level * nightK * fl
+      l.distance = look.range * (0.6 + 0.4 * e.level)
+      active++
     })
-    // Player torch.
-    const torch = p.eq.off?.id === 'torch' || p.eq.main?.id === 'torch'
-    this.playerLight.intensity = torch ? 16 * flick * (1 - daylight(sim.state.time.cal) * 0.85) : 0
-    this.playerLight.position.set(p.x, p.y + 1.8, p.z)
+    this.activeLights = active
+    // Planted torches: upright mesh (the ground-item box is skipped for them below).
+    let nt = 0
+    for (const g of sim.groundNear(p.x, p.z, 150)) {
+      if (!g.planted || nt >= 64) continue
+      m.compose(POS.set(g.x, sim.terrain.heightAt(g.x, g.z), g.z), Q0, ONE)
+      this.torches.setMatrixAt(nt++, m)
+    }
+    this.torches.count = nt
+    this.torches.instanceMatrix.needsUpdate = true
     // Ground items in range.
     let n = 0
     for (const g of sim.groundNear(p.x, p.z, 150)) {
       if (n >= 400) break
+      if (g.planted) continue
       const s = itemDef(g.stack.id).weight > 5 ? 2.5 : 1
       m.compose(POS.set(g.x, groundHeight(sim, g.x, g.z), g.z), Q0, SCL.set(s, s, s))
       this.items.setColorAt(n, g.stack.id === 'stone' || g.stack.id === 'rock_chunk' ? STONE_COL : ITEM_COL)
@@ -190,7 +215,6 @@ export class Dynamics {
         this.corpses.delete(id)
       }
     }
-    this.activeLights = active
     // Precipitation around camera.
     const w = sim.weather
     const wet = w.kind === 'rain' || w.kind === 'storm' || w.kind === 'snow'
@@ -210,6 +234,6 @@ export class Dynamics {
       this.rain.position.set(camPos.x, camPos.y, camPos.z)
       ;(this.rain.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
     }
-    perf.gauge('render.pointLights', this.activeLights + (this.playerLight.intensity > 0 ? 1 : 0))
+    perf.gauge('render.pointLights', this.activeLights)
   }
 }

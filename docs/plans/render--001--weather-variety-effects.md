@@ -1,6 +1,6 @@
 # Render: weather, scene life (fire, wind, water), character and animal variety, decals
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — implementation of every step; opus — keep/drop calls on visual variants (marked per step) and the exit-gate review (`wave-review`)  
 **Domain:** render  
 **Sub domains:** effects, weather, actors, terrain, vegetation, water, assets  
@@ -135,3 +135,10 @@ Vegetation wind (6) is `render--007` step 1 (shared wind module for grass and tr
 ## Result
 
 *(empty — filled per step)*
+
+### Session 11 (2026-10-02, WSL) — step 1a done
+
+- `render/fireSources.ts` (pure): emitters from spatial queries only — campfire / **hearth** (`fireLevel`), torch post (tip 2.5 m), **planted torch at its tip** (`PLANTED_TORCH_H` 1.25 m), **held torches** of the player and NPCs within 40 m (hand offset from the actor transform, no bone lookup), a lying lit torch as a small fire (level 0.35); stable per-key phase. `selectLights`: player's torch first, then distance weighted by level. `flicker`: three sines (≈ 1.3 / 3.7 / 7.9 Hz) with the fire's phase, ±15 %, render seconds.
+- `render/dynamics.ts`: **light pool per profile low 1 / medium 3 / high 4** (`LIGHT_POOL`, player's torch included — the separate player light is gone); lights are added/removed only in `setQuality` (one recompile on a quality switch, never per frame). Intensity = kind base × level × night factor (1 − daylight × 0.75) × flicker; range shrinks with level; a few cm of position jitter. Flame cones scale with kind and level and flicker per fire; NPCs' held torches now have a flame. Planted torches are an upright instanced mesh (stick + wrapped head) instead of the item box. Hearth (`structures.ts`): a wider ring of 8 larger stones with a second course.
+- Tests: `fireSources.test.ts` (pool sizes, player torch priority on low, dying fire → weaker light, planted tip height, hearth kind, phases differ, flicker bounds, spatial queries only); `dynamics.test.ts` still green. Frame `docs/state/frames/render--001/s11-fire1a-settlement-night.png` (software rendering).
+- Not measured on the GPU (WSL GPU path unstable this session). Expected: low gets cheaper per pixel (1 light instead of 7), `render.lights` = pool + sun + hemisphere. Next: 1b particles.

@@ -39,6 +39,15 @@ function proceduralTemplates(): Record<string, Item[]> {
     t.campfire.push(part(new THREE.DodecahedronGeometry(0.22, 0), stone, mat4(Math.cos(a) * 0.8, 0.1, Math.sin(a) * 0.8)))
   }
   for (let i = 0; i < 3; i++) t.campfire.push(part(cyl(0.07, 0.9).rotateZ(1.2).translate(0.3, 0, 0), darkWood, mat4(0, 0.1, 0, (i / 3) * Math.PI * 2)))
+  // Stone hearth (FIRE-02, render--001 1a): a wider ring of 8 larger stones, a second offset course, and the logs.
+  t.hearth = []
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2
+    t.hearth.push(part(new THREE.DodecahedronGeometry(0.34, 0).scale(1, 0.75, 1), stone, mat4(Math.cos(a) * 1.05, 0.18, Math.sin(a) * 1.05)))
+    const b = a + Math.PI / 8
+    t.hearth.push(part(new THREE.DodecahedronGeometry(0.24, 0).scale(1, 0.7, 1), stone, mat4(Math.cos(b) * 1.0, 0.42, Math.sin(b) * 1.0)))
+  }
+  for (let i = 0; i < 3; i++) t.hearth.push(part(cyl(0.08, 1.0).rotateZ(1.2).translate(0.35, 0, 0), darkWood, mat4(0, 0.1, 0, (i / 3) * Math.PI * 2)))
   t.noticeboard = [part(box(0.12, 2.2, 0.12), wood, mat4(-0.8, 0, 0)), part(box(0.12, 2.2, 0.12), wood, mat4(0.8, 0, 0)), part(box(1.9, 1.1, 0.08), 0x9a7a52, mat4(0, 0.9, 0)), part(box(0.5, 0.35, 0.02), 0xe8dfc8, mat4(-0.4, 1.35, 0.05)), part(box(0.4, 0.5, 0.02), 0xe8dfc8, mat4(0.35, 1.2, 0.05))]
   t.soil = [part(box(2, 0.12, 2), 0x5a4128, mat4(0, -0.06, 0))]
   t.herbsoil = [part(box(2, 0.14, 2), 0x4a3a24, mat4(0, -0.06, 0))]
@@ -144,6 +153,8 @@ export class Structures {
         return [{ key: L ? 'anvil' : 'crates', matrix: base() }]
       case 'bridge':
         return [{ key: 'bridge', matrix: mat4(b.x, y - 0.2, b.z, b.rot, 1, 1, b.hd * 2) }]
+      case 'campfire':
+        return [{ key: b.hearth && this.templates.has('hearth') ? 'hearth' : 'campfire', matrix: base() }]
       case 'field':
         return [{ key: 'soil', matrix: base(b.hw / 1, 1, b.hd / 1) }]
       case 'herbgarden':
