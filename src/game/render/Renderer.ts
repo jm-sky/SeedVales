@@ -27,7 +27,7 @@ import { TerrainChunks } from './terrainChunks'
 import { Vegetation } from './vegetation'
 import { readVisualFlags, type VisualFlags } from './visualFlags'
 import { waterUniforms } from './waterMaterial'
-import { updateWind } from './wind'
+import { updateWind, windUniforms } from './wind'
 
 export type { QualityProfile } from './quality'
 
@@ -202,7 +202,9 @@ export class Renderer {
       this.hemi.color.copy(a.hemiSky)
       this.hemi.groundColor.copy(a.hemiGround)
       this.hemi.intensity = a.hemiIntensity
-      this.skyDome.update(a, this.rig.camera.position)
+      // WEATHER-01: cloud cover from the weather (clear: scattered clouds).
+      const cover = w.kind === 'clear' ? 0.3 : w.kind === 'overcast' ? 0.72 : w.kind === 'storm' ? 0.95 : 0.85
+      this.skyDome.update(a, this.rig.camera.position, dt, cover, windUniforms.uWind.value)
       waterUniforms.uSkyZen.value.copy(a.zenith)
       waterUniforms.uSkyHor.value.copy(a.horizon)
       waterUniforms.uSunDirW.value.copy(a.sunDir)
