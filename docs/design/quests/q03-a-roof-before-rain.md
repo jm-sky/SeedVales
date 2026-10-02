@@ -157,3 +157,20 @@ Effect: the quest can be reopened later as `repair` (same family; S7/S8/S9 suffi
 ## Mechanics
 
 I: buildings and durability, construction site, NPC help, carrying limits, timber trade. N: structural inspection, common store with in-kind loans, temporary prop, lean-to. **Author decisions:** should a prop be a separate building object; rules for borrowing from a settlement store.
+
+## Implementation notes
+
+Implemented by `quests--001` step 3 as `src/game/data/quests/q03.ts` (engine: [quests-engine.md](../quests-engine.md)). Deviations and stubs:
+
+- **Casting by role.** `miles` = woodcutter head, `lucy` = spouse, `joan` = elder, `matthew` = son (else child), `ralph` = farmer head (the reeve). Names are the generated ones (`{miles}` etc.), not renamed. Joan and Matthew are optional: their scenes and lines disappear when the slot is empty; Miles, Lucy and Ralph are required (otherwise the quest is never offered).
+- **Start:** the woodcutter house has `durability < 60` (checked every 30 s); the quest is offered through Miles's dialog only (topic "The roof").
+- **S4 "inspect the beam"** is an observation, not a loft-climbing action: hold a lit torch (T) and stand within 7 m of the house centre for 6 s once the quest is accepted → `beamInspected`, stage 2.
+- **Plan.** The plan (`repair` / `lean_to` / `prop`) can be named in S4 with Miles and again in S7 with Lucy; both write the same `plan` flag (changeable until the quest ends). "Both of them must agree" collapsed into Lucy's "Then it's settled" option, which starts the work (stage 3). Without `cupboardHeard` Miles adds a line suggesting the prop first (new line, not in the design).
+- **S8 common store:** Ralph's topic only appears for `plan = repair` while Miles's store holds fewer than 2 logs. The loan is a transfer of 2 logs warehouse to Miles's store (partial when the warehouse is short) and sets `storeDebt`. Option C (G05 oak) is omitted: G05 is not implemented.
+- **E1 / E2 payment.** There is no cheese item: Lucy's "bread x2 and a cheese" is bread x2 + milk x1 from the household store; the 10 c alternative is paid from **Miles's** purse (partial when short). Both are transfers. The store debt is settled **at the ending** (2 logs store to warehouse, partial) because finished quests cost nothing per tick; "Miles owes a load of firewood" is an immediate transfer of 6 branches from his store to the player.
+- **Opinion** is not specified for E2/E3: E1 +15 (as designed), E2 +10, E3 +5 for the whole household; reputation helpfulness +4 / +3.
+- **E2 lean-to** = a `shed` blueprint built by the player within 15 m of the house after the plan is agreed (the `built` event); the shed's ownership passes to the household. "The old room is closed" and Matthew's sleeping place are not modelled.
+- **E3 prop** is a dialog option (1 log consumed from the player's pack) that sets `propped` + `workComplete`. **Not implemented:** "the house wears more slowly until spring" (no new decay modifier; the journal and a message say the prop does not mend the roof) and reopening the quest later as `repair`.
+- **"The family finished it"** = ending `family` when the house reaches `durability >= 90` outside the agreed repair work (also while only offered); no payment, Miles's opinion +3.
+- **Not implemented:** Lucy leading the plan when Miles dies (the quest lapses), rain-specific effects, carrying limits for the beams, partial-repair states.
+- Pronouns/genders in the verbatim lines follow the design doc (Miles/Lucy/Joan are written as he/she/she) while the generated cast can differ in sex; names are always the generated first names.

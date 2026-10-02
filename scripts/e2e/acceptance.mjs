@@ -39,6 +39,43 @@ const clickTest = async (id, wait = 500) => {
   await page.click(`[data-testid="${id}"]`, { timeout: 8000 })
   await page.waitForTimeout(wait)
 }
+/** Authored quests (quests--001): walk up to a cast NPC, open the dialog and the quest topic through the UI. */
+const talkTo = async (questId, slot) => {
+  const id = await S(([q, s]) => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const n = sim.human(sim.state.authoredQuests[q].cast[s])
+    sv.pause(true)
+    sv.approach(n.x, n.z, 1.4)
+    sv.face(n.x, n.z)
+    sv.game.pinnedTarget = `npc:${n.id}`
+    return n.id
+  }, [questId, slot])
+  await waitTarget((t) => t.ref === `npc:${id}` && t.opts.includes('talk'))
+  await key('KeyE')
+  await clickTest('opt-talk')
+  await clickTest(`quest-topic-${questId}`)
+}
+/** Quest dialog: pick options in order, then close the panel. */
+const questOpts = async (...ids) => {
+  for (const id of ids) await clickTest(`quest-opt-${id}`)
+  await clickTest('panel-close')
+}
+/** All money in the world (conservation checks). */
+const worldMoney = () => S(() => {
+  const s = window.__sv.game.sim.state
+  return s.player.money + s.npcs.reduce((a, n) => a + n.money, 0) + s.settlements.reduce((a, t) => a + t.treasury, 0)
+})
+const questState = (id) => S((q) => {
+  const st = window.__sv.game.sim.state.authoredQuests[q]
+  return st ? { status: st.status, stage: st.stage, ending: st.ending, flags: st.flags } : null
+}, id)
+/** Runs the sim un-paused for `s` gameplay seconds, then pauses again (the dialog steps need still NPCs). */
+const simFor = (s) => S((sec) => {
+  window.__sv.pause(false)
+  window.__sv.simStep(sec)
+  window.__sv.pause(true)
+}, s)
 
 try {
   // 1. New game from a chosen seed.
@@ -648,6 +685,214 @@ try {
     return { gone: !sim.building(f.id), ash: sim.tracesNear(f.x, f.z, 2).some((t) => t.kind === 'ash') }
   }, fire0)
   check(results, '18b. ognisko: start na 3 gałęziach, dokładanie opału (UI), wypalenie → popiół', fire0.lit === true && fire1 > fire0.fuel + 2 && burnt.gone && burnt.ash, { fire0, fire1, burnt })
+  await S(() => window.__sv.pause(false))
+
+  // 19. QUEST-03 / Q03 "A Roof Before Rain": offered by Miles, accepted in the dialog, journal (J), beam inspected with a
+  // lit torch, plan agreed with Lucy, house repaired, thanks — dialogs through the UI, world actions through the sim.
+  await S(() => {
+    const sv = window.__sv
+    sv.pause(false)
+    window.__q3ok = sv.forceQuest('q03')
+    const sim = sv.game.sim
+    const st = sim.state.authoredQuests.q03
+    const house = sim.building(sim.state.households[sim.human(st.cast.miles).householdId].houseId)
+    house.durability = 40
+    window.__q3house = house.id
+    sv.pause(true)
+  })
+  const q3money = await worldMoney()
+  await talkTo('q03', 'miles')
+  await questOpts('show_damage')
+  const q3a = await questState('q03')
+  await key('KeyJ')
+  const q3journal = await page.$eval('[data-testid="journal-text-q03"]', (e) => e.textContent).catch(() => '')
+  await shot(page, 'acc-19-journal')
+  await clickTest('panel-close')
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const h = sim.building(window.__q3house)
+    sim.player.eq.off = { id: 'torch', qty: 1, dur: 60 }
+    sv.teleport(h.x + h.hw + 2, h.z)
+  })
+  await simFor(8)
+  const q3b = await questState('q03')
+  await talkTo('q03', 'miles')
+  await questOpts('plan_repair')
+  await talkTo('q03', 'lucy')
+  await questOpts('say_repair', 'agree')
+  const q3c = await questState('q03')
+  await S(() => {
+    window.__sv.game.sim.building(window.__q3house).durability = 95
+  })
+  await simFor(2)
+  const q3d = await questState('q03')
+  await talkTo('q03', 'lucy')
+  await questOpts('take_coin_repair')
+  const q3e = await questState('q03')
+  check(results, '19. Q03 A Roof Before Rain: accept (dialog), journal (J), beam with a torch, plan, repair, thanks; money constant',
+    !!q3a && (await S(() => window.__q3ok)) && q3a.status === 'active' && /Judge the damage/.test(q3journal) && q3b.flags.beamInspected && q3c.stage === 3 && q3c.flags.plan === 'repair' && q3d.flags.workComplete && q3e.status === 'done' && q3e.ending === 'repair' && (await worldMoney()) === q3money,
+    { q3a, q3journal: q3journal.slice(0, 60), q3b: q3b?.flags.beamInspected, q3c: q3c?.stage, q3d: q3d?.flags.workComplete, q3e })
+
+  // 20. QUEST-03 / Q07 "Six Bowls, One Pan": accept, check the stores, walk Mark's dusk round (light every post), roast in two
+  // batches with a pan, serve one table; Mark then lets the player take a torch.
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    sv.pause(false)
+    for (const n of sim.state.npcs) if (sim.state.households[n.householdId]?.profession === 'woodcutter') n.opinion = 12
+    window.__q7ok = sv.forceQuest('q07')
+    sv.give('flint', 1)
+    sv.pause(true)
+  })
+  const q7money = await worldMoney()
+  await talkTo('q07', 'lucy')
+  await questOpts('accept')
+  await talkTo('q07', 'lucy')
+  await questOpts('examine_meat')
+  await talkTo('q07', 'mark')
+  await questOpts('round')
+  const q7a = await S(() => {
+    const sim = window.__sv.game.sim
+    const m = sim.human(sim.state.authoredQuests.q07.cast.mark)
+    return { held: m.questHold?.q, flags: sim.state.authoredQuests.q07.flags }
+  })
+  const postIds = await S(() => {
+    const sim = window.__sv.game.sim
+    window.__sv.setHour(17.5)
+    const posts = sim.settlementBuildings(0, 'torchpost')
+    for (const b of posts) b.lit = false
+    return posts.map((b) => b.id)
+  })
+  for (const id of postIds) {
+    await S((bid) => {
+      const sv = window.__sv
+      const b = sv.game.sim.building(bid)
+      sv.approach(b.x, b.z, 1.6)
+      sv.face(b.x, b.z)
+      sv.game.pinnedTarget = `building:${bid}`
+    }, id)
+    await waitTarget((t) => t.ref === `building:${id}` && t.opts.includes('light'))
+    await key('KeyE', 400)
+  }
+  await simFor(2)
+  const q7b = await questState('q07')
+  // Roast 4 pieces in two batches (pan: two at a time) at the settlement hearth through the interaction menu.
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const p = sim.player
+    const f = sim.state.buildings.find((b) => b.kind === 'campfire' && b.settlementId === 0 && b.hearth)
+    f.lit = true
+    f.fuel = Math.max(f.fuel ?? 0, 10)
+    p.inv.items = p.inv.items.filter((x) => x.id !== 'raw_meat' && x.id !== 'cooked_meat')
+    p.inv.items.push({ id: 'raw_meat', qty: 4, fresh: 48, sp: 'deer' })
+    sv.give('pan')
+    sv.approach(f.x, f.z, 1.8)
+    sv.game.pinnedTarget = `building:${f.id}`
+  })
+  for (let i = 0; i < 2; i++) {
+    await waitTarget((t) => t.opts.includes('roast'))
+    await key('KeyE')
+    if (await page.$('[data-testid="opt-roast"]')) await clickTest('opt-roast')
+    await S(() => window.__sv.pause(false))
+    await finishActivity()
+    await S(() => window.__sv.pause(true))
+  }
+  await simFor(2)
+  const q7c = await questState('q07')
+  await talkTo('q07', 'lucy')
+  await questOpts('together', 'serve_together')
+  const q7d = await questState('q07')
+  const torches0 = await S(() => window.__sv.count('torch'))
+  await talkTo('q07', 'mark')
+  await questOpts('take_torch')
+  const torches1 = await S(() => window.__sv.count('torch'))
+  const q7held = await S(() => window.__sv.game.sim.state.npcs.filter((n) => n.questHold?.q === 'q07').length)
+  check(results, '20. Q07 Six Bowls, One Pan: Mark holds for his round, 6 posts lit, 2 batches roasted, one table, Mark gives a torch; money constant',
+    (await S(() => window.__q7ok)) && q7a.held === 'q07' && postIds.length === 6 && q7b.flags.markCovered && q7c.flags.cooked && q7d.status === 'done' && q7d.ending === 'together' && torches1 === torches0 + 1 && q7held === 0 && (await worldMoney()) === q7money,
+    { q7a, posts: postIds.length, q7b: q7b?.flags.markCovered, q7c: q7c?.flags.cooked, q7d, torches: [torches0, torches1], q7held })
+
+  // 21. QUEST-03 / G03 "Night Torches": Mark asks, the player keeps watch at the dark post at night, Hazel appears (held),
+  // she tells Mark together with the player; Mark pays 15 c from the treasury.
+  await S(() => {
+    const sv = window.__sv
+    sv.pause(false)
+    window.__g3ok = sv.forceQuest('g03')
+    sv.pause(true)
+  })
+  const g3money = await worldMoney()
+  const g3p0 = await S(() => window.__sv.game.sim.player.money)
+  await talkTo('g03', 'mark')
+  await questOpts('watch')
+  await S(() => {
+    const sv = window.__sv
+    const sim = sv.game.sim
+    const st = sim.state.authoredQuests.g03
+    const house = sim.building(sim.state.households[sim.human(st.cast.hazel).householdId].houseId)
+    const post = [...sim.settlementBuildings(0, 'torchpost')].sort((a, b) => Math.hypot(a.x - house.x, a.z - house.z) - Math.hypot(b.x - house.x, b.z - house.z))[0]
+    sv.setHour(1)
+    sv.teleport(post.x + 3, post.z)
+    window.__g3post = post.id
+  })
+  await simFor(45)
+  const g3a = await S(() => {
+    const sim = window.__sv.game.sim
+    const st = sim.state.authoredQuests.g03
+    const h = sim.human(st.cast.hazel)
+    const post = sim.building(window.__g3post)
+    return { stage: st.stage, held: h.questHold?.q, near: Math.hypot(h.x - post.x, h.z - post.z) < 4, lit: post.lit }
+  })
+  await talkTo('g03', 'hazel')
+  await questOpts('path_together')
+  await talkTo('g03', 'mark')
+  await questOpts('close_together')
+  const g3b = await questState('g03')
+  const g3held = await S(() => window.__sv.game.sim.state.npcs.filter((n) => n.questHold?.q === 'g03').length)
+  check(results, '21. G03 Night Torches: watch at night, Hazel at the post, tell Mark together, +15 c from the treasury, nobody left held',
+    (await S(() => window.__g3ok)) && g3a.stage === 2 && g3a.held === 'g03' && g3a.near && g3a.lit === false && g3b.status === 'done' && g3b.ending === 'together' && (await S(() => window.__sv.game.sim.player.money)) === g3p0 + 15 && g3held === 0 && (await worldMoney()) === g3money,
+    { g3a, g3b: g3b?.ending, held: g3held })
+
+  // 22. QUEST-03 / G01 "Lost Lamb": Molly asks, Piers waits at the camp by the road, the finder's fee frees Pip (follows the
+  // player), Molly takes her back and pays; Piers is gone afterwards.
+  await S(() => {
+    const sv = window.__sv
+    sv.pause(false)
+    window.__g1ok = sv.forceQuest('g01')
+    sv.pause(true)
+    sv.game.sim.player.money = Math.max(sv.game.sim.player.money, 40)
+  })
+  const g1money = await worldMoney()
+  await talkTo('g01', 'molly')
+  await questOpts('help', 'no_accusing')
+  const g1a = await questState('g01')
+  await talkTo('g01', 'piers')
+  await questOpts('paid')
+  const g1b = await S(() => {
+    const sim = window.__sv.game.sim
+    const st = sim.state.authoredQuests.g01
+    const pip = sim.actor(st.cast.pip)
+    return { stage: st.stage, resolved: st.flags.resolved, follows: pip.questFollow === sim.player.id, held: !!pip.questHold }
+  })
+  await S(() => {
+    const sim = window.__sv.game.sim
+    const st = sim.state.authoredQuests.g01
+    const molly = sim.human(st.cast.molly)
+    const pip = sim.actor(st.cast.pip)
+    pip.x = molly.x + 1.5
+    pip.z = molly.z
+    sim.actors.update(pip)
+  })
+  await talkTo('g01', 'molly')
+  await questOpts('home_paid')
+  const g1c = await questState('g01')
+  await key('KeyJ')
+  const journalFinished = await page.$eval('[data-testid="journal-finished"]', (e) => e.textContent).catch(() => '')
+  await clickTest('panel-close')
+  const g1after = await S(() => ({ visitors: window.__sv.game.sim.state.npcs.filter((n) => n.questOwner).length, held: window.__sv.game.sim.state.npcs.filter((n) => n.questHold?.q === 'g01').length + window.__sv.game.sim.state.animals.filter((a) => a.questHold?.q === 'g01' || a.questFollow !== undefined).length }))
+  check(results, '22. G01 Lost Lamb: accept, Piers (visitor, held), the fee frees Pip, Molly pays; Piers gone, nothing held; journal lists it as finished',
+    (await S(() => window.__g1ok)) && g1a.status === 'active' && g1a.stage === 2 && g1b.resolved === 'paid' && g1b.follows && !g1b.held && g1c.status === 'done' && g1c.ending === 'paid' && g1after.visitors === 0 && g1after.held === 0 && /Lost Lamb/.test(journalFinished) && (await worldMoney()) === g1money,
+    { g1a: g1a?.stage, g1b, g1c: g1c?.ending, g1after, journal: journalFinished.slice(0, 40) })
   await S(() => window.__sv.pause(false))
 
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.

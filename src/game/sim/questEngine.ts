@@ -9,7 +9,7 @@ import type { QuestEvent } from './questHooks'
 import type { Sim } from './sim'
 import type { AuthoredQuestState } from './types'
 import { AUTHORED_QUESTS } from '../data/quests'
-import { actorOf, allOf, applyEffects, ctxOf, gameDay, homeId, lapseQuest, newQuestState, type QuestCtx, resolveAnchor, resolveAnimalSlots, resolveNpcSlots } from './questCore'
+import { actorOf, allOf, applyEffects, cleanup, ctxOf, gameDay, homeId, lapseQuest, newQuestState, type QuestCtx, resolveAnchor, resolveAnimalSlots, resolveNpcSlots } from './questCore'
 import { registerQuestHandler } from './questHooks'
 
 export { questEvent } from './questHooks'
@@ -42,16 +42,16 @@ export const questDef = (sim: Sim, id: string): QuestDef | undefined => memoOf(s
 const live = (st: AuthoredQuestState) => st.status === 'offered' || st.status === 'active' || st.status === 'refused'
 
 /** Offers a quest when its start conditions hold and the cast resolves; returns whether it was offered. */
-function tryOffer(sim: Sim, def: QuestDef, m: EngineMemo): boolean {
+function tryOffer(sim: Sim, def: QuestDef, m: EngineMemo, force = false): boolean {
   const day = gameDay(sim)
-  if ((m.retryDay.get(def.id) ?? 0) > day) return false
+  if (!force && (m.retryDay.get(def.id) ?? 0) > day) return false
   const st = newQuestState(def, sim.state.time.cal)
   const c = ctxOf(sim, def, st)
   if (!resolveNpcSlots(sim, def, st)) {
     m.retryDay.set(def.id, day + 1)
     return false
   }
-  if (!allOf(c, def.start)) return false
+  if (!force && !allOf(c, def.start)) return false
   if (!resolveAnimalSlots(sim, def, st)) {
     m.retryDay.set(def.id, day + 1)
     return false
@@ -123,6 +123,18 @@ export function tickQuest(sim: Sim, def: QuestDef, st: AuthoredQuestState, dt: n
   }
   tickRules(c)
   if (st.status === 'active') tickObservations(c, dt)
+}
+
+/** Test/e2e only: (re)offers a quest right now, ignoring its start conditions (the cast must still resolve). */
+export function forceOfferQuest(sim: Sim, id: string): boolean {
+  const def = questDef(sim, id)
+  if (!def) return false
+  const old = sim.state.authoredQuests[id]
+  if (old) {
+    cleanup(ctxOf(sim, def, old))
+    delete sim.state.authoredQuests[id]
+  }
+  return tryOffer(sim, def, memoOf(sim), true)
 }
 
 /** The system: offers quests and ticks the offered/active ones. */

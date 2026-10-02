@@ -110,3 +110,18 @@ After a week of felling, Lucy Hewer wants one proper meal with the whole house a
 ## Mechanics
 
 I: freshness, campfire, food, needs, torches. P: pan/grill capacity (`FOOD-03`), relations and gifts. N: standing in on a watch round, meal plan, torch permissions. **Author decision:** does a shared meal have its own "social" need effect.
+
+## Implementation notes
+
+Implemented by `quests--001` step 4 as `src/game/data/quests/q07.ts`. Deviations and stubs:
+
+- **Casting by role.** `lucy` = woodcutter spouse (giver), `miles` = woodcutter head, `mark` = guard head (required), `joan` = elder, `matthew` = son/child, `luke` = shepherd son/child (optional). Names are the generated ones.
+- **Start:** Q03 is done **or** the woodcutter's wife has opinion >= 10 of the player.
+- **Portions.** The meal needs **4 pieces of roast meat** from the player (consumed at the meal), not 6-7 portions; Lucy's household bread is not counted. The pan roasts 2 pieces at a time as in `FOOD-03`. E2 needs two roast batches (counter of `roast` events), E1 needs Mark's round, E3 needs neither.
+- **S2 stores:** the freshness of the meat is not shown; "Look at the meat" sets `freshnessChecked` and moves up to 2 raw meat from Lucy's store to the player (partial when she has none; the player can hunt or buy meat instead). Spoiled meat / illness at the table is not modelled.
+- **S3 Mark's round.** Option A sets `roundAccepted` and **holds Mark** at the settlement campfire (so the guard does not light the posts himself). The round is a counter: every torch post of the home settlement lit by the player (distinct) between 16:00 and 24:00. When all are lit, Mark is held at Lucy's house until the quest ends. Options B and C are only conversation (no hold). A 4-day timeout (`since` 96 h from acceptance) lapses the quest and releases Mark; the design has no timeout, this keeps a guard from being held forever. "Mark called away to a real threat" is not modelled (a held NPC keeps the fight/flee options, but E1 stays available).
+- **Luke / Matthew's guest:** lines only; no hare, no extra portion.
+- **Endings.** All three consume the meat and raise the social need of every guest slot (+40 / +25 / +20 on `vitals.social`). Opinions: E1 Lucy/Miles/Mark +10, Joan/Matthew +5; E2 Lucy/Miles/Mark +5; E3 Lucy/Miles +3. E3's "village opinion rises a little" = reputation helpfulness +2 (E1 +3).
+- **Mark's torch rack (E1):** afterwards Mark's dialog has a topic ("Torches", offered after the quest is done) that moves one torch from Mark's household store to the player, once per game day (partial when he has none).
+- **Grill (P)** is not needed; capacity uses the existing pan.
+- Dialogs S4 (Miles at the pitch kettle) and S5 (Joan) are ambient topics; the pitch fire has no mechanics.

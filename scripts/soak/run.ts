@@ -46,7 +46,11 @@ for (const seed of seeds) {
   const rep = rec.finish()
   console.log(`seed ${seed}: ${rep.days} days in ${((performance.now() - t0) / 1000).toFixed(0)} s · violations ${rep.violations.length}`)
   fs.writeFileSync(path.join(OUT, `soak-${seed}.json`), JSON.stringify(rep, null, 1))
-  md.push(soakMarkdown(rep))
+  // quests--001: the authored quests are offered during the soak (the player idles in the settlement) — record which.
+  const quests = Object.entries(sim.state.authoredQuests).map(([id, q]) => `${id} ${q.status}`).join(', ') || 'none'
+  const visitors = sim.state.npcs.filter((n) => n.questOwner).length
+  console.log(`  authored quests: ${quests} · visitors ${visitors}`)
+  md.push(soakMarkdown(rep) + `\nAuthored quests at the end: ${quests} (quest visitors alive: ${visitors}).\n`)
   if (rep.violations.length) failed = true
 }
 fs.writeFileSync(path.join(OUT, 'soak-latest.md'), md.join('\n'))

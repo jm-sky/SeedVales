@@ -180,6 +180,35 @@ try {
   await tap('quick-plant_torch')
   const planted = await S(() => window.__sv.game.sim.state.ground.some((g) => g.planted && g.stack.id === 'torch'))
   check(results, 'M10. menu dotykowe → szybkie akcje → wbicie pochodni', planted)
+
+  // M11. QUEST-03: an authored quest topic in the dialog and the journal, by touch.
+  const minerId = await S(() => {
+    const sv = window.__sv
+    sv.pause(false)
+    window.__qok = sv.forceQuest('q03')
+    const sim = sv.game.sim
+    const st = sim.state.authoredQuests.q03
+    const miles = sim.human(st.cast.miles)
+    sim.building(sim.state.households[miles.householdId].houseId).durability = 40
+    sv.pause(true)
+    sv.approach(miles.x, miles.z, 1.4)
+    sv.face(miles.x, miles.z)
+    sv.game.pinnedTarget = `npc:${miles.id}`
+    return miles.id
+  })
+  await page.waitForTimeout(1200)
+  await tap('touch-interact')
+  await tap('opt-talk')
+  await tap('quest-topic-q03')
+  await tap('quest-opt-show_damage')
+  const questActive = await S(() => window.__sv.game.sim.state.authoredQuests.q03.status)
+  await tap('panel-close')
+  await tap('touch-menu-journal')
+  const journalOpen = !!(await page.$('[data-testid="journal-quest-q03"]'))
+  await shot(page, 'mob-11-journal')
+  await tap('panel-close')
+  await S(() => window.__sv.pause(false))
+  check(results, 'M11. dotyk: temat zadania w dialogu → przyjęcie → Dziennik (Journal)', minerId > 0 && questActive === 'active' && journalOpen, { questActive, journalOpen })
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 300))
   await shot(page, 'mob-error')

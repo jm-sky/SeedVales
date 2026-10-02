@@ -128,3 +128,16 @@ Payment is the same — the guard pays for the lights, not for how the girl felt
 | Required | Night scheduling; torch post lit/unlit state; three paths |
 | Stub | Hazel's climbing as a short scripted animation or offscreen |
 | Out of scope | Patrol AI changes beyond lit torches |
+
+## Implementation notes
+
+Implemented by `quests--001` step 5 as `src/game/data/quests/g03.ts`. Deviations and stubs:
+
+- **Casting by role.** `mark` = guard head, `hazel` = hunter child, `martha` = hunter spouse (all required). Names and sex are the generated ones (the verbatim lines call Hazel "she" and "little owl"; the generated child can be a boy).
+- **Start:** game day 3-10 and at least one torch post (day >= 3 so Mark's "third night this week" is plausible). The quest is offered through Mark's dialog only.
+- **The snuffing is a rule:** once per game day, 23:00-24:00, while the quest is unresolved (offered, refused or active, stage < 2), the torch post nearest to the hunter's house is put out. Relighting is the guard's existing duty. If the player refuses (D) the snuffing goes on, and after 240 h (10 nights) unresolved Mark solves it himself (ending `markSolved`, no reward).
+- **Night scene (A watch / B alone):** an observation: within 12 m of that post for 40 s at night in stage 1 (B also requires sneaking; the "sneak check" is the sneaking state, no failure roll). Then the post goes dark and Hazel is **snapped next to it and held** (no climbing animation: stub); her dialog opens as a quest topic.
+- **Morning (C):** Martha's topic appears only after at least one snuffed night; "talk to her gently" holds Hazel at her house door.
+- **Hazel's choice** sets `path`; relation changes are split between the choice and the ending so the totals match the doc's table: together Hazel +20 / Martha +10 now, Mark +20 / Martha +5 at the ending; show Hazel +10 now, Mark +15 / Martha +10 at the ending; tell Hazel -20 / Mark +5 now, Mark +5 at the ending. Payout 15 c from the settlement treasury (partial when short), paid in Mark's closing dialog, which also carries the Martha lines of `tell`.
+- **Dusk scene (`show`):** Hazel is held at the post during 16:00-22:00 while the path is `show`; Mark's scene topic appears when the player talks to Mark with Hazel within 15 m of him.
+- **Not implemented (stubs, flag/journal text only):** Hazel lighting her post every dusk (`together`), Hazel kept indoors for a week (`tell`), the extra line in quest 07 (`show`; G07 does not exist), Jacob catching Hazel when he is home, "Martha unavailable, Mark goes to Jacob".

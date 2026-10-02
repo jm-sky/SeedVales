@@ -9,6 +9,7 @@ import type { Game } from '../Game'
 import { perf } from '../diag/perf'
 import { addItem, countItem, newStack } from '../sim/inventory'
 import { makeAnimal } from '../sim/newGame'
+import { forceOfferQuest } from '../sim/questEngine'
 import { hp } from '../sim/vitals'
 import { openSpot } from './openSpot'
 
@@ -32,6 +33,8 @@ export interface DebugApi {
   pause(on: boolean): void
   /** Draw calls per render subsystem for one extra frame (render--003 attribution). */
   drawAttribution(): ReturnType<Game['renderer']['drawAttribution']>
+  /** Authored quests (quests--001): offers the quest now, ignoring its start conditions; false when the cast does not resolve. */
+  forceQuest(id: string): boolean
   /** Teleport next to a point and face it (distance d). */
   approach(x: number, z: number, d?: number): void
   /**
@@ -69,6 +72,7 @@ export function installDebugApi(game: Game) {
     },
     drawAttribution: () => game.renderer.drawAttribution(),
     openSpot: (minR, sid) => openSpot(sim(), minR, sid),
+    forceQuest: (id) => forceOfferQuest(sim(), id),
     teleportToSettlement: (id, dx = 0, dz = 20) => {
       const s = sim().world.settlements[id]!
       game.debugTeleport(s.x + dx, s.z + dz)
@@ -102,6 +106,7 @@ export function installDebugApi(game: Game) {
         timeScale: sim().timeScale,
         weather: s.weather.kind,
         quests: s.quests.map((q) => ({ id: q.id, status: q.status, kills: q.kills, need: q.killsNeeded })),
+        authored: Object.fromEntries(Object.entries(s.authoredQuests).map(([id, q]) => [id, { status: q.status, stage: q.stage, ending: q.ending, choice: q.choice }])),
         rep: s.settlements.map((st) => st.rep),
         badges: Object.keys(s.px.badges),
         sites: s.sites.length,

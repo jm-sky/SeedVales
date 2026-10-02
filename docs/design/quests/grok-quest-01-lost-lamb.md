@@ -147,3 +147,15 @@ Piers sits by a small fire. Pip is tied to a willow, bell tinkling. He stands up
 | Required | Stages and leads; `lamb_miki` follow; payment from named purse; Survival check result |
 | Stub | Piers's fence work as a one-day scripted presence |
 | Out of scope | Blood-trail minigame; court/punishment system |
+
+## Implementation notes
+
+Implemented by `quests--001` step 6 as `src/game/data/quests/g01.ts`. Deviations and stubs:
+
+- **Casting by role.** `molly` = shepherd head (else spouse), `tom` = another adult of that household (optional, one line), `mark` = guard head (optional witness), `pip` = a sheep of Molly's household (prefers a young one; required), `piers` = a quest-owned visitor. Names and sex are the generated ones; Piers keeps his name from the doc.
+- **Start:** game day 1-5 and the player at least 40 m from Molly's pen. **On offer** Pip is moved (snapped) next to the camp and held there, and Piers is spawned there and held. The camp is a point beside the road leaving the settlement, ~200 m beyond its edge (the doc's "ford"); the road anchor is resolved once.
+- **Piers is a visitor NPC** (`kin: 'visitor'`, no household, no profession; eats and drinks from his pack while held; no tax, cannot be hired). His kit (bread x2, a waterskin) is created at spawn, the only goods the quest mints, declared in `spawn.items`; money 0. At the end of **every** ending he is removed and his belongings go to the home warehouse / treasury.
+- **Leads:** `latch` (Molly's briefing), `witness` (Mark's dialog, optional), `prints` (observation: within 4 m of the pen for 5 s, one try; Survival >= 15 gives prints, else `misreadWolf`). Evidence and the guard ending need two leads; "Come with me and arrest him" counts as Mark's witness and sets `askedMark`, which the guard ending requires.
+- **Endings:** evidence / guard / paid (10 c from the player to Piers) from Piers's dialog; taken_back = 5 s at the camp at night while sneaking (no "spotted" branch). Pip then follows the player (`follow`); Molly's topic opens when Pip is within 10 m of her. Molly pays from her purse (15 c, 25 c with the refund; partial) and gives 2 wool from her household store (partial); opinion/reputation as in the table.
+- **Not implemented (stubs):** Piers's fence work (message only), Piers at the smithy in {V} (flavour line), Tom receiving the lamb when Molly dies (the quest lapses), Pip's bell sound, the "uses whichever leads the player has" wording (one fixed line).
+- **Timeout:** 48 h after the offer, unresolved, Piers "sells" Pip: Pip and Piers are removed (livestock disappears), Molly -5 if the quest was accepted.
