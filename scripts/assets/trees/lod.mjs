@@ -2,7 +2,7 @@
  * Leaf-card processing for the tree pipeline: visibility culling (LOD0), card merging (LOD1), AO and wind weights.
  * Pure geometry on plain-array meshes, deterministic (seeded).
  */
-import { area, rng, subMesh, triCount } from './mesh.mjs'
+import { area, components, rng, subMesh, triCount } from './mesh.mjs'
 import { makeCamera, rasterize } from './raster.mjs'
 
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
@@ -141,8 +141,10 @@ function kmeans(cards, k, lift, seed) {
  * LOD1 leaves: merge cards into `k` larger quads. Each quad keeps the group's mean orientation, UV axes and
  * (area-weighted) vertex normal; its area is `kappa` times the summed card area (cards overlap, so < 1).
  * `uvFull` = the atlas rectangle [u0, v0, u1, v1] that one card maps to in full.
+ * `cutSet` (from `regionCuts`) turns the quads into tight cards: each group takes one convex cut polygon of the card texture
+ * (fan-triangulated) instead of the whole rectangle, and kappa then preserves the *opaque* area (kappa x summed opaque card area).
  */
-export function mergeCards(leaf, comp, k, kappa, uvFull, seed = 1) {
+export function mergeCards(leaf, comp, k, kappa, uvFull, seed = 1, cutSet = null) {
   const cards = cardStats(leaf, comp)
   k = Math.min(k, cards.length)
   let bmin = [Infinity, Infinity, Infinity]
@@ -159,6 +161,7 @@ export function mergeCards(leaf, comp, k, kappa, uvFull, seed = 1) {
   const ao = []
   const idx = []
   const up = [0, 1, 0]
+  const rnd = rng(seed + 101)
   for (let g = 0; g < k; g++) {
     const members = cards.filter((_, i) => assign[i] === g)
     if (!members.length) continue
@@ -199,22 +202,32 @@ export function mergeCards(leaf, comp, k, kappa, uvFull, seed = 1) {
     const uvArea = (uvFull[2] - uvFull[0]) * (uvFull[3] - uvFull[1])
     const cardArea = lu * lv * uvArea
     const total = kappa * A
-    const s = Math.sqrt(total / (cardArea || 1))
-    const hw = (lu * (uvFull[2] - uvFull[0]) * s) / 2
-    const hh = (lv * (uvFull[3] - uvFull[1]) * s) / 2
+    const cut = cutSet ? cutSet.cuts[Math.floor(rnd() * cutSet.cuts.length)] : null
+    // tight cut: scale so the polygon's opaque area = kappa x the group's opaque card area
+    const s2 = cut ? (kappa * A * cutSet.regionOpaque) / (cut.opaque * cardArea || 1) : total / (cardArea || 1)
+    const sc = Math.sqrt(s2)
+    const hw = (lu * (uvFull[2] - uvFull[0]) * sc) / 2
+    const hh = (lv * (uvFull[3] - uvFull[1]) * sc) / 2
     const base = pos.length / 3
-    for (const [ux, vy, u, v] of [
-      [-1, -1, uvFull[0], uvFull[1]],
-      [1, -1, uvFull[2], uvFull[1]],
-      [1, 1, uvFull[2], uvFull[3]],
-      [-1, 1, uvFull[0], uvFull[3]],
-    ]) {
+    const corners = cut
+      ? cut.poly.map(([pu, pv]) => [2 * pu - 1, 2 * pv - 1, uvFull[0] + pu * (uvFull[2] - uvFull[0]), uvFull[1] + pv * (uvFull[3] - uvFull[1])])
+      : [
+          [-1, -1, uvFull[0], uvFull[1]],
+          [1, -1, uvFull[2], uvFull[1]],
+          [1, 1, uvFull[2], uvFull[3]],
+          [-1, 1, uvFull[0], uvFull[3]],
+        ]
+    // polygon centroid (vertex average is enough) sits on the group centre
+    const off = cut ? [corners.reduce((a, q) => a + q[0], 0) / corners.length, corners.reduce((a, q) => a + q[1], 0) / corners.length] : [0, 0]
+    for (const [ux0, vy0, u, v] of corners) {
+      const ux = ux0 - off[0]
+      const vy = vy0 - off[1]
       pos.push(c[0] + uAxis[0] * hw * ux + vAxis[0] * hh * vy, c[1] + uAxis[1] * hw * ux + vAxis[1] * hh * vy, c[2] + uAxis[2] * hw * ux + vAxis[2] * hh * vy)
       nrm.push(...n)
       uv.push(u, v)
       ao.push(ao1)
     }
-    idx.push(base, base + 1, base + 2, base, base + 2, base + 3)
+    for (let q = 1; q < corners.length - 1; q++) idx.push(base, base + q, base + q + 1)
   }
   return { pos: Float32Array.from(pos), nrm: Float32Array.from(nrm), uv: Float32Array.from(uv), ao: Float32Array.from(ao), idx: Uint32Array.from(idx) }
 }
@@ -260,4 +273,49 @@ export function windBark(m, height, halfWidth) {
     w[v] = Math.min(1, 0.35 * Math.pow(t, 1.5) + 0.8 * Math.pow(rr, 1.2) * (0.4 + 0.6 * t))
   }
   return w
+}
+
+/**
+ * Overdraw statistics of a leaf mesh against its alpha texture (cutoff 0.5): card count (connected pieces), total card area (m2),
+ * opaque-coverage ratio (opaque area / card area, per-triangle UV sampling) and the mean *projected* card area over `cams`
+ * relative to the silhouette of the leaves alone (>= 1; how often a covered pixel is rasterised).
+ */
+export function leafOverdraw(leaf, tex, cams) {
+  let total = 0
+  let opaque = 0
+  const N = 10
+  for (let t = 0; t < triCount(leaf); t++) {
+    const ar = area(leaf, t)
+    const [a, b, c] = [0, 1, 2].map((k) => leaf.idx[t * 3 + k])
+    let on = 0
+    let n = 0
+    for (let i = 0; i <= N; i++) {
+      for (let j = 0; j <= N - i; j++) {
+        const l0 = (i + 1 / 3) / (N + 1)
+        const l1 = (j + 1 / 3) / (N + 1)
+        const l2 = 1 - l0 - l1
+        const u = l0 * leaf.uv[a * 2] + l1 * leaf.uv[b * 2] + l2 * leaf.uv[c * 2]
+        const v = l0 * leaf.uv[a * 2 + 1] + l1 * leaf.uv[b * 2 + 1] + l2 * leaf.uv[c * 2 + 1]
+        const x = Math.min(tex.w - 1, Math.max(0, Math.floor(u * tex.w)))
+        const y = Math.min(tex.h - 1, Math.max(0, Math.floor(v * tex.h)))
+        if (tex.data[(y * tex.w + x) * 4 + 3] >= 128) on++
+        n++
+      }
+    }
+    total += ar
+    opaque += ar * (on / n)
+  }
+  let proj = 0
+  let sil = 0
+  for (const cam of cams) {
+    for (let t = 0; t < triCount(leaf); t++) {
+      const [a, b, c] = [0, 1, 2].map((k) => vpos(leaf, leaf.idx[t * 3 + k]))
+      proj += 0.5 * Math.abs(dot(cross(sub(b, a), sub(c, a)), cam.fwd))
+    }
+    const buf = rasterize([{ mesh: leaf, tex, cutoff: 0.5, ids: null }], cam, 128, 128)
+    let px = 0
+    for (let i = 0; i < buf.depth.length; i++) if (buf.depth[i] !== Infinity) px++
+    sil += (px / (128 * 128)) * 4 * cam.halfW * cam.halfH
+  }
+  return { cards: components(leaf).count, tris: triCount(leaf), area: total, opaqueRatio: opaque / total, overdraw: proj / (sil || 1) }
 }

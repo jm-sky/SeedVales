@@ -3,7 +3,9 @@
   "budget": {
     "lod0": 3000,
     "lod0Dead": 2000,
-    "lod1": 800
+    "lod1": 800,
+    "lod1Tight": 1000,
+    "lod1Pine": 450
   },
   "atlas": {
     "leaf": {
@@ -61,14 +63,20 @@
           3.958
         ]
       },
-      "lod1Iou": 0.888,
-      "lod1How": "merged",
-      "lod1Coverage": 1,
+      "lod1Iou": 0.864,
+      "lod1How": "tight(w1,n8)",
+      "lod1Coverage": 0.948,
+      "lod1Stats": {
+        "cards": 132,
+        "area": 298.475,
+        "opaqueRatio": 0.785,
+        "overdraw": 5.1
+      },
       "lod1": {
         "bark": 208,
-        "leaf": 592,
-        "tris": 800,
-        "kappa": 0.7
+        "leaf": 792,
+        "tris": 1000,
+        "kappa": 0.45
       }
     },
     {
@@ -104,14 +112,20 @@
           3.663
         ]
       },
-      "lod1Iou": 0.846,
-      "lod1How": "merged",
-      "lod1Coverage": 1.002,
+      "lod1Iou": 0.863,
+      "lod1How": "tight(w1,n4)",
+      "lod1Coverage": 0.987,
+      "lod1Stats": {
+        "cards": 292,
+        "area": 667.54,
+        "opaqueRatio": 0.629,
+        "overdraw": 8.871
+      },
       "lod1": {
         "bark": 219,
-        "leaf": 580,
-        "tris": 799,
-        "kappa": 0.7
+        "leaf": 584,
+        "tris": 803,
+        "kappa": 0.9
       }
     },
     {
@@ -147,14 +161,20 @@
           2.455
         ]
       },
-      "lod1Iou": 0.913,
-      "lod1How": "simplified",
-      "lod1Coverage": 0.948,
+      "lod1Iou": 0.861,
+      "lod1How": "tight(w2,n4)",
+      "lod1Coverage": 0.971,
+      "lod1Stats": {
+        "cards": 286,
+        "area": 290.911,
+        "opaqueRatio": 0.54,
+        "overdraw": 12.279
+      },
       "lod1": {
         "bark": 236,
-        "leaf": 564,
-        "tris": 800,
-        "kappa": null
+        "leaf": 572,
+        "tris": 808,
+        "kappa": 0.9
       }
     },
     {
@@ -190,14 +210,20 @@
           1.918
         ]
       },
-      "lod1Iou": 0.87,
-      "lod1How": "merged",
-      "lod1Coverage": 0.995,
+      "lod1Iou": 0.861,
+      "lod1How": "tight(w1,n5)",
+      "lod1Coverage": 0.947,
+      "lod1Stats": {
+        "cards": 266,
+        "area": 120.594,
+        "opaqueRatio": 0.712,
+        "overdraw": 9.395
+      },
       "lod1": {
         "bark": 200,
-        "leaf": 600,
-        "tris": 800,
-        "kappa": 0.7
+        "leaf": 798,
+        "tris": 998,
+        "kappa": 0.75
       }
     },
     {
@@ -233,13 +259,19 @@
           2.619
         ]
       },
-      "lod1Iou": 0.966,
-      "lod1How": "simplified",
-      "lod1Coverage": 0.987,
+      "lod1Iou": 0.929,
+      "lod1How": "simplified(err 0.2)",
+      "lod1Coverage": 0.985,
+      "lod1Stats": {
+        "cards": 35,
+        "area": 160.049,
+        "opaqueRatio": 0.808,
+        "overdraw": 3.529
+      },
       "lod1": {
-        "bark": 197,
-        "leaf": 603,
-        "tris": 800,
+        "bark": 106,
+        "leaf": 340,
+        "tris": 446,
         "kappa": null
       }
     },
@@ -276,13 +308,19 @@
           2.719
         ]
       },
-      "lod1Iou": 0.952,
-      "lod1How": "simplified",
-      "lod1Coverage": 0.999,
+      "lod1Iou": 0.921,
+      "lod1How": "simplified(err 0.2)",
+      "lod1Coverage": 1.001,
+      "lod1Stats": {
+        "cards": 54,
+        "area": 232.615,
+        "opaqueRatio": 0.817,
+        "overdraw": 3.679
+      },
       "lod1": {
-        "bark": 190,
-        "leaf": 609,
-        "tris": 799,
+        "bark": 107,
+        "leaf": 340,
+        "tris": 447,
         "kappa": null
       }
     },

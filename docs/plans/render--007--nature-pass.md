@@ -162,3 +162,28 @@ Reference (`docs/research/refs/`): broadleaf with real branches and alpha leaf c
 - **Bug fixed:** the model and impostor dither kept the *same* pixels (both "b < …"), so the fade band was half see-through — the screen-door pattern noted earlier. Bands now use complementary keep rules.
 - **GPU (Arc 140V, gpu.frame median):** medium single pairs — dense-forest kit 4.3 → assets 3.9 ms, march 5.68 → 5.14 ms (with a 120 m model ring instead of 48 m). High, 3 alternating pairs (150 m ring, LOD1 without shadows): dense-forest 9.3 → 6.4 ms, **march 9.3 → 14.1 ms** at equal triangles (≈ 2.05 M) — attributed to overdraw of LOD1's merged leaf cards (large quads, much transparent area, alpha-tested) when many mid-distance trees fill the screen. High was set to the medium ring (120 m) until tighter LOD1 cards exist; request in the contract "Round 2". Run-to-run noise on high this session was ±50 % on the same build, so only alternating pairs are quoted.
 - Frames: `docs/state/frames/render--007/wsl/s13-trees-*-kit-vs-assets.png`. Test: `vegetation.test.ts` RENDER-07 offline bands (fake assets).
+
+### Session 14 � tree assets round 2 (Windows asset session)
+
+Contract "Round 2 requests" handled; pipeline still `node scripts/assets/build-trees.mjs` (now ~16 min: it searches ~400 LOD1 candidates per broadleaf variant; `--lod1=merged` reproduces the session-12 LOD1 in ~1 min, `SV_TREES_DEBUG=1` prints the candidate table) + `validate-trees.mjs` green. Albedo impostor atlas and LOD0 are byte-identical to session 12. Node names, axes, pivot, materials, `COLOR_0` unchanged.
+
+**1. Tight-cut LOD1 leaf cards** (`trees/outline.mjs`, `mergeCards(..., cutSet)`). The source leaf card is a rosette of ~10 leaves and only 23 % opaque, so a merged full-rectangle quad was ~80 % transparent. Now each merged group takes a convex cut (4-8 vertices, fan-triangulated) of the card texture: hull of 1-4 angularly adjacent leaf lobes, reduced greedily by edge extension (always encloses the lobes). Cards are rescaled so kappa preserves the *opaque* area. The build searches lobe window x vertex count x card count x kappa and picks the smallest total card area with silhouette IoU >= 0.86 and coverage within 8 %. Metrics (opaque ratio = opaque texels / card area, per-triangle UV sampling; overdraw = mean projected card area over the 8 views / leaf silhouette area):
+
+| Variant | LOD1 tris | cards | card area m2 | opaque ratio | overdraw | IoU vs LOD0 |
+|---|---|---|---|---|---|---|
+| Broadleaf_A | 800 -> 1000 | 296 -> 132 | 1710 -> 298 | 0.18 -> 0.79 | 26.6 -> 5.1 | 0.888 -> 0.864 |
+| Broadleaf_B | 799 -> 803 | 290 -> 292 | 1537 -> 668 | 0.18 -> 0.63 | 19.8 -> 8.9 | 0.846 -> 0.863 |
+| Broadleaf_C | 800 -> 808 | 311 -> 286 | 653 -> 291 | 0.23 -> 0.54 | 27.5 -> 12.3 | 0.913 -> 0.861 |
+| Apple_A | 800 -> 998 | 300 -> 266 | 375 -> 121 | 0.18 -> 0.71 | 27.6 -> 9.4 | 0.870 -> 0.861 |
+| Pine_A | 800 -> 446 | 35 -> 35 | 163 -> 160 | 0.79 -> 0.81 | 3.6 -> 3.5 | 0.966 -> 0.929 |
+| Pine_B | 799 -> 447 | 54 -> 54 | 236 -> 233 | 0.80 -> 0.82 | 3.8 -> 3.7 | 0.952 -> 0.921 |
+
+Broadleaf/apple overdraw drops 2-5x (card area 2-6x). Broadleaf_C (0.54) and B (0.63) gain less: their cheaper window/kappa winners keep bigger cards; raising the IoU floor or tris budget trades against that. Dead_A has no leaves (unchanged, 759 tris). Validator caps: LOD1 <= 1000 (pines <= 500).
+
+**2. Lighter pines.** The kit's pine cards are already cut to the needle outline (opaque 0.8), so tight merging does not help them (IoU 0.78); instead the bent card mesh is simplified harder with the bark LOD1 cut to ~107 tris: LOD1 800 -> ~446 tris, IoU 0.93 / 0.92 (>= 0.85). Simplifying to ~200 leaf tris still gives IoU 0.90 if a lighter pine is ever wanted.
+
+**3. Impostor normal atlas** `trees-impostors-normal.png` (2048x1792, same layout/coverage as the albedo atlas; R = right, G = up, B = towards camera, 0.5-biased; double-sided normals flipped towards the camera; renormalised after 4x supersampling; empty texels = (0.5, 0.5, 1)). No JSON change needed.
+
+**4. Per-row cell aspect:** not done (low priority; no contract field added).
+
+Frames: `docs/state/frames/render--007/trees/s14-contact-sheet-round2.png` (impostor | LOD0 | LOD1 per variant). Game side to do (WSL): reload, optional normal-atlas lighting, march-10mps acceptance, ring back to 150-200 m only if march is within ~+1 ms of the kit.
