@@ -10,7 +10,7 @@
 import * as THREE from 'three'
 import type { Sim } from '../sim/sim'
 import { perf } from '../diag/perf'
-import { CHUNK_M } from '../world/types'
+import { Biome, CHUNK_M } from '../world/types'
 import { FADE_FAR, FADE_NEAR, type Footprint, GRASS_RINGS, grassTint, hash01, maxInstances, TILE_M, tileInstances } from './grassPlacement'
 import { flowerType, GROUND_PATCH_GLSL, groundPatch } from './groundPatch'
 import { type QualityProfile } from './quality'
@@ -400,6 +400,23 @@ export class Grass {
 
   private frame = 0
 
+  /**
+   * Height class of a clump (research 003 §6.1): taller in the lush (dark) patches, along forest edges and next
+   * to water, shorter on the steppe. Vertical instance scale, so no extra geometry or per-frame work.
+   */
+  private heightClass(biome: number, x: number, z: number, dark: number): number {
+    const t = this.sim.terrain
+    let k = 1 + 0.5 * dark
+    if (biome === Biome.Steppe) k *= 0.8
+    let edge = 0
+    for (const [dx, dz] of [[7, 0], [-7, 0], [0, 7], [0, -7]] as const) {
+      const b = t.biomeAt(x + dx, z + dz)
+      if ((b === Biome.ForestDeciduous || b === Biome.ForestMixed || b === Biome.ForestConifer) && b !== biome) edge = Math.max(edge, 0.45)
+      if (t.waterDepthAt(x + dx * 0.6, z + dz * 0.6) > 0) edge = Math.max(edge, 0.6)
+    }
+    return k + edge
+  }
+
   update(px: number, pz: number, budgetMs = GRASS_BUDGET_MS) {
     this.frame++
     this.u.uGrassCenter.value.set(px, pz)
@@ -440,9 +457,11 @@ export class Grass {
           const patch = groundPatch(p.x, p.z)
           if (patch[2] > 0 && hash01(Math.round(p.x * 10), Math.round(p.z * 10), 11) < patch[2] * 0.95) continue
           q.setFromAxisAngle(up, data[i * 5 + 3]!)
-          s.setScalar(data[i * 5 + 4]!)
+          const biome = this.sim.terrain.biomeAt(p.x, p.z)
+          const sc = data[i * 5 + 4]!
+          s.set(sc, sc * this.heightClass(biome, p.x, p.z, patch[1]), sc)
           m.compose(p, q, s).toArray(buf, j * 16)
-          clumpLook(this.sim.terrain.biomeAt(p.x, p.z), p.x, p.z, col, pat, j, patch)
+          clumpLook(biome, p.x, p.z, col, pat, j, patch)
           j++
         }
         ring.tiles.set(n.k, { m: buf.subarray(0, j * 16), c: col.subarray(0, j * 3), p: pat.subarray(0, j * 2) })
