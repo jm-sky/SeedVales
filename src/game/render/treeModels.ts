@@ -82,7 +82,7 @@ function lodTemplate(node: THREE.Object3D, mats: Map<string, THREE.Material>): T
 }
 
 /** Loads trees.glb + the offline impostor atlas; rejects if anything is missing (the caller keeps the kit path). */
-export async function loadTreeAssets(): Promise<TreeAssets> {
+export async function loadTreeAssets(opts: { normals?: boolean } = {}): Promise<TreeAssets> {
   const [gltf, json, texture] = await Promise.all([
     loadGltf('trees.glb'),
     fetch(`${import.meta.env.BASE_URL}assets/trees-impostors.json`).then((r) => {
@@ -113,5 +113,12 @@ export async function loadTreeAssets(): Promise<TreeAssets> {
     rows.set(r.name, i)
     bounds.push(new THREE.Vector4(r.halfWidth, r.minY, r.maxY, 0))
   })
-  return { templates, maxY, atlas: { texture, rows, bounds, dispose: () => texture.dispose() } }
+  // Optional normal atlas (data, not colour: linear). Missing → impostors keep the up normal.
+  const normal = opts.normals === false ? undefined : await new THREE.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}assets/trees-impostors-normal.png`).catch(() => undefined)
+  if (normal) {
+    normal.colorSpace = THREE.NoColorSpace
+    normal.generateMipmaps = true
+    normal.minFilter = THREE.LinearMipmapLinearFilter
+  }
+  return { templates, maxY, atlas: { texture, rows, bounds, normal, dispose: () => { texture.dispose(); normal?.dispose() } } }
 }

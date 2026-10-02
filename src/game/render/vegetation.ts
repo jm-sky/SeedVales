@@ -78,7 +78,7 @@ export class Vegetation {
     for (const [k, v] of Object.entries(this.far)) this.near.set(`${k}#0`, v)
   }
 
-  async load(opts: { treeAssets?: boolean } = {}) {
+  async load(opts: { treeAssets?: boolean; impostorNormals?: boolean } = {}) {
     try {
       const g = await loadGltf('nature.glb')
       for (const [kind, def] of Object.entries(NATURE_MODEL)) {
@@ -92,7 +92,7 @@ export class Vegetation {
       console.warn('nature.glb failed; procedural vegetation', e)
     }
     if (opts.treeAssets !== false) try {
-      this.useTreeAssets(await loadTreeAssets())
+      this.useTreeAssets(await loadTreeAssets({ normals: opts.impostorNormals }))
     } catch (e) {
       console.warn('trees.glb / impostor atlas failed; kit trees with a runtime-baked atlas', e)
     }

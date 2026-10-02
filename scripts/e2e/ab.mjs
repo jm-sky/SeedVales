@@ -183,7 +183,7 @@ for (const v of variants) {
   await sv(page, () => window.__sv.pause(true))
   for (const [name, setup] of FRAMES) {
     await sv(page, (src) => new Function('sv', `(${src})(sv)`)(window.__sv), setup.toString())
-    await page.waitForTimeout(4500)
+    await page.waitForTimeout(Number(process.env.SV_AB_WAIT ?? 4500)) // SV_AB_WAIT: longer for far first frames on software rendering
     const file = path.join(OUT, `ab-${v.label}-${name}.png`)
     await page.screenshot({ path: file })
     ;(shots[name] ??= []).push({ label: v.label, file })

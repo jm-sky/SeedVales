@@ -127,6 +127,8 @@ export interface ImpostorAtlas {
   rows: Map<string, number>
   /** Per row: (half width, min y, max y, 0) in template units. */
   bounds: THREE.Vector4[]
+  /** Optional normal atlas (same layout; view space R = right, G = up, B = towards the camera, 0.5-biased). */
+  normal?: THREE.Texture
   dispose(): void
 }
 
@@ -203,7 +205,7 @@ export function createImpostorMesh(atlas: ImpostorAtlas, cap: number): { mesh: T
   const rowsN = atlas.bounds.length
   const bounds = Array.from({ length: MAX_ROWS }, (_, i) => atlas.bounds[i] ?? new THREE.Vector4())
   mat.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, treeFadeUniforms, { uImpBounds: { value: bounds } })
+    Object.assign(sh.uniforms, treeFadeUniforms, { uImpBounds: { value: bounds } }, atlas.normal ? { uImpNormal: { value: atlas.normal } } : {})
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', `#include <common>
 uniform vec2 uTreeCenter;
@@ -213,7 +215,9 @@ attribute vec2 aImp;
 varying vec2 vImpUv;
 varying float vImpView;
 varying float vImpRow;
-varying float vTreeD;`)
+varying float vTreeD;
+varying vec3 vImpR;
+varying vec3 vImpF;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
 vec3 iO = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 float iS = length(instanceMatrix[0].xyz);
@@ -227,6 +231,8 @@ float iAz = atan(iF.x, iF.z) - aImp.y;
 vImpView = mod(iAz / 6.2831853 * ${IMPOSTOR_VIEWS}.0, ${IMPOSTOR_VIEWS}.0);
 vImpUv = vec2(position.x + 0.5, position.y);
 vImpRow = aImp.x;
+vImpR = iR;
+vImpF = iF;
 vTreeD = distance(iO.xz, uTreeCenter);
 if (vTreeD < uTreeRing.x - 0.5) iW = iO; // inside the model ring (rebuild margin): collapsed`)
       .replace('#include <project_vertex>', 'vec4 mvPosition = viewMatrix * vec4(iW, 1.0);\ngl_Position = projectionMatrix * mvPosition;')
@@ -236,20 +242,35 @@ uniform vec2 uTreeRing;
 varying vec2 vImpUv;
 varying float vImpView;
 varying float vImpRow;
-varying float vTreeD;${BAYER_GLSL}`)
+varying float vTreeD;
+varying vec3 vImpR;
+varying vec3 vImpF;${atlas.normal ? '\nuniform sampler2D uImpNormal;' : ''}${BAYER_GLSL}`)
       .replace('#include <map_fragment>', `
+vec2 svUv0;
+vec2 svUv1;
+float svT;
 {
   float v0 = floor(vImpView);
-  float t = vImpView - v0;
+  svT = vImpView - v0;
   vec2 cellUv = vec2(vImpUv.x, clamp(vImpUv.y, 0.002, 0.998));
-  vec2 uv0 = vec2((v0 + cellUv.x) / ${IMPOSTOR_VIEWS}.0, (vImpRow + cellUv.y) / ${rowsN}.0);
-  vec2 uv1 = vec2((mod(v0 + 1.0, ${IMPOSTOR_VIEWS}.0) + cellUv.x) / ${IMPOSTOR_VIEWS}.0, uv0.y);
-  diffuseColor *= mix(texture2D(map, uv0), texture2D(map, uv1), t);
+  svUv0 = vec2((v0 + cellUv.x) / ${IMPOSTOR_VIEWS}.0, (vImpRow + cellUv.y) / ${rowsN}.0);
+  svUv1 = vec2((mod(v0 + 1.0, ${IMPOSTOR_VIEWS}.0) + cellUv.x) / ${IMPOSTOR_VIEWS}.0, svUv0.y);
+  diffuseColor *= mix(texture2D(map, svUv0), texture2D(map, svUv1), svT);
   if (svBayer4(gl_FragCoord.xy) < 1.0 - smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)) discard; // complement of the models' keep rule
 }`)
-      .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nnormal = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);')
+      // With the normal atlas: the baked view-space normal rotated into world space by the billboard basis,
+      // softened towards up (no black backlit sides); without it: lit like the ground (up normal).
+      .replace('#include <normal_fragment_begin>', atlas.normal
+        ? `#include <normal_fragment_begin>
+{
+  vec3 nT = mix(texture2D(uImpNormal, svUv0).xyz, texture2D(uImpNormal, svUv1).xyz, svT) * 2.0 - 1.0;
+  vec3 nW = normalize(vImpR * nT.x + vec3(0.0, 1.0, 0.0) * nT.y + vImpF * nT.z);
+  nW = normalize(mix(vec3(0.0, 1.0, 0.0), nW, 0.75));
+  normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
+}`
+        : '#include <normal_fragment_begin>\nnormal = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);')
   }
-  mat.customProgramCacheKey = () => `tree-impostor:${rowsN}`
+  mat.customProgramCacheKey = () => `tree-impostor:${rowsN}:${atlas.normal ? 1 : 0}`
   const mesh = new THREE.InstancedMesh(geo, mat, cap)
   mesh.frustumCulled = false
   mesh.count = 0

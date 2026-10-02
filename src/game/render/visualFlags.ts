@@ -25,9 +25,11 @@ export interface VisualFlags {
   treeAssets: boolean
   /** Actors: per-actor frustum culling + shadow radius (render--003); false = the old always-drawn actors (A/B). */
   actorCull: boolean
+  /** Impostors lit with the baked normal atlas (session 14 asset); false = up normal (A/B). */
+  impostorNormals: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true, actorCull: true }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true, actorCull: true, impostorNormals: true }
 
 export function readVisualFlags(): VisualFlags {
   try {
