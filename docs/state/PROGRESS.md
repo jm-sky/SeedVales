@@ -4,15 +4,14 @@
 
 ## Teraz
 
-- **D-LANG-1 (2026-10-01): English everywhere** — UI, proper names (English first name + occupational surname; home guard = Mark Hornblower), docs, plans, comments. Polish docs are legacy. NPC first names and settlement names in code are English (first names switched in session 11; picked in `sim/newGame.ts`, no format bump).
-- Verification (latest, 2026-10-02, session 11, WSL): `pnpm check` 237/237; `pnpm e2e:run` smoke 3/3 · acceptance 32/32 · mobile 11/11, 0 console errors (acceptance 8b/18b intermittents root-caused and fixed in the harness; 3 extra acceptance runs green).
-- Formats: `SAVE_VERSION` 8 (fire fuel, hearth, standing torch, ash — older saves rejected, no migrations, D-SAVE-7), `GEN_VERSION` 9 (mid-scale terrain relief, WORLD-12). Session 11 changed neither (first names are picked in `newGame`, render-only changes).
-- Tooling: on-disk world cache for vitest/e2e (`node_modules/.cache/seedvales/`, `SV_WORLD_CACHE=0` off; CLAUDE.md "Commands").
-- v1 kompletne (2026-09-30, potwierdzone po UI-LANG-01 2026-10-01); wyjątek: WORLD-10 (dźwięk nieodsłuchany).
-- Waves: 1 `sim--001` done, 2 `ui--001` done, 3 `economy--001` + `npc--001` done, 4s `survival--001` done, 4a `render--002` done, **4n nature pass in progress** (`world--002` done/kept; `render--007`: wind, grass + flowers + soil + height classes, trees with offline LOD0/LOD1 + impostors, water shader first pass — remaining: tree assets round 2 (Blender session running), leaf back-light, planar reflection on high, Opus exit review), **4b `render--001` planned** (fire 1a → 1b → 8 → …), 5 `world--001` in progress (step 1 done), 6 `render--003` draft (settlement draw-call attribution first). Side tracks: `diag--002` tier A step 1 done, step 5 open.
-- Next step: integrate tree assets round 2 when the Blender session pushes (alternating GPU pairs, raise the high model ring if march stays within ~+1 ms of the kit) → `render--007` remaining (water planar reflection on high: decide by measurement; leaf back-light) → Opus wave review of 4n → `render--001` fire 1a/1b; `render--003` settlement draw-call attribution before any high-only effect. Kick-off: `NEXT-SESSION-KICK-OFF-PROMPT.md`.
-- ❓ for the user: (1) look of grass/flowers/soil, trees and water (frames `docs/state/frames/render--007/wsl/s11-*`, `s13-*`); (2) WORLD-10 sound listen; (3) phone measurement (D-PERF-2); (4) high profile on the laptop: march with the new trees is the open cost.
-- Starsze sekcje (sesja przygotowawcza, stan po sesji 1): [progress-log.md](progress-log.md).
+- **D-LANG-1:** English everywhere (UI, names, docs, comments). Polish docs are legacy.
+- Verification (latest, 2026-10-02, session 13, WSL, after merging quests + verify + review scripts + recon batch A): `pnpm check` 329/329; `pnpm e2e:run` smoke 3/3 · acceptance 37/37 · mobile 12/12, 0 console errors (last full run before batch A: 3/3 · 36/36 · 12/12).
+- Formats: **`SAVE_VERSION` 9** (authored quests `state.authoredQuests`, quest holds, visitor NPC; v8 rejected, D-SAVE-7; not released yet — further v9 field additions this cycle need no extra bump), `GEN_VERSION` 9.
+- Stage: quests--001 steps 1–6 done (engine + Q03, Q07, G03, G01; review 014 fixes in progress); verify--001 steps 1–3 done (event log, ledger, invariants, D-VERIFY-1); review--001 steps 1–3 done, **round 1 in progress**; render--009 stockpiles done by the Windows session (`062000c`).
+- **Review round 1 state:** recon 013 (GPT) triaged — batch A merged, batch B in a worktree; code review 014 triaged — fixes in a worktree; soak 015 trader caravan stall — fix in a worktree; app review (skill `app-review`, `pnpm review:app`) + full soak 10 d × 3 seeds not run yet.
+- Next step: merge the three worktree branches (caravan, recon batch B, review 014 fixes) → `pnpm check` + `pnpm e2e:run` + `pnpm soak --days=10 --seeds=1337,7,42` → app review round 1 (Opus reviewer) → triage → round 2 on the fix range (max 3 rounds). Then roadmap: render--001 rest / render--008 (4c) → wave 5 → wave 6 → proposals--001 → [later-vision-backlog](../roadmap/later-vision-backlog.md) L1–L7 (D-PLAN-9).
+- ❓ user: looks (render--001/007 frames, stockpiles), WORLD-10 listen, phone measurement, mobile touch targets (app-review evidence: 371 buttons < 32 px → `ui--002` step 0), bench:sim on a quiet machine after the merges (batch runs were under load).
+- Older sections: [progress-log.md](progress-log.md).
 
 ## Sesja 2
 
@@ -135,3 +134,16 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - **render--003 started:** draw-call attribution (`scripts/bench/draw-attribution.mjs`) showed actors = 75 % of settlement draw calls on high (no frustum culling on skinned meshes, every part casting shadows). Per-actor frustum culling + actor shadow radius: high crowded-settlement 934 → 363 draw calls. GPU confirmation pending (machine loaded). Harness: mobile M1 made frame-rate independent (hold the stick until > 1 m, max 10 s; it failed at 350–400 ms software frames under load), e2e `launch()` honours `SV_VISUAL`. Final: `pnpm check` 238/238, e2e 3/3 · 32/32 · 11/11.
 - **Tree assets round 2 accepted:** high model ring 200 m (LOD0 to 60 m), cheaper than the kit in dense-forest and march (2 alternating GPU pairs, PERF.md). **❓ user: WSL crashed three times this session, each during a long `SV_GPU=1` bench loop** — the real-GPU path (Mesa d3d12) seems to destabilise WSL under sustained load; GPU benches only one per command until this is understood. Harness: smoke "player moves with W" made frame-rate independent like mobile M1. Final: `pnpm check` 238/238, e2e 3/3 · 32/32 · 11/11.
 - **render--001 (wave 4b) started in session 11:** step 1a (fire sources, light pool 1/3/4, flicker, held/planted torches, hearth ring), 1b (GPU particle fire), 8 (blood/ash decals), 3 (wet ground + snow slope falloff), 2 clouds done; open: 2 precipitation (GPU streaks/flakes), 4 CHAR-01, 5 FAUNA-09; all looks ❓ user (software-rendered frames in `docs/state/frames/render--001/`), GPU cost pending (WSL GPU path). RENDER-03, TRACE-01, WEATHER-02 → `implemented_unverified`. Final: `pnpm check` 245/245, e2e 3/3 · 32/32 · 11/11. Ultrareview of session 11 ran in the cloud (user) — its findings file `docs/reviews/2026-10-02--011--session-11-ultrareview.md` is to be triaged first next session.
+
+### Session 12 (WSL, Opus) — recorded in session 13
+
+- render--001 step 2 precipitation (GPU streaks/flakes, shelter column), steps 4 (CHAR-01 tints/scale) and 5 (FAUNA-09 darker alpha/strong); plans quests--001, verify--001, review--001, render--008, proposals--001 (D-PLAN-8); `pnpm soak` with NPC-life invariants; review 012 (hunter leash, unreachable water).
+
+### Session 13 (WSL, Opus + Sonnet worktree agents)
+
+- quests--001: design `docs/design/quests-engine.md` + D-QUEST-1 (Opus); engine, journal (J), dialog topics, Q03/Q07/G03/G01, SAVE 9 (Sonnet). Code review 014: 2 major (unbounded holds starve held NPCs; G03 soft-lock) + 8 minor → all to fix.
+- verify--001 steps 1+3: `sim/eventLog.ts` (ring buffer, ledger), soak invariants conservation/economy/fire/perf/working-output; D-VERIFY-1 (thresholds; wall-clock judged only in dedicated runs). Soak report 015: trader caravan stall (real bug).
+- review--001: skill `app-review`, scenario scripts `pnpm review:app`; ultrareview 011 triaged (2 fixed, 1 deferred, 1 rejected; PR #1 closed, branch deleted).
+- Recon 013 (GPT) triaged; batch A merged (MAP-01 leak, board quest objectives/reward/history, UI through Game). Recon items scheduled into `ui--002`, `quests--002`, `economy--002`, `render--008`, `diag--002`.
+- Roadmap: `later-vision-backlog.md` (L1–L7) accepted by the user (D-PLAN-9: L6 caves only, L5 partly, voices by the user via Fish Audio free).
+
