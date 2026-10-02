@@ -51,3 +51,15 @@ export function applyLook(root: THREE.Object3D, look: CharacterLook) {
     else if (look.cloth > 0 && !name.startsWith('MI_Eyes') && !name.startsWith('MI_Regular') && !name.startsWith('MI_Superhero')) mesh.material = variant(mesh.material, 'cloth', look.cloth, L.cloth[look.cloth]!)
   })
 }
+
+/** FAUNA-09: prime animals (alpha/strong) are ~10 % darker; shared per source material, never per animal. */
+export const PRIME_DARKEN: Partial<Record<string, number>> = { alpha: 0xe6e6e6, strong: 0xd9d9d9 }
+
+export function darkenPrime(root: THREE.Object3D, variantName: string) {
+  const hex = PRIME_DARKEN[variantName]
+  if (hex === undefined) return
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh
+    if (mesh.isMesh && !Array.isArray(mesh.material)) mesh.material = variant(mesh.material, 'cloth', hex, hex)
+  })
+}

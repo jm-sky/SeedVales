@@ -17,7 +17,7 @@ import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { isDown } from '../sim/combat'
 import { loadGltf } from './assets'
-import { applyLook, characterLook } from './characterLook'
+import { applyLook, characterLook, darkenPrime } from './characterLook'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 /** Scratch vector for the per-frame interpolation (no allocation per actor, review 009 F-04). */
@@ -213,6 +213,7 @@ export class Actors {
         }
       }
     })
+    darkenPrime(root, a.variant)
     const mixer = new THREE.AnimationMixer(root)
     const actions = new Map<string, THREE.AnimationAction>()
     for (const c of g.animations) actions.set(c.name, mixer.clipAction(c))
