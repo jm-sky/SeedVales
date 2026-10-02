@@ -119,3 +119,11 @@ Uzasadnienie: wszystkie wymagania `scope: v1` w FEATURES.json mają status `veri
 - Item 5: trees re-plan written in `render--007` ("Step 3 re-plan", Opus decision A: own generator vs kit). Water and `diag--002` step 5 not started.
 - Final: `pnpm check` 230/230, e2e 3/3 · 32/32 · 11/11, 0 console errors.
 - ❓ Opus: grass look keep/drop (per-clump colour variation? flowers), relief amplitude, trees source decision A. ❓ user: WORLD-10 listen, phone measurement.
+
+### Session 11 (WSL, real GPU, Opus) — in progress
+
+- Start: `main` (`7e4578b`), no new review; `pnpm check` 230/230, e2e 3/3 · 32/32 · 11/11, 0 console errors.
+- **Opus decisions (D-REN-15):** grass kept + reworked; relief ×1.15 unchanged (same-spot A/B, new `rolling-hills` frame); trees keep the MegaKit models — step 3c (longer ring + baked impostors) first, no own generator for now; settlement cost on high after trees 3c.
+- **Grass rework per user feedback** (thinner/longer/denser, seasonal height, flower = yellowish patches, dark patches, match the ground, optimise): 16 blades/clump, `grassSeasonal`, `render/groundPatch.ts` (shared GLSL/TS), biome tint, instance attributes, fine/coarse LOD, camera-facing petal heads. GPU medium meadow gpu.frame 3.7 ms (session 10: 3.1 ms with 7 blades). PERF.md "WSL session 11".
+- New reference from the user: `docs/research/refs/2026-10-02--threejs-ref-flax-meadow.jpg` (ideas in the plan: soil/litter patches, bigger flower heads, mixed heights, haze).
+- Checkpoint `817c83f`: `pnpm check` 233/233, e2e 3/3 · 32/32 · 11/11, 0 console errors. Next: trees 3c.
