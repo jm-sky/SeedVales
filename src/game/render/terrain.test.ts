@@ -87,4 +87,35 @@ describe('render: terrain shading (RENDER-04)', () => {
     expect(builds() - before).toBe(0)
     tc.dispose()
   })
+
+  it('RENDER-05: water meshes carry depth = surface − ground (≥ 0, shore fades to 0); glint follows the profile', () => {
+    const sim = testSim()
+    const w = sim.world
+    let at: { x: number; z: number } | null = null
+    for (let k = 0; k < w.n * w.n && !at; k += 7) if (w.waterKind[k] === 2 && sim.terrain.waterDepthAt((k % w.n) * w.cell, Math.floor(k / w.n) * w.cell) > 1) at = { x: (k % w.n) * w.cell, z: Math.floor(k / w.n) * w.cell }
+    expect(at).not.toBeNull()
+    const tc = new TerrainChunks(sim.terrain, QUALITY.low, VISUAL_DEFAULTS)
+    settle(tc, at!.x, at!.z)
+    const meshes = [...(tc as unknown as { chunks: Map<string, { water?: THREE.Mesh }> }).chunks.values()].flatMap((c) => (c.water ? [c.water] : []))
+    expect(meshes.length).toBeGreaterThan(0)
+    let deep = 0
+    let shore = 0
+    for (const m of meshes) {
+      const pos = m.geometry.getAttribute('position')
+      const d = m.geometry.getAttribute('aDepth')
+      expect(d.count).toBe(pos.count)
+      for (let i = 0; i < d.count; i += 5) {
+        const expected = Math.max(0, pos.getY(i) - sim.terrain.heightAt(pos.getX(i), pos.getZ(i)))
+        expect(d.getX(i)).toBeCloseTo(expected, 3)
+        if (d.getX(i) > 1) deep++
+        if (d.getX(i) === 0) shore++
+      }
+    }
+    expect(deep).toBeGreaterThan(0)
+    expect(shore).toBeGreaterThan(0)
+    const detail = (tc as unknown as { waterDetail: { value: number } }).waterDetail
+    expect(detail.value).toBe(0) // low: no glint
+    tc.setQuality(QUALITY.medium)
+    expect(detail.value).toBe(1)
+  })
 })

@@ -26,6 +26,7 @@ import { TargetMarker } from './targetMarker'
 import { TerrainChunks } from './terrainChunks'
 import { Vegetation } from './vegetation'
 import { readVisualFlags, type VisualFlags } from './visualFlags'
+import { waterUniforms } from './waterMaterial'
 import { updateWind } from './wind'
 
 export type { QualityProfile } from './quality'
@@ -200,6 +201,10 @@ export class Renderer {
       this.hemi.groundColor.copy(a.hemiGround)
       this.hemi.intensity = a.hemiIntensity
       this.skyDome.update(a, this.rig.camera.position)
+      waterUniforms.uSkyZen.value.copy(a.zenith)
+      waterUniforms.uSkyHor.value.copy(a.horizon)
+      waterUniforms.uSunDirW.value.copy(a.sunDir)
+      waterUniforms.uSunCol.value.copy(a.sunColor).multiplyScalar(a.sunIntensity)
     } else {
       const dusk = Math.max(0, 1 - Math.abs(dl - 0.35) * 3) * (dl > 0 && dl < 1 ? 1 : 0)
       this.sky.copy(NIGHT_SKY).lerp(DAY_SKY, dl).lerp(DUSK_SKY, dusk * 0.5)
@@ -212,6 +217,10 @@ export class Renderer {
       this.sun.intensity = dl * 2.2 * (1 - overcast * 0.6) + 0.12
       this.sun.color.set(dl > 0.2 ? 0xfff2dd : 0x8899cc)
       this.hemi.intensity = 0.35 + dl * 0.9 * (1 - overcast * 0.3)
+      waterUniforms.uSkyZen.value.copy(this.sky)
+      waterUniforms.uSkyHor.value.copy(this.sky)
+      waterUniforms.uSunDirW.value.copy(this.toLight)
+      waterUniforms.uSunCol.value.copy(this.sun.color).multiplyScalar(this.sun.intensity)
     }
     const fogK = Math.max(w.fog, w.kind === 'rain' || w.kind === 'snow' ? 0.35 : 0, w.kind === 'storm' ? 0.55 : 0)
     fog.near = 120 * (1 - fogK * 0.9)
@@ -245,6 +254,7 @@ export class Renderer {
     this.lighting()
     this.renderS += dt
     updateWind(this.renderS, this.sim.weather, this.sim.state.time.cal)
+    waterUniforms.uWTime.value = this.renderS
     perf.measure('render.terrain', () => this.terrain.update(p.x, p.z, this.first ? 4000 : 5))
     this.first = false
     perf.measure('render.vegetation', () => this.vegetation.update(p.x, p.z))

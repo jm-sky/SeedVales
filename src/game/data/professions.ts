@@ -81,8 +81,9 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
   },
 }
 
-const FIRST_M = ['Bogdan', 'Mirosław', 'Wojciech', 'Jarosław', 'Zbigniew', 'Stanisław', 'Kazimierz', 'Radosław', 'Bolesław', 'Mieszko', 'Przemysł', 'Dobromir', 'Sławomir', 'Leszek', 'Janko', 'Maciej', 'Tomasz', 'Piotr']
-const FIRST_F = ['Dobrawa', 'Jadwiga', 'Bogna', 'Wanda', 'Radomira', 'Zofia', 'Małgorzata', 'Agnieszka', 'Dorota', 'Świętosława', 'Ludmiła', 'Halina', 'Marta', 'Anna', 'Elżbieta']
+/** English first names (D-LANG-1); pool sizes kept (18/15) so the new-game RNG sequence is unchanged. */
+const FIRST_M = ['Edmund', 'Walter', 'Hugh', 'Roger', 'Geoffrey', 'Ralph', 'Gilbert', 'Robert', 'Richard', 'William', 'Thomas', 'John', 'Henry', 'Simon', 'Alan', 'Adam', 'Peter', 'Nicholas']
+const FIRST_F = ['Alice', 'Agnes', 'Matilda', 'Emma', 'Joan', 'Isabel', 'Margery', 'Cecily', 'Edith', 'Beatrice', 'Avice', 'Mabel', 'Juliana', 'Maud', 'Eleanor']
 export const NAMES = { male: FIRST_M, female: FIRST_F }
 
 /** Occupational surnames per household profession (D-LANG-1): the head's trade shows in the family name. */

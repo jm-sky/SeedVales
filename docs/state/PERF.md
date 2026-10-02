@@ -242,11 +242,22 @@ GPU timer (`gpu.frame`, medium): meadow 2.24 → 3.07 ms, march 3.32 → 4.66 ms
 
 Same machine (Arc 140V, `SV_GPU=1`, `SV_SCENES=meadow`, one run each — GPU runs are noisy, judge medians and `gpu.frame`). Grass reworked per user feedback (render--007 "Session 11"): 16 thin blades per clump (was 7), flowers, patches.
 
-| variant | medium meadow RAF med/p95 · gpu | medium march gpu | high meadow RAF · gpu | high march gpu |
+| variant | medium meadow frame med/p95 · gpu | medium march gpu | high meadow frame · gpu | high march gpu |
 |---|---|---|---|---|
-| session 10 (7 blades) | 3.32/6.92 · 3.07 | 4.66 | 3.97/8.43 · — | — |
+| session 10 (7 blades; RAF interval) | 3.32/6.92 · 3.07 | 4.66 | 3.97/8.43 · — | — |
 | first rework (noise per vertex) | — · 5.14 | 6.78 | — · 6.92 | 16.21 |
 | + per-clump instance attributes | — · 4.13 | 7.95 | — · 10.69 | 17.9 |
 | **+ fine/coarse geometric LOD (kept)** | **1.91/5.35 · 3.67** | **4.22** | **3.01/6.14 · 5.35** | **6.52** |
 
 Triangles in the meadow view: medium 1.65 M, high 2.42 M (first rework 1.84 M / 3.20 M). Conclusion: twice the blades for ≈ +0.6 ms GPU on medium in a meadow and no march regression. Low is unchanged in structure (its 14 m blade ring is entirely "fine"); mobile e2e green.
+
+Note: the session-11 "frame" values are the bench's `frame` column (CPU frame time, which in `SV_GPU` mode tracks the RAF interval closely but is not identical); the session-10 row quotes the RAF interval. Compare `gpu` (gpu.frame median) across rows.
+
+### Trees: baked impostors (session 11, same-time A/B, dense-forest, gpu.frame median / triangles)
+
+| profile | impostors off (procedural cones) | impostors on, model ring 48/72 m | trial ring 60/90 m |
+|---|---|---|---|
+| medium | 3.67 ms · 1.15 M | 3.53 ms · 1.42 M | 5.04 ms · 1.81 M |
+| high | 6.52 ms · 2.09 M | 6.02 ms · 2.32 M | 7.34 ms · 2.86 M |
+
+The longer model ring waits for LOD1 meshes (Blender session, `docs/design/render-tree-assets-contract.md`). Bench noise this session: another workload started at 08:39 (load average 12), the high runs after it degraded run after run (dense-forest gpu 5.7 → 18.6 ms with no code change) and were discarded.

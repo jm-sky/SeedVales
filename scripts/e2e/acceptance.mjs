@@ -281,6 +281,8 @@ try {
     })
     // Kill rats of this nest: approach each rat and click (UI attack). Runs again after the repair,
     // because the nest keeps breeding while the repair is under way.
+    // Per-attempt trace (last 12 kept) so an intermittent failure shows why a rat survived (session 9/11).
+    const ratTrace = []
     const killRats = async () => {
       for (let i = 0; i < 80; i++) {
         const left = await S((bid) => {
@@ -294,10 +296,22 @@ try {
           sv.pause(true)
           if (rat.vitals.dead) return 1
           sv.approach(rat.x, rat.z, 0.9)
-          return 1
+          const p = sim.player
+          return { id: rat.id, d: Math.round(Math.hypot(rat.x - p.x, rat.z - p.z) * 10) / 10, nest: Math.round(Math.hypot(rat.x - b.x, rat.z - b.z)), st: Math.round(p.vitals.stamina), ui: document.elementFromPoint(640, 360)?.tagName }
         }, questInfo.b)
         if (!left) break
+        if (typeof left === 'object' && left.ui !== 'CANVAS') {
+          await page.keyboard.press('Escape') // a menu/panel over the centre would take the click
+          await S(() => { window.__sv.game.sim.player.eq.main = { id: 'club', qty: 1, dur: 200 } })
+        }
+        const c0 = await S(() => ({ ...window.__sv.perf.report().counters }))
         await page.mouse.click(640, 360)
+        if (typeof left === 'object') {
+          const c1 = await S(() => window.__sv.perf.report().counters)
+          const dc = (k) => (c1[k] ?? 0) - (c0[k] ?? 0)
+          ratTrace.push({ i, ...left, sw: dc('combat.swings'), hit: dc('combat.hits'), miss: dc('combat.misses'), none: dc('combat.noTarget') })
+          if (ratTrace.length > 12) ratTrace.shift()
+        }
         await page.waitForTimeout(80)
         if (i === 5) console.log('rat loop', JSON.stringify(await S(() => Object.fromEntries(Object.entries(window.__sv.perf.report().counters).filter(([k]) => k.startsWith('combat'))))))
       }
@@ -313,7 +327,9 @@ try {
       sv.face(b.x, b.z)
     }, questInfo.b)
     for (let i = 0; i < 3; i++) {
-      await waitTarget((t) => t.opts.includes('repair'))
+      // Stop once the warehouse needs no more repair: pressing E without the option would open the
+      // interaction menu over the screen centre and swallow the kill loop's clicks (session 11 trace: ui DIV, 0 swings).
+      if (!(await waitTarget((t) => t.opts.includes('repair')))) break
       await key('KeyE')
       if (await page.$('[data-testid="opt-repair"]')) await clickTest('opt-repair')
       await S(() => window.__sv.pause(false))
@@ -332,7 +348,7 @@ try {
       const left = sim.state.animals.filter((a) => a.species === 'rat' && !a.vitals.dead && (a.denId === `nest:${b.id}` || (!a.denId && Math.hypot(a.x - b.x, a.z - b.z) < 20)))
       return { status: qq.status, kills: qq.kills, sid: qq.settlementId, rep: sim.state.settlements[qq.settlementId].rep, nest: !!b.ratNest, dur: b.durability, left: left.map((a) => ({ id: a.id, d: Math.round(Math.hypot(a.x - b.x, a.z - b.z)), den: a.denId, st: a.state })) }
     }, questInfo.id)
-    check(results, '8b. zadanie ukończone i reputacja wzrosła', q.status === 'done' && q.rep.helpfulness >= 12, q)
+    check(results, '8b. zadanie ukończone i reputacja wzrosła', q.status === 'done' && q.rep.helpfulness >= 12, q.status === 'done' ? q : { ...q, ratTrace })
   }
 
   // 9. Save through the menu, reload the page, load the save, verify persisted changes.

@@ -14,6 +14,7 @@ import { perf } from '../diag/perf'
 import { idx } from '../world/grid'
 import { Biome, CHUNK_M, SEA_LEVEL } from '../world/types'
 import { createTerrainMaterial, type TerrainShading } from './terrainMaterial'
+import { createWaterMaterial } from './waterMaterial'
 
 const STEPS = [2, 4, 8, 16] as const
 /** Normals come from a central difference of this step (m), independent of the LOD. */
@@ -59,6 +60,7 @@ export class TerrainChunks {
   private wantDetail = false
   private hasDetail = false
   waterMat: THREE.MeshLambertMaterial
+  private waterDetail: { value: number }
   ocean: THREE.Mesh
   private patch: Noise2D
   private dirty = new Set<string>()
@@ -90,10 +92,13 @@ export class TerrainChunks {
     } else {
       this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
     }
-    this.waterMat = new THREE.MeshLambertMaterial({ color: 0x3f7392, transparent: true, opacity: 0.78, depthWrite: false })
+    const wm = createWaterMaterial(q.shadows)
+    this.waterMat = wm.material
+    this.waterDetail = wm.detail
     this.patch = new Noise2D(terrain.world.seed ^ 0x77aa)
     const og = new THREE.PlaneGeometry(6000, 6000, 1, 1)
     og.rotateX(-Math.PI / 2)
+    og.setAttribute('aDepth', new THREE.Float32BufferAttribute([40, 40, 40, 40], 1)) // open sea: deep
     this.ocean = new THREE.Mesh(og, this.waterMat)
     this.ocean.position.y = SEA_LEVEL
     this.ocean.renderOrder = 1
@@ -104,6 +109,7 @@ export class TerrainChunks {
   setQuality(q: QualitySettings) {
     this.lods = q.lods.map((d, i) => ({ maxDist: d, step: STEPS[i]! }))
     this.viewDist = q.viewDist
+    this.waterDetail.value = q.shadows ? 1 : 0
     this.lastX = -1e9 // re-evaluate the wanted chunks on the next update
     // The detail texture follows the profile (medium/high only): swap the material in place, geometry stays.
     if (this.shading && this.hasDetail !== (this.wantDetail && q.shadows)) {
@@ -430,8 +436,13 @@ export class TerrainChunks {
       }
     }
     if (!pos.length) return null
+    // Water depth per vertex (surface − ground; ≤ 0 on the bank fill → transparent shore).
+    const t = this.terrain
+    const depth = new Float32Array(pos.length / 3)
+    for (let k = 0; k < depth.length; k++) depth[k] = Math.max(0, pos[k * 3 + 1]! - t.heightAt(pos[k * 3]!, pos[k * 3 + 2]!))
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    g.setAttribute('aDepth', new THREE.BufferAttribute(depth, 1))
     g.computeVertexNormals()
     const m = new THREE.Mesh(g, this.waterMat)
     m.renderOrder = 1
