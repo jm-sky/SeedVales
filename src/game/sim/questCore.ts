@@ -10,9 +10,12 @@ import type { Sim } from './sim'
 import type { Actor, Animal, AuthoredQuestState, Building, Human, Inventory } from './types'
 import { START_CALENDAR_S } from '../config/calibration'
 import { Rng } from '../core/rng'
+import { itemDef } from '../data/items'
 import { giveOrDrop } from './actions'
-import { addItem, countItem, newStack, removeItem } from './inventory'
+import { logConsume, logMint, logProduce } from './eventLog'
+import { addItem, consumeItem, countItem, findFood, newStack, removeItem } from './inventory'
 import { makeHuman } from './newGame'
+import { holdUntil } from './questHold'
 import { addRep } from './reputation'
 import { dayIndex, hourOf, isNight } from './time'
 
@@ -20,9 +23,13 @@ export interface QuestCtx {
   sim: Sim
   def: QuestDef
   st: AuthoredQuestState
+  /** Read paths (UI, journal, markers) never write the saved anchor cache (review 014 #11). */
+  readOnly?: boolean
 }
 
 export const ctxOf = (sim: Sim, def: QuestDef, st: AuthoredQuestState): QuestCtx => ({ sim, def, st })
+/** Context for read paths: anchors resolved here live in a transient cache, never in the saved state. */
+export const readCtxOf = (sim: Sim, def: QuestDef, st: AuthoredQuestState): QuestCtx => ({ sim, def, st, readOnly: true })
 
 export const homeId = (sim: Sim) => sim.world.homeSettlement
 /** Game day since the start (1 = the first day). */
@@ -63,7 +70,7 @@ export function resolveNpcSlots(sim: Sim, def: QuestDef, st: AuthoredQuestState)
   for (const [slot, spec] of Object.entries(def.cast)) {
     if (spec.kind !== 'npc' || st.cast[slot] !== undefined) continue
     const list = sim.npcsOf(homeId(sim)).filter((n) => {
-      if (n.vitals.dead || n.questOwner || used.has(n.id) || n.householdId < 0) return false
+      if (n.vitals.dead || n.questOwner || n.companion || used.has(n.id) || n.householdId < 0) return false
       if (spec.profession && sim.state.households[n.householdId]?.profession !== spec.profession) return false
       return !spec.age || n.age === spec.age
     })
@@ -130,16 +137,34 @@ function roadPoint(sim: Sim, m: number): { x: number; z: number } | null {
   return null
 }
 
-/** Resolves an anchor once; results are cached in the quest state so evaluation never searches the world again. */
-export function resolveAnchor(c: QuestCtx, a: Anchor): { x: number; z: number; id?: string } | null {
+type Resolved = { x: number; z: number; id?: string }
+const anchorKeys = new WeakMap<Anchor, string>()
+const anchorKey = (a: Anchor): string => {
+  let k = anchorKeys.get(a)
+  if (k === undefined) anchorKeys.set(a, (k = JSON.stringify(a)))
+  return k
+}
+/** Anchors resolved by read paths (not saved; re-resolved after a load). */
+const transientAnchors = new WeakMap<AuthoredQuestState, Record<string, Resolved>>()
+
+/**
+ * Resolves an anchor once; the tick caches results in the quest state so evaluation never searches the world again.
+ * Read paths (`c.readOnly`) use a transient cache and never write saved state (review 014 #11).
+ */
+export function resolveAnchor(c: QuestCtx, a: Anchor): Resolved | null {
   if (a.k === 'actor') {
     const t = actorOf(c, a.slot)
     return t ? { x: t.x, z: t.z } : null
   }
   if (a.k === 'saved') return c.st.anchors[`saved:${a.id}`] ?? null
-  const key = JSON.stringify(a)
-  const hit = c.st.anchors[key]
-  if (hit) return hit
+  const key = anchorKey(a)
+  const saved = c.st.anchors[key]
+  if (saved) return saved
+  const seen = transientAnchors.get(c.st)?.[key]
+  if (seen) {
+    if (!c.readOnly) c.st.anchors[key] = seen // the tick persists what a read path resolved first
+    return seen
+  }
   let r: { x: number; z: number; id?: string } | null = null
   const sim = c.sim
   if (a.k === 'house') {
@@ -159,7 +184,13 @@ export function resolveAnchor(c: QuestCtx, a: Anchor): { x: number; z: number; i
     const b = nearest(sim.settlementBuildings(homeId(sim), a.kind), hs.x, hs.z)
     if (b) r = { x: b.x, z: b.z, id: b.id }
   } else r = roadPoint(sim, a.m)
-  if (r) c.st.anchors[key] = r
+  if (r) {
+    if (c.readOnly) {
+      let t = transientAnchors.get(c.st)
+      if (!t) transientAnchors.set(c.st, (t = {}))
+      t[key] = r
+    } else c.st.anchors[key] = r
+  }
   return r
 }
 
@@ -236,10 +267,13 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
     }
     case 'posts':
       return homePosts(sim) >= k.gte
-    case 'quest':
-      return k.in.includes(sim.state.authoredQuests[k.id]?.status ?? ('none' as never))
+    case 'quest': {
+      const o = sim.state.authoredQuests[k.id]
+      // `started`: the player really took the quest on (an ending of a quest nobody accepted does not count).
+      return !!o && k.in.includes(o.status) && (!k.started || o.startedAt !== undefined)
+    }
     case 'since': {
-      const t = k.from === 'offered' ? st.offeredAt : st.startedAt
+      const t = k.from === 'offered' ? st.offeredAt : k.from === 'stage' ? (st.stageAt ?? st.startedAt) : st.startedAt
       return t !== undefined && (sim.state.time.cal - t) / 3600 >= k.hours
     }
     case 'skill':
@@ -324,15 +358,18 @@ function resetAi(a: Actor) {
   a.ai.decideAt = 0
 }
 
-function setHold(c: QuestCtx, slot: SlotId, at: Anchor | undefined, snap: boolean) {
+function setHold(c: QuestCtx, slot: SlotId, e: Extract<Effect, { k: 'hold' }>) {
   const a = actorOf(c, slot)
   if (!a) return
-  const held = a.questHold
-  if (held && held.q !== c.def.id) return // another quest owns the hold
-  const pos = at ? resolveAnchor(c, at) : { x: a.x, z: a.z }
+  if (a.kind !== 'animal' && (a as Human).companion) return // a travelling companion is not held (review 014 #5)
+  const cal = c.sim.state.time.cal
+  const held = a.questHold && (a.questHold.until ?? 0) > cal ? a.questHold : undefined
+  if (held && held.q !== c.def.id) return // another quest owns the (still valid) hold
+  const pos = e.at ? resolveAnchor(c, e.at) : { x: a.x, z: a.z }
   if (!pos) return
+  const snap = !!e.snap
   const same = held && Math.hypot(held.x - pos.x, held.z - pos.z) < 0.5
-  a.questHold = { q: c.def.id, x: pos.x, z: pos.z }
+  a.questHold = { q: c.def.id, x: pos.x, z: pos.z, until: holdUntil(cal, e.hours, e.untilHour) }
   if (!same) resetAi(a)
   if (snap) {
     a.x = pos.x + 1.2
@@ -366,13 +403,43 @@ function spawnVisitor(c: QuestCtx, slot: SlotId) {
   h.householdId = -1
   h.kin = 'visitor'
   h.questOwner = c.def.id
+  // A visitor arrives from outside the simulated world: its purse and pack are an explicit external source (ledger).
   h.money = spec.money ?? 0
-  for (const it of spec.items) addItem(h.inv, newStack(it.item, it.qty))
+  if (h.money > 0) logMint(h.money, `quest:${c.def.id}:visitor`, h)
+  for (const it of spec.items) {
+    addItem(h.inv, newStack(it.item, it.qty))
+    logProduce(it.item, it.qty, `quest:${c.def.id}:visitor`, h)
+  }
   h.vitals.hunger = 55
   h.vitals.thirst = 70
   sim.addNpc(h)
   c.st.cast[slot] = h.id
-  h.questHold = { q: c.def.id, x, z }
+  // A visitor stays until the quest ends (at the latest its own timeout); `provisionVisitors` feeds it meanwhile.
+  h.questHold = { q: c.def.id, x, z, until: holdUntil(sim.state.time.cal, VISITOR_STAY_H) }
+}
+
+/** How long a visitor's hold is valid: longer than any quest timeout using one (G01 48 h). */
+const VISITOR_STAY_H = 96
+
+/**
+ * Provisions for the visitor's whole stay (review 014 #1): a declared external source — the wanderer carries what it
+ * needs from outside the simulated world. Bread is ledger-logged (`logProduce`); water is not a conserved item.
+ */
+export function provisionVisitors(c: QuestCtx) {
+  for (const [slot, spec] of Object.entries(c.def.cast)) {
+    if (spec.kind !== 'spawn') continue
+    const h = humanOf(c, slot)
+    if (!h || h.vitals.dead || h.questOwner !== c.def.id) continue
+    if (h.vitals.hunger < 50 && !findFood(h.inv)) {
+      addItem(h.inv, newStack('bread', 1))
+      logProduce('bread', 1, `quest:${c.def.id}:visitor-provision`, h)
+    }
+    if (h.vitals.thirst < 50 && !h.inv.items.some((s) => (s.water ?? 0) > 0)) {
+      const skin = h.inv.items.find((s) => itemDef(s.id).waterCapacity)
+      if (skin) skin.water = itemDef(skin.id).waterCapacity
+      else addItem(h.inv, newStack('waterskin_m', 1))
+    }
+  }
 }
 
 /** Removes a quest-owned actor; a visitor's belongings go to the home warehouse / treasury (never vanish). */
@@ -385,7 +452,10 @@ function despawn(c: QuestCtx, slot: SlotId) {
     const h = a as Human
     if (h.questOwner !== c.def.id) return
     const wh = sim.building(sim.state.settlements[homeId(sim)]?.warehouseId)
-    for (const s of h.inv.items) if (wh?.inv) addItem(wh.inv, s)
+    for (const s of h.inv.items) {
+      if (wh?.inv) addItem(wh.inv, s)
+      else logConsume(s.id, s.qty, `quest:${c.def.id}:visitor-left`, h)
+    }
     h.inv.items = []
     const t = sim.state.settlements[homeId(sim)]
     if (t) t.treasury += h.money
@@ -393,6 +463,15 @@ function despawn(c: QuestCtx, slot: SlotId) {
     sim.removeNpc(h)
   }
   c.st.cast[slot] = -1
+}
+
+/** Clears this quest's holds that ran out (the AI would do it at its next decision; this keeps the state honest). */
+export function expireHolds(c: QuestCtx) {
+  const cal = c.sim.state.time.cal
+  for (const id of Object.values(c.st.cast)) {
+    const a = id < 0 ? undefined : c.sim.actor(id)
+    if (a?.questHold?.q === c.def.id && (a.questHold.until ?? 0) <= cal) a.questHold = undefined
+  }
 }
 
 /** Ends every quest-owned primitive: holds, followers and spawned visitors. */
@@ -436,7 +515,7 @@ function applyEffect(c: QuestCtx, e: Effect) {
       break
     case 'consume': {
       const inv = invOf(c, e.from)
-      if (inv) removeItem(inv, e.item, e.qty)
+      if (inv) consumeItem(inv, e.item, e.qty, `quest:${c.def.id}`)
       break
     }
     case 'despawn':
@@ -458,7 +537,7 @@ function applyEffect(c: QuestCtx, e: Effect) {
       transferItems(c, e.from, e.to, e.item, e.qty)
       break
     case 'hold':
-      setHold(c, e.slot, e.at, !!e.snap)
+      setHold(c, e.slot, e)
       break
     case 'if':
       applyEffects(c, allOf(c, e.when) ? e.then : (e.else ?? []))
@@ -510,7 +589,10 @@ function applyEffect(c: QuestCtx, e: Effect) {
       spawnVisitor(c, e.slot)
       break
     case 'stage':
-      if (e.to > st.stage) st.stage = e.to
+      if (e.to > st.stage) {
+        st.stage = e.to
+        st.stageAt = sim.state.time.cal
+      }
       break
     case 'torch': {
       const pos = resolveAnchor(c, e.anchor)
@@ -540,7 +622,8 @@ export function endQuest(c: QuestCtx, endingId: string) {
   st.status = 'done'
   st.endedAt = sim.state.time.cal
   st.stage = Math.max(st.stage, def.stages.length - 1)
-  sim.message(`Quest completed: ${def.title}`, 'quest')
+  // A quest nobody accepted ends silently (review 014 #10).
+  if (st.startedAt !== undefined) sim.message(`Quest completed: ${def.title}`, 'quest')
   cleanup(c)
 }
 
@@ -551,6 +634,6 @@ export function lapseQuest(c: QuestCtx) {
   st.status = 'lapsed'
   st.endedAt = sim.state.time.cal
   if (def.lapse) applyEffects(c, def.lapse.effects)
-  sim.message(`Quest lapsed: ${def.title}`, 'quest')
+  if (st.startedAt !== undefined) sim.message(`Quest lapsed: ${def.title}`, 'quest')
   cleanup(c)
 }

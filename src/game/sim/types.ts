@@ -138,6 +138,11 @@ export interface QuestHold {
   q: QuestId
   x: number
   z: number
+  /**
+   * Calendar s at which the hold ends by itself (review 014 #1: every hold is bounded). A missing value (a hold written
+   * by an older build) counts as already expired.
+   */
+  until?: number
 }
 
 export type CompanionTask = 'escort' | 'guard'
@@ -393,6 +398,8 @@ export interface AuthoredQuestState {
   offeredAt: number
   startedAt?: number
   endedAt?: number
+  /** Calendar s of the last stage change (`since … from: 'stage'`); falls back to `startedAt`. */
+  stageAt?: number
   /** Cast slot → actor id, resolved once at offer time. */
   cast: Record<SlotId, number>
   /** Resolved anchors (cache key = JSON of the anchor spec). */

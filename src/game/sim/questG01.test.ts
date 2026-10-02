@@ -122,6 +122,14 @@ describe('QUEST-03 G01 Lost Lamb', () => {
     expect(say(sim, 'pi_ford').options.map((o) => o.id)).toContain('guard')
     const money = totalMoney(sim)
     choose(sim, 'g01', 'pi_ford', 'guard')
+    // Piers is still there for the narration node (review 014 #7); he leaves once the player has walked away.
+    expect(sim.human(piers.id)).toBeDefined()
+    expect(sayNode(sim, 'g01', 'pi_guard').lines).toHaveLength(1)
+    tickQuests(sim, 2)
+    expect(sim.human(piers.id)).toBeDefined()
+    sim.player.x += 30
+    sim.actors.update(sim.player)
+    tickQuests(sim, 2)
     expect(sim.human(piers.id)).toBeUndefined()
     bringHome(sim, 'home_guard', 'guard')
     expect(totalMoney(sim)).toBe(money)

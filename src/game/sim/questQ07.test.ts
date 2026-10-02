@@ -62,11 +62,14 @@ describe('QUEST-03 Q07 Six Bowls, One Pan', () => {
     const mark = castHuman(sim, 'q07', 'mark')
     expect(topicNode(sim, 'q07', mark.id)).toBe('m_gate')
     choose(sim, 'q07', 'm_gate', 'round')
+    // Mark is held only from 16:00 to midnight (review 014 #1): not yet in the morning, at once at dusk.
+    expect(mark.questHold).toBeUndefined()
+    setHour(sim, 17.5)
+    tickQuests(sim, 1)
     expect(mark.questHold?.q).toBe('q07')
     expect(topicNode(sim, 'q07', mark.id)).toBe('m_wait')
     // Not all posts lit yet: Mark stays on the settlement fire.
     const posts = sim.settlementBuildings(0, 'torchpost')
-    setHour(sim, 17.5)
     posts[0]!.lit = false
     runOption(sim, { type: 'building', id: posts[0]!.id }, 'light')
     runOption(sim, { type: 'building', id: posts[0]!.id }, 'douse')
@@ -156,6 +159,8 @@ describe('QUEST-03 Q07 Six Bowls, One Pan', () => {
     accept(sim)
     const mark = castHuman(sim, 'q07', 'mark')
     choose(sim, 'q07', 'm_gate', 'round')
+    setHour(sim, 17.5)
+    tickQuests(sim, 1)
     expect(heldActors(sim, 'q07')).toBe(1)
     hoursLater(sim, 97)
     tickQuests(sim)

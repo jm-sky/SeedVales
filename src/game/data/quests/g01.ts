@@ -37,7 +37,7 @@ export const G01: QuestDef = {
     piers: { kind: 'spawn', required: true, spawn: { name: 'Piers Walker', male: true, at: camp, items: [{ item: 'bread', qty: 2 }, { item: 'waterskin_m', qty: 1 }], money: 0 } },
   },
   start: [{ k: 'day', from: 1, to: 5 }, { k: 'not', of: { k: 'near', anchor: pen, r: 40 } }],
-  onOffer: [{ k: 'spawn', slot: 'piers' }, { k: 'hold', slot: 'pip', at: camp, snap: true }],
+  onOffer: [{ k: 'spawn', slot: 'piers' }, { k: 'hold', slot: 'pip', at: camp, snap: true, hours: 50 }],
   flags: { accepted: false, latch: false, witness: false, prints: false, misreadWolf: false, askedMark: false, resolved: 'none', piersWork: false },
   stages: [
     { id: 'rumour', journal: '{molly} found her pen latch lifted and her lamb Pip gone. Talk to her.', anchor: { k: 'actor', slot: 'molly' } },
@@ -112,7 +112,7 @@ export const G01: QuestDef = {
       lines: [say('piers', 'Morning. You\'ll be from {H}? I found this one wandering on the road at dawn. Thought I\'d keep her safe till someone came asking. Feeding her\'s cost me, mind — a finder\'s fee wouldn\'t be out of place.')],
       options: [
         opt('evidence', 'Molly\'s latch was lifted, not broken. Mark saw you on the road with her on a cord. And your boot prints are next to her hoof prints all the way from the pen.', takePip('evidence'), { when: [leads2], next: 'pi_evidence' }),
-        opt('guard', 'Mark\'s on his way. You can explain it to him.', [...takePip('guard'), { k: 'despawn', slot: 'piers' }], { when: [flag('askedMark'), leads2], next: 'pi_guard' }),
+        opt('guard', 'Mark\'s on his way. You can explain it to him.', [...takePip('guard')], { when: [flag('askedMark'), leads2], next: 'pi_guard' }),
         opt('paid', 'Here\'s your fee. Ten coppers.', [{ k: 'pay', from: 'player', to: { purse: 'piers' }, amount: 10 }, ...takePip('paid')], { needs: [{ k: 'money', gte: 10 }], reason: 'You don\'t have 10 c.', next: 'pi_paid' }),
         opt('where', 'Where exactly did you find her?', [], { next: 'pi_where' }),
       ],
@@ -157,6 +157,8 @@ export const G01: QuestDef = {
   ],
   counters: [],
   rules: [
+    // Mark walks Piers off: Piers leaves once the player has walked away from him (never mid-dialog, review 014 #7).
+    { id: 'piersLeaves', once: 'always', when: [flag('resolved', 'guard'), { k: 'not', of: { k: 'near', slot: 'piers', r: 8 } }], effects: [{ k: 'despawn', slot: 'piers' }] },
     { id: 'sold', phase: 'both', when: [{ k: 'since', hours: 48, from: 'offered' }, stageLt(3)], effects: [{ k: 'end', ending: 'sold' }] },
   ],
   endings: [

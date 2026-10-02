@@ -6,6 +6,7 @@ import { repairBuilding } from './actions'
 import { placeSite } from './build'
 import { applyBuildProgress } from './build'
 import { addItem, countItem, newStack } from './inventory'
+import { questChoose } from './questDialog'
 import { castHuman, choose, heldActors, houseOfNpc, itemTotal, stateOf, tickQuests, topicNode } from './questTestKit'
 import { testSim } from './testWorld'
 import { totalMoney } from './treasury'
@@ -100,9 +101,13 @@ describe('QUEST-03 Q03 A Roof Before Rain', () => {
     expect(itemTotal(sim, 'branch')).toBe(branches)
     expect(miles.opinion).toBe(op0 + 15)
     expect(heldActors(sim, 'q03')).toBe(0)
-    // A second ending is ignored (exclusive endings).
-    choose(sim, 'q03', 'l_done', 'take_coin_repair')
+    // The quest is settled: a replayed thank-you option is refused and pays nothing (review 014 #3).
+    const purse = sim.player.money
+    expect(questChoose(sim, 'q03', 'l_done', 'take_coin_repair')).toBeNull()
+    expect(questChoose(sim, 'q03', 'l_done', 'take_goods_repair')).toBeNull()
     expect(st.ending).toBe('repair')
+    expect(itemTotal(sim, 'bread')).toBe(bread)
+    expect(sim.player.money).toBe(purse)
   })
 
   it('QUEST-03 Q03 E1: the coin option pays 10 c from Miles\'s purse (partial when short)', () => {

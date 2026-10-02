@@ -10,7 +10,7 @@ import { COMPANION, FIRE, RUN_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { isSettlementHearth } from '../fire'
 import { countItem, findFood } from '../inventory'
-import { holdOptions } from '../questHold'
+import { activeHold, criticalNeed, holdOptions, leashOptions } from '../questHold'
 import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
 import { isBadWeather } from '../weather'
@@ -76,8 +76,10 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       })
     }
   }
-  // Authored quest hold: safety, eating/drinking from the pack, otherwise wait at the spot (no duties).
-  if (h.questHold) return holdOptions(h, opts)
+  // Authored quest hold (bounded, review 014 #1): safety, eating/drinking from the pack, otherwise wait at the spot (no
+  // duties). A critical need lifts it: the NPC eats/drinks/sleeps the normal way and returns while the hold is valid.
+  const hold = activeHold(h, cal)
+  if (hold && !criticalNeed(h)) return holdOptions(h, hold, opts)
   // Help downed neighbours (guards always; agreeable armed adults sometimes).
   const downed = sim.actors.query(h.x, h.z, 150).find((o): o is Human => o.kind === 'npc' && o !== h && !!o.vitals.ko && !o.vitals.dead && (o as Human).callForHelpAt !== undefined)
   if (downed && h.age === 'adult') {
@@ -213,5 +215,5 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       return { label: 'Resting', steps: [go(door.x + Math.cos(a) * r, door.z + Math.sin(a) * r, 1), work('rest', 20 + sim.rng.next() * 30, 'Resting')] }
     },
   })
-  return opts
+  return hold ? leashOptions(hold, opts) : opts
 }

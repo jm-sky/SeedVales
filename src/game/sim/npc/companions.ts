@@ -15,6 +15,7 @@ import { isDown } from '../combat'
 import { logMoney } from '../eventLog'
 import { addItem, findFood, removeStack, wearBetterArmor, wieldBest } from '../inventory'
 import { steerTo } from '../movement'
+import { activeHold } from '../questHold'
 import { dayIndex } from '../time'
 import { penalty } from '../vitals'
 import { houseOf } from './queries'
@@ -51,7 +52,7 @@ export const hirePrice = (npc: Human, task: CompanionTask, risk: CompanionRisk, 
 function unavailable(sim: Sim, npc: Human): string | null {
   if (npc.vitals.dead || isDown(sim, npc)) return `${npc.name} is in no state to travel.`
   if (npc.companion) return `${npc.name} is already travelling with you.`
-  if (npc.questOwner) return `${npc.name} has business of their own.`
+  if (npc.questOwner || activeHold(npc, sim.state.time.cal)) return `${npc.name} has business of their own.`
   if (npc.age === 'child') return 'A child cannot go with you.'
   if (npc.age === 'elder') return `${npc.name} is too old for the road.`
   if (npc.trip) return `${npc.name} is away with the caravan.`

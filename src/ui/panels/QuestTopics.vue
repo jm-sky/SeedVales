@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 
@@ -7,6 +7,8 @@ import { useGameStrict } from '@/composables/useGame'
 const props = defineProps<{ npcId: number }>()
 const { game, version } = useGameStrict()
 const open = ref<{ questId: string; nodeId: string } | null>(null)
+// A different NPC must not show the previous NPC's open quest node.
+watch(() => props.npcId, () => (open.value = null))
 
 const topics = computed(() => {
   void version.value

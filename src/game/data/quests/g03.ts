@@ -52,7 +52,7 @@ export const G03: QuestDef = {
       lines: [
         say('martha', 'Soot on our stool. And a cup from my shelf with black on the rim. (she sits down heavily) Hazel. It\'s Hazel, isn\'t it. She hasn\'t slept right since Patch.'),
       ],
-      options: [opt('talk_gently', 'I\'d like to talk to her. Gently.', [stage(2), { k: 'hold', slot: 'hazel', at: { k: 'house', slot: 'hazel' } }], { next: 'ma_morning_b' })],
+      options: [opt('talk_gently', 'I\'d like to talk to her. Gently.', [stage(2), { k: 'hold', slot: 'hazel', at: { k: 'house', slot: 'hazel' }, hours: 3 }], { next: 'ma_morning_b' })],
     },
     ma_morning_b: {
       lines: [say('martha', 'Please. And — not in front of the square. Jacob\'s out every night after that wolf. I can\'t do this one alone too.')],
@@ -86,7 +86,7 @@ export const G03: QuestDef = {
         say('hazel', '(after a while) Patch was in the dark bit. By the woodpile. The lamp was on the other side.'),
         say('mark', '(gently) Then the lamp wasn\'t what found him, was it.'),
       ],
-      options: [opt('let_sink', 'Say nothing and let it sink in.', [stage(3), { k: 'release', slot: 'hazel' }])],
+      options: [opt('let_sink', 'Say nothing and let it sink in.', [stage(3), { k: 'release', slot: 'hazel' }, { k: 'release', slot: 'mark' }])],
     },
     // Stage 3 — Mark closes it.
     m_close: {
@@ -121,7 +121,7 @@ export const G03: QuestDef = {
       r: 12,
       dwellS: 40,
       when: [stageIs(1), flag('mode', 'watch'), { k: 'hour', night: true }],
-      effects: [stage(2), { k: 'torch', anchor: post, lit: false }, { k: 'hold', slot: 'hazel', at: post, snap: true }, message('A small shape climbs the torch post by the hunter\'s house. It is Hazel. Talk to her.')],
+      effects: [stage(2), { k: 'torch', anchor: post, lit: false }, { k: 'hold', slot: 'hazel', at: post, snap: true, untilHour: 6 }, message('A small shape climbs the torch post by the hunter\'s house. It is Hazel. Talk to her.')],
     },
     {
       id: 'alone',
@@ -129,15 +129,32 @@ export const G03: QuestDef = {
       r: 12,
       dwellS: 40,
       when: [stageIs(1), flag('mode', 'alone'), { k: 'hour', night: true }, { k: 'sneaking' }],
-      effects: [stage(2), { k: 'torch', anchor: post, lit: false }, { k: 'hold', slot: 'hazel', at: post, snap: true }, message('A small shape climbs the torch post by the hunter\'s house. It is Hazel. Talk to her.')],
+      effects: [stage(2), { k: 'torch', anchor: post, lit: false }, { k: 'hold', slot: 'hazel', at: post, snap: true, untilHour: 6 }, message('A small shape climbs the torch post by the hunter\'s house. It is Hazel. Talk to her.')],
     },
   ],
   counters: [],
   rules: [
     { id: 'snuff', phase: 'both', once: 'day', when: [stageLt(2), { k: 'hour', from: 23, to: 24 }], effects: [{ k: 'torch', anchor: post, lit: false }, set('lastSnuff', 'today')] },
-    { id: 'markSolves', phase: 'both', when: [{ k: 'since', hours: 240, from: 'offered' }, stageLt(2)], effects: [{ k: 'end', ending: 'markSolved' }] },
-    { id: 'showHold', once: 'always', when: [flag('path', 'show'), stageIs(2), dusk], effects: [{ k: 'hold', slot: 'hazel', at: post }] },
-    { id: 'showRelease', once: 'always', when: [flag('path', 'show'), stageIs(2), { k: 'not', of: dusk }], effects: [{ k: 'release', slot: 'hazel' }] },
+    // Every path ends without the player (review 014 #2): 9 days to find the culprit, 36 h to talk to her, 12 h to close.
+    { id: 'markSolves', phase: 'both', when: [{ k: 'since', hours: 216, from: 'offered' }, stageLt(2)], effects: [{ k: 'end', ending: 'markSolved' }] },
+    { id: 'markSolvesLate', when: [stageIs(2), { k: 'since', hours: 36, from: 'stage' }], effects: [{ k: 'end', ending: 'markSolved' }] },
+    {
+      id: 'autoClose',
+      when: [stageIs(3), { k: 'since', hours: 12, from: 'stage' }],
+      effects: [
+        { k: 'if', when: [flag('path', 'together')], then: [{ k: 'end', ending: 'together' }] },
+        { k: 'if', when: [flag('path', 'show')], then: [{ k: 'end', ending: 'show' }] },
+        { k: 'if', when: [flag('path', 'tell')], then: [{ k: 'end', ending: 'tell' }] },
+      ],
+    },
+    // The dusk scene does not depend on Mark's patrol: at dusk the quest calls him (and Hazel) to the post until 22:00.
+    // When Mark is busy with another quest the hold is refused and the scene waits for the next dusk.
+    {
+      id: 'showScene',
+      once: 'always',
+      when: [flag('path', 'show'), stageIs(2), dusk],
+      effects: [{ k: 'hold', slot: 'mark', at: post, untilHour: 22 }, { k: 'hold', slot: 'hazel', at: post, untilHour: 22 }],
+    },
   ],
   endings: [
     {

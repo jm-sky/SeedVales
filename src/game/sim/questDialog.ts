@@ -8,7 +8,7 @@ import type { QuestDef } from '../data/quests/types'
 import type { Sim } from './sim'
 import type { AuthoredQuestState } from './types'
 import { isExplored } from './navigation'
-import { allOf, applyEffects, ctxOf, firstName, homeId, humanOf, type QuestCtx, resolveAnchor } from './questCore'
+import { allOf, applyEffects, ctxOf, firstName, homeId, humanOf, type QuestCtx, readCtxOf, resolveAnchor } from './questCore'
 import { questDef, questDefs } from './questEngine'
 
 export interface QuestTopic {
@@ -66,7 +66,7 @@ export function questTopics(sim: Sim, npcId: number): QuestTopic[] {
   for (const def of questDefs(sim)) {
     const st = sim.state.authoredQuests[def.id]
     if (!st) continue
-    const c = ctxOf(sim, def, st)
+    const c = readCtxOf(sim, def, st)
     const t = def.topics.find((tp) => st.cast[tp.slot] === npcId && talkable(st, !!tp.done) && allOf(c, tp.when))
     if (t) out.push({ questId: def.id, label: t.label, node: t.node })
   }
@@ -98,7 +98,7 @@ export function questSay(sim: Sim, questId: string, nodeId: string): QuestSay | 
   const st = sim.state.authoredQuests[questId]
   const node = def?.nodes[nodeId]
   if (!def || !st || !node) return null
-  const c = ctxOf(sim, def, st)
+  const c = readCtxOf(sim, def, st)
   const ph = placeholders(c)
   const lines = node.lines
     .filter((l) => allOf(c, l.when))
@@ -112,6 +112,20 @@ export function questSay(sim: Sim, questId: string, nodeId: string): QuestSay | 
   return { title: def.title, lines, options }
 }
 
+/** Nodes the quest can be in right now: those of the currently valid topics plus everything their options lead to. */
+function reachable(c: QuestCtx): Set<string> {
+  const { def, st } = c
+  const seen = new Set<string>()
+  const todo = def.topics.filter((tp) => talkable(st, !!tp.done) && allOf(c, tp.when)).map((tp) => tp.node)
+  while (todo.length) {
+    const id = todo.pop()!
+    if (seen.has(id)) continue
+    seen.add(id)
+    for (const o of def.nodes[id]?.options ?? []) if (o.next) todo.push(o.next)
+  }
+  return seen
+}
+
 /** Applies the effects of an enabled option; returns the follow-up node (if any). */
 export function questChoose(sim: Sim, questId: string, nodeId: string, optionId: string): QuestChooseResult | null {
   const def = questDef(sim, questId)
@@ -119,6 +133,9 @@ export function questChoose(sim: Sim, questId: string, nodeId: string, optionId:
   const opt = def?.nodes[nodeId]?.options.find((o) => o.id === optionId)
   if (!def || !st || !opt) return null
   const c = ctxOf(sim, def, st)
+  // Only a node the current topics can reach, and only while the quest is still talkable (review 014 #3): a stale
+  // open dialog or a scripted call cannot replay an option (and its reward) of a settled quest.
+  if (!reachable(c).has(nodeId)) return null
   if (!allOf(c, opt.when) || !allOf(c, opt.needs)) return null
   applyEffects(c, opt.effects)
   return { next: opt.next }
@@ -130,7 +147,8 @@ export function questJournal(sim: Sim): JournalEntry[] {
   for (const def of questDefs(sim)) {
     const st = sim.state.authoredQuests[def.id]
     if (!st) continue
-    const ph = placeholders(ctxOf(sim, def, st))
+    if ((st.status === 'done' || st.status === 'lapsed') && st.startedAt === undefined) continue // never accepted: no journal entry
+    const ph = placeholders(readCtxOf(sim, def, st))
     out.push({ id: def.id, title: def.title, status: st.status, text: fill(journalText(def, st), ph), decision: st.choice ? def.choiceLabels?.[st.choice] : undefined })
   }
   return out
@@ -148,7 +166,7 @@ export function questMarkers(sim: Sim): QuestMarker[] {
   for (const def of questDefs(sim)) {
     const st = sim.state.authoredQuests[def.id]
     if (st?.status !== 'active') continue
-    const c = ctxOf(sim, def, st)
+    const c = readCtxOf(sim, def, st)
     const anchor = def.stages[st.stage]?.anchor
     const pos = anchor ? resolveAnchor(c, anchor) : resolveAnchor(c, { k: 'actor', slot: def.giver })
     if (pos && isExplored(sim, pos.x, pos.z)) out.push({ questId: def.id, title: def.title, x: pos.x, z: pos.z })

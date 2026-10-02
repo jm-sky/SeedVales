@@ -3,7 +3,7 @@
  * Dialog lines are the design doc's; deviations are listed in the doc's "Implementation notes".
  * @domain quests
  */
-import type { QuestDef } from './types'
+import type { Effect, QuestDef } from './types'
 import { alive, flag, flagNot, message, opinion, opt, say, sayIf, set, stage, stageGte, stageLt } from './dsl'
 
 const house = { k: 'house', slot: 'miles' } as const
@@ -14,12 +14,14 @@ const everyone = ['miles', 'lucy', 'joan', 'matthew'] as const
 
 /** Lucy's thanks: bread and milk (the design's cheese does not exist) from her household or 10 c from Miles's purse. */
 const payOptions = (ending: string) => [
-  opt(`take_goods_${ending}`, 'Take the bread and milk.', [
-    { k: 'give', from: milesStore, to: 'player', item: 'bread', qty: 2 },
-    { k: 'give', from: milesStore, to: 'player', item: 'milk', qty: 1 },
-    { k: 'end', ending },
-  ]),
-  opt(`take_coin_${ending}`, 'Take 10 c.', [{ k: 'pay', from: { purse: 'miles' }, to: 'player', amount: 10 }, { k: 'end', ending }]),
+  opt(`take_goods_${ending}`, 'Take the bread and milk.', [set('thanks', 'goods'), { k: 'end', ending }]),
+  opt(`take_coin_${ending}`, 'Take 10 c.', [set('thanks', 'coin'), { k: 'end', ending }]),
+]
+
+/** The thanks themselves are paid by the (exclusive) ending, so a repeated call cannot pay twice (review 014 #3). */
+const thanks: Effect[] = [
+  { k: 'if', when: [flag('thanks', 'goods')], then: [{ k: 'give', from: milesStore, to: 'player', item: 'bread', qty: 2 }, { k: 'give', from: milesStore, to: 'player', item: 'milk', qty: 1 }] },
+  { k: 'if', when: [flag('thanks', 'coin')], then: [{ k: 'pay', from: { purse: 'miles' }, to: 'player', amount: 10 }] },
 ]
 
 export const Q03: QuestDef = {
@@ -34,7 +36,7 @@ export const Q03: QuestDef = {
     ralph: { kind: 'npc', required: true, profession: 'farmer', kin: ['head'] },
   },
   start: [{ k: 'durability', slot: 'miles', lt: 60 }],
-  flags: { accepted: false, beamInspected: false, cupboardHeard: false, plan: 'unset', storeGranted: false, storeDebt: false, workComplete: false, propped: false },
+  flags: { accepted: false, beamInspected: false, cupboardHeard: false, plan: 'unset', storeGranted: false, storeDebt: false, workComplete: false, propped: false, thanks: 'none' },
   stages: [
     { id: 'rumour', journal: '{miles} has been patching the roof of the house for months and is up on the ladder again. Talk to him.', anchor: { k: 'actor', slot: 'miles' } },
     { id: 'measure', journal: 'Judge the damage: climb into the loft of {miles}\'s house with a lit torch (hold a torch and stand by the house). Listen to the household: {lucy} by the hearth, {joan} in her room.', anchor: house },
@@ -154,8 +156,8 @@ export const Q03: QuestDef = {
       lines: [
         sayIf('joan', 'The bowl\'s empty.', flag('plan', 'repair')),
         say('miles', 'The roof isn\'t. Mostly.', flag('plan', 'repair')),
-        say('lucy', 'We still owe the store two beams.', flag('plan', 'repair'), flag('storeDebt')),
-        say('player', 'I\'ll help bring them back.', flag('plan', 'repair'), flag('storeDebt')),
+        say('lucy', 'The store has its two beams back, out of our own woodpile. We\'ll be short of firewood by spring.', flag('plan', 'repair'), flag('storeDebt')),
+        say('player', 'I\'ll help you split what\'s left.', flag('plan', 'repair'), flag('storeDebt')),
         say('miles', 'You\'ll be welcome. Don\'t let me call it a favour — I\'ll owe you a load of firewood.', flag('plan', 'repair')),
         say('lucy', 'It\'s small.', flag('plan', 'lean_to')),
         sayIf('joan', 'So was the old room, once the cupboard moved in.', flag('plan', 'lean_to')),
@@ -206,7 +208,7 @@ export const Q03: QuestDef = {
       ],
     },
     r_lend: { lines: [say('ralph', 'And if the herbalist\'s roof goes in a month? I\'ll lend, not give. That\'s the best I\'ve got.')], options: [] },
-    r_have: { lines: [say('ralph', 'The beams are with Miles. See that they come back before the first snow.')], options: [] },
+    r_have: { lines: [say('ralph', 'The beams are with Miles. When the roof is done he squares the store from his own woodpile.')], options: [] },
   },
   topics: [
     { slot: 'lucy', node: 'l_done', label: 'The work is done', when: [flag('workComplete')] },
@@ -251,9 +253,10 @@ export const Q03: QuestDef = {
   endings: [
     {
       id: 'repair',
-      journal: 'The old house holds. The beam was replaced and Joan sleeps in her own room again; Miles owes the common store two beams and you a load of firewood.',
+      journal: 'The old house holds. The beam was replaced and Joan sleeps in her own room again; Miles repaid the common store its two beams from his own woodpile and owes you a load of firewood.',
       effects: [
         ...everyone.map((s) => opinion(s, 15)),
+        ...thanks,
         { k: 'consume', from: milesStore, item: 'log', qty: 2 },
         { k: 'if', when: [flag('storeDebt')], then: [{ k: 'give', from: milesStore, to: { warehouse: 'home' }, item: 'log', qty: 2 }] },
         { k: 'give', from: milesStore, to: 'player', item: 'branch', qty: 6 },
@@ -263,7 +266,7 @@ export const Q03: QuestDef = {
     {
       id: 'lean_to',
       journal: 'A smaller dry room stands beside the house. The old room is shut; the old roof is still bad.',
-      effects: [...everyone.map((s) => opinion(s, 10)), { k: 'owner', anchor: { k: 'saved', id: 'leanTo' }, to: 'miles' }, { k: 'rep', delta: { helpfulness: 3 }, reason: 'You helped build a dry room' }],
+      effects: [...everyone.map((s) => opinion(s, 10)), ...thanks, { k: 'owner', anchor: { k: 'saved', id: 'leanTo' }, to: 'miles' }, { k: 'rep', delta: { helpfulness: 3 }, reason: 'You helped build a dry room' }],
     },
     {
       id: 'prop',

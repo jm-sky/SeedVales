@@ -110,7 +110,7 @@ describe('QUEST-03 engine: stage machine and endings', () => {
   })
 
   it('QUEST-03 ending: exclusive — a second `end` is a no-op and its effects are not applied', () => {
-    const sim = withDef(baseDef())
+    const sim = withDef(baseDef({ topics: [{ slot: 'a', node: 'n', label: 'Talk', done: true }] })) // still talkable when done
     choose(sim, 'tq', 'n', 'forward')
     choose(sim, 'tq', 'n', 'e1')
     expect(stateOf(sim, 'tq')).toMatchObject({ status: 'done', ending: 'e1', settled: true })
@@ -122,7 +122,7 @@ describe('QUEST-03 engine: stage machine and endings', () => {
   })
 
   it('QUEST-03 choice: changeable until the quest is settled, frozen after', () => {
-    const sim = withDef(baseDef())
+    const sim = withDef(baseDef({ topics: [{ slot: 'a', node: 'n', label: 'Talk', done: true }] }))
     choose(sim, 'tq', 'n', 'forward')
     choose(sim, 'tq', 'n', 'ca')
     expect(stateOf(sim, 'tq')).toMatchObject({ choice: 'a' })
@@ -327,14 +327,15 @@ describe('QUEST-03 save format', () => {
     for (const id of ['q03', 'q07', 'g03', 'g01']) expect(stateOf(sim, id)?.status, id).toBe('offered')
     choose(sim, 'q03', 'm_open', 'show_damage')
     choose(sim, 'q07', 'l_open', 'accept')
-    choose(sim, 'q07', 'm_gate', 'round') // holds Mark
+    choose(sim, 'q07', 'm_gate', 'round') // holds Mark for the dusk window (17:30 now)
+    tickQuests(sim, 1)
     choose(sim, 'g03', 'm_open', 'watch')
     choose(sim, 'g01', 'mo_open', 'help')
     const piers = sim.state.npcs.find((n) => n.questOwner === 'g01')!
     const pip = sim.state.animals.find((a) => a.questHold?.q === 'g01')!
     pip.questFollow = sim.player.id
     pip.questHold = undefined
-    piers.questHold = { q: 'g01', x: piers.x, z: piers.z }
+    piers.questHold = { q: 'g01', x: piers.x, z: piers.z, until: sim.state.time.cal + 3600 }
     const held = heldActors(sim)
     expect(held).toBeGreaterThanOrEqual(3)
     const copy = roundTrip(sim)

@@ -64,10 +64,10 @@ export type Cond =
   /** The player holds a (burning) torch in the off hand. */
   | { k: 'litTorch' }
   | { k: 'sneaking' }
-  /** Another authored quest has one of these statuses. */
-  | { k: 'quest'; id: QuestId; in: QuestStatusId[] }
+  /** Another authored quest has one of these statuses (`started`: and the player had accepted it). */
+  | { k: 'quest'; id: QuestId; in: QuestStatusId[]; started?: boolean }
   /** Calendar hours since the quest was offered / accepted. */
-  | { k: 'since'; hours: number; from: 'offered' | 'started' }
+  | { k: 'since'; hours: number; from: 'offered' | 'started' | 'stage' }
   | { k: 'all'; of: Cond[] }
   | { k: 'any'; of: Cond[] }
   | { k: 'not'; of: Cond }
@@ -91,8 +91,11 @@ export type Effect =
   | { k: 'need'; slots: SlotId[]; social: number }
   | { k: 'message'; text: string; kind?: 'info' | 'good' | 'bad' | 'quest' }
   | { k: 'torch'; anchor: Anchor; lit: boolean }
-  /** `at` defaults to the actor's own position; `snap` moves the actor there at once. */
-  | { k: 'hold'; slot: SlotId; at?: Anchor; snap?: boolean }
+  /**
+   * `at` defaults to the actor's own position; `snap` moves the actor there at once. Every hold is bounded
+   * (review 014 #1): it ends at the next `untilHour` o'clock (0..24), else after `hours` calendar hours (default 3).
+   */
+  | { k: 'hold'; slot: SlotId; at?: Anchor; snap?: boolean; hours?: number; untilHour?: number }
   | { k: 'release'; slot: SlotId }
   | { k: 'follow'; slot: SlotId; target: 'player' | SlotId }
   | { k: 'unfollow'; slot: SlotId }
@@ -174,7 +177,10 @@ export interface Observation {
 
 export interface Counter {
   id: string
-  on: QuestEventKind
+  /** `visit` is ticked by the engine: the player passing within `visit.r` m of a matching building (see `visit`). */
+  on: QuestEventKind | 'visit'
+  /** `on: 'visit'`: counts each home building of `kind` once when the player is within `r` m (and, with `lit`, it is lit). */
+  visit?: { kind: StructureKind; r: number; lit?: boolean }
   /** `n` adds the event amount (roast pieces) instead of 1. */
   weight?: 'n'
   match?: {

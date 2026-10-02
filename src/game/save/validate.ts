@@ -22,6 +22,38 @@ function humanOk(h: unknown): boolean {
   return actorOk(h) && obj((h as Record<string, unknown>).inv) && Array.isArray(((h as Record<string, unknown>).inv as Record<string, unknown>).items)
 }
 
+const STATUSES = new Set(['active', 'done', 'lapsed', 'offered', 'refused'])
+const isRecord = (v: unknown, each: (x: unknown) => boolean) => obj(v) && Object.values(v).every(each)
+
+/** One authored quest state (review 014 #8): the engine reads every one of these on the first tick. */
+function questStateOk(q: unknown): boolean {
+  if (!obj(q)) return false
+  return (
+    typeof q.status === 'string' &&
+    STATUSES.has(q.status) &&
+    num(q.stage) &&
+    typeof q.settled === 'boolean' &&
+    num(q.offeredAt) &&
+    (q.startedAt === undefined || num(q.startedAt)) &&
+    (q.stageAt === undefined || num(q.stageAt)) &&
+    isRecord(q.flags, (x) => ['boolean', 'number', 'string'].includes(typeof x)) &&
+    isRecord(q.cast, num) &&
+    isRecord(q.anchors, (a) => obj(a) && num(a.x) && num(a.z)) &&
+    isRecord(q.obs, num) &&
+    isRecord(q.counters, num) &&
+    isRecord(q.seen, (a) => Array.isArray(a) && a.every((x) => typeof x === 'string')) &&
+    isRecord(q.fired, num)
+  )
+}
+
+/** `questHold`: `{q, x, z, until?}` when present; `questFollow`: an actor id. */
+function questFieldsOk(a: unknown): boolean {
+  if (!obj(a)) return false
+  const h = a.questHold
+  if (h !== undefined && !(obj(h) && typeof h.q === 'string' && num(h.x) && num(h.z) && (h.until === undefined || num(h.until)))) return false
+  return a.questFollow === undefined || num(a.questFollow)
+}
+
 /** Throws SaveError('…corrupted…') naming the first broken field. */
 export function assertSaveShape(st: unknown): asserts st is GameState {
   const bad = (what: string): never => {
@@ -36,6 +68,8 @@ export function assertSaveShape(st: unknown): asserts st is GameState {
   if (!humanOk(s.player)) bad('player')
   if (!(s.npcs as unknown[]).every(humanOk)) bad('npcs')
   if (!(s.animals as unknown[]).every(actorOk)) bad('animals')
+  if (!(s.npcs as unknown[]).every(questFieldsOk) || !(s.animals as unknown[]).every(questFieldsOk)) bad('quest hold')
+  if (!Object.values(s.authoredQuests as Record<string, unknown>).every(questStateOk)) bad('authoredQuests')
   for (const k of ['buildings', 'settlements', 'households'] as const) if (!(s[k] as unknown[]).every(obj)) bad(k)
   for (const v of Object.values(s.terrainEdits as Record<string, unknown>)) {
     if (!Array.isArray(v) || v.length !== EDIT_N * EDIT_N || !v.every(num)) bad('terrainEdits')

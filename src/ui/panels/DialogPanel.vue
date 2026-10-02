@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
@@ -24,6 +24,10 @@ const d = computed(() => {
   const wish = want && n.opinion > -30 ? `I've been hoping to get ${itemDef(want).name.toLowerCase()}.` : ''
   const comp = n.companion ? (n.companion.kind === 'hired' ? 'Travelling with you (hired).' : 'Travelling with you.') : ''
   return { wish, comp, n, title: `${n.name} — ${professionName(n.profession) || (n.age === 'child' ? 'child' : n.age === 'elder' ? 'elder' : 'villager')}`, traits, mood, activity: n.ai.label, quests }
+})
+// The NPC can vanish while the dialog is open (a quest despawns it): close the empty panel (review 014 #7).
+watch(d, (v) => {
+  if (!v && game.value.panel === 'dialog') game.value.closePanel()
 })
 </script>
 

@@ -38,11 +38,11 @@ export const Q07: QuestDef = {
     mark: { kind: 'npc', required: true, profession: 'guard', kin: ['head'] },
     luke: { kind: 'npc', required: false, profession: 'shepherd', kin: ['son', 'child'], fallbackName: 'a young man' },
   },
-  start: [{ k: 'any', of: [{ k: 'quest', id: 'q03', in: ['done'] }, { k: 'opinion', slot: 'lucy', gte: 10 }] }],
-  flags: { accepted: false, freshnessChecked: false, roundAccepted: false, markCovered: false, cooked: false, guests: 'unset', markTorches: false, torchDay: 0 },
+  start: [{ k: 'any', of: [{ k: 'quest', id: 'q03', in: ['done'], started: true }, { k: 'opinion', slot: 'lucy', gte: 10 }] }],
+  flags: { accepted: false, freshnessChecked: false, roundAccepted: false, markCovered: false, cooked: false, guests: 'unset', markTorches: false, torchDay: 0, roundDay: 0 },
   stages: [
     { id: 'rumour', journal: '{lucy} wants one proper meal for the whole house after a week of felling. Talk to her.', anchor: { k: 'actor', slot: 'lucy' } },
-    { id: 'prepare', journal: 'Get the meal ready: look at the meat in {lucy}\'s food chest, roast at least 4 pieces at a campfire (a pan roasts 2 at a time), and, if you want {mark} at the table, walk his dusk round and light every torch post. Then tell {lucy}.', anchor: { k: 'actor', slot: 'lucy' } },
+    { id: 'prepare', journal: 'Get the meal ready: look at the meat in {lucy}\'s food chest, roast at least 4 pieces at a campfire (a pan roasts 2 at a time), and, if you want {mark} at the table, walk his dusk round (after 16:00, he waits by the fire while you do): visit every torch post in the settlement and light the ones that are dark. Then tell {lucy}.', anchor: { k: 'actor', slot: 'lucy' } },
     { id: 'table', journal: 'The meat is roasted. Tell {lucy} how the meal should be served: one table, two sittings, or on the doorstep.', anchor: { k: 'actor', slot: 'lucy' } },
   ],
   choiceLabels: { together: 'One table, everyone together', shifts: 'Two sittings', doorstep: 'On the doorstep' },
@@ -130,7 +130,7 @@ export const Q07: QuestDef = {
         say('mark', 'Long enough to burn my tongue.'),
       ],
       options: [
-        opt('round', 'I\'ll walk the dusk round for you. You eat with everyone.', [set('roundAccepted'), { k: 'hold', slot: 'mark', at: { k: 'settlement', kind: 'campfire' } }], { next: 'm_gate_a' }),
+        opt('round', 'I\'ll walk the dusk round for you. You eat with everyone.', [set('roundAccepted'), set('roundDay', 'today')], { next: 'm_gate_a' }),
         opt('eat_first', 'Eat first, go after. We\'ll keep a bowl hot for later.', [], { next: 'm_gate_b' }),
         opt('by_door', 'We\'ll eat by the door, so you can come and go.', [], { next: 'm_gate_c' }),
       ],
@@ -139,12 +139,12 @@ export const Q07: QuestDef = {
     m_gate_b: { lines: [say('mark', 'That I can manage.')], options: [] },
     m_gate_c: { lines: [say('mark', 'On the step? I\'ve eaten in worse places. The gatehouse, for one.')], options: [] },
     m_wait: {
-      lines: [say('self', '{mark} waits by the fire while you walk his round: light every torch post in {H} at dusk (a torch post can be lit with flint and steel).')],
-      options: [],
+      lines: [say('self', '{mark} waits by the fire from 16:00 to midnight while you walk his round: stand by every torch post in {H} and light the ones that are dark (a torch post can be lit with flint and steel). Posts that are already burning count when you pass them.')],
+      options: [opt('round_again', 'I\'ll walk your round tonight.', [set('roundDay', 'today')], { when: [flagNot('roundDay', 'today')] })],
     },
     m_torches: {
       lines: [say('mark', 'The rack by the gate is yours when you need a torch. One a day, mind.')],
-      options: [opt('take_torch', 'Take a torch.', [{ k: 'give', from: { store: 'mark' }, to: 'player', item: 'torch', qty: 1 }, set('torchDay', 'today')])],
+      options: [opt('take_torch', 'Take a torch.', [{ k: 'give', from: { store: 'mark' }, to: 'player', item: 'torch', qty: 1 }, set('torchDay', 'today')], { when: [flagNot('torchDay', 'today')] })],
     },
     // S4 / S5 — Miles at the pitch kettle, Joan in the corner.
     mi_pitch: {
@@ -181,12 +181,21 @@ export const Q07: QuestDef = {
     { id: 'batches', on: 'roast', when: [flag('accepted')] },
     { id: 'pieces', on: 'roast', weight: 'n', when: [flag('accepted')] },
     { id: 'posts', on: 'light', match: { kind: 'torchpost', home: true, distinct: true }, when: [flag('roundAccepted'), { k: 'hour', from: 16, to: 24 }] },
+    // A post that already burns (Mark lit it) counts when the player stands by it (review 014 #6).
+    { id: 'posts', on: 'visit', visit: { kind: 'torchpost', r: 4, lit: true }, when: [flag('roundAccepted'), { k: 'hour', from: 16, to: 24 }] },
   ],
   rules: [
+    // Mark is held only for the dusk window (16:00 to midnight) of the day the round was promised (review 014 #1).
+    {
+      id: 'roundHold',
+      once: 'always',
+      when: [flag('roundAccepted'), flagNot('markCovered', true), flag('roundDay', 'today'), { k: 'hour', from: 16, to: 24 }],
+      effects: [{ k: 'hold', slot: 'mark', at: { k: 'settlement', kind: 'campfire' }, untilHour: 24 }],
+    },
     {
       id: 'roundDone',
       when: [flag('roundAccepted'), flagNot('markCovered', true), { k: 'counter', id: 'posts', gte: 'homePosts' }],
-      effects: [set('markCovered'), { k: 'hold', slot: 'mark', at: { k: 'house', slot: 'lucy' } }, message('The posts are lit. Mark goes to the Hewers\' table.')],
+      effects: [set('markCovered'), { k: 'hold', slot: 'mark', at: { k: 'house', slot: 'lucy' }, untilHour: 24 }, message('The posts are lit. Mark goes to the Hewers\' table.')],
     },
     {
       id: 'cooked',

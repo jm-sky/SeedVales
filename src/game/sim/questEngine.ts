@@ -9,7 +9,7 @@ import type { QuestEvent } from './questHooks'
 import type { Sim } from './sim'
 import type { AuthoredQuestState } from './types'
 import { AUTHORED_QUESTS } from '../data/quests'
-import { actorOf, allOf, applyEffects, cleanup, ctxOf, gameDay, homeId, lapseQuest, newQuestState, type QuestCtx, resolveAnchor, resolveAnimalSlots, resolveNpcSlots } from './questCore'
+import { actorOf, allOf, applyEffects, cleanup, ctxOf, evalCond, expireHolds, gameDay, homeId, lapseQuest, newQuestState, provisionVisitors, type QuestCtx, resolveAnchor, resolveAnimalSlots, resolveNpcSlots } from './questCore'
 import { registerQuestHandler } from './questHooks'
 
 export { questEvent } from './questHooks'
@@ -22,12 +22,14 @@ interface EngineMemo {
   offerAcc: number
   /** Quest id → game day before which a failed cast is not tried again. */
   retryDay: Map<string, number>
+  /** Quest id → NPC cast resolved by an earlier offer check (reused while everyone is alive: no re-cast every 30 s). */
+  casts: Map<string, Record<string, number>>
 }
 
 const memo = new WeakMap<Sim, EngineMemo>()
 const memoOf = (sim: Sim): EngineMemo => {
   let m = memo.get(sim)
-  if (!m) memo.set(sim, (m = { defs: AUTHORED_QUESTS, offerAcc: OFFER_CHECK_S, retryDay: new Map() }))
+  if (!m) memo.set(sim, (m = { defs: AUTHORED_QUESTS, offerAcc: OFFER_CHECK_S, retryDay: new Map(), casts: new Map() }))
   return m
 }
 
@@ -41,16 +43,26 @@ export const questDef = (sim: Sim, id: string): QuestDef | undefined => memoOf(s
 
 const live = (st: AuthoredQuestState) => st.status === 'offered' || st.status === 'active' || st.status === 'refused'
 
+/** Start conditions that read no cast member: cheap to decide before any NPC is looked up. */
+const CAST_FREE = new Set(['day', 'hour', 'money', 'posts', 'quest'])
+
+/** The offer window of a definition has passed for good (a `day` condition with an upper bound that is behind us). */
+const startExpired = (def: QuestDef, day: number) => def.start.some((k) => k.k === 'day' && k.to !== undefined && day > k.to)
+
 /** Offers a quest when its start conditions hold and the cast resolves; returns whether it was offered. */
 function tryOffer(sim: Sim, def: QuestDef, m: EngineMemo, force = false): boolean {
   const day = gameDay(sim)
   if (!force && (m.retryDay.get(def.id) ?? 0) > day) return false
+  if (!force && startExpired(def, day)) return false // never offered again: no cast lookups for the rest of the game
   const st = newQuestState(def, sim.state.time.cal)
   const c = ctxOf(sim, def, st)
-  if (!resolveNpcSlots(sim, def, st)) {
+  if (!force && !def.start.filter((k) => CAST_FREE.has(k.k)).every((k) => evalCond(c, k))) return false
+  const cached = m.casts.get(def.id)
+  if (cached && !force && Object.values(cached).every((id) => !!sim.actor(id) && !sim.actor(id)!.vitals.dead)) st.cast = { ...cached }
+  else if (!resolveNpcSlots(sim, def, st)) {
     m.retryDay.set(def.id, day + 1)
     return false
-  }
+  } else m.casts.set(def.id, { ...st.cast })
   if (!force && !allOf(c, def.start)) return false
   if (!resolveAnimalSlots(sim, def, st)) {
     m.retryDay.set(def.id, day + 1)
@@ -82,6 +94,22 @@ function tickObservations(c: QuestCtx, dt: number) {
     }
     st.obs[ob.id] = -1
     applyEffects(c, ob.effects)
+  }
+}
+
+/** `visit` counters: the player passing within `r` m of a home building counts it once (review 014 #6). */
+function tickVisits(c: QuestCtx) {
+  const { def, st, sim } = c
+  for (const ct of def.counters) {
+    const v = ct.visit
+    if (!v || !allOf(c, ct.when)) continue
+    const p = sim.player
+    const seen = (st.seen[ct.id] ??= [])
+    for (const b of sim.settlementBuildings(homeId(sim), v.kind)) {
+      if ((v.lit && !b.lit) || seen.includes(b.id) || Math.hypot(b.x - p.x, b.z - p.z) > v.r) continue
+      seen.push(b.id)
+      st.counters[ct.id] = (st.counters[ct.id] ?? 0) + 1
+    }
   }
 }
 
@@ -121,6 +149,12 @@ export function tickQuest(sim: Sim, def: QuestDef, st: AuthoredQuestState, dt: n
     lapseQuest(c)
     return
   }
+  expireHolds(c)
+  provisionVisitors(c)
+  // Anchors of the current stage are resolved here (and cached in the saved state); read paths only look them up.
+  const stageAnchor = def.stages[st.stage]?.anchor
+  if (stageAnchor) resolveAnchor(c, stageAnchor)
+  if (st.status === 'active') tickVisits(c)
   tickRules(c)
   if (st.status === 'active') tickObservations(c, dt)
 }
