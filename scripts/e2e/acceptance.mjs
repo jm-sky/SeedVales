@@ -483,7 +483,7 @@ try {
     return { unknown }
   })
   const mapText = await page.locator('[data-testid="map-canvas"]').locator('xpath=../..').innerText()
-  check(results, '12. mapa: nieodkryta osada nie wycieka do listy (MAP-01)', mapNames.unknown.length > 0 && mapNames.unknown.every((n) => !mapText.includes(n)), { mapNames, mapText })
+  check(results, '12. map: an unexplored settlement does not leak into the list (MAP-01)', mapNames.unknown.length > 0 && mapNames.unknown.every((n) => !mapText.includes(n)), { mapNames, mapText })
   await shot(page, 'acc-12-map')
   await clickTest('panel-close')
   await page.waitForTimeout(600)
