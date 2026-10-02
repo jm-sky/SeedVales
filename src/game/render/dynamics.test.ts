@@ -30,4 +30,21 @@ describe('render: dynamics (PERF-01)', () => {
     // Near fires are particle flames now (render--001 step 1b); the cone is only drawn beyond the particle range.
     expect((d as unknown as { particles: { counts: { flames: number } } }).particles.counts.flames).toBeGreaterThanOrEqual(1)
   })
+  it('PERF-01: ground items in range are queried once per frame (review 011 #2)', () => {
+    const sim = testSim()
+    const p = sim.player
+    sim.addGround({ id: sim.nextId(), x: p.x + 2, z: p.z, stack: newStack('stone'), droppedAt: 0 })
+    sim.addGround({ id: sim.nextId(), x: p.x + 3, z: p.z, stack: newStack('torch'), droppedAt: 0, planted: true })
+    const d = new Dynamics(sim)
+    const orig = sim.groundNear.bind(sim)
+    const radii: number[] = []
+    sim.groundNear = (x, z, r) => {
+      radii.push(r)
+      return orig(x, z, r)
+    }
+    d.update(0.016, new THREE.Vector3(p.x, p.y + 3, p.z))
+    expect(radii.filter((r) => r === 150)).toHaveLength(1)
+    expect((d as unknown as { items: THREE.InstancedMesh }).items.count).toBe(1)
+    expect((d as unknown as { torches: THREE.InstancedMesh }).torches.count).toBe(1)
+  })
 })

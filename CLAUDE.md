@@ -39,7 +39,6 @@ SeedVales is a browser-based medieval-themed world simulation game with RPG elem
 
 Independent review (Grok / Scribe, 2026-09-30): see [docs/reviews/2026-09-30--001--v1-review.md](docs/reviews/2026-09-30--001--v1-review.md); its findings are triaged into `docs/plans/game--002--v1-review-fixes.md`.
 
-**Pending review findings:** the session 11 ultrareview (PR #1, 2026-10-02) is waiting for triage — see [docs/reviews/2026-10-02--011--session-11-ultrareview.md](docs/reviews/2026-10-02--011--session-11-ultrareview.md) (4 findings, triage table empty). Remove this note once triaged; then close PR #1 and delete branch `review/base-s11`.
 
 `docs/IMPLEMENTATION-PROMPT.md` is the standing brief for autonomous "build v1" sessions. It instructs the agent to create, if missing, plans in `docs/plans/`, `docs/state/FEATURES.json` and `docs/state/PROGRESS.md`, and `docs/design/DECISIONS.md` as the cross-session memory for implementation status — check for these at the start of any implementation session and read `PROGRESS.md` before continuing prior work.
 

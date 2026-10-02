@@ -173,25 +173,24 @@ export class Dynamics {
       active++
     })
     this.activeLights = active
-    // Planted torches: upright mesh (the ground-item box is skipped for them below).
+    // Ground items in range, one query (review 011 #2): planted torches get the upright mesh, the rest the item box.
     let nt = 0
-    for (const g of sim.groundNear(p.x, p.z, 150)) {
-      if (!g.planted || nt >= 64) continue
-      m.compose(POS.set(g.x, sim.terrain.heightAt(g.x, g.z), g.z), Q0, ONE)
-      this.torches.setMatrixAt(nt++, m)
-    }
-    this.torches.count = nt
-    this.torches.instanceMatrix.needsUpdate = true
-    // Ground items in range.
     let n = 0
     for (const g of sim.groundNear(p.x, p.z, 150)) {
-      if (n >= 400) break
-      if (g.planted) continue
+      if (g.planted) {
+        if (nt >= 64) continue
+        m.compose(POS.set(g.x, sim.terrain.heightAt(g.x, g.z), g.z), Q0, ONE)
+        this.torches.setMatrixAt(nt++, m)
+        continue
+      }
+      if (n >= 400) continue
       const s = itemDef(g.stack.id).weight > 5 ? 2.5 : 1
       m.compose(POS.set(g.x, groundHeight(sim, g.x, g.z), g.z), Q0, SCL.set(s, s, s))
       this.items.setColorAt(n, g.stack.id === 'stone' || g.stack.id === 'rock_chunk' ? STONE_COL : ITEM_COL)
       this.items.setMatrixAt(n++, m)
     }
+    this.torches.count = nt
+    this.torches.instanceMatrix.needsUpdate = true
     this.items.count = n
     this.items.instanceMatrix.needsUpdate = true
     if (this.items.instanceColor) this.items.instanceColor.needsUpdate = true

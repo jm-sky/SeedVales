@@ -22,7 +22,9 @@
 
 | # | Verdict | Action |
 |---|---------|--------|
-| 1 | ❓ | |
-| 2 | ❓ | |
-| 3 | ❓ | |
-| 4 | ❓ | |
+| 1 | ✅ confirmed (code read: `best` stays `null`, `best.x` throws) | **fixed** — the frame leaves the camera in place with a console warning, like `lake-shore`/`river-bank`. No unit harness exists for in-page frame closures in `ab.mjs`; verified by reading the code path (🟡 not executed on a seed without meadow). |
+| 2 | ✅ confirmed (two `groundNear(…, 150)` per frame) | **fixed** — one query fills both the planted-torch and the item meshes. Regression test `render: dynamics (PERF-01) › PERF-01: ground items in range are queried once per frame (review 011 #2)` failed before the fix. |
+| 3 | ✅ confirmed (duplicated evaluator in the offline asset script) | **deferred** — offline Blender-session script; refactoring it without re-running the asset build risks silently changing accepted outputs. Do it the next time `build-trees.mjs` is touched (`render-tree-assets-contract.md`). |
+| 4 | ✅ confirmed as a latent pattern | **rejected for now** — the game owns exactly one `Renderer`; no second instance exists or is planned. Move to instance fields when a second renderer/vegetation instance is introduced (e.g. a preview viewport). |
+
+Summary (session 13, 2026-10-02): 4 confirmed, 2 fixed, 1 deferred, 1 rejected. PR #1 closed, branch `review/base-s11` deleted.

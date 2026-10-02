@@ -1,6 +1,6 @@
 # Review → fix → review loop (code, gameplay, graphics, UX)
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** opus — reviewers and triage decisions; sonnet — fixes with regression tests  
 **Domain:** review  
 **Sub domains:** process, code, gameplay, render, ux  
@@ -32,7 +32,7 @@ Goal (user, 2026-10-02): an automatic verification pass by Sonnet/Opus that revi
 ## Steps
 | # | Step | Model |
 |---|---|---|
-| 1 | Skill `app-review` (`.claude/skills/`): prompt template, scenarios list, frame list, report format | opus |
+| 1 | Skill `app-review` (`.claude/skills/`): prompt template, scenarios list, frame list, report format — **done 2026-10-02** (`.claude/skills/app-review/SKILL.md`) | opus |
 | 2 | Scenario scripts for gameplay review (`scripts/e2e/review-*.mjs`, reuse `lib.mjs`) | sonnet |
-| 3 | Pending: session 11 ultrareview (PR #1, 4 findings) — first input of the loop; triage, close PR, delete `review/base-s11` | opus + sonnet |
+| 3 | Pending: session 11 ultrareview (PR #1, 4 findings) — first input of the loop; triage, close PR, delete `review/base-s11` — **done 2026-10-02**: 2 fixed, 1 deferred, 1 rejected (review 011 triage table) | opus + sonnet |
 | 4 | First full round after `quests--001` and the first soak | opus |

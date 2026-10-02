@@ -177,6 +177,11 @@ const FRAMES = [
       }
       if (hi < Infinity && (!best || hi - lo > best.d)) best = { x, z, d: hi - lo }
     }
+    // No lowland meadow on this seed (review 011 #1): leave the camera where it is, like lake-shore / river-bank.
+    if (!best) {
+      console.warn('rolling-hills: no meadow candidate on this seed, frame left at the previous spot')
+      return
+    }
     sv.teleport(best.x, best.z)
     sv.face(best.x + 100, best.z + 40)
     sv.game.renderer.rig.distance = 12
