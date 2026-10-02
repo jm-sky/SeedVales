@@ -8,6 +8,12 @@
 
 ---
 
+## User decisions (2026-10-02)
+
+- Shields should be clearly better for blocking than weapons.
+- Parry must also work with weapons, not only shields.
+- Block and parry share the same control (`RMB`); parry is the short timing window at block start.
+
 ## Goal
 
 Add directional blocking and timing-based parrying so melee defence becomes an active player decision. Reuse the existing stamina, weapon, armour and action-animation systems. Keep the mechanic readable and grounded rather than combo-heavy.
