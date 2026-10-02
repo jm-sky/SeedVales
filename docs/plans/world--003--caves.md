@@ -4,7 +4,7 @@
 **Model:** opus — architecture/recon and keep/drop decisions; sonnet — generator, terrain/render, sim integration, tests  
 **Domain:** world  
 **Sub domains:** world-gen, terrain, navigation, collision, perception, combat, save, render, loot, fauna  
-**Roadmap:** later / WORLD-05; feeds cave loot in [world--001](world--001--landmarks-and-treasure.md)  
+**Roadmap:** later / WORLD-05; feeds cave loot in [world--001](world--001--landmarks-and-treasure.md); movement/grounding dependency: [combat--004](combat--004--jump-and-airborne-movement.md)  
 **Created:** 2026-10-02  
 **Finished:** —
 
@@ -206,6 +206,54 @@ Where practical, reuse the project's existing quality profiles and asset budgets
 
 Ambient audio from the vision: water drops in caves. Treat as a later cave-content/audio step unless the audio hook is trivial.
 
+## Dependency: jump / airborne movement
+
+This plan and [`combat--004--jump-and-airborne-movement.md`](combat--004--jump-and-airborne-movement.md) touch the same movement contract and must be coordinated.
+
+Current shared problem:
+
+- `moveWithCollision()` owns horizontal collision **and** unconditionally snaps `y` to `groundHeight()`;
+- player idle movement also snaps directly to `Terrain.heightAt()`;
+- jump needs `y` to become independent while airborne;
+- caves need `y` to resolve against Plane 2 instead of the surface while underground.
+
+**Do not implement two separate refactors.** The Opus architecture decision for both plans should define one shared movement/grounding contract.
+
+Preferred shared direction:
+
+```ts
+walkSurfaceHeight(sim, spaceId, x, z)
+```
+
+(or an equivalent API) plus separate responsibilities for:
+
+- horizontal collision / `x,z`,
+- vertical velocity / airborne state,
+- grounded detection and landing,
+- active walk-surface query,
+- cave wall/ceiling collision.
+
+Expected behaviour:
+
+- grounded surface actor → surface terrain / bridge deck,
+- grounded cave actor → Plane 2,
+- airborne actor → preserve/integrate real `y`; do not snap until landing,
+- landing → only onto a valid surface in the actor's active spatial context,
+- cave ceiling/walls → collision constraints, never mistaken for ground.
+
+### Ordering
+
+The plans do **not** require the full jump feature to ship before caves.
+
+They do require the shared movement/grounding architecture to be decided once. Preferred sequence:
+
+1. Opus reviews `combat--004` + this plan together and fixes the shared contract.
+2. Implement/refactor the common movement/grounding primitives once.
+3. Jump can build airborne movement on top.
+4. Caves can add context-aware Plane 2 grounding + Plane 3/wall collision on top.
+
+Whichever plan implements the shared refactor first must satisfy the regression cases of the other plan and leave the API usable by it.
+
 ## Code recon (2026-10-02)
 
 The current implementation is strongly **2.5D**: most world/sim systems index and reason in `x/z`, while `y` is usually derived from the single surface terrain. Caves therefore need an explicit vertical/spatial-context extension; treating them as render-only geometry would break movement, combat, perception and persistence.
@@ -351,7 +399,7 @@ Decide explicitly:
 
 1. **Plane 1 opening:** dedicated entrance patch + conservative hole in `TerrainChunks` (preferred) vs LOD-aware triangle omission directly in every chunk mesh.
 2. **Cave data:** compact `GenCave` descriptor with derived local Plane 2/3 (preferred) vs persisted/generated local height arrays.
-3. **Ground API:** exact context-aware replacement for direct surface `heightAt()` grounding.
+3. **Shared movement/ground API (coordinate with `combat--004`):** exact context-aware replacement for direct surface `heightAt()` grounding; horizontal collision must no longer unconditionally own `y`, and the contract must support both airborne movement and cave Plane 2 grounding.
 4. **Cave collision:** representation/query for floor + walls + ceiling; it must stay cheaper/smaller than a general physics-engine rewrite.
 5. **Spatial context:** exact scalar `spaceId`/cave-id representation and which entity types receive it.
 6. **Entrance transition:** deterministic portal/threshold region for changing context without teleporting position.
@@ -360,7 +408,7 @@ Decide explicitly:
 9. **Mutable cave contents:** which records gain `y + spaceId` and which cave contents use a new cave-specific state type.
 10. **LOD/streaming:** how entrance topology remains visually stable across terrain LODs and when local Plane 2/3 geometry is built/disposed.
 
-Do not implement the full system before these decisions are recorded.
+Do not implement the full system before these decisions are recorded. Read and review `combat--004--jump-and-airborne-movement.md` in the same architecture pass; any change to `moveWithCollision()`, `groundHeight()` or player vertical-state ownership must be shared between the two plans.
 
 ### 2. One deterministic prototype cave — **Model: sonnet**
 
