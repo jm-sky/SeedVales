@@ -66,6 +66,16 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 
 **Side-track triggers for wave 5:** landmark models (stone circle, shipwreck, boat wreck, ruins beyond partial village modules) come from `render--004` step 3 — or procedural geometry if that step is skipped.
 
+## Stage 5b — authored quests and Stage V — verification loop (planned 2026-10-02, user)
+
+| Plan | Scope |
+|---|---|
+| [quests--001--authored-quest-engine-and-starters](../plans/quests--001--authored-quest-engine-and-starters.md) | stage-machine engine for authored quests (`QUEST-03` promoted to v2) + four starters from `docs/design/quests/`: Q03 A Roof Before Rain, Q07 Six Bowls One Pan, G03 Night Torches, G01 Lost Lamb (H-only, existing mechanics) |
+| [verify--001--soak-and-npc-life](../plans/verify--001--soak-and-npc-life.md) | multi-day soak run: sim event log + ledger, invariants (NPCs alive, working, eating/sleeping, not stuck, conservation, fires kept), report |
+| [review--001--review-fix-loop](../plans/review--001--review-fix-loop.md) | Sonnet/Opus code review + application review (gameplay, graphics, UX) → fix → re-review, ≤ 3 rounds per wave; first input = session 11 ultrareview |
+
+Order: finish `render--001` (4b) → `verify--001` steps 1–3 (cheap, protects everything after) → `quests--001` → first full `review--001` round → wave 5 continues. The loop repeats after every wave and before each release candidate.
+
 ## Wave 6 — visual polish and graphics optimisation (conditional)
 
 | Plan | Scope |
