@@ -1018,7 +1018,7 @@ Legend: **fix** = regression test first, then fix (this round) · **defer** = re
 | C-05 | accepted | Household background production is an explicit, logged ledger source (verify--001); documented as such in D-VERIFY-1 follow-up — not hidden. |
 | C-06 | defer | Skill-gain calibration → economy calibration pass (L3). |
 | C-07 | ✅ fix (A) | Panels mutate state only through `Game` methods (TradePanel, QuestsPanel, OrdersPanel and any other found); CLAUDE.md rule. |
-| UI-01…UI-07, G-01…G-07 | backlog | Product recommendations → inputs for `proposals--001` and later-vision-backlog (UI-01/UI-05 partly covered by M-01/M-03 fixes and the journal). |
+| UI-01…UI-07, G-01…G-07 | planned | UI-01…07 → [`ui--002`](../plans/ui--002--panels-at-scale-and-sensory-map.md); G-01, G-02, G-06 (+ M-08, M-10 prices, C-05, C-06) → [`economy--002`](../plans/economy--002--production-chain-and-calibration.md); G-03, G-04, G-07 (+ C-03) → [`quests--002`](../plans/quests--002--batch-2-rumours-and-rewards.md); G-05 → `proposals--001` input. Map: [later-vision-backlog](../roadmap/later-vision-backlog.md) §1d. |
 | Audits A–E | A, B, E in batch B; C exists partly (route-band/generator tests) → M-05; D done (verify--001 soak). |
 
 ### Batch A results (2026-10-02)

@@ -34,6 +34,8 @@ Step 1 also records the share of startup spent on asset download/decode (input f
 6. **Scene isolation (F-09 rest):** optional fresh context per scene when step 1 exists (reuses its code); assert an installed-state snapshot (player/camera, hour, weather, lit fires, counts) per scene.
 7. **A/B metrics (F-14 rest):** `ab.mjs` sidecar table per variant (`render.prep`, draw calls, programs, textures, lights) and a state manifest per frame.
 
+**Added 2026-10-02 (recon 013 P-05):** measure road-candidate A* buffer allocation in `bench:startup` generator phase timings (cold start, `SV_WORLD_CACHE=0`); change the router (reusable workspace / coarse-to-fine) only if it is a measured top cost of first generation. Source: [recon 013](../reviews/2026-10-02--013--full-repository-recon.md).
+
 ## Exit
 
 Tiers A and B done; tier C done or closed as "not needed". Each step produces its own section in `test-results/bench/` and PERF.md; no budget/baseline changed to absorb a result.

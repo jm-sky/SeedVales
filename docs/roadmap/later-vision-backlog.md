@@ -47,17 +47,21 @@ Legend: ✅ tracked (FEATURES id / decision exists) · 🆕 not tracked until th
 - Blacksmiths stop forging at the stock cap because nothing creates demand in a calm world (D-VERIFY-1 exemption) → belongs with TRADE-03 (traders buying tools for other settlements).
 - Q03/Q07 rarely start in 3 idle soak days (their start conditions depend on house wear / opinion) → calibration note for QUEST-04, not a bug.
 
+### 1d. Recon 013 (GPT full-repository review) → plans
+
+Fixed in session 13: M-01, M-02, M-03, M-04, P-03, C-07 (batch A); M-05, M-07, M-09, M-10 audit, P-02, P-04, P-01 counters, C-01, C-02, C-04 (batch B). Scheduled: M-06 → `render--008` step 4 (GEN bump); P-05 → `diag--002`; M-08, M-10 prices, C-05, C-06, G-01, G-02, G-06 → `economy--002` (L3); C-03, G-03, G-04, G-07 → `quests--002` (L2); UI-01…UI-07 → `ui--002` (L1); G-05 (skill loops) → `proposals--001` input; P-01 scheduler → L5 prerequisite. Triage table: [recon 013](../reviews/2026-10-02--013--full-repository-recon.md).
+
 ## 2. Proposed stages after the current roadmap
 
 Each stage = one or more plans with the usual `**Model:**` split (D-PLAN-7), a wave review and a soak run (`review--001` loop). Sizes: S < 1 session, M 1–2, L 3–5, XL needs its own design round first.
 
 | Stage | Content | Why this order |
 |---|---|---|
-| **L1 — small closers** | DEV-01 code map; SKILL-02 books; FIRE-04 torch fuel; hearth grill/rain shelter; cart wear (D-TRANS-2); MAP-02 sensory visibility (`ui--002`) | cheap, no new systems; MAP-02 is a stated v2 product requirement and should not wait for big features |
-| **L2 — content on the existing engine** | QUEST-04: second batch of authored quests in H/V (G05, G07, G08, Q01 after FAUNA-09, Q02, Q06) → then treasure quests (Q05, Q11–Q13 after LOOT-01) → Q10 gold mine (needs a miner, NPC-06 slice) | the quest engine and the review loop exist; content raises the game's value most per session; Q10 is the vision's own example (§26.2) |
-| **L3 — economy between settlements** | TRADE-03 trader tiers + goods moving between settlements (demand for tools, ore, cloth) + NPC-06 slice (miner, carpenter, carter); RES-06 fishing + fisher | closes the blacksmith-demand gap and makes ECON-01 ("settlements trade raw materials and goods") real; uses existing caravan code |
+| **L1 — small closers** | DEV-01 code map; SKILL-02 books; FIRE-04 torch fuel; hearth grill/rain shelter; MAP-02 sensory visibility + panels at scale — plan [`ui--002`](../plans/ui--002--panels-at-scale-and-sensory-map.md) (recon 013 UI-01…07) | cheap, no new systems; MAP-02 is a stated v2 product requirement and should not wait for big features |
+| **L2 — content on the existing engine** | plan [`quests--002`](../plans/quests--002--batch-2-rumours-and-rewards.md): rumours (recon G-04), item/knowledge rewards (G-03), non-lethal wolf resolution (G-07); QUEST-04: second batch of authored quests in H/V (G05, G07, G08, Q01 after FAUNA-09, Q02, Q06) → then treasure quests (Q05, Q11–Q13 after LOOT-01) → Q10 gold mine (needs a miner, NPC-06 slice) | the quest engine and the review loop exist; content raises the game's value most per session; Q10 is the vision's own example (§26.2) |
+| **L3 — economy between settlements** | plan [`economy--002`](../plans/economy--002--production-chain-and-calibration.md): forge chain, availability tiers, maintenance + cart wear, price/skill-gain calibration (recon M-08, M-10, C-05, C-06, G-01, G-02, G-06); TRADE-03 trader tiers + goods moving between settlements (demand for tools, ore, cloth) + NPC-06 slice (miner, carpenter, carter); RES-06 fishing + fisher | closes the blacksmith-demand gap and makes ECON-01 ("settlements trade raw materials and goods") real; uses existing caravan code |
 | **L4 — animals as transport** | WORLD-09 riding/pack saddles, TRANS-02 donkey/horse carts, richer trader tiers on wagons | needs L3's trade flows to matter; reuses the quest-engine follow/hold primitives |
-| **L5 — living society** (design round first, Opus) | NPC-08 relations/demography/funerals → SET-04 settlement growth/decline, outposts, cemeteries; physician/reeve/mayor professions with SET-05 | the largest change to the sim and the save; must be designed against soak invariants (population, conservation) before code |
+| **L5 — living society** (design round first, Opus; prerequisite: due-time NPC/fauna scheduler, recon 013 P-01, if the population grows) | NPC-08 relations/demography/funerals → SET-04 settlement growth/decline, outposts, cemeteries; physician/reeve/mayor professions with SET-05 | the largest change to the sim and the save; must be designed against soak invariants (population, conservation) before code |
 | **L6 — world size** (design round first) | WORLD-05 caves (+ cave loot), WORLD-06 continents/biomes/sea transport, QUAL-02 technologies | generator + streaming work; caves also need an interior camera |
 | **L7 — voice and sound** | VOICE-01 phrase sets, WORLD-10 listen pass | asset-heavy, best when the content is stable |
 
