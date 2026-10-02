@@ -853,8 +853,8 @@
    "scope": "v2",
    "behavior": "Trafienia zadające obrażenia zostawiają ślad krwi; zanika z czasem i szybciej w deszczu; wabi drapieżniki",
    "verify": "vitest (sim) + screenshot (dekale)",
-   "status": "in_progress",
-   "evidence": "sim part done: appendix-sim.test.ts TRACE-01 (hit → trace merged within 1.5 m, fades per calendar hour, faster in rain, saved in GameState.traces (SAVE_VERSION 5), hungry predator investigates within smell range 70 m × intensity); decals pending in render--001"
+   "status": "implemented_unverified",
+   "evidence": "sim part done: appendix-sim.test.ts TRACE-01 (hit → trace merged within 1.5 m, fades per calendar hour, faster in rain, saved in GameState.traces (SAVE_VERSION 5), hungry predator investigates within smell range 70 m × intensity); render side done in session 11: render/decals.ts (blood + ash instanced ground decals, alpha = intensity), decals.test.ts, frame docs/state/frames/render--001/s11-traces-blood-ash.png; look on a real screen pending (user)"
   },
   {
    "id": "WEATHER-01",

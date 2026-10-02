@@ -127,6 +127,20 @@ const FRAMES = [
     sv.game.renderer.rig.distance = 5
     sv.game.renderer.rig.pitch = 0.18
   }],
+  // render--001 step 8 (TRACE-01): a blood trail and a fresh ash patch next to the player, daylight.
+  ['traces', (sv) => {
+    const sim = sv.game.sim
+    const s = sim.world.settlements[0]
+    sv.setHour(12)
+    const o = sv.openSpot(40)
+    sv.teleport(o.x, o.z)
+    sv.face(o.x, o.z + 10)
+    for (let i = 0; i < 7; i++) sim.addTrace({ id: sim.nextId(), x: o.x - 1.5 + Math.sin(i * 0.9) * 0.6, z: o.z + 2 + i * 0.9, intensity: 1 - i * 0.1, at: sim.state.time.cal })
+    sim.addTrace({ id: sim.nextId(), x: o.x + 2, z: o.z + 4, kind: 'ash', intensity: 1, at: sim.state.time.cal })
+    void s
+    sv.game.renderer.rig.distance = 6
+    sv.game.renderer.rig.pitch = 0.45
+  }],
   // world--002 relief A/B: the other frames sit where the hilliness field is ~0 (settlement surroundings),
   // so this one searches for the lowland meadow spot with the largest height range within 150 m.
   ['rolling-hills', (sv) => {

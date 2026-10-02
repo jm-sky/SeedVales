@@ -13,6 +13,7 @@ import { groundHeight } from '../sim/collision'
 import { daylight } from '../sim/time'
 import { Actors } from './actors'
 import { sharedColorMat } from './assets'
+import { TraceDecals } from './decals'
 import { FireParticles } from './fireParticles'
 import { collectFires, FIRE_LOOK, type FireEmitter, type FireKind, flicker, LIGHT_POOL, PLANTED_TORCH_H, selectLights } from './fireSources'
 import { type QualityProfile } from './quality'
@@ -45,6 +46,7 @@ export class Dynamics {
   private picked: number[] = []
   private t = 0
   private particles: FireParticles
+  private decals: TraceDecals
   private corpses = new Map<number, THREE.Object3D>()
   private rain: THREE.Points
   private rainPos: Float32Array
@@ -76,6 +78,8 @@ export class Dynamics {
     }
     this.particles = new FireParticles(profile)
     this.group.add(this.particles.group)
+    this.decals = new TraceDecals(sim)
+    this.group.add(this.decals.group)
     this.setQuality(profile)
     const N = 2500
     this.rainPos = new Float32Array(N * 3)
@@ -139,6 +143,7 @@ export class Dynamics {
     const fires = this.fires
     const nf = collectFires(sim, p.x, p.z, 200, fires)
     this.particles.update(fires, nf, p.x, p.z, dt, this.t)
+    this.decals.update(dt, p.x, p.z)
     // Particle fire within range (step 1b); the flame cone only beyond it.
     const pr2 = this.particles.range ** 2
     let nFlames = 0
