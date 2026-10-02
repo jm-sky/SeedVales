@@ -26,7 +26,8 @@ export const Biome = {
 } as const
 export type BiomeId = (typeof Biome)[keyof typeof Biome]
 
-export type SettlementSize = 'SM' | 'MD' | 'LG' | 'XL'
+/** Settlement sizes the generator produces (a bigger tier needs a generator + content contract first, review 013 M-07). */
+export type SettlementSize = 'SM' | 'MD' | 'LG'
 
 export type StructureKind =
   | 'house'

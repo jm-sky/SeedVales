@@ -8,16 +8,37 @@
  */
 import type { Sim } from './sim'
 import type { Human, Inventory, Order } from './types'
-import { itemDef } from '../data/items'
+import { ORDER, TRADE } from '../config/calibration'
+import { itemDef, QUALITY_MULT } from '../data/items'
 import { recipeById } from '../data/recipes'
 import { rollQuality } from './craft'
 import { logConsume, logMoney, logProduce } from './eventLog'
 import { addItem, consumeItem, fitQty, hasItems, newStack, removeItem } from './inventory'
 import { houseOf } from './npc/queries'
 
+/** Labour part of an order (coins): the smith's craft time at `ORDER.labourPerS` per second. */
+export const orderLabour = (recipeId: string) => {
+  const r = recipeById(recipeId)
+  return r ? Math.round(r.timeS * ORDER.labourPerS) : 0
+}
+
+/**
+ * Best price any NPC could pay for the forged item (exceptional quality, plenty of stock, best mood): an order
+ * is never cheaper, so ordering and reselling never gains (D-ECON-5; the old flat +10 % lost to quality ×1.3).
+ */
+export const orderResaleFloor = (itemId: string) =>
+  Math.ceil(itemDef(itemId).price * QUALITY_MULT[3] * TRADE.plentyScarcity * TRADE.minBuyMul)
+
+/**
+ * Order price (M-09): the larger of the resale floor and the replacement value of the inputs the smith
+ * reserves plus labour — never below what the consumed materials are worth (D-CRAFT-1).
+ */
 export const orderPrice = (recipeId: string) => {
   const r = recipeById(recipeId)
-  return r ? Math.round(itemDef(r.output.item).price * 1.1) : 0
+  if (!r) return 0
+  const floor = orderResaleFloor(r.output.item)
+  const replacement = r.inputs.reduce((n, i) => n + itemDef(i.item).price * i.qty, 0) + orderLabour(recipeId)
+  return Math.max(floor, replacement)
 }
 
 /** Can the smith take this order now (materials in the household store)? */

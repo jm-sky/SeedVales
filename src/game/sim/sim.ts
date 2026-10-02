@@ -229,11 +229,50 @@ export class Sim {
     this.byId.set(a.id, a)
   }
 
+  /** Animals removed while `forEachAnimalSafely` iterates; they leave `state.animals` when the pass ends (P-02). */
+  private animalIterDepth = 0
+  private animalsPendingRemoval: Set<Animal> | null = null
+
   removeAnimal(a: Animal) {
-    const i = this.state.animals.indexOf(a)
-    if (i >= 0) this.state.animals.splice(i, 1)
+    if (this.animalIterDepth > 0) {
+      // Keeps indices stable for the running pass; actor lookups/queries stop seeing the animal right away.
+      ;(this.animalsPendingRemoval ??= new Set()).add(a)
+    } else {
+      const i = this.state.animals.indexOf(a)
+      if (i >= 0) this.state.animals.splice(i, 1)
+    }
     this.actors.remove(a)
     this.byId.delete(a.id)
+  }
+
+  /** True once the animal was removed from the world (possibly still listed until the running pass ends). */
+  animalGone(a: Animal): boolean {
+    return this.animalsPendingRemoval?.has(a) ?? false
+  }
+
+  /**
+   * Visits the animals present at the start in order, without copying the array: removals during the pass
+   * are deferred (no skipped/duplicated animals), animals added during it are visited next time.
+   */
+  forEachAnimalSafely(fn: (a: Animal) => void) {
+    const list = this.state.animals
+    const n = list.length
+    this.animalIterDepth++
+    try {
+      for (let i = 0; i < n; i++) {
+        const a = list[i]!
+        if (!this.animalGone(a)) fn(a)
+      }
+    } finally {
+      this.animalIterDepth--
+      const gone = this.animalsPendingRemoval
+      if (this.animalIterDepth === 0 && gone) {
+        this.animalsPendingRemoval = null
+        let w = 0
+        for (let r = 0; r < list.length; r++) if (!gone.has(list[r]!)) list[w++] = list[r]!
+        list.length = w
+      }
+    }
   }
 
   /** Adds an NPC at runtime (quest-owned visitors). */

@@ -37,25 +37,29 @@ export class SpatialHash<T extends Positioned> {
   remove(e: T) {
     const k = this.where.get(e.id)
     if (k === undefined) return
-    const arr = this.cells.get(k)
-    if (arr) {
-      const i = arr.indexOf(e)
-      if (i >= 0) arr.splice(i, 1)
-    }
+    this.detach(e, k)
     this.where.delete(e.id)
+  }
+
+  /** Takes the entity out of cell `k`; an emptied cell is deleted so roaming actors leave no empty arrays (P-04). */
+  private detach(e: T, k: number) {
+    const arr = this.cells.get(k)
+    if (!arr) return
+    const i = arr.indexOf(e)
+    if (i >= 0) arr.splice(i, 1)
+    if (arr.length === 0) this.cells.delete(k)
+  }
+
+  /** Number of non-empty cells (diagnostics/tests). */
+  get cellCount() {
+    return this.cells.size
   }
 
   update(e: T) {
     const k = this.key(e.x, e.z)
     const old = this.where.get(e.id)
     if (old === k) return
-    if (old !== undefined) {
-      const arr = this.cells.get(old)
-      if (arr) {
-        const i = arr.indexOf(e)
-        if (i >= 0) arr.splice(i, 1)
-      }
-    }
+    if (old !== undefined) this.detach(e, old)
     let arr = this.cells.get(k)
     if (!arr) {
       arr = []

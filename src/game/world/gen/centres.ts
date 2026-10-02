@@ -16,8 +16,8 @@ import { findRoadPath, smoothPath } from './roads'
 /** Home → nearest neighbour route length band (× DAY_MARCH_M), vision §4.2 „~1 day's walk”. */
 export const ROUTE_BAND: [number, number] = [0.8, 1.3]
 /** LG leg: target × DAY_MARCH_M and band (× target). */
-const LG_TARGET = 1.25
-const LG_BAND: [number, number] = [0.7, 1.3]
+export const LG_TARGET = 1.25
+export const LG_BAND: [number, number] = [0.7, 1.3]
 const HOME_ATTEMPTS = 5
 
 type Site = ReturnType<typeof scoreSites>[number]

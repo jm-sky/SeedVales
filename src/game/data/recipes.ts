@@ -7,7 +7,8 @@ import type { StructureKind } from '../world/types'
 import type { Capability } from './items'
 import type { SkillId } from './skills'
 
-export type StationKind = 'campfire' | 'anvil' | 'dryrack' | 'workbench'
+/** Crafting stations: each must be a world structure kind (`StructureKind`) the player can stand next to. */
+export type StationKind = Extract<StructureKind, 'campfire' | 'anvil' | 'dryrack'>
 
 export interface Recipe {
   id: string
@@ -57,7 +58,23 @@ export const RECIPES: Recipe[] = [
   { id: 'pickaxe', name: 'Pickaxe', inputs: [{ item: 'iron_ingot', qty: 2 }, { item: 'branch', qty: 1 }], output: { item: 'pickaxe', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', timeS: 22, quality: true, category: 'smithing' },
   { id: 'sword', name: 'Sword', inputs: [{ item: 'iron_ingot', qty: 4 }, { item: 'hide', qty: 1 }], output: { item: 'sword', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', minSkill: 25, timeS: 40, quality: true, category: 'smithing' },
   { id: 'hammer', name: 'Hammer', inputs: [{ item: 'iron_ingot', qty: 1 }, { item: 'branch', qty: 1 }], output: { item: 'hammer', qty: 1 }, station: 'anvil', skill: 'blacksmith', timeS: 14, category: 'smithing' },
+  // Review 013 C-01: recipes that make the NPC wishes (and other kit-only items) obtainable.
+  { id: 'pot', name: 'Pot', inputs: [{ item: 'iron_ingot', qty: 1 }], output: { item: 'pot', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', timeS: 14, category: 'smithing' },
+  { id: 'dagger', name: 'Dagger', inputs: [{ item: 'iron_ingot', qty: 1 }, { item: 'branch', qty: 1 }], output: { item: 'dagger', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', timeS: 18, quality: true, category: 'smithing' },
+  { id: 'short_sword', name: 'Short sword', inputs: [{ item: 'iron_ingot', qty: 2 }, { item: 'branch', qty: 1 }], output: { item: 'short_sword', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', minSkill: 15, timeS: 30, quality: true, category: 'smithing' },
+  { id: 'big_axe', name: 'Battle axe', inputs: [{ item: 'iron_ingot', qty: 3 }, { item: 'branch', qty: 2 }], output: { item: 'big_axe', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', minSkill: 25, timeS: 36, quality: true, category: 'smithing' },
+  { id: 'war_hammer', name: 'War hammer', inputs: [{ item: 'iron_ingot', qty: 3 }, { item: 'branch', qty: 1 }], output: { item: 'war_hammer', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', minSkill: 25, timeS: 34, quality: true, category: 'smithing' },
+  { id: 'iron_helm', name: 'Iron helm', inputs: [{ item: 'iron_ingot', qty: 2 }, { item: 'hide', qty: 1 }], output: { item: 'iron_helm', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', minSkill: 20, timeS: 30, quality: true, category: 'smithing' },
+  { id: 'chainmail', name: 'Mail shirt', inputs: [{ item: 'iron_ingot', qty: 7 }, { item: 'cloth', qty: 2 }], output: { item: 'chainmail', qty: 1 }, tool: 'hammer', station: 'anvil', skill: 'blacksmith', minSkill: 40, timeS: 60, quality: true, category: 'smithing' },
+  { id: 'long_bow', name: 'Longbow', inputs: [{ item: 'branch', qty: 3 }, { item: 'rope', qty: 2 }, { item: 'hide', qty: 1 }], output: { item: 'long_bow', qty: 1 }, tool: 'cut', skill: 'ranged', minSkill: 20, timeS: 30, quality: true, category: 'weapons' },
+  { id: 'arrows_bodkin', name: 'Bodkin arrows ×6', inputs: [{ item: 'branch', qty: 1 }, { item: 'iron_ore', qty: 1 }], output: { item: 'arrow_bodkin', qty: 6 }, tool: 'cut', skill: 'ranged', minSkill: 10, timeS: 12, category: 'weapons' },
+  { id: 'leather_gloves', name: 'Leather gloves', inputs: [{ item: 'hide', qty: 1 }], output: { item: 'leather_gloves', qty: 1 }, tool: 'sew', skill: 'survival', timeS: 10, quality: true, category: 'leather' },
+  { id: 'furs', name: 'Fur bedding', inputs: [{ item: 'hide', qty: 3 }], output: { item: 'furs', qty: 1 }, tool: 'sew', skill: 'survival', timeS: 20, category: 'leather' },
+  { id: 'bucket', name: 'Bucket', inputs: [{ item: 'branch', qty: 4 }, { item: 'rope', qty: 1 }], output: { item: 'bucket', qty: 1 }, tool: 'cut', skill: 'survival', timeS: 12, category: 'survival' },
 ]
+
+/** Recipes a blacksmith takes orders for (`sim/orders.ts`, OrdersPanel): quality smithing. */
+export const isOrderable = (r: Recipe) => r.category === 'smithing' && !!r.quality
 
 export interface BuildStage {
   name: string

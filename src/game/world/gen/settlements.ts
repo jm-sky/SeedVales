@@ -22,7 +22,6 @@ export const HOUSEHOLDS_BY_SIZE: Record<SettlementSize, ProfessionId[]> = {
     'farmer', 'farmer', 'farmer', 'woodcutter', 'woodcutter', 'hunter', 'guard', 'guard', 'herbalist',
     'shepherd', 'trader', 'trader', 'blacksmith',
   ],
-  XL: [],
 }
 
 export interface SiteGrid {

@@ -15,6 +15,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "soak": "node --import tsx scripts/soak/run.ts",
+    "audit:recipes": "node --import tsx scripts/audit/recipes.ts",
     "bench:sim": "node --expose-gc --import tsx scripts/bench/sim-bench.ts",
     "e2e:run": "node scripts/e2e/run.mjs",
     "review:app": "node scripts/e2e/review-run.mjs",

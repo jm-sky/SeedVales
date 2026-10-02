@@ -49,6 +49,8 @@ for (const seed of seeds) {
   // quests--001: the authored quests are offered during the soak (the player idles in the settlement) — record which.
   const quests = Object.entries(sim.state.authoredQuests).map(([id, q]) => `${id} ${q.status}`).join(', ') || 'none'
   const visitors = sim.state.npcs.filter((n) => n.questOwner).length
+  const sc = rep.scheduler
+  console.log(`  scheduler: npc visited ${sc.npc.visited} / updated ${sc.npc.updated} (x${sc.npc.ratio.toFixed(1)}) · fauna visited ${sc.fauna.visited} / updated ${sc.fauna.updated} (x${sc.fauna.ratio.toFixed(1)})`)
   console.log(`  authored quests: ${quests} · visitors ${visitors}`)
   md.push(soakMarkdown(rep) + `\nAuthored quests at the end: ${quests} (quest visitors alive: ${visitors}).\n`)
   if (rep.violations.length) failed = true

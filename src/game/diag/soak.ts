@@ -140,6 +140,8 @@ export interface SoakReport {
   workDays: Record<string, number>
   /** Event log entries kept / dropped by ring wrap. */
   log: { size: number; dropped: number }
+  /** PERF-01 scheduler counters over the whole run: actors inspected vs. actually updated (audit E). */
+  scheduler: Record<'npc' | 'fauna', { visited: number; updated: number; ratio: number }>
 }
 
 /** Quest-owned visitors (G01 Piers) have no household or profession and are held at a spot: exempt from the life invariants. */
@@ -446,8 +448,19 @@ export class SoakRecorder {
       heapGrowthMB,
       workDays,
       log: { size: this.log.size, dropped: this.log.dropped },
+      scheduler: schedulerCounters(),
     }
   }
+}
+
+/** `npc|fauna.schedulerVisited` / `.updated` counters since the last perf reset, with the visited/updated ratio. */
+export function schedulerCounters(counters: Record<string, number> = perf.report().counters): SoakReport['scheduler'] {
+  const one = (k: 'npc' | 'fauna') => {
+    const visited = counters[`${k}.schedulerVisited`] ?? 0
+    const updated = counters[`${k}.updated`] ?? 0
+    return { visited, updated, ratio: updated ? visited / updated : 0 }
+  }
+  return { npc: one('npc'), fauna: one('fauna') }
 }
 
 /** Markdown summary of a report (per-day table + invariant numbers + violations). */
@@ -466,6 +479,7 @@ export function soakMarkdown(r: SoakReport): string {
   lines.push('', r.violations.length ? `**${r.violations.length} violation(s):**` : '**No violations.**', '')
   for (const v of r.violations.slice(0, 60)) lines.push(`- \`${v.invariant}\` day ${v.day}: ${v.detail}`)
   if (r.violations.length > 60) lines.push(`- … ${r.violations.length - 60} more`)
+  lines.push('', `Scheduler (PERF-01): npc visited ${r.scheduler.npc.visited} / updated ${r.scheduler.npc.updated} (×${r.scheduler.npc.ratio.toFixed(1)}); fauna visited ${r.scheduler.fauna.visited} / updated ${r.scheduler.fauna.updated} (×${r.scheduler.fauna.ratio.toFixed(1)}).`)
   if (r.info.length) lines.push('', `Info (${r.info.length}):`, ...r.info.map((i) => `- ${i}`))
   return lines.join('\n') + '\n'
 }

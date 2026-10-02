@@ -28,7 +28,7 @@ export function canCraft(sim: Sim, h: Human, r: Recipe): { ok: boolean; reason?:
   return { ok: true }
 }
 
-export const STATION_NAMES: Record<StationKind, string> = { campfire: 'campfire', anvil: 'anvil', dryrack: 'drying rack', workbench: 'workbench' }
+export const STATION_NAMES: Record<StationKind, string> = { campfire: 'campfire', anvil: 'anvil', dryrack: 'drying rack' }
 
 /** Duration in gameplay seconds; good skill speeds up (vision §23). */
 export const craftTime = (h: Human, r: Recipe) => r.timeS * (1 - Math.min(0.5, h.skills[r.skill] / 200))

@@ -18,7 +18,7 @@ import { questEvent } from './questHooks'
 const DAY_S = 86400
 
 /** Wish lists by profession (household head) or household role. */
-const WISHES: Record<string, string[]> = {
+export const WISHES: Record<string, string[]> = {
   farmer: ['pan', 'leather_boots', 'bread'],
   woodcutter: ['big_axe', 'leather_gloves', 'stew'],
   hunter: ['long_bow', 'arrow_bodkin', 'leather_boots'],

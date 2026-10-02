@@ -1031,3 +1031,45 @@ Legend: **fix** = regression test first, then fix (this round) · **defer** = re
 | M-04 | `questBoard.test.ts` "QUEST-01: the reward is shown as "up to X c"…" | fixed: `questRewardText()`, `Quest.paid?` (optional, no SAVE_VERSION bump) |
 | P-03 | `questBoard.test.ts` "PERF-01 / QUEST-01: many repost cycles keep state.quests bounded…" (120 cycles, max 22 entries) | fixed: per-key index (`rats:<buildingId>`, `wolves:<settlementId>`) built once per run, `pruneQuestHistory` keeps live quests + last 20 finished + any inside the repost cooldown (no new saved state) |
 | C-07 | `uiFacade.test.ts` "C-07: no UI file imports a sim mutator" | fixed: `Game.buyFrom/sellTo/giftTo/orderFrom/cancelSmithOrder/collectSmithOrder/acceptBoardQuest/apologize/moveStorage/hire/cancelPlayerActivity`; panels (Trade, Gift, Orders, Quests, Hire, Storage, ActivityBar) call only these |
+---
+
+# Batch B results (economy / content / performance, session 13)
+
+Finding → regression test → fix. No `GEN_VERSION`/`SAVE_VERSION` change (generator output unchanged; `SAVE_VERSION` 9 stays).
+
+| # | Test (file) | Fix |
+|---|---|---|
+| M-09 | `sim/review013b.test.ts` "M-09 …" (4 tests: price ≥ inputs + labour for every orderable recipe, review examples axe/sword/pickaxe, D-ECON-5 resale floor, real placed order vs reserved value) | `orders.ts`: `orderPrice = max(resale floor, Σ input base prices + labour)`, labour = `round(timeS × ORDER.labourPerS)` with `ORDER.labourPerS = 0.5` c per craft second (`config/calibration.ts`). Resale floor = exceptional-quality result at the best NPC price (`price × 1.3 × plentyScarcity × minBuyMul`, rounded up) — the old flat `+10 %` was already below the best resale for several items once quality ×1.3 is considered, so D-ECON-5 is now enforced by the test over all orderable recipes. Axe 50 → 72 c, sword 132 → 155 c, pickaxe 61 → 72 c. |
+| M-10 | `data/itemAudit.test.ts` "recipe economy audit" (every recipe classified, ratio inside its class band, exceptions explicit and not stale, orderable recipes yield exactly 1 item) | New `data/recipeEconomy.ts` (class per recipe, bands: processing 0.5–3.0, cheap-craft 0.5–4.0, smithing 0.6–1.5, leather 0.35–1.3, construction 0.5–1.0) and `pnpm audit:recipes` (table incl. order prices). Exceptions with reasons: `knife` (ratio 0.26, one 30 c ingot for an 8 c knife), `sling` (0.20), `sling_stones` (free ammo). No clear data error needing a price change was found; the Rope/Cloth/Waterskin/Sling/Stew spread of the finding is now documented and bounded, recalibration stays deferred (L3). |
+| C-01 + C-02 / audit A | `data/itemAudit.test.ts` "item reachability audit" (wishes, recipe I/O, blueprint materials, ammo of obtainable ranged weapons, every `active` item has a source, `future` items really unreachable and unused) | `ItemDef.availability: 'active' \| 'future' \| 'quest-only' \| 'unique'` (`data/items.ts`), `data/itemSources.ts` (graph: start gear, warehouse, pantry, profession stores = trade stock, household produce, field crops, gathering, mining, digging, shearing, butchering, cooking, recipes, smith orders; the profession **kit** is not a source — `tradeStock` keeps it back). 16 catalogue items marked `future`. New recipes (see below). |
+| C-04 | `itemAudit.test.ts` "C-04: every recipe station …" + compile-time `StationKind = Extract<StructureKind, …>` | `workbench` removed from `StationKind` and `STATION_NAMES` (the render prop `Workbench` is unrelated). |
+| M-07 | `world/gen/contracts.test.ts` "M-07 …" (size tables cover exactly SM/MD/LG; per size required structures incl. inn/market rules, household and house counts over 24 seeds, all three sizes seen) | `XL` removed from `SettlementSize`, `HOUSEHOLDS_BY_SIZE`, `TREASURY_START`. No generator output change. |
+| M-05 | `world/gen/contracts.test.ts` "M-05 …" | Band stays soft; contract = at most 5 % of route legs outside the band and any miss at most 15 % beyond the band edge, over seeds 1..24 (measured over seeds 1..40: 0 misses; home leg 0.876–1.141 of the day march, LG leg 0.742–1.288 of its target). `LG_TARGET`/`LG_BAND` exported from `centres.ts`. |
+| P-02 | `sim/review013b.test.ts` "P-02 …" (removals mid-pass neither skip nor duplicate, additions wait, `faunaSystem` with an animal dying mid-pass) | `Sim.forEachAnimalSafely`: no array clone, removals deferred until the pass ends (`removeAnimal` still drops the animal from actor queries/lookups immediately), pass order unchanged. |
+| P-04 | `world/spatial.test.ts` (3 tests) | `SpatialHash.detach` deletes emptied cells on `remove` and cross-cell `update`; `cellCount` accessor. |
+| P-01 / audit E | `sim/review013b.test.ts` "scheduler counters" | `npc.schedulerVisited`/`npc.updated`, `fauna.schedulerVisited`/`fauna.updated` perf counters; printed by `pnpm soak` (and in the soak markdown) and as `load` columns of `pnpm bench:sim`. No scheduler rewrite. Measured: soak 3 days seed 1337 — npc visited/updated ×5.2, fauna ×10.9 (the ratio grows with population; this is the number to watch before L5). |
+
+## Wishes made reachable (C-01)
+
+The 8 flagged wishes plus the ones the audit found beyond the finding (the audit counts a profession kit as *not* purchasable):
+
+| Wish | Channel |
+|---|---|
+| `big_axe` (Woodcutter) | new smithing recipe `big_axe` (3 ingots + 2 branches, skill 25) → smith order or anvil craft |
+| `iron_helm` (Guard, Blacksmith) | new smithing recipe (2 ingots + hide, skill 20) → smith order |
+| `chainmail` (Guard) | new smithing recipe (7 ingots + 2 cloth, skill 40) → smith order (smith store holds 8 ingots) |
+| `pot` (Herbalist) | new smithing recipe `pot` (1 ingot, like the pan; not orderable, anvil craft) |
+| `long_bow` (Hunter) | new recipe `long_bow` (3 branches + 2 rope + hide, ranged skill 20, quality) |
+| `arrow_bodkin` (Hunter) | new recipe `arrows_bodkin` ×6 (branch + iron ore, ranged skill 10) |
+| `leather_gloves` (Woodcutter) | new leather recipe (1 hide) |
+| `furs` (Elder) | new leather recipe `furs` (3 hides) |
+| `short_sword` (son; guard kit-only) | new smithing recipe (2 ingots + branch, skill 15) → smith order |
+| (not a wish) `dagger`, `war_hammer`, `bucket` | were `active` with no source (trader/blacksmith/farmer kit-only) → smith recipes `dagger`, `war_hammer`; `bucket` = 4 branches + rope |
+
+Marked `future` (no source, used nowhere, audit-guarded): `long_sword`, `small_axe`, `composite_bow`, `crossbow`, `bolt`, `bolt_heavy`, `bolt_blunt`, `arrow_blunt`, `padded_jacket`, `studded_leather`, `plate_cuirass`, `leather_trousers`, `bracers`, `pauldrons`, `saddlebag`, `tent`.
+
+## Observations not fixed (out of scope)
+
+- NPC smiths forge background "stock" tools from **one** ingot (`works.smith`, `SMITH_TOOLS`) while the recipe needs 2 ingots for an axe/pickaxe — a ledger-visible `forge_stock` source; relevant for the L3 economy pass.
+- `OrdersPanel.vue` still filters orderable recipes inline (`category === 'smithing' && quality`); `isOrderable()` in `data/recipes.ts` is the same predicate — the panel (batch A territory) can adopt it.
+- Quest rewards were not scanned as an item source (authored quests only move items from named stores, so they cannot widen the graph; board quests pay coins).

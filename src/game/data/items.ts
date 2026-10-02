@@ -77,6 +77,13 @@ export interface HerbStats {
   rarity: 'common' | 'medium' | 'rare'
 }
 
+/**
+ * Content status (review 013 C-02): `active` items must be obtainable in the game (audit: itemSources);
+ * `future` = catalogue-only, not wired to any source yet (must not appear in wishes, recipes, stores);
+ * `quest-only` = obtainable only as an authored-quest reward; `unique` = a single deliberate instance.
+ */
+export type ItemAvailability = 'active' | 'future' | 'quest-only' | 'unique'
+
 export interface ItemDef {
   id: string
   name: string
@@ -101,6 +108,8 @@ export interface ItemDef {
   light?: number
   ammoKind?: AmmoKind
   damageBonus?: number
+  /** Content status; missing = `active`. */
+  availability?: ItemAvailability
 }
 
 const res = (id: string, name: string, weight: number, size: SizeClass, price: number): ItemDef => ({
@@ -230,7 +239,19 @@ const LIST: ItemDef[] = [
   armor('pauldrons', 'Pauldrons', 1.8, 45, { slot: 'shoulders', layer: 'outer', resist: { cut: 0.4, pierce: 0.25, blunt: 0.2 }, speedPenalty: 0.01 }),
 ]
 
-export const ITEMS: Record<string, ItemDef> = Object.fromEntries(LIST.map((i) => [i.id, i]))
+/**
+ * Catalogue entries without any acquisition path yet (review 013 C-02). They stay defined (balance/data APIs
+ * can use them) but are explicitly not part of the playable economy until a source is added; then drop the
+ * entry here (the audit fails for a `future` item that already has a source).
+ */
+const FUTURE_ITEMS: readonly string[] = [
+  'long_sword', 'small_axe', 'composite_bow', 'crossbow', 'bolt', 'bolt_heavy', 'bolt_blunt', 'arrow_blunt',
+  'padded_jacket', 'studded_leather', 'plate_cuirass', 'leather_trousers', 'bracers', 'pauldrons', 'saddlebag', 'tent',
+]
+
+export const ITEMS: Record<string, ItemDef> = Object.fromEntries(
+  LIST.map((i) => [i.id, FUTURE_ITEMS.includes(i.id) ? { ...i, availability: 'future' as const } : i]),
+)
 
 /** Heavy goods that go into a cart (TRANS-01). */
 export const HEAVY_GOODS = new Set(['coal', 'copper_ore', 'gold_ore', 'iron_ingot', 'iron_ore', 'log', 'rock_chunk', 'stone'])

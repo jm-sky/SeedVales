@@ -278,8 +278,12 @@ export function faunaSystem(sim: Sim) {
   const now = sim.state.time.play
   const p = sim.player
   let near = 0
-  for (const a of [...sim.state.animals]) {
-    if (now < a.nextUpdate || a.vitals.dead) continue
+  let visited = 0
+  let updated = 0
+  sim.forEachAnimalSafely((a) => {
+    visited++
+    if (now < a.nextUpdate || a.vitals.dead) return
+    updated++
     const d = Math.hypot(a.x - p.x, a.z - p.z)
     const interval = sim.lodInterval(d)
     const dt = Math.min(now - a.lastUpdate, 30)
@@ -287,7 +291,9 @@ export function faunaSystem(sim: Sim) {
     a.nextUpdate = now + interval * (0.9 + ((a.id * 7919) % 100) / 500)
     if (interval <= 0.11) near++
     updateAnimal(sim, a, dt, interval <= 0.11)
-  }
+  })
+  perf.count('fauna.schedulerVisited', visited)
+  perf.count('fauna.updated', updated)
   perf.gauge('fauna.near', near)
   perf.gauge('fauna.total', sim.state.animals.length)
 }

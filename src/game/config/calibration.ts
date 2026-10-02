@@ -68,7 +68,14 @@ export const COMBAT = {
 }
 
 /** Settlement treasury at world start (copper) — the only initial money besides NPC/player purses (D-ECON-1). */
-export const TREASURY_START = { SM: 150, MD: 300, LG: 600, XL: 1200 } as const
+export const TREASURY_START = { SM: 150, MD: 300, LG: 600 } as const
+
+/**
+ * Blacksmith orders (CRAFT-02, review 013 M-09): price = max(resale floor, replacement value of the reserved inputs +
+ * labour), labour = craft time (s) × labourPerS. The smith never sells below what the materials cost; the resale floor
+ * (an exceptional-quality result at the best price any NPC would pay) keeps order → sell loops from paying (D-ECON-5).
+ */
+export const ORDER = { labourPerS: 0.5 }
 
 /** Daily settlement tax on NPC purses above `exempt` copper (money recirculates to the treasury). */
 export const TAX = { rate: 0.03, exempt: 20 }

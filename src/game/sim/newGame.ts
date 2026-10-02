@@ -8,6 +8,7 @@ import type { ProfessionId, WorldData } from '../world/types'
 import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, Kin, SettlementState } from './types'
 import { FIRE, START_CALENDAR_S, TREASURY_START } from '../config/calibration'
 import { hashString, Rng } from '../core/rng'
+import { HOUSEHOLD_PANTRY, PLAYER_START_ITEMS, PLAYER_START_WEAPON, WAREHOUSE_START } from '../data/itemSources'
 import { NAMES, PROFESSIONS, SURNAMES } from '../data/professions'
 import { emptySkills } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
@@ -86,7 +87,7 @@ export function createNewGame(world: WorldData): GameState {
       b.inv = { items: [] }
       // Neglected common buildings (nobody's duty to repair) → source of the rat quest.
       b.durability = rng.range(28, 38)
-      for (const [it, q] of [['bread', 6], ['grain', 20], ['carrot', 10], ['log', 6], ['branch', 20], ['stone', 20], ['rope', 2], ['cloth', 3]] as const) {
+      for (const [it, q] of WAREHOUSE_START) {
         addItem(b.inv, newStack(it, q))
       }
     }
@@ -125,8 +126,7 @@ export function createNewGame(world: WorldData): GameState {
         b.householdId = hid
       }
       for (const st of prof.store) addItem(house.inv!, newStack(st.item, st.qty))
-      addItem(house.inv!, newStack('bread', 2))
-      addItem(house.inv!, newStack('branch', 4))
+      for (const [it, q] of HOUSEHOLD_PANTRY) addItem(house.inv!, newStack(it, q))
       const hh: Household = { id: hid, settlementId: s.id, profession: gh.profession, houseId: house.id, memberIds: [] }
       households.push(hh)
       // Family name from the head's trade; picked by hash so the sim RNG stream is unchanged.
@@ -241,10 +241,10 @@ export function createNewGame(world: WorldData): GameState {
   player.money = 150
   player.settlementId = home.id
   player.householdId = -1
-  for (const [it, q] of [['knife', 1], ['waterskin_m', 1], ['bread', 2], ['apple', 3], ['bandage', 2], ['flint', 1], ['torch', 2], ['blanket', 1]] as const) {
+  for (const [it, q] of PLAYER_START_ITEMS) {
     addItem(player.inv, newStack(it, q))
   }
-  player.eq.main = newStack('club')
+  player.eq.main = newStack(PLAYER_START_WEAPON)
 
   const state: GameState = {
     saveVersion: SAVE_VERSION,

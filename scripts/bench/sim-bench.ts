@@ -57,6 +57,11 @@ function scene(name: string, params: Record<string, unknown>, setup: (sim: Sim) 
     aiPlans: rep.counters['ai.plans'] ?? 0,
     aiFailures: rep.counters['ai.failures'] ?? 0,
     chunksGenerated: rep.counters['world.nodes.chunksGenerated'] ?? 0,
+    // PERF-01 scheduler counters (visited per run vs. actually updated), audit E.
+    npcVisited: rep.counters['npc.schedulerVisited'] ?? 0,
+    npcUpdated: rep.counters['npc.updated'] ?? 0,
+    faunaVisited: rep.counters['fauna.schedulerVisited'] ?? 0,
+    faunaUpdated: rep.counters['fauna.updated'] ?? 0,
   }
   const systems = rep.timers.filter((t) => t.name.startsWith('sim.') && t.name !== 'sim.tick').map((t) => ({ name: t.name, median: t.median, p95: t.p95, samples: t.samples })).sort((a, b) => b.p95 - a.p95)
   perf.detailed.clear()

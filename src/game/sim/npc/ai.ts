@@ -210,8 +210,10 @@ export function npcSystem(sim: Sim, _dt: number) {
   const p = sim.player
   let near = 0
   let far = 0
+  let updated = 0
   for (const h of sim.state.npcs) {
     if (now < h.nextUpdate) continue
+    updated++
     const d = Math.hypot(h.x - p.x, h.z - p.z)
     const interval = sim.lodInterval(d)
     const dt = Math.min(now - h.lastUpdate, 30)
@@ -223,6 +225,9 @@ export function npcSystem(sim: Sim, _dt: number) {
     updateNpc(sim, h, dt, full)
     if (isDown(sim, h)) h.moving = 'idle'
   }
+  // PERF-01 / P-01: scheduler cost = actors inspected per run vs. actors actually updated (ratio grows with population).
+  perf.count('npc.schedulerVisited', sim.state.npcs.length)
+  perf.count('npc.updated', updated)
   perf.gauge('npc.near', near)
   perf.gauge('npc.farUpdates', far)
 }

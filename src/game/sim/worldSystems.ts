@@ -7,6 +7,7 @@ import type { SpeciesId } from '../data/species'
 import type { Sim, SimSystem } from './sim'
 import type { Building } from './types'
 import { CALENDAR_SPEED, FOOD } from '../config/calibration'
+import { HOUSEHOLD_PRODUCE } from '../data/itemSources'
 import { perf } from '../diag/perf'
 import { regrowNodes } from './actions'
 import { projectileSystem } from './combat'
@@ -112,7 +113,7 @@ function households(sim: Sim, dtPlay: number) {
   const days = (dtPlay * CALENDAR_SPEED) / 86400
   const season = seasonOf(sim.state.time.cal)
   const g = { spring: 0.9, summer: 1.1, autumn: 1, winter: 0.45 }[season]
-  const pool = season === 'winter' ? ['bread', 'dried_meat', 'cabbage', 'egg'] : ['bread', 'carrot', 'cabbage', 'egg', 'milk', 'tomato', 'apple']
+  const pool = season === 'winter' ? HOUSEHOLD_PRODUCE.winter : HOUSEHOLD_PRODUCE.other
   for (const hh of sim.state.households) {
     const house = sim.building(hh.houseId)
     if (!house?.inv) continue
