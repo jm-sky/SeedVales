@@ -8,6 +8,11 @@
 
 ---
 
+## User decisions (2026-10-02)
+
+- `Tab` in combat mode controls combat target lock; outside combat it keeps the existing interaction-target cycle.
+- Keep free camera control as the default; target lock only assists facing/camera and must not hard-snap.
+
 ## Goal
 
 Add a combat-specific target selection system that makes melee combat more intentional without turning SeedVales into a hard lock-on action game. Keep free camera movement as the default, add a soft target assist for ordinary attacks, and provide an explicit combat lock for difficult encounters.
