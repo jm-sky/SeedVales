@@ -5,7 +5,7 @@
 **Domain:** combat  
 **Sub domains:** input, player-movement, camera, targeting, ui, mobile, render, diagnostics  
 **Created:** 2026-10-02  
-**Reviewed against main:** 2026-10-02, `bee5f94335f3b15b7a5e273f28e1c49fefad258c`
+**Reviewed against main:** 2026-10-02, `4d305f3e5099432018f7269a764c884737c99ab3`
 
 ---
 
