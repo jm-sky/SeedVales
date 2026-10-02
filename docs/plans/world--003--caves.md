@@ -43,14 +43,14 @@ The intended implementation is based on three local terrain surfaces.
 - Start from a copy/sample of the corresponding Plane 1 terrain patch.
 - From the entrance, carve the cave by lowering the Plane 2 heightmap.
 - The entrance section must descend by several metres before the main tunnel/chambers begin. This creates enough rock cover so the cave ceiling cannot accidentally break through the surface.
-- Areas that are not carved remain near the original surface height. The height difference between the carved path and uncarved area naturally forms the lower half of cave walls.
-- Tunnels and chambers are therefore expressed as heightmap operations, not as a manually assembled wall mesh.
+- Areas that are not carved remain near the original surface height. The height difference between the carved path and uncarved area defines the lower-wall shape.
+- Tunnels and chambers are therefore primarily expressed as heightmap operations. The **final render/collision boundary is still closed with an explicit wall strip** derived from the Plane 2/3 edge, as described in the research section; do not rely on two steep heightfields meeting perfectly.
 - A steeper-wall variant may later use the same mechanism for dungeon-like spaces.
 
 ### Plane 3 — ceiling and upper walls
 
 - Plane 3 is another local heightmap, rendered with its faces/normals oriented downward.
-- It creates the cave ceiling and the upper half of the walls.
+- It defines the cave ceiling and upper-wall profile; the final side boundary is closed by the explicit Plane 2 ↔ Plane 3 wall strip.
 - Plane 3 must follow the tunnel/chamber footprint while preserving enough clearance for the player and third-person camera.
 - The generator must enforce a minimum rock thickness between Plane 3 and Plane 1 so the ceiling cannot pierce the surface except at the intended entrance.
 
@@ -97,13 +97,13 @@ Rocks/boulders around the entrance are part of the cave placement/layout and sho
 
 A raw `x/z` position is not sufficient once two walkable spaces can exist above/below one another.
 
-**Architecture decision for step 1:** after code recon, choose the smallest explicit spatial-context representation that prevents cross-floor queries. Preferred direction:
+**Architecture decision for step 1:** confirm the exact type/API, but the current recon strongly favours a compact scalar partition key, e.g.:
 
 ```ts
-spatialContext: 'surface' | { caveId: CaveId }
+spaceId: 0 | CaveId // 0 = surface
 ```
 
-or an equivalent compact id/layer representation.
+The exact representation is still Opus's decision, but the implementation must provide an explicit logical partition; raw `x/y/z` alone is not sufficient.
 
 The world-space `x/y/z` remains authoritative for rendering and physical position. The context is an additional logical partition, not a replacement coordinate system.
 
@@ -146,9 +146,12 @@ The navigation design must support:
 - local cave pathing,
 - cave path → entrance → surface.
 
-Step 1 recon decides whether the current navigation system is best extended with:
-- one graph/region transition at the entrance + local cave navigation, or
-- a unified representation if current pathing already supports arbitrary 3D/local surfaces cheaply.
+Recon shows there is no general 3D/navmesh system today. The preferred direction is therefore:
+- keep current 2D steering inside each spatial context,
+- add an explicit entrance transition/portal,
+- add a small cave-local waypoint graph only where tunnel bends/junctions require it.
+
+Opus may choose a broader navigation change only if it finds concrete code evidence that makes it simpler than this approach.
 
 Per-tick full-cave scans are forbidden; keep the project's spatial-query / distance-LOD rules.
 
@@ -257,20 +260,16 @@ Preferred rules:
 
 If `three-mesh-bvh` is adopted for camera/collision queries, build it only for active/local cave geometry. Static cave meshes are a good fit; mutable/destructible cave topology is deferred.
 
-## Lighting and render
-
-First slice:
+### First-slice lighting/render requirements
 
 - exterior daylight should enter/read naturally at the mouth,
 - the deeper cave should become dark,
 - existing torches/lights can illuminate cave geometry,
 - cave material should support cheap damp/wet-wall patches with a stronger specular response visible in torch light,
 - surface detail should come mainly from tiling textures/shader masks rather than extra geometry,
-- no expensive global illumination, SSR or general-purpose volumetric solution is required.
-
-Cull/stream cave geometry locally. A cave far from the player must not add meaningful draw-call or per-frame CPU cost.
-
-Where practical, reuse the project's existing quality profiles and asset budgets. Cave rocks should be instanced/merged similarly to other repeated world props.
+- no expensive global illumination, SSR or general-purpose volumetric solution is required,
+- cave geometry is local/streamed; a cave far from the player must add no meaningful draw calls or recurring render CPU,
+- reuse quality profiles and existing instancing/merging rules for repeated rocks/props.
 
 Ambient audio from the vision: water drops in caves. Treat as a later cave-content/audio step unless the audio hook is trivial.
 
@@ -535,6 +534,33 @@ The lowest-risk architecture to hand to Opus is:
 
 This preserves the current architecture instead of replacing it with a general 3D engine.
 
+## Implementation contract at a glance
+
+Unless Opus finds a concrete reason to change it, implementation should proceed with this mental model:
+
+```text
+Plane 1 surface terrain
+  └─ real hole in terrain topology
+      └─ dedicated entrance/rim mesh
+          └─ local cave (same world coordinates, no teleport)
+              ├─ Plane 2 floor heightfield
+              ├─ Plane 3 ceiling heightfield
+              └─ explicit wall strip joining their boundary
+```
+
+Simulation contract:
+
+- `x/y/z` remain real world coordinates;
+- `spaceId` separates surface and cave queries;
+- grounding is context-aware and shared with `combat--004`;
+- actors/NPCs/animals cross the entrance through a deterministic portal/threshold, not a position teleport;
+- navigation remains 2D per context unless Opus proves a broader change is cheaper;
+- cave geometry is local, deterministic and streamable;
+- mutable cave contents are saved; generated geometry is seed-derived;
+- visual detail comes primarily from cheap texture/shader work, with strict performance measurement.
+
+The main unresolved items are calibration/representation details, not the intended gameplay or overall architecture.
+
 ## Steps
 
 ### 1. Architecture decision from recon — **Model: opus**
@@ -712,7 +738,7 @@ No cave outside the local active range should add recurring simulation work.
 These do **not** block writing the plan; step 1 should resolve them against the real code.
 
 1. **Spatial context representation:** recon strongly favours a scalar `spaceId` (`0 = surface`, cave id otherwise) because `SpatialHash` is currently a hot 2D index. Opus confirms exact typing/API.
-2. **Entrance topology across terrain LOD:** recon favours a dedicated entrance patch + conservative hole, but this should be compared with direct index omission after the planned web research on heightmap caves.
+2. **Entrance topology across terrain LOD:** recon + web research favour a dedicated entrance/rim patch + conservative hole in the normal terrain mesh. Opus should confirm this against the actual chunk/LOD implementation before coding.
 3. **Heightmap resolution and dimensions:** choose from camera/collision requirements and measured cost, not an arbitrary world-scale constant.
 4. **Minimum clearances / cover:** derive concrete numbers from the current player radius and CameraRig (default 6 m boom, target +1.6 m, max 16 m), then put them in calibration.
 5. **Navigation representation:** recon favours 2D steering per space + explicit entrance portal + small local cave waypoint graph only where necessary.
