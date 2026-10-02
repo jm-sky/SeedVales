@@ -13,6 +13,6 @@
   | `food` | 1, 8, 20, 40 | items with category `food` (herbs excluded) | warehouse yard (3.8, 6.4) |
 
 - **Frame:** 1 unit = 1 m, origin on the ground at the slot centre, +Z = front (Blender −Y), footprint ≤ 4 m wide (grain 30 is two sacks deep, food 40 two crates deep + barrels).
-- **Look:** one material, vertex colours only, flat shading, no textures (class: prop, ≤ 2.5 k triangles per tier; built max 1.2 k). No LOD1 — piles are small and only drawn within 250 m.
+- **Look:** one material, vertex colours only, flat shading, no textures (class: prop, ≤ 4 k triangles per tier (raised from 2.5 k on 2026-10-02 by user request for more detail; re-check the draw budget on WSL); built max 3.5 k). No LOD1 — piles are small and only drawn within 250 m.
 - **Slots:** local offsets in `render/stockpiles.ts` (`WAREHOUSE_SLOTS`, `WOODPILE_SLOT`), local +X = building right, +Z = front; yaw jitter per building id.
 - **Not yet modelled:** hides/wool (hunter/shepherd house), player's own store (plan open questions 1–2).

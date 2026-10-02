@@ -238,7 +238,7 @@
   {
    "src": "scripts/assets/blender-stockpiles.py (own models, no external source)",
    "dst": "public/assets/stockpiles.glb",
-   "kb": 157,
+   "kb": 427,
    "tex": 0
   }
  ]

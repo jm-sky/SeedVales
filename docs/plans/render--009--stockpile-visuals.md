@@ -38,7 +38,7 @@ User note (2026-10-02): a visual representation of warehouse and household store
    - update cadence **2 s** (not per frame): `buildingsNear(player, 120 m)` once, recompute tiers only for buildings in range, write matrices only for slots whose tier changed (dirty list); counts stay small (H: ~10 households + warehouse);
    - beyond 120 m: last known tier kept up to 250 m, nothing beyond (piles are small; no impostors);
    - shadows: piles cast shadows only on `high`, within the actor shadow radius.
-5. **Budget** (checked in step 3): settlement scenes add ≤ 10 draw calls on medium (one per visible template) and ≤ 0.1 ms `render.prep` p95 in `crowded-settlement` (SwiftShader CPU phase is comparable; GPU pair on WSL one run per command). Triangles per tier template: ≤ 600 (tier 1) … ≤ 2 500 (top tier), LOD1 at 40 m at ~40 %.
+5. **Budget** (checked in step 3): settlement scenes add ≤ 10 draw calls on medium (one per visible template) and ≤ 0.1 ms `render.prep` p95 in `crowded-settlement` (SwiftShader CPU phase is comparable; GPU pair on WSL one run per command). Triangles per tier template: ≤ 600 (tier 1) … ≤ 4 000 (top tier; raised from 2 500 on 2026-10-02 at user request — bench on WSL decides), LOD1 at 40 m at ~40 %.
 
 ## Steps
 
@@ -65,3 +65,12 @@ Piles change visibly when wood is chopped/burnt and when the warehouse fills or 
 - **Step 2 done for firewood, stone, grain sacks, food crates/barrels** (17 models, 20–1 200 triangles, 157 KB, one vertex-colour material): `scripts/assets/blender-stockpiles.py` + `build-stockpiles.mjs`. Own geometry (existing `_temp/` packs and poly.pizza were checked; nothing fitted tiered stacks, so no third-party source). Hides/wool not done.
 - **Step 3 open:** not run on Windows (no e2e/bench here) — needs `pnpm check`/e2e, `ab.mjs` frames `stores-low`/`stores-full`, `bench:render` crowded-settlement A/B, PERF.md entry, look review ❓ user.
 
+
+### Update (2026-10-02, Windows session, Blender MCP) — model polish
+
+- Re-modelled with more detail (budget raised to ≤ 4 k triangles per tier at user request; top tiers: food_40 3.5 k, grain_30 3.4 k, firewood_20 3.1 k — **bench on WSL decides whether to keep it**):
+  - firewood: 4-ring prism logs with furrowed bark (vertex tone by furrow depth), end grain = dark bark rim / pale sapwood / medium heart;
+  - sacks: lying tied sacks, stacked so they touch; crates: three planks with gaps, open top crates with real produce (apples, cabbage, loaves, carrots); barrels with bulge and hoops;
+  - stones: angular rocks dropped onto a height field of already placed rocks (stable seat only, mound profile, gravel); measured: no rock with > 2 cm gap underneath.
+- Third-party assets in `public/assets/parked/piles assets/` (Quaternius bags/crate CC0, K H wood pile CC-BY) were evaluated and **not used** (too heavy / wrong look); they stay untracked. The 32-log K H pile is a possible alternative variant if wanted.
+- Still open: step 3 (ab frames `stores-low`/`stores-full`, bench A/B, PERF.md), hides/wool, soak check of tiers.

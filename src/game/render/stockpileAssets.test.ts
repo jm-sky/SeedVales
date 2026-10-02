@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { PILE_TIERS, pileNode } from './stockpileTiers'
 
 describe('stockpiles.glb contract (render--009)', () => {
-  it('has one top-level, identity-transform node per tier with vertex colours and ≤ 2.5k triangles', async () => {
+  it('has one top-level, identity-transform node per tier with vertex colours and ≤ 4k triangles', async () => {
     await MeshoptDecoder.ready
     const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder })
     const doc = await io.read('public/assets/stockpiles.glb')
@@ -18,7 +18,7 @@ describe('stockpiles.glb contract (render--009)', () => {
         expect(n!.getScale()).toEqual([1, 1, 1])
         const prim = n!.listChildren()[0]!.getMesh()!.listPrimitives()[0]!
         expect(prim.getAttribute('COLOR_0')).not.toBeNull()
-        expect(prim.getIndices()!.getCount() / 3).toBeLessThanOrEqual(2500)
+        expect(prim.getIndices()!.getCount() / 3).toBeLessThanOrEqual(4000)
       }
     }
   })
