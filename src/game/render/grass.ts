@@ -42,10 +42,12 @@ export function bladeClumpGeometry(coarse = false): THREE.BufferGeometry {
   const idx: number[] = []
   const base = new THREE.Color(0x3e6a28)
   const tip = new THREE.Color(0x96bc50)
-  const vert = (x: number, y: number, z: number, c: THREE.Color, f = 0) => {
+  const crn: number[] = []
+  const vert = (x: number, y: number, z: number, c: THREE.Color, f = 0, cx = 0, cy = 0) => {
     pos.push(x, y, z)
     col.push(c.r, c.g, c.b)
     flw.push(f)
+    crn.push(cx, cy)
     return pos.length / 3 - 1
   }
   for (let i = 0; i < BLADES_PER_CLUMP; i++) {
@@ -83,23 +85,19 @@ export function bladeClumpGeometry(coarse = false): THREE.BufferGeometry {
     const fx = Math.cos(a) * 0.12
     const fz = Math.sin(a) * 0.12
     const fh = BLADE_H * (0.7 + 0.12 * k)
-    const hr = 0.032
-    for (let q = 0; q < (coarse ? 1 : 2); q++) {
-      const ca = q * Math.PI * 0.5 + a
-      const cx = Math.cos(ca) * hr
-      const cz = Math.sin(ca) * hr
-      // A small tilted quad (flat-ish head seen from the camera height).
-      const v0 = vert(fx - cx, fh - 0.01, fz - cz, white, k + 11)
-      vert(fx + cx, fh - 0.01, fz + cz, white, k + 11)
-      vert(fx - cx, fh + 0.03, fz - cz, white, k + 11)
-      vert(fx + cx, fh + 0.03, fz + cz, white, k + 11)
-      idx.push(v0, v0 + 1, v0 + 2, v0 + 1, v0 + 3, v0 + 2)
-    }
+    // One camera-facing quad per head (all four corners at the head centre, spread by `aCorner` in the
+    // shader); the 5-petal shape is cut in the fragment shader — no texture.
+    const v0 = vert(fx, fh, fz, white, k + 11, -1, -1)
+    vert(fx, fh, fz, white, k + 11, 1, -1)
+    vert(fx, fh, fz, white, k + 11, -1, 1)
+    vert(fx, fh, fz, white, k + 11, 1, 1)
+    idx.push(v0, v0 + 1, v0 + 2, v0 + 1, v0 + 3, v0 + 2)
   }
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
   g.setAttribute('aFlower', new THREE.Float32BufferAttribute(flw, 1))
+  g.setAttribute('aCorner', new THREE.Float32BufferAttribute(crn, 2))
   g.setAttribute('normal', new THREE.Float32BufferAttribute(new Array(pos.length / 3).fill(0).flatMap(() => [0, 1, 0]), 3))
   g.setIndex(idx)
   return g
@@ -184,6 +182,8 @@ uniform float uGrassSnow;
 uniform vec3 uGrassDry;
 uniform float uGrassGrowth;
 attribute float aFlower;
+attribute vec2 aCorner; // flower-head billboard corner (−1..1); 0 on blades
+varying vec2 vPetal;
 attribute vec2 aPatch; // per instance: x = flower-patch weight, y = flower species (FLOWER_COLOURS index)
 varying float vFlowerK;
 varying vec3 vFlowerC;
@@ -204,11 +204,19 @@ const FADE_VERTEX = `
   gf *= 1.0 - smoothstep(0.3, 0.7, uGrassSnow);
   gf *= 1.0 - uGrassSeason * 0.2;
   float gh = fract(sin(dot(gO.xz, vec2(12.9898, 78.233))) * 43758.5453);
-  float bloom = aPatch.x * uFlowers * 1.4;
+  float bloom = aPatch.x * uFlowers * 1.1;
   vFlowerK = step(fract(gh * 5.37), bloom);
   vFlowerC = flowerColourOf(aPatch.y);
   if (aFlower > 0.5) gf *= step(fract(gh * 7.31 + mod(aFlower, 10.0) * 0.377), bloom);
   transformed.y *= uGrassGrowth * (0.82 + 0.36 * fract(gh * 3.1));
+  vPetal = vec2(9.0);
+  if (aFlower > 10.5) {
+    // Camera-facing head, 5 cm radius in world units (instance scale divided out).
+    vec3 camR = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+    vec3 camU = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+    transformed += inverse(mat3(gM)) * (camR * aCorner.x + camU * aCorner.y) * 0.05;
+    vPetal = aCorner;
+  }
   transformed *= gf;
   #ifdef USE_COLOR
   vColor.rgb = aFlower > 10.5 ? vFlowerC : mix(vColor.rgb, uGrassDry, uGrassSeason * 1.2);
@@ -225,7 +233,15 @@ function makeMaterial(u: Uniforms, opts: { map?: THREE.Texture; heightScale: num
     // Blades are lit like the ground from both sides: no back-face normal flip (it made them black).
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nnormal = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);')
-      .replace('#include <common>', '#include <common>\nvarying float vFlowerK;\nvarying vec3 vFlowerC;')
+      .replace('#include <common>', '#include <common>\nvarying float vFlowerK;\nvarying vec3 vFlowerC;\nvarying vec2 vPetal;')
+      // LOD0 flower heads: five rounded petals and a darker golden centre, cut from the billboard quad.
+      .replace('#include <color_fragment>', `#include <color_fragment>
+if (vPetal.x < 5.0) {
+  float pr = length(vPetal);
+  float pa = atan(vPetal.y, vPetal.x);
+  if (pr > 0.5 + 0.5 * pow(abs(cos(pa * 2.5)), 0.7)) discard;
+  diffuseColor.rgb = pr < 0.24 ? vec3(0.85, 0.55, 0.06) : diffuseColor.rgb * (0.82 + 0.3 * (1.0 - pr));
+}`)
       // LOD1: texels with blue = 0 are flower heads — patch colour inside a flower patch, cut away elsewhere.
       .replace('#include <map_fragment>', '#include <map_fragment>\n#ifdef USE_MAP\nif (texture2D(map, vMapUv).b < 0.5) { if (vFlowerK < 0.5) discard; diffuseColor.rgb = vFlowerC; }\n#endif')
   }
