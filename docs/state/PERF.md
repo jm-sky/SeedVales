@@ -312,14 +312,17 @@ Symptom: the whole WSL VM died 3× on 2026-10-02 (boots ended 10:38, 12:42, 13:2
 ### Mitigations applied (harness)
 - `scripts/e2e/lib.mjs`: in `SV_GPU=1` mode the frame-rate limit and vsync flags are **no longer** passed; `SV_GPU_UNCAPPED=1` restores them (hypothesis 2).
 - Host-side monitor `scripts/bench/wsl-host-monitor.ps1` (Windows PowerShell; survives a VM death; the last row of `%TEMP%\svmon.csv` is the host state before the crash) and VM-side `scripts/bench/wsl-vm-monitor.sh` (RAM, Chrome count, dxg errors → `test-results/bench/wsl-vm.log`).
-- Recommended `.wslconfig` in `docs/state/wslconfig.recommended.txt` (12 GB, 8 GB swap, 6 CPUs; hypothesis 1 — more VM RAM would shrink the host headroom, so we go *down*, not up).
+- Recommended `.wslconfig` in `docs/state/wslconfig.recommended.txt` (memory=12GB only, swap and CPUs left at defaults; hypothesis 1 — more VM RAM would shrink the host headroom, so we go *down*, not up).
 
-### Repro protocol (one factor at a time; stop at the first crash)
-Preconditions: user work saved, other Claude/Cursor sessions closed, monitors running, `uptime` load < 1.
-1. Apply `.wslconfig`, `wsl --shutdown`, reopen. Start both monitors.
-2. One `SV_GPU=1 timeout 600 node scripts/bench/render-bench.mjs medium` per command, 60 s cooldown between, up to 6 runs (capped frame rate). Record after each run: host free MB, `vmmemWSL`, `dxgk_err` count.
-3. If it survives, repeat with `high`, then with `SV_GPU_UNCAPPED=1` (separates hypothesis 2).
-4. On a crash: collect the last `svmon.csv` rows, Windows System events for the window (script header), `journalctl -b -1 -k | tail`, and record below which factor was changed last.
+### Repro protocol — do real work, monitored (one factor at a time; stop at the first crash)
+The goal is NOT a synthetic stress loop. The monitored runs are the GPU benchmarks the project actually needs; the monitors just catch the cause if the VM dies.
+
+0. **Orient first:** read `docs/state/PROGRESS.md` ("Teraz"), `git log -15`, `git status`, and `NEXT-SESSION-KICK-OFF-PROMPT.md` (open items, e.g. the `render--003` actor-cull GPU A/B, water judging, tree leaf back-light). Pick the next sensible item that needs real-GPU numbers and continue the plan work around it (implement, verify with `pnpm check`, handoff per the project skills) — GPU benches are one step of that work, not the whole session.
+1. Preconditions: user work saved, other Claude/Cursor sessions closed, both monitors running, `uptime` load < 1, `.wslconfig` applied (`wsl --shutdown` done).
+2. **One GPU run per command**, `SV_GPU=1 timeout 600 node scripts/bench/...`, capped frame rate (default). Wait ~60 s between runs. Append each result (numbers + date + config) to a file under `test-results/` and a row to the Result log **immediately after each run**, before the next one, so a crash loses nothing.
+3. Keep the order of the real work (e.g. A/B pairs alternating A, B, A, B). Add a `high` run, and later `SV_GPU_UNCAPPED=1` runs, only where that item calls for them (separates hypothesis 2).
+4. If the real work does not provoke any crash after ~10 GPU runs in total, say so in the Result log — that is a valid outcome (the mitigations hold); only then, if the user asks, run a synthetic loop (up to 6× `render-bench medium`) as a last resort.
+5. On a crash: after reboot collect the last `svmon.csv` rows, Windows System events for the window (script header), `journalctl -b -1 -k | tail`, and note which factor changed last; commit that into this section before continuing.
 
 ### Result log
 _(empty — fill in per run: date, config, run #, outcome, host free MB min, vmmem max)_
