@@ -282,3 +282,12 @@ High runs on this laptop varied ±50 % on the same build (dense-forest 4.3 vs 8.
 | small-settlement, before → after | 714 → 410 | 231+231 → 121+37 | 59+54 | 99+0 | 25+11 |
 
 Medium: crowded 578 → 342, small 525 → 296. GPU times for this change: pending (machine loaded during the session). Also measured under load: mobile/low SwiftShader frame 350–400 ms with grass + offline trees vs 250 ms with both off (software rendering, not representative of devices — D-PERF-5).
+
+### Tree assets round 2 (high, 200 m model ring) — 2 alternating pairs, gpu.frame median
+
+| pair | kit dense-forest | round 2 dense-forest | kit march | round 2 march |
+|---|---|---|---|---|
+| 1 | 7.06 | 4.56 | 8.11 | 7.20 |
+| 2 | 7.20 | 6.39 | 13.84 | 12.29 |
+
+Round 2 is cheaper than the kit in both scenes and pairs → high ring 200 m (D-REN-16). The GPU path (`SV_GPU=1`) crashed WSL three times this session during long bench loops — run GPU benches one per command and record each result immediately.

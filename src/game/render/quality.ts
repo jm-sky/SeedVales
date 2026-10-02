@@ -28,5 +28,5 @@ export interface QualitySettings {
 export const QUALITY: Record<QualityProfile, QualitySettings> = {
   low: { viewDist: 650, lods: [120, 260, 450, 650], vegNear: 45, vegFar: 380, treeModel: 60, treeLod0: 20, impostorCell: 128, humanModel: 30, actorShadow: 0, animalModel: 45, shadows: false, pixelRatio: 1, fogFar: 700 },
   medium: { viewDist: 1000, lods: [180, 380, 700, 1000], vegNear: 80, vegFar: 600, treeModel: 120, treeLod0: 40, impostorCell: 256, humanModel: 40, actorShadow: 30, animalModel: 80, shadows: true, pixelRatio: 1.5, fogFar: 1050 },
-  high: { viewDist: 1400, lods: [220, 480, 900, 1400], vegNear: 120, vegFar: 850, treeModel: 120, treeLod0: 50, impostorCell: 256, humanModel: 70, actorShadow: 40, animalModel: 110, shadows: true, pixelRatio: 2, fogFar: 1450 },
+  high: { viewDist: 1400, lods: [220, 480, 900, 1400], vegNear: 120, vegFar: 850, treeModel: 200, treeLod0: 60, impostorCell: 256, humanModel: 70, actorShadow: 40, animalModel: 110, shadows: true, pixelRatio: 2, fogFar: 1450 },
 }
