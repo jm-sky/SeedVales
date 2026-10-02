@@ -46,3 +46,19 @@ Checked with no findings:
 
 | # | Verdict | Action |
 |---|---------|--------|
+| 1 | ✅ fix | Holds become bounded: every hold has an `until` (calendar s, set by the effect; default = end of the scene window, max a few game hours) and a critical-need override (hunger/thirst/vigor below the critical level → the NPC leaves to eat/drink/sleep normally and returns while the hold is still valid). Q07: Mark is held only for the dusk window. Visitors (Piers) get provisions for their whole stay (declared external source). Soak: a test that accepts each quest's hold path and runs 4 days — NPC-life invariants must hold (no starvation, guard duty resumes). |
+| 2 | ✅ fix | G03: Hazel's hold ends with the night scene (bounded hold); stage 2 gets a timeout (Mark resolves it after N nights, as in stage 1); the `show` dusk scene no longer depends on Mark's random patrol — at dusk the quest brings Mark to the scene point (bounded hold), or the scene waits for the next dusk if Mark is unavailable. Test: every G03 path ends within 12 game days without player input after acceptance. |
+| 3 | ✅ fix | `questChoose` refuses when the quest is not active/offered or the option's node is not reachable in the current state; per-option `once` (and the Q07 torch limit) enforced in the option, not only the topic. Test: second call pays nothing. |
+| 4 | ✅ fix | Arrow recovery logged as `logProduce`… no: recovery is a move from the world back into an inventory — find where the arrow left the ledger (shot = consume?) and make shot/recover symmetric. Test: ledger residual 0 after shoot + recover. |
+| 5 | ✅ fix | Held/cast NPCs cannot be hired (option disabled with a reason); casting skips the player's companions. |
+| 6 | ✅ fix | Q07 round counts posts that are lit at dusk while the player visits them (observation per post, or "lit when the player passes within 3 m"), not only player-lit ones; the journal tells the player what to do. |
+| 7 | ✅ fix | Narration is shown before despawn (despawn deferred to the end of the dialog / next tick) and the panel closes cleanly. |
+| 8 | ✅ fix | `assertSaveShape` validates each `authoredQuests` entry (status, stage, flags, cast, anchors, obs, counters, fired) → SaveError. Test with a malformed entry. |
+| 9 | ✅ fix | Q03 repair ending text/journal match the repayment rule (repaid at the ending → say so). |
+| 10 | ✅ fix | Endings of quests never accepted are silent (no "completed" message) and do not count as "done" for other quests' start conditions (Q07 needs Q03 *accepted and* done, or opinion). |
+| 11 | ✅ fix | Read paths never write the saved anchor cache (resolve into a transient cache; persist only from the tick). |
+| 12 | accepted | One active event log per process is fine for headless soak/tests (single Sim); documented in `eventLog.ts`. |
+| 13 | ✅ fix | Expired/done quests are never re-cast; offer re-check only for never-offered or `refused` quests, with a per-day cap. |
+| 14 | ✅ fix | Docs: quests-engine.md §13 updated. |
+| 15 | 🟡 fix | `QuestTopics` resets its open node when the target NPC changes (watch on npc id). |
+
