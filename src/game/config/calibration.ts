@@ -223,3 +223,11 @@ export const COMPANION = {
   /** Hunger below which a companion with an empty pack leaves for home. */
   starveLeave: 5,
 }
+
+/** Character variety (CHAR-01): body scale jitter (fractions), hair colours (multiplied onto the hair texture), cloth tints. */
+export const CHARACTER_LOOK = {
+  scaleXZ: 0.05,
+  scaleY: 0.1,
+  hair: [0xe6c27a, 0x7a5230, 0x262220, 0xb4512a, 0xb8b8b8] as const, // blond, brown, black, red, grey
+  cloth: [0xffffff, 0xcfe6c0, 0xbfd2ee, 0xe8d3b0] as const, // neutral, green, blue, sand
+}

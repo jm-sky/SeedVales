@@ -17,6 +17,7 @@ import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { isDown } from '../sim/combat'
 import { loadGltf } from './assets'
+import { applyLook, characterLook } from './characterLook'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 /** Scratch vector for the per-frame interpolation (no allocation per actor, review 009 F-04). */
@@ -181,8 +182,10 @@ export class Actors {
         m.frustumCulled = false
       }
     })
-    if (h.age === 'child') root.scale.setScalar(0.68)
-    if (h.age === 'elder') root.scale.setScalar(0.96)
+    const look = characterLook(h.id, h.age)
+    applyLook(root, look)
+    const base = h.age === 'child' ? 0.68 : h.age === 'elder' ? 0.96 : 1
+    root.scale.set(base * look.scale[0], base * look.scale[1], base * look.scale[2])
     const mixer = new THREE.AnimationMixer(root)
     const actions = new Map<string, THREE.AnimationAction>()
     for (const c of this.clips) actions.set(c.name, mixer.clipAction(c))
