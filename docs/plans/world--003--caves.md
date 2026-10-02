@@ -744,3 +744,8 @@ These do **not** block writing the plan; step 1 should resolve them against the 
 5. **Navigation representation:** recon favours 2D steering per space + explicit entrance portal + small local cave waypoint graph only where necessary.
 6. **Mutable cave state shape:** decide whether drops/corpses/traces/carts all gain `y + spaceId`, and define a cave-specific state record for chests/depleted cave resources.
 7. **Dungeon variant:** keep as a generator mode/future extension unless a first gameplay use needs it earlier.
+
+## References
+
+- `docs/research/refs/2026-10-02--seedvale-v1-ref-screenshot-as-baseline-3-cave-enterance.png`
+- `docs/research/refs/2026-10-02--seedvale-v1-ref-screenshot-as-baseline-4-cave-inside.jpg`
