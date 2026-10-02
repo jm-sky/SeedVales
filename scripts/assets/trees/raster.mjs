@@ -56,7 +56,9 @@ function sample(tex, u, v, out) {
 }
 
 /**
- * parts: [{ mesh, tex|null, cutoff (0 = none), color:[r,g,b] fallback 0..1, ids: Int32Array per triangle | null, shade: fn(lightless) }]
+ * parts: [{ mesh, tex|null, cutoff (0 = none), color:[r,g,b] fallback 0..1, ids: Int32Array per triangle | null, normalView: bool }]
+ * `normalView` writes the view-space normal instead of the colour (R = right, G = up, B = towards the camera, 0.5-biased; the
+ * normal is flipped to face the camera, matching double-sided shading) — the impostor normal atlas.
  * returns { W, H, depth, id, rgb } (rgb 0..1 sRGB values, id = -1 where empty).
  */
 export function rasterize(parts, cam, W, H) {
@@ -105,6 +107,24 @@ export function rasterize(parts, cam, W, H) {
             r = t[0]; g = t[1]; bl = t[2]
           } else {
             ;[r, g, bl] = part.color
+          }
+          if (part.normalView) {
+            let nx = l0 * m.nrm[a * 3] + l1 * m.nrm[b * 3] + l2 * m.nrm[c * 3]
+            let ny = l0 * m.nrm[a * 3 + 1] + l1 * m.nrm[b * 3 + 1] + l2 * m.nrm[c * 3 + 1]
+            let nz = l0 * m.nrm[a * 3 + 2] + l1 * m.nrm[b * 3 + 2] + l2 * m.nrm[c * 3 + 2]
+            const nl = Math.hypot(nx, ny, nz) || 1
+            nx /= nl; ny /= nl; nz /= nl
+            const towards = -(nx * cam.fwd[0] + ny * cam.fwd[1] + nz * cam.fwd[2])
+            const flip = towards < 0 ? -1 : 1
+            const vx = (nx * cam.right[0] + ny * cam.right[1] + nz * cam.right[2]) * flip
+            const vy = (nx * cam.up[0] + ny * cam.up[1] + nz * cam.up[2]) * flip
+            const vz = towards * flip
+            depth[o] = z
+            id[o] = triId
+            rgb[o * 3] = 0.5 + 0.5 * vx
+            rgb[o * 3 + 1] = 0.5 + 0.5 * vy
+            rgb[o * 3 + 2] = 0.5 + 0.5 * vz
+            continue
           }
           depth[o] = z
           id[o] = triId

@@ -3,7 +3,7 @@
 import { getBounds, NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { MeshoptDecoder } from 'meshoptimizer'
-import { readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import sharp from 'sharp'
 
 await MeshoptDecoder.ready
@@ -31,7 +31,9 @@ for (const n of (doc.getRoot().getDefaultScene() ?? root.listScenes()[0]).listCh
   const dead = /^Dead/.test(n.getName())
   const [t0, t1] = [tris(l0), tris(l1)]
   if (t0 > (dead ? 2000 : 3000)) bad(`${n.getName()} LOD0 ${t0} tris over budget`)
-  if (t1 > 800) bad(`${n.getName()} LOD1 ${t1} tris over budget`)
+  // round 2: tight-cut leaf cards may use up to 1000 tris (broadleaf/apple); pines stay lighter (<= 500)
+  const lod1Cap = /^Pine/.test(n.getName()) ? 500 : 1000
+  if (t1 > lod1Cap) bad(`${n.getName()} LOD1 ${t1} tris over budget (${lod1Cap})`)
   for (const l of [l0, l1]) {
     if (l.getScale().some((v) => v !== 1) || l.getTranslation().some((v) => v !== 0) || l.getSkin()) bad(`${n.getName()}/${l.getName()} has a transform/skin`)
     for (const p of l.getMesh().listPrimitives()) {
@@ -50,6 +52,6 @@ for (const n of (doc.getRoot().getDefaultScene() ?? root.listScenes()[0]).listCh
 const png = await sharp(`${dir}/trees-impostors.png`).metadata()
 if (png.width !== meta.views * meta.cell || png.height !== meta.rows.length * meta.cell || !png.hasAlpha) bad(`impostor png ${png.width}x${png.height}`)
 console.log(rows.join('\n'))
-for (const f of ['trees.glb', 'trees-impostors.png', 'trees-impostors.json']) console.log(`${f}: ${(statSync(`${dir}/${f}`).size / 1024).toFixed(0)} KB`)
+for (const f of ['trees.glb', 'trees-impostors.png', 'trees-impostors-normal.png', 'trees-impostors.json'].filter((f) => existsSync(`${dir}/${f}`))) console.log(`${f}: ${(statSync(`${dir}/${f}`).size / 1024).toFixed(0)} KB`)
 if (errs.length) { console.error(`FAIL\n${errs.join('\n')}`); process.exit(1) }
 console.log('OK: trees contract')

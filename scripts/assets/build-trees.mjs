@@ -21,8 +21,9 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { buildTextures, REGIONS, remapLeafUv } from './trees/atlas.mjs'
-import { applyCrownAo, cardVisibility, crownAo, cullCards, mergeCards, windBark } from './trees/lod.mjs'
+import { applyCrownAo, cardVisibility, crownAo, cullCards, leafOverdraw, mergeCards, windBark } from './trees/lod.mjs'
 import { bounds, components, loadSource, simplifyMesh, transformInPlace, triCount } from './trees/mesh.mjs'
+import { regionCuts } from './trees/outline.mjs'
 import { bleed, impostorCamera, makeCamera, rasterize, resolve as resolveBuf } from './trees/raster.mjs'
 
 await Promise.all([MeshoptEncoder.ready, MeshoptSimplifier.ready])
@@ -35,7 +36,11 @@ const OUT = resolve(ROOT, flag('out') ?? 'public/assets')
 const ONLY = flag('only')?.split(',')
 
 /** Budgets (D-REN-11 / contract): LOD0 <= 3000 (dead 2000), LOD1 <= 800. */
-const BUDGET = { lod0: 3000, lod0Dead: 2000, lod1: 800 }
+const BUDGET = { lod0: 3000, lod0Dead: 2000, lod1: 800, lod1Tight: 1000, lod1Pine: 450 }
+/** LOD1 leaf cards: `tight` (cut to the card texture outline, round 2) or `merged` (full-rectangle quads, session 12) */
+const LOD1_MODE = flag('lod1') ?? 'tight'
+/** minimum silhouette IoU (LOD0 vs LOD1, 8 views) a tight LOD1 candidate must reach to be eligible */
+const MIN_IOU = 0.86
 const CELL = 256
 const VIEWS = 8
 const SS = 4
@@ -45,8 +50,8 @@ const VARIANTS = [
   { name: 'Broadleaf_B', kind: 'tree_broad', src: 'CommonTree_3', height: 13.5, leaf: 'broad', leafCap: 1500, bark1: 220 },
   { name: 'Broadleaf_C', kind: 'tree_broad', src: 'CommonTree_4', height: 12, leaf: 'broad', leafCap: 1300, bark1: 240 },
   { name: 'Apple_A', kind: 'tree_apple', src: 'CommonTree_5', height: 5.2, leaf: 'apple', leafCap: 1300, bark1: 200 },
-  { name: 'Pine_A', kind: 'tree_pine', src: 'Pine_1', height: 14, leaf: 'pine', leafCap: 1200, bark1: 200, width: 0.62 },
-  { name: 'Pine_B', kind: 'tree_pine', src: 'Pine_4', height: 18, leaf: 'pine', leafCap: 1200, bark1: 200, width: 0.6 },
+  { name: 'Pine_A', kind: 'tree_pine', src: 'Pine_1', height: 14, leaf: 'pine', leafCap: 1200, bark1: 200, bark1Tight: 110, width: 0.62 },
+  { name: 'Pine_B', kind: 'tree_pine', src: 'Pine_4', height: 18, leaf: 'pine', leafCap: 1200, bark1: 200, bark1Tight: 110, width: 0.6 },
   { name: 'Dead_A', kind: 'tree_dead', src: 'DeadTree_2', height: 9.5, leaf: null, leafCap: 0, bark1: 760 },
 ]
 
@@ -144,10 +149,71 @@ function buildVariant(v) {
   info.bounds = { halfWidth, minY: 0, maxY, min: all.min.map(f1), max: all.max.map(f1) }
 
   // ---- LOD1
-  const bark1 = simplifyMesh(bark0, v.bark1, { error: 0.1, flags: ['Permissive'] })
+  const tight = LOD1_MODE === 'tight' && v.leaf
+  const lodBudget = !tight ? BUDGET.lod1 : v.leaf === 'pine' ? BUDGET.lod1Pine : BUDGET.lod1Tight
+  const bark1 = simplifyMesh(bark0, tight ? (v.bark1Tight ?? v.bark1) : v.bark1, { error: 0.1, flags: ['Permissive'] })
   let leaf1 = null
   let kappa = null
-  if (leaf0) {
+  if (leaf0 && tight) {
+    const comp0 = components(leaf0)
+    const cams = Array.from({ length: VIEWS }, (_, i) => impostorCamera(i, halfWidth, 0, maxY))
+    const ref = cams.map((c) => silhouette(partsOf(bark0, leaf0), c))
+    const cov = (sil) => sil.reduce((x, y) => x + y, 0)
+    const refCov = ref.reduce((x, r) => x + cov(r), 0)
+    const evaluate = (cand) => {
+      let io = 0
+      let c = 0
+      cams.forEach((cam, i) => {
+        const sil = silhouette(partsOf(bark1, cand), cam)
+        io += iou(ref[i], sil)
+        c += cov(sil)
+      })
+      return { iou: io / VIEWS, cov: c / refCov }
+    }
+    const region = REGIONS[v.leaf]
+    const tris1 = triCount(bark1)
+    const cands = []
+    const windows = v.leaf === 'pine' ? [] : [1, 2, 3, 4]
+    for (const w of windows) {
+      for (const n of [4, 5, 6, 8]) {
+        const cutSet = regionCuts(tex.leaf.tex, region, n, [w])
+        const per = cutSet.cuts.reduce((a, c) => a + c.poly.length - 2, 0) / cutSet.cuts.length
+        for (const kScale of [1, 0.75, 0.55]) {
+          const k = Math.floor(((lodBudget - tris1) / per) * kScale)
+          for (let kp = 0.3; kp <= 1.51; kp += 0.15) {
+            const cand = mergeCards(leaf0, comp0, k, kp, uvFull[v.leaf], 3, cutSet)
+            if (tris1 + triCount(cand) > lodBudget) continue
+            applyCrownAo(cand, crownAo(leaf0))
+            const e = evaluate(cand)
+            const st = leafOverdraw(cand, leafTex, cams)
+            cands.push({ ...e, ...st, kp, k, n, w, cand, cov0: cutSet.cuts.reduce((a, c) => a + c.coverage, 0) / cutSet.cuts.length })
+          }
+        }
+      }
+    }
+    if (v.leaf === 'pine') {
+      // the kit's pine cards are already cut to the needle outline (bent, ~22 tris each): simplifying them keeps the droop
+      for (const err of [0.2]) {
+        for (let target = 200; target <= lodBudget - tris1; target += 20) {
+          const cand = simplifyMesh(leaf0, target, { error: err, uvWeight: 0.5, flags: ['Permissive'] })
+          if (tris1 + triCount(cand) > lodBudget) continue
+          const e = evaluate(cand)
+          const st = leafOverdraw(cand, leafTex, cams)
+          cands.push({ ...e, ...st, kp: 0, k: 0, n: 0, w: 0, simp: err, cand })
+        }
+      }
+    }
+    const ok = cands.filter((c) => c.iou >= MIN_IOU && Math.abs(c.cov - 1) <= 0.08)
+    const pool = ok.length ? ok : cands
+    const best = v.leaf === 'pine' ? pool.reduce((a, b) => (b.iou > a.iou ? b : a)) : ok.length ? pool.reduce((a, b) => (b.area < a.area ? b : a)) : pool.reduce((a, b) => (b.iou - 0.5 * Math.abs(b.cov - 1) > a.iou - 0.5 * Math.abs(a.cov - 1) ? b : a))
+    if (process.env.SV_TREES_DEBUG) for (const c of cands.filter((c) => c.iou >= 0.8).sort((a, b) => a.area - b.area).slice(0, 14)) console.log(`   cand ${c.simp ? `simp${c.simp}` : ''} w${c.w} n${c.n} k${c.k} kp${c.kp.toFixed(2)} tris${c.tris} iou ${c.iou.toFixed(3)} cov ${c.cov.toFixed(2)} area ${c.area.toFixed(1)} opq ${c.opaqueRatio.toFixed(2)} od ${c.overdraw.toFixed(2)}`)
+    leaf1 = best.cand
+    kappa = best.kp ? f1(best.kp) : null
+    info.lod1Iou = f1(best.iou)
+    info.lod1How = best.simp ? `simplified(err ${best.simp})` : `tight(w${best.w},n${best.n})`
+    info.lod1Coverage = f1(best.cov)
+    info.lod1Stats = { cards: best.cards, area: f1(best.area), opaqueRatio: f1(best.opaqueRatio), overdraw: f1(best.overdraw) }
+  } else if (leaf0) {
     const comp0 = components(leaf0)
     const k = Math.floor((BUDGET.lod1 - triCount(bark1)) / 2)
     const cams = Array.from({ length: VIEWS }, (_, i) => impostorCamera(i, halfWidth, 0, maxY))
@@ -184,6 +250,8 @@ function buildVariant(v) {
     info.lod1Iou = f1(best.iou)
     info.lod1How = best.how
     info.lod1Coverage = f1(best.cov)
+    const st = leafOverdraw(leaf1, leafTex, cams)
+    info.lod1Stats = { cards: st.cards, area: f1(st.area), opaqueRatio: f1(st.opaqueRatio), overdraw: f1(st.overdraw) }
   } else {
     const cams = Array.from({ length: VIEWS }, (_, i) => impostorCamera(i, halfWidth, 0, maxY))
     info.lod1Iou = f1(cams.reduce((a, c) => a + iou(silhouette(partsOf(bark0, null), c), silhouette(partsOf(bark1, null), c)), 0) / VIEWS)
@@ -227,6 +295,7 @@ const rows = built.length
 const sheetW = VIEWS * CELL
 const sheetH = rows * CELL
 const sheet = new Uint8ClampedArray(sheetW * sheetH * 4)
+const normalSheet = new Uint8ClampedArray(sheetW * sheetH * 4)
 const rowsMeta = []
 built.forEach((b, row) => {
   const parts = partsOf(b.lods.LOD0.bark, b.lods.LOD0.leaf)
@@ -236,6 +305,22 @@ built.forEach((b, row) => {
     // GL convention: row 0 at the bottom of the image
     const y0 = (rows - 1 - row) * CELL
     for (let y = 0; y < CELL; y++) sheet.set(img.data.subarray(y * CELL * 4, (y + 1) * CELL * 4), ((y0 + y) * sheetW + k * CELL) * 4)
+    // normal atlas (same layout and coverage): view-space normals, renormalised after the supersample average
+    const nImg = bleed(resolveBuf(rasterize(parts.map((p) => ({ ...p, normalView: true })), cam, CELL * SS, CELL * SS), SS), 10)
+    for (let i = 0; i < nImg.data.length; i += 4) {
+      const x = nImg.data[i] / 127.5 - 1, y = nImg.data[i + 1] / 127.5 - 1, z = nImg.data[i + 2] / 127.5 - 1
+      const l = Math.hypot(x, y, z)
+      if (l > 1e-3) {
+        nImg.data[i] = (x / l * 0.5 + 0.5) * 255
+        nImg.data[i + 1] = (y / l * 0.5 + 0.5) * 255
+        nImg.data[i + 2] = (z / l * 0.5 + 0.5) * 255
+      } else {
+        nImg.data[i] = 127.5
+        nImg.data[i + 1] = 127.5
+        nImg.data[i + 2] = 255
+      }
+    }
+    for (let y = 0; y < CELL; y++) normalSheet.set(nImg.data.subarray(y * CELL * 4, (y + 1) * CELL * 4), ((y0 + y) * sheetW + k * CELL) * 4)
   }
   rowsMeta.push({ name: b.v.name, kind: b.v.kind, halfWidth: b.halfWidth, minY: 0, maxY: b.maxY })
 })
@@ -291,6 +376,7 @@ await io.write(`${OUT}/trees.glb`, doc)
 
 // ---- 5. impostor files -------------------------------------------------------------------------------------------------------
 await sharp(Buffer.from(sheet.buffer), { raw: { width: sheetW, height: sheetH, channels: 4 } }).png({ compressionLevel: 9, effort: 10 }).toFile(`${OUT}/trees-impostors.png`)
+await sharp(Buffer.from(normalSheet.buffer), { raw: { width: sheetW, height: sheetH, channels: 4 } }).png({ compressionLevel: 9, effort: 10 }).toFile(`${OUT}/trees-impostors-normal.png`)
 writeFileSync(
   `${OUT}/trees-impostors.json`,
   `${JSON.stringify({ views: VIEWS, cell: CELL, rowOrigin: 'bottom', rows: rowsMeta }, null, 2)}\n`,
