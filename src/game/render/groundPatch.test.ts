@@ -11,17 +11,20 @@ describe('ground patches', () => {
     expect(mean).toBeLessThan(0.55)
   })
 
-  it('flower and dark patches cover a minority of the ground and never overlap fully', () => {
+  it('flower, dark and soil patches cover a minority of the ground and never overlap fully', () => {
     let flower = 0
     let dark = 0
+    let soil = 0
     const types = new Set<number>()
     const n = 6000
     for (let i = 0; i < n; i++) {
       const x = (i % 80) * 37.3
       const z = Math.floor(i / 80) * 41.9
-      const [f, d] = groundPatch(x, z)
+      const [f, d, so] = groundPatch(x, z)
       expect(f).toBeGreaterThanOrEqual(0)
       expect(f + d).toBeLessThanOrEqual(1.0001)
+      expect(f + so).toBeLessThanOrEqual(1.0001)
+      if (so > 0.5) soil++
       if (f > 0.5) flower++
       if (d > 0.5) dark++
       types.add(flowerType(x, z))
@@ -30,6 +33,8 @@ describe('ground patches', () => {
     expect(flower / n).toBeLessThan(0.35)
     expect(dark / n).toBeGreaterThan(0.03)
     expect(dark / n).toBeLessThan(0.35)
+    expect(soil / n).toBeGreaterThan(0.03)
+    expect(soil / n).toBeLessThan(0.25)
     expect([...types].sort()).toEqual([0, 1, 2])
   })
 })

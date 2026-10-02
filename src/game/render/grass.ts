@@ -254,9 +254,9 @@ if (vPetal.x < 5.0) {
  * Per-clump look, once at tile build: colour = biome tint × dark meadow splash × per-clump brightness/hue jitter
  * (instanceColor); patch = flower-patch weight + species (aPatch). Same patches as the ground under it.
  */
-function clumpLook(biome: number, x: number, z: number, col: Float32Array, pat: Float32Array, i: number) {
+function clumpLook(biome: number, x: number, z: number, col: Float32Array, pat: Float32Array, i: number, patch = groundPatch(x, z)) {
   const [tr, tg, tb] = grassTint(biome)
-  const [flower, dark] = groundPatch(x, z)
+  const [flower, dark] = patch
   const h = hash01(Math.round(x * 10), Math.round(z * 10), 9)
   const h2 = hash01(Math.round(x * 10), Math.round(z * 10), 10) - 0.5
   const k = (1 - dark * 0.3) * (0.86 + 0.26 * h)
@@ -433,14 +433,19 @@ export class Grass {
         const col = new Float32Array((data.length / 5) * 3)
         const pat = new Float32Array((data.length / 5) * 2)
         const { m, p, q, s, up } = this.scratch
+        let j = 0
         for (let i = 0; i < data.length / 5; i++) {
           p.set(data[i * 5]!, data[i * 5 + 1]!, data[i * 5 + 2]!)
+          // Bare-soil patches (same function as the ground tint): clumps survive with probability 1 − soil.
+          const patch = groundPatch(p.x, p.z)
+          if (patch[2] > 0 && hash01(Math.round(p.x * 10), Math.round(p.z * 10), 11) < patch[2] * 0.95) continue
           q.setFromAxisAngle(up, data[i * 5 + 3]!)
           s.setScalar(data[i * 5 + 4]!)
-          m.compose(p, q, s).toArray(buf, i * 16)
-          clumpLook(this.sim.terrain.biomeAt(p.x, p.z), p.x, p.z, col, pat, i)
+          m.compose(p, q, s).toArray(buf, j * 16)
+          clumpLook(this.sim.terrain.biomeAt(p.x, p.z), p.x, p.z, col, pat, j, patch)
+          j++
         }
-        ring.tiles.set(n.k, { m: buf, c: col, p: pat })
+        ring.tiles.set(n.k, { m: buf.subarray(0, j * 16), c: col.subarray(0, j * 3), p: pat.subarray(0, j * 2) })
       }
       // Commit when the set of ready tiles (or their fine/coarse split) changed.
       const ready = need.filter((n) => ring.tiles.has(n.k))

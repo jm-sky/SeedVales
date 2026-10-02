@@ -13,6 +13,8 @@ import { GROUND_PATCH_GLSL } from './groundPatch'
 /** Colours the tint fades towards (linear, like the vertex colours). */
 const DRY = new THREE.Color(0xb3a55a)
 const SNOW = new THREE.Color(0xf0f4f8)
+/** Bare meadow soil (brown earth with a hint of leaf litter). */
+const SOIL = new THREE.Color(0x6e5537)
 
 export interface TerrainShading {
   /** 0 = summer, up to ~0.8 = faded autumn/winter grass. */
@@ -80,19 +82,22 @@ export function createTerrainMaterial(opts: { smooth: boolean; detail: boolean }
     sh.uniforms.uDry = { value: DRY }
     sh.uniforms.uSnowC = { value: SNOW }
     sh.uniforms.uFlowers = shading.flowers
+    sh.uniforms.uSoilC = { value: SOIL }
     if (detail) sh.uniforms.uDetail = { value: detail }
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nattribute vec2 aTint;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;\nvarying float vViewDist;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTint = aTint;\nvGroundXZ = position.xz;\nvViewDist = length((modelViewMatrix * vec4(position, 1.0)).xyz);')
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', `#include <common>\nuniform float uSeason;\nuniform float uSnow;\nuniform vec3 uDry;\nuniform vec3 uSnowC;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;\nvarying float vViewDist;${detail ? '\nuniform sampler2D uDetail;' : ''}\n${GROUND_PATCH_GLSL}`)
+      .replace('#include <common>', `#include <common>\nuniform float uSeason;\nuniform float uSnow;\nuniform vec3 uDry;\nuniform vec3 uSnowC;\nuniform vec3 uSoilC;\nvarying vec2 vTint;\nvarying vec2 vGroundXZ;\nvarying float vViewDist;${detail ? '\nuniform sampler2D uDetail;' : ''}\n${GROUND_PATCH_GLSL}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb = mix(diffuseColor.rgb, uDry, uSeason * 0.45 * vTint.x);
 {
   // Meadow patches on the grass share (the same splashes as the blades above): darker green, and a faint
   // flower tint that carries the flower patches beyond the grass rings.
-  vec2 gp = groundPatch(vGroundXZ) * vTint.x;
+  vec3 gp = groundPatch(vGroundXZ) * vTint.x;
   diffuseColor.rgb *= 1.0 - gp.y * 0.22;
+  // Bare soil between tufts (the grass thins in the same patches); fades under snow like the grass share.
+  diffuseColor.rgb = mix(diffuseColor.rgb, uSoilC, gp.z * 0.8 * (1.0 - uSnow));
   vec3 fc = flowerColour(vGroundXZ);
   // Yellow patches tint the ground; white/violet only slightly (a pale wash reads as grey on the ground).
   diffuseColor.rgb = mix(diffuseColor.rgb, fc, gp.x * uFlowers * (fc.b < 0.5 ? 0.18 : 0.06));
