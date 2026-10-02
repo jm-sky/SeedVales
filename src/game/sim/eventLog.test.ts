@@ -4,10 +4,10 @@
  */
 import { describe, expect, it } from 'vitest'
 import { consume } from './actions'
-import { killNpc } from './combat'
+import { fireRanged, killNpc } from './combat'
 import { activeLog, EventLog, ledgerBalance, logMint, logMoney, logProduce, moneyBalance, worldStock } from './eventLog'
-import { addItem, countItem, newStack, spoilInventory } from './inventory'
-import { run, testSim } from './testWorld'
+import { addItem, countItem, equipToMain, newStack, spoilInventory } from './inventory'
+import { playerFarAway, run, testSim } from './testWorld'
 import { payFromTreasury, payToTreasury } from './treasury'
 
 describe('event log + ledger (verify--001)', () => {
@@ -132,6 +132,29 @@ describe('event log + ledger (verify--001)', () => {
       const d = log.find((e) => e.kind === 'death')[0]!
       expect(d.actorId).toBe(npc.id)
       expect(d.data.cause).toBe('thirst')
+    } finally {
+      sim.disableEventLog()
+    }
+  })
+
+  it('ECON-01: shooting and recovering arrows balances the ledger (review 014 #4)', () => {
+    const sim = testSim()
+    try {
+      const p = sim.player
+      playerFarAway(sim)
+      addItem(p.inv, newStack('short_bow', 1))
+      addItem(p.inv, newStack('arrow', 40))
+      equipToMain(p, p.inv.items.find((s) => s.id === 'short_bow')!)
+      const log = sim.enableEventLog() // baseline after the setup items
+      for (let i = 0; i < 40; i++) {
+        p.attackReadyAt = 0
+        fireRanged(sim, p, 0.3, 0.3, 1)
+        run(sim, 6, 0.1)
+      }
+      const onGround = sim.state.ground.filter((g) => g.stack.id === 'arrow').reduce((n, g) => n + g.stack.qty, 0)
+      expect(onGround).toBeGreaterThan(0)
+      const row = ledgerBalance(sim, log).find((r) => r.item === 'arrow')!
+      expect(row.residual).toBe(0)
     } finally {
       sim.disableEventLog()
     }

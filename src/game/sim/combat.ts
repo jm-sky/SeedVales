@@ -14,7 +14,7 @@ import { perf } from '../diag/perf'
 import { train } from './actions'
 import { alertAround } from './alerts'
 import { projectileGround } from './caveSpace'
-import { logEvent, logging } from './eventLog'
+import { logEvent, logging, logProduce } from './eventLog'
 import { fleeHome } from './fauna/perception'
 import { consumeItem, qualityMult, wearTool } from './inventory'
 import { companionsOnKill } from './npc/companions'
@@ -333,6 +333,7 @@ export function projectileSystem(sim: Sim, dt: number) {
         // Arrows can be recovered sometimes.
         if (p.item && p.item !== 'sling_stone' && sim.rng.chance(0.5)) {
           sim.addGround({ id: sim.nextId(), x: p.x, z: p.z, stack: { id: p.item, qty: 1 }, droppedAt: sim.state.time.cal })
+          logProduce(p.item, 1, 'arrow_recovered') // the shot logged it as consumed; the recovered one is a source again
         }
       }
     }
