@@ -19,7 +19,7 @@ import { initialWeather } from './weather'
 
 export const newAi = (): AiState => ({ goal: null, label: '', steps: [], stepIdx: 0, stepT: 0, replanAt: 0, cooldowns: {}, stuckT: 0 })
 
-function makeHuman(rng: Rng, id: number, x: number, z: number, y: number, male: boolean, age: AgeGroup, surname: string): Human {
+export function makeHuman(rng: Rng, id: number, x: number, z: number, y: number, male: boolean, age: AgeGroup, surname: string): Human {
   const attr = () => rng.int(3, 7)
   const attrs = { str: attr(), per: attr(), end: attr(), cha: attr(), int: attr(), agi: attr() }
   if (age === 'child') attrs.str = Math.max(1, attrs.str - 3)
@@ -267,6 +267,7 @@ export function createNewGame(world: WorldData): GameState {
     nodes: {},
     dens,
     quests: [],
+    authoredQuests: {},
     terrainEdits: {},
     messages: [{ t: START_CALENDAR_S, text: `You arrive in ${home.name}.`, kind: 'info' }],
     nextId,

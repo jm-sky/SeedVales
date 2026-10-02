@@ -6,6 +6,7 @@ import { itemDef } from '@/game/data/items'
 import { wantedItem } from '@/game/sim/gifts'
 import { professionName } from '@/game/sim/newGame'
 import PanelFrame from './PanelFrame.vue'
+import QuestTopics from './QuestTopics.vue'
 
 const { game, version } = useGameStrict()
 const d = computed(() => {
@@ -75,5 +76,6 @@ const d = computed(() => {
         Quests ({{ d.quests.length }})
       </Button>
     </div>
+    <QuestTopics :npc-id="d.n.id" />
   </PanelFrame>
 </template>

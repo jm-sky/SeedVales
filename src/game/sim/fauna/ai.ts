@@ -14,6 +14,7 @@ import { isDown, isProtected, killAnimal, meleeAttack } from '../combat'
 import { logConsume } from '../eventLog'
 import { steerTo } from '../movement'
 import { nearestNaturalWater } from '../npc/queries'
+import { animalQuestMotion } from '../questHold'
 import { hourOf, isNight } from '../time'
 import { smellTrace } from '../traces'
 import { hp } from '../vitals'
@@ -82,6 +83,9 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
     perf.count('ai.decisions')
     if (decideAnimal(sim, a)) return
   }
+
+  // Authored quest: hold at a spot / follow an actor (G01 Pip).
+  if ((a.questHold || a.questFollow !== undefined) && animalQuestMotion(sim, a, dt, full)) return
 
   // 4) Plan-level behaviour (re-evaluated when previous target reached or timed out).
   if (ai.goal === 'hunt' && !chaseValid(sim, a)) {

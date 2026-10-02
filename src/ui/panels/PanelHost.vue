@@ -10,6 +10,7 @@ import GiftPanel from './GiftPanel.vue'
 import HirePanel from './HirePanel.vue'
 import InteractMenu from './InteractMenu.vue'
 import InventoryPanel from './InventoryPanel.vue'
+import JournalPanel from './JournalPanel.vue'
 import MapPanel from './MapPanel.vue'
 import OrdersPanel from './OrdersPanel.vue'
 import QuestsPanel from './QuestsPanel.vue'
@@ -39,6 +40,7 @@ const panel = computed(() => {
     <TradePanel v-else-if="panel === 'trade'" />
     <StoragePanel v-else-if="panel === 'storage'" />
     <QuestsPanel v-else-if="panel === 'quests'" />
+    <JournalPanel v-else-if="panel === 'journal'" />
     <BuildPanel v-else-if="panel === 'build'" />
     <QuickPanel v-else-if="panel === 'quick'" />
     <MapPanel v-else-if="panel === 'map'" />

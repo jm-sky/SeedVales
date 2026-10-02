@@ -16,6 +16,7 @@ import { Biome } from '../world/types'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { torchBurnH } from './fire'
 import { addItem, consumeItem, countItem, findTool, fitQty, newStack, removeStack, wearTool } from './inventory'
+import { questEvent } from './questHooks'
 import { seasonOf } from './time'
 import { drink, eat, heal, makeIll } from './vitals'
 
@@ -388,7 +389,7 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
 }
 
 /** Repair: hammer + 2 branches (from actor or household store). Removes rat nests at >60%. */
-export function repairBuilding(_sim: Sim, h: Human, b: Building, store?: Building): ActionResult {
+export function repairBuilding(sim: Sim, h: Human, b: Building, store?: Building): ActionResult {
   if (b.durability >= 98) return fail('It does not need repair.')
   const tool = findTool(h, 'hammer') ?? findTool(h, 'chop')
   if (!tool) return fail('You need a hammer or an axe.')
@@ -398,6 +399,7 @@ export function repairBuilding(_sim: Sim, h: Human, b: Building, store?: Buildin
   b.durability = Math.min(100, b.durability + 30 + h.skills.construction * 0.2)
   wearTool(tool, 1)
   train(h, 'construction', 0.4, 2)
+  questEvent(sim, { k: 'repair', buildingId: b.id })
   if (b.ratNest && b.durability > 60) {
     b.ratNest = undefined
     return ok('You repaired the building — the rat nest is gone.')

@@ -15,6 +15,7 @@ import { train } from './actions'
 import { logConsume } from './eventLog'
 import { consumeItem, countItem, findTool } from './inventory'
 import { startActivity } from './player'
+import { questEvent } from './questHooks'
 import { addRep, settlementAt } from './reputation'
 
 export function canPlace(sim: Sim, bp: Blueprint, x: number, z: number): { ok: boolean; reason?: string } {
@@ -132,5 +133,6 @@ export function applyBuildProgress(sim: Sim, siteId: string, playS: number): Act
   sim.rebuildBuildingIndex()
   sim.state.px.stats.built = (sim.state.px.stats.built ?? 0) + 1
   if (site.settlementId >= 0 && bp.kind !== 'campfire') addRep(sim, site.settlementId, { renown: 2 })
+  questEvent(sim, { k: 'built', buildingId: b.id, kind: b.kind })
   return { ok: true, msg: `Construction complete: ${bp.name}!` }
 }

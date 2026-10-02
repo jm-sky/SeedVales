@@ -38,7 +38,7 @@ export function collectTaxes(sim: Sim) {
     st.taxDay = day
     if (first) continue // no retroactive tax at game start / after load of an old save
     for (const n of sim.npcsOf(st.id)) {
-      if (n.vitals.dead) continue
+      if (n.vitals.dead || n.questOwner) continue
       payToTreasury(sim, st.id, n, Math.floor(Math.max(0, n.money - TAX.exempt) * TAX.rate))
     }
   }

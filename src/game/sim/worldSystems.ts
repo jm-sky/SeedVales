@@ -20,6 +20,7 @@ import { npcSystem } from './npc/ai'
 import { companionSystem } from './npc/companions'
 import { playerSystem } from './player'
 import { countByDen, nestTag } from './queries'
+import { authoredQuestSystem } from './questEngine'
 import { questSystem } from './quests'
 import { reputationSystem } from './reputation'
 import { growthFactor, seasonOf } from './time'
@@ -159,6 +160,7 @@ export function installSystems(sim: Sim) {
     { name: 'regrow', interval: 60, run: (s) => regrowNodes(s) },
     { name: 'reputation', interval: 5, run: (s) => reputationSystem(s) },
     { name: 'quests', interval: 10, run: (s) => questSystem(s) },
+    { name: 'authoredQuests', interval: 1, run: authoredQuestSystem },
     { name: 'taxes', interval: 30, run: (s) => collectTaxes(s) },
     { name: 'traces', interval: 10, run: traceSystem },
     { name: 'navigation', interval: 2, run: navigationSystem },

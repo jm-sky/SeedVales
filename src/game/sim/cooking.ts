@@ -14,6 +14,7 @@ import { train } from './actions'
 import { giveOrDrop } from './actions'
 import { logConsume, logProduce } from './eventLog'
 import { addItem, findTool, newStack } from './inventory'
+import { questEvent } from './questHooks'
 
 /** Lit campfire within reach, and whether a spit stands next to it. */
 export function roastSpot(sim: Sim, h: Human): { fire: boolean; spit: boolean } {
@@ -71,5 +72,6 @@ export function completeRoast(sim: Sim, h: Human, n: number): ActionResult {
   for (const s of out) addItem(tmp, s)
   for (const s of tmp.items) giveOrDrop(sim, h, s)
   train(h, 'survival', 0.3, out.length)
+  if (h.kind === 'player') questEvent(sim, { k: 'roast', n: out.length })
   return { ok: true, msg: `Roasted: ${itemDef('cooked_meat').name} ×${out.length}` }
 }

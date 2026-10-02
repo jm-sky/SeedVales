@@ -236,6 +236,26 @@ export class Sim {
     this.byId.delete(a.id)
   }
 
+  /** Adds an NPC at runtime (quest-owned visitors). */
+  addNpc(h: Human) {
+    this.state.npcs.push(h)
+    this.actors.insert(h)
+    this.byId.set(h.id, h)
+    const arr = this.npcsBySettlement.get(h.settlementId)
+    if (arr) arr.push(h)
+    else this.npcsBySettlement.set(h.settlementId, [h])
+  }
+
+  removeNpc(h: Human) {
+    const i = this.state.npcs.indexOf(h)
+    if (i >= 0) this.state.npcs.splice(i, 1)
+    this.actors.remove(h)
+    this.byId.delete(h.id)
+    const arr = this.npcsBySettlement.get(h.settlementId)
+    const j = arr ? arr.indexOf(h) : -1
+    if (arr && j >= 0) arr.splice(j, 1)
+  }
+
   nextId() {
     return this.state.nextId++
   }

@@ -111,18 +111,18 @@ async function saveAs() {
       </Button>
       <div class="mt-2 grid grid-cols-2 gap-2">
         <Button
-          v-for="p in (['inventory', 'character', 'craft', 'build', 'quests', 'map', 'quick'] as const)"
+          v-for="p in (['inventory', 'character', 'craft', 'build', 'journal', 'quests', 'map', 'quick'] as const)"
           :key="p"
           variant="secondary"
           size="sm"
           @click="game.togglePanel(p)"
         >
-          {{ { inventory: 'Inventory', character: 'Character', craft: 'Crafting', build: 'Building', quests: 'Quests', map: 'Map', quick: 'Quick actions' }[p] }}
+          {{ { inventory: 'Inventory', character: 'Character', craft: 'Crafting', build: 'Building', journal: 'Journal', quests: 'Notices and reputation', map: 'Map', quick: 'Quick actions' }[p] }}
         </Button>
       </div>
       <p class="mt-2 text-xs text-muted-foreground">
         WASD/arrows — move · mouse — camera (click the game) · wheel — zoom · Shift — run · E — interact · Tab — next target · LMB — attack
-        (hold with a bow) · X — switch weapon · K — character · R — combat · Z — sneak · T — torch · H — bandage · F3 — diagnostics · F5 — save.
+        (hold with a bow) · X — switch weapon · K — character · J — journal · R — combat · Z — sneak · T — torch · H — bandage · F3 — diagnostics · F5 — save.
       </p>
     </div>
   </PanelFrame>

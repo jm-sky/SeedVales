@@ -3,11 +3,12 @@
  * @domain sim
  */
 import type { ArmorLayer, ArmorSlot } from '../data/items'
+import type { FlagValue, QuestId, SlotId } from '../data/quests/types'
 import type { Attributes, Skills } from '../data/skills'
 import type { AnimalVariant, SpeciesId } from '../data/species'
 import type { DenSpecies, ProfessionId, StructureKind } from '../world/types'
 
-export const SAVE_VERSION = 8
+export const SAVE_VERSION = 9
 
 export type BodyPart = 'head' | 'torso' | 'gut' | 'larm' | 'rarm' | 'lleg' | 'rleg'
 export const BODY_PARTS: BodyPart[] = ['head', 'torso', 'gut', 'larm', 'rarm', 'lleg', 'rleg']
@@ -126,8 +127,18 @@ export interface ActorBase {
 
 export type AgeGroup = 'child' | 'adult' | 'elder'
 
-/** Role in the household: `son` = grown son living with his parents, no family of his own (COMP-02). */
-export type Kin = 'head' | 'spouse' | 'child' | 'elder' | 'son'
+/**
+ * Role in the household: `son` = grown son living with his parents, no family of his own (COMP-02);
+ * `visitor` = quest-owned wanderer without a household (quests--001, G01 Piers).
+ */
+export type Kin = 'head' | 'spouse' | 'child' | 'elder' | 'son' | 'visitor'
+
+/** An actor kept at a spot by an authored quest (hold primitive, quests-engine §7). */
+export interface QuestHold {
+  q: QuestId
+  x: number
+  z: number
+}
 
 export type CompanionTask = 'escort' | 'guard'
 export type CompanionRisk = 'low' | 'medium' | 'high'
@@ -175,6 +186,10 @@ export interface Human extends ActorBase {
   gifts?: { day: number; n: number }
   /** Calendar day the player last asked this NPC to join for free (one roll per day). */
   joinAskDay?: number
+  /** Authored quest holding this NPC at a spot (safety and eating from the pack only). */
+  questHold?: QuestHold
+  /** Quest-owned NPC (visitor): no household, no profession, removed by the quest. */
+  questOwner?: QuestId
 }
 
 export interface Animal extends ActorBase {
@@ -195,6 +210,9 @@ export interface Animal extends ActorBase {
   aggroUntil?: number
   /** Calendar s of last shearing (wool regrows over WOOL_REGROW_DAYS). */
   shornAt?: number
+  /** Authored quest keeps this animal at a spot / makes it follow an actor (id). */
+  questHold?: QuestHold
+  questFollow?: number
 }
 
 export type Actor = Human | Animal
@@ -357,6 +375,34 @@ export interface Quest {
   kills: number
 }
 
+export type AuthoredQuestStatus = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
+
+/** Runtime state of one authored quest (docs/design/quests-engine.md §3). Plain data, saved. */
+export interface AuthoredQuestState {
+  status: AuthoredQuestStatus
+  /** Index into `QuestDef.stages`; only moves forward. */
+  stage: number
+  flags: Record<string, FlagValue>
+  /** Outcome choice, changeable until `settled`. */
+  choice?: string
+  settled: boolean
+  ending?: string
+  offeredAt: number
+  startedAt?: number
+  endedAt?: number
+  /** Cast slot → actor id, resolved once at offer time. */
+  cast: Record<SlotId, number>
+  /** Resolved anchors (cache key = JSON of the anchor spec). */
+  anchors: Record<string, { x: number; z: number; id?: string }>
+  /** Observation id → accumulated dwell (gameplay s); −1 = done. */
+  obs: Record<string, number>
+  counters: Record<string, number>
+  /** Counter id → building ids already counted (`distinct`). */
+  seen: Record<string, string[]>
+  /** Rule id → last game day it fired (−1 = never; `once: 'ever'` uses any value ≥ 0). */
+  fired: Record<string, number>
+}
+
 export interface PlayerActivity {
   kind: string
   ref?: string
@@ -463,6 +509,8 @@ export interface GameState {
   nodes: Record<string, NodeState>
   dens: DenState[]
   quests: Quest[]
+  /** Authored quests (quests--001), by quest id. */
+  authoredQuests: Record<QuestId, AuthoredQuestState>
   terrainEdits: Record<string, number[]>
   messages: GameMessage[]
   nextId: number

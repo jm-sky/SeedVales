@@ -20,6 +20,7 @@ import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishG
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
+import { questEvent } from './questHooks'
 import { acceptQuest } from './quests'
 import { addRep, addStat, depositGoodwill, takeGoodwill } from './reputation'
 import { hourOf, isNight } from './time'
@@ -347,7 +348,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     }
     case 'douse': {
       const b = sim.building((t as { id: string }).id)
-      if (b) b.lit = false
+      if (b) {
+        b.lit = false
+        questEvent(sim, { k: 'douse', buildingId: b.id })
+      }
       return 'Put out.'
     }
     case 'douse_fire': {
@@ -414,6 +418,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (!b) return ''
       if (b.kind === 'campfire') return lightFire(p, b).msg
       b.lit = true
+      questEvent(sim, { k: 'light', buildingId: b.id })
       return 'Lit.'
     }
     case 'light_planted': {

@@ -13,6 +13,7 @@ import { GIFT } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { addItem, qualityMult, removeStack } from './inventory'
 import { equipReceived } from './npc/companions'
+import { questEvent } from './questHooks'
 
 const DAY_S = 86400
 
@@ -94,6 +95,7 @@ export function giveGift(sim: Sim, npc: Human, stack: ItemStack, qty = stack.qty
   countGoodwill(sim, npc)
   npc.opinion = Math.min(100, npc.opinion + gain)
   equipReceived(npc)
+  questEvent(sim, { k: 'give', npcId: npc.id, item: given.id, qty: given.qty })
   const name = itemDef(given.id).name
   if (wanted) return { ok: true, msg: `${npc.name} is delighted with the ${name.toLowerCase()}!` }
   return { ok: true, msg: gain >= 3 ? `${npc.name} thanks you for the ${name.toLowerCase()}.` : `${npc.name} takes the ${name.toLowerCase()} politely.` }

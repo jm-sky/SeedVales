@@ -18,6 +18,7 @@ const view = computed(() => {
     goal: navGoal(sim),
     settlements: sim.world.settlements.map((s) => ({ ...s, visited: isVisited(sim, s.id), km: (Math.hypot(s.x - p.x, s.z - p.z) / 1000).toFixed(1) })),
     quests: sim.state.quests.filter((q) => q.status === 'active').map((q) => questGoal(sim, q)).filter((g) => !!g),
+    authored: game.value.questMarkers(),
   }
 })
 
@@ -60,6 +61,12 @@ function draw() {
     ctx.fillStyle = '#ff5a3c'
     ctx.font = 'bold 16px sans-serif'
     ctx.fillText('!', q.x * sc - 3, q.z * sc + 6)
+  }
+  // Authored quests (quests--001): the current stage's place, only in explored cells (filtered by the sim).
+  for (const q of view.value.authored) {
+    ctx.fillStyle = '#ffd24a'
+    ctx.font = 'bold 16px sans-serif'
+    ctx.fillText('?', q.x * sc - 4, q.z * sc + 6)
   }
   const g = view.value.goal
   if (g) {

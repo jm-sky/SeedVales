@@ -142,7 +142,8 @@ export interface SoakReport {
   log: { size: number; dropped: number }
 }
 
-const isLiving = (h: Human) => !h.vitals.dead && h.age !== 'child' && !h.companion
+/** Quest-owned visitors (G01 Piers) have no household or profession and are held at a spot: exempt from the life invariants. */
+const isLiving = (h: Human) => !h.vitals.dead && h.age !== 'child' && !h.companion && !h.questOwner
 
 export class SoakRecorder {
   private tracks = new Map<number, NpcTrack>()

@@ -7,6 +7,7 @@ import type { Sim } from './sim'
 import type { Quest } from './types'
 import { logEvent } from './eventLog'
 import { animalsNear, countByDen, nestTag } from './queries'
+import { questEvent } from './questHooks'
 import { addRep } from './reputation'
 import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
@@ -117,6 +118,7 @@ export function completeQuest(sim: Sim, q: Quest) {
 
 /** Called on kills by the player to advance quests. */
 export function questOnKill(sim: Sim, species: string, x: number, z: number, denId?: string) {
+  questEvent(sim, { k: 'kill', species })
   for (const q of sim.state.quests) {
     if (q.status !== 'active') continue
     if (q.kind === 'rats' && species === 'rat') {

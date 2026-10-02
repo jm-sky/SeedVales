@@ -10,6 +10,7 @@ import { COMPANION, FIRE, RUN_SPEED_MPS } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
 import { isSettlementHearth } from '../fire'
 import { countItem, findFood } from '../inventory'
+import { holdOptions } from '../questHold'
 import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
 import { isBadWeather } from '../weather'
@@ -73,6 +74,8 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       })
     }
   }
+  // Authored quest hold: safety, eating/drinking from the pack, otherwise wait at the spot (no duties).
+  if (h.questHold) return holdOptions(h, opts)
   // Help downed neighbours (guards always; agreeable armed adults sometimes).
   const downed = sim.actors.query(h.x, h.z, 150).find((o): o is Human => o.kind === 'npc' && o !== h && !!o.vitals.ko && !o.vitals.dead && (o as Human).callForHelpAt !== undefined)
   if (downed && h.age === 'adult') {

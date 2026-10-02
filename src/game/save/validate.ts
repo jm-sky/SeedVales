@@ -9,7 +9,7 @@ import { EDIT_N } from '../world/terrain'
 import { SaveError } from './errors'
 
 const ARRAYS = ['npcs', 'animals', 'households', 'settlements', 'buildings', 'sites', 'ground', 'corpses', 'traces', 'carts', 'dens', 'quests', 'messages'] as const
-const RECORDS = ['weather', 'px', 'nodes', 'terrainEdits'] as const
+const RECORDS = ['weather', 'px', 'nodes', 'terrainEdits', 'authoredQuests'] as const
 
 const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
 const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)

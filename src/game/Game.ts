@@ -28,6 +28,7 @@ import { setPrimary, switchWeapon } from './sim/loadout'
 import { clearWaypoint, revealAround, setWaypoint } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
 import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/player'
+import { type JournalEntry, questChoose, type QuestChooseResult, questJournal, type QuestMarker, questMarkers, questSay, type QuestSay, type QuestTopic, questTopics } from './sim/questDialog'
 import { Sim } from './sim/sim'
 import { installSystems } from './sim/worldSystems'
 import { generateWorld } from './world/gen/generate'
@@ -40,7 +41,7 @@ export interface GameOptions {
   onProgress?: (label: string) => void
 }
 
-export type Panel = null | 'settings' | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact' | 'gift' | 'hire'
+export type Panel = null | 'settings' | 'inventory' | 'character' | 'craft' | 'quests' | 'trade' | 'storage' | 'build' | 'quick' | 'map' | 'dialog' | 'orders' | 'menu' | 'interact' | 'gift' | 'hire' | 'journal'
 
 export async function loadWorld(seed: number, onProgress?: (l: string) => void): Promise<WorldData> {
   onProgress?.('Looking for the world in the cache…')
@@ -275,6 +276,9 @@ export class Game {
         break
       case 'inventory':
         this.togglePanel('inventory')
+        break
+      case 'journal':
+        this.togglePanel('journal')
         break
       case 'map':
         this.togglePanel('map')
@@ -563,6 +567,33 @@ export class Game {
     }
     this.panel = null
     this.notify()
+  }
+
+  // ---------------- Authored quests (quests--001) ----------------
+
+  /** Quest topics this NPC offers right now (one per quest). */
+  questTopics(npcId: number): QuestTopic[] {
+    return questTopics(this.sim, npcId)
+  }
+
+  questSay(questId: string, nodeId: string): QuestSay | null {
+    return questSay(this.sim, questId, nodeId)
+  }
+
+  /** Applies the option's effects; returns the follow-up node (none = the dialog closes). */
+  questChoose(questId: string, nodeId: string, optionId: string): QuestChooseResult | null {
+    const r = questChoose(this.sim, questId, nodeId, optionId)
+    this.notify()
+    return r
+  }
+
+  /** Journal: authored quests and the active notice-board quests. */
+  journal(): { authored: JournalEntry[]; board: GameState['quests'] } {
+    return { authored: questJournal(this.sim), board: this.sim.state.quests.filter((q) => q.status === 'active') }
+  }
+
+  questMarkers(): QuestMarker[] {
+    return questMarkers(this.sim)
   }
 
   /** Map waypoint (UI-04): shown on the map and by the minimap arrow until reached or cleared. */

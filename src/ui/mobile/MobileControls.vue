@@ -49,7 +49,7 @@ function toggleRun() {
   version.value++
 }
 const MENU = [
-  ['inventory', 'Inv.'], ['character', 'Char.'], ['craft', 'Craft'], ['build', 'Build'], ['quick', 'Actions'], ['quests', 'Quests'], ['map', 'Map'], ['menu', 'Menu'],
+  ['inventory', 'Inv.'], ['character', 'Char.'], ['craft', 'Craft'], ['build', 'Build'], ['quick', 'Actions'], ['journal', 'Journal'], ['quests', 'Quests'], ['map', 'Map'], ['menu', 'Menu'],
 ] as const
 </script>
 

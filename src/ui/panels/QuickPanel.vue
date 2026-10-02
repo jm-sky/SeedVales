@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import PanelFrame from './PanelFrame.vue'
 
-type QuickId = 'park_cart' | 'load_cart' | 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'plant_torch' | 'campfire'
+type QuickId = 'journal' | 'park_cart' | 'load_cart' | 'level' | 'dig' | 'raise' | 'sleep' | 'rest' | 'torch' | 'drop_torch' | 'plant_torch' | 'campfire'
 const { game } = useGameStrict()
 const GROUPS: { name: string; items: { id: QuickId | `bp:${string}`; label: string }[] }[] = [
   { name: 'Fire', items: [{ id: 'campfire', label: 'Build a campfire' }, { id: 'torch', label: 'Light / stow torch' }, { id: 'drop_torch', label: 'Drop burning torch' }, { id: 'plant_torch', label: 'Plant torch' }, { id: 'bp:hearth', label: 'Build a stone hearth' }] },
@@ -11,12 +11,14 @@ const GROUPS: { name: string; items: { id: QuickId | `bp:${string}`; label: stri
   { name: 'Terrain', items: [{ id: 'level', label: 'Level ground' }, { id: 'dig', label: 'Dig a hole' }, { id: 'raise', label: 'Raise ground' }] },
   { name: 'Cart', items: [{ id: 'load_cart', label: 'Load heavy goods into the cart' }, { id: 'park_cart', label: 'Park the cart' }] },
   { name: 'Camp', items: [{ id: 'sleep', label: 'Sleep here' }, { id: 'rest', label: 'Rest' }] },
+  { name: 'Notes', items: [{ id: 'journal', label: 'Open the journal' }] },
 ]
 function run(id: string) {
-  if (id === 'park_cart') game.value.parkCart()
+  if (id === 'journal') game.value.togglePanel('journal')
+  else if (id === 'park_cart') game.value.parkCart()
   else if (id === 'load_cart') game.value.loadPushedCart()
   else if (id.startsWith('bp:')) game.value.placeBlueprint(id.slice(3))
-  else game.value.quick(id as Exclude<QuickId, 'park_cart' | 'load_cart'>)
+  else game.value.quick(id as Exclude<QuickId, 'journal' | 'park_cart' | 'load_cart'>)
 }
 </script>
 
