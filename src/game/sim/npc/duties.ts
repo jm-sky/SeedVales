@@ -66,6 +66,8 @@ function deliverSurplus(sim: Sim, h: Human): DutyPlan {
 }
 
 const HUNTED_GAME: SpeciesId[] = ['deer', 'stag', 'hare']
+/** A hunter's game must lie within this distance (m) of the settlement edge — a chase must not take them out of reach of food and water (soak finding, verify--001). */
+export const HUNT_LEASH_M = 450
 
 function hunter(sim: Sim, h: Human): DutyPlan {
   const s = sim.world.settlements[h.settlementId]!
@@ -81,7 +83,7 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   let target: Animal | undefined = wolves[0]
   if (!target) {
     // Bow hunting: non-aggressive game only (a lone archer does not provoke boars — D-SIM-9).
-    const game = cands.filter((a) => HUNTED_GAME.includes(a.species) && a.variant !== 'young')
+    const game = cands.filter((a) => HUNTED_GAME.includes(a.species) && a.variant !== 'young' && Math.hypot(a.x - s.x, a.z - s.z) < s.radius + HUNT_LEASH_M)
     const bySp = (sp: string) => cands.filter((a) => a.species === sp).length
     const ok = game.filter((a) => bySp(a.species) >= 3)
     ok.sort((a, b) => Math.hypot(a.x - h.x, a.z - h.z) - Math.hypot(b.x - h.x, b.z - h.z))

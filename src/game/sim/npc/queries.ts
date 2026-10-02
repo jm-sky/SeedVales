@@ -43,11 +43,15 @@ export interface WaterSource {
 /** Cached natural water access points per settlement (bank points with shallow water). */
 const waterCache = new WeakMap<Sim, Map<string, { x: number; z: number } | null>>()
 
-export function nearestNaturalWater(sim: Sim, x: number, z: number, maxR = 400): { x: number; z: number } | null {
+/** Cooldown key of an unreachable water access point (cell of ~24 m); stored in `ai.cooldowns`, so it expires by itself. */
+export const badWaterKey = (x: number, z: number) => `water:${Math.round(x / 24)},${Math.round(z / 24)}`
+
+export function nearestNaturalWater(sim: Sim, x: number, z: number, maxR = 400, skip?: (x: number, z: number) => boolean): { x: number; z: number } | null {
   let cache = waterCache.get(sim)
   if (!cache) waterCache.set(sim, (cache = new Map()))
   const key = `${Math.round(x / 48)},${Math.round(z / 48)}`
-  if (cache.has(key)) return cache.get(key)!
+  // With a skip filter (points this NPC failed to reach) the shared cache cannot be used.
+  if (!skip && cache.has(key)) return cache.get(key)!
   let found: { x: number; z: number } | null = null
   const t = sim.terrain
   for (let r = 8; r <= maxR && !found; r += 8) {
@@ -57,13 +61,13 @@ export function nearestNaturalWater(sim: Sim, x: number, z: number, maxR = 400):
       const px = x + Math.cos(a) * r
       const pz = z + Math.sin(a) * r
       const d = t.waterDepthAt(px, pz)
-      if (d > 0.05 && d < 0.6 && !t.isSeaAt(px, pz)) {
+      if (d > 0.05 && d < 0.6 && !t.isSeaAt(px, pz) && !skip?.(px, pz)) {
         found = { x: px, z: pz }
         break
       }
     }
   }
-  cache.set(key, found)
+  if (!skip) cache.set(key, found)
   return found
 }
 
@@ -73,7 +77,10 @@ export function waterSources(sim: Sim, h: Human): WaterSource[] {
     if (b.kind !== 'well') continue
     out.push({ x: b.x, z: b.z, safe: true, wellId: b.id, cost: Math.hypot(b.x - h.x, b.z - h.z) })
   }
-  const nat = nearestNaturalWater(sim, h.x, h.z)
+  const now = sim.state.time.play
+  const failed = (x: number, z: number) => (h.ai.cooldowns[badWaterKey(x, z)] ?? 0) > now
+  const anyFailed = Object.keys(h.ai.cooldowns).some((k) => k.startsWith('water:') && h.ai.cooldowns[k]! > now)
+  const nat = nearestNaturalWater(sim, h.x, h.z, 400, anyFailed ? failed : undefined)
   if (nat) {
     const risk = waterRisk(sim, nat.x, nat.z)
     out.push({ x: nat.x, z: nat.z, safe: false, cost: Math.hypot(nat.x - h.x, nat.z - h.z) + risk * 150 * (0.5 + h.big5.n) })

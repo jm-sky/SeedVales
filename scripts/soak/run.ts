@@ -6,7 +6,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { DAY_S, SoakRecorder, soakMarkdown } from '../../src/game/diag/soak'
+import { DAY_S, soakMarkdown, SoakRecorder } from '../../src/game/diag/soak'
 import { run, testSim } from '../../src/game/sim/testWorld'
 
 const arg = (k: string, d: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1] ?? d

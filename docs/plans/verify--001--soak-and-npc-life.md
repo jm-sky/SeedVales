@@ -1,6 +1,6 @@
 # Verification stage: multi-day soak run, NPC-life invariants, event log
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** sonnet — tooling and checks; opus — reading the results, deciding what is a defect  
 **Domain:** verify  
 **Sub domains:** sim, diag  
@@ -39,3 +39,8 @@ Goal (user, 2026-10-02): collect logs/events from several game days and see whet
 | 5 | Re-run after every wave (see [review--001](review--001--review-fix-loop.md)) | — |
 
 Acceptance: one soak report on `main` with zero unexplained violations; every violation is fixed with a regression test or recorded in DECISIONS as accepted.
+
+## Progress (2026-10-02)
+- Steps 2–3 first slice done: snapshot recorder `src/game/diag/soak.ts` (no sim hooks), `pnpm soak [--days] [--seeds]`, CI variant `diag/soak.test.ts`. Invariants live: alive (hunger/thirst deaths; combat deaths are info), eating, drinking, sleeping, working per profession, not stuck, treasury ≥ 0.
+- Step 4 first run: [review 012](../reviews/2026-10-02--012--soak-first-run.md) — 2 real NPC-life bugs found and fixed (hunter leash, unreachable water loop). 3 seeds × 10 days clean.
+- Open: step 1 (event log + conservation ledger), economy/fire/perf invariants, output-based "working" metric.

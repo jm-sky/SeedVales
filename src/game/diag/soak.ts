@@ -11,7 +11,7 @@ import type { Human } from '../sim/types'
 export const DAY_S = 3600
 
 /** Goals during which standing still is normal. */
-const STATIONARY_OK = new Set(['sleep', 'idle', 'wait', 'shelter', 'social', 'fight', 'work', 'help', 'repair', 'eat', 'drink', 'tend_fire', 'surplus'])
+const STATIONARY_OK = new Set(['drink', 'eat', 'fight', 'help', 'idle', 'repair', 'shelter', 'sleep', 'social', 'surplus', 'tend_fire', 'wait', 'work'])
 /** Stationary this long (gameplay s) while walking somewhere (`goto` step) = stuck. */
 export const STUCK_S = 90
 
@@ -59,6 +59,8 @@ export interface SoakReport {
   days: number
   rows: DayRow[]
   violations: Violation[]
+  /** Non-violating notes (combat deaths). */
+  info: string[]
 }
 
 const isLiving = (h: Human) => !h.vitals.dead && h.age !== 'child' && !h.companion
@@ -67,7 +69,9 @@ export class SoakRecorder {
   private tracks = new Map<number, NpcTrack>()
   private rows: DayRow[] = []
   readonly violations: Violation[] = []
-  private deaths: string[] = []
+  private deaths: { text: string; needs: boolean }[] = []
+  /** Deaths in fights/injury: reported, not a violation (the world is not calm: wolves exist). */
+  readonly info: string[] = []
   private day = 0
   private dayStartDead = 0
   private workByProf = new Map<string, { work: number; n: number }>()
@@ -76,7 +80,12 @@ export class SoakRecorder {
   private lastT = 0
   private seenDead = new Set<number>()
 
-  constructor(private sim: Sim, private seed: number) {
+  private sim: Sim
+  private seed: number
+
+  constructor(sim: Sim, seed: number) {
+    this.sim = sim
+    this.seed = seed
     this.dayStartDead = sim.state.npcs.filter((n) => n.vitals.dead).length
   }
 
@@ -94,7 +103,7 @@ export class SoakRecorder {
         this.seenDead.add(n.id)
         const v = n.vitals
         const parts = Object.entries(v.parts).filter(([, d]) => d > 0).map(([k, d]) => `${k} ${d.toFixed(0)}`).join(', ')
-        this.deaths.push(`${n.name} (#${n.id}, ${n.profession ?? 'none'}, ${n.age}) day ${day}: hunger ${v.hunger.toFixed(0)}, thirst ${v.thirst.toFixed(0)}, vigor ${v.vigor.toFixed(0)}, bleeding ${v.bleeding.toFixed(1)}, illness ${v.illness?.kind ?? 'none'}, damage [${parts}], last goal ${n.ai.goal} "${n.ai.label}" at (${n.x.toFixed(0)}, ${n.z.toFixed(0)})`)
+        this.deaths.push({ needs: v.hunger <= 0 || v.thirst <= 0, text: `${n.name} (#${n.id}, ${n.profession ?? 'none'}, ${n.age}) day ${day}: hunger ${v.hunger.toFixed(0)}, thirst ${v.thirst.toFixed(0)}, vigor ${v.vigor.toFixed(0)}, bleeding ${v.bleeding.toFixed(1)}, illness ${v.illness?.kind ?? 'none'}, damage [${parts}], last goal ${n.ai.goal} "${n.ai.label}" at (${n.x.toFixed(0)}, ${n.z.toFixed(0)})` })
       }
       if (!isLiving(n)) continue
       let t = this.tracks.get(n.id)
@@ -166,7 +175,11 @@ export class SoakRecorder {
 
   private check(r: DayRow) {
     const v = (invariant: string, detail: string) => this.violations.push({ invariant, day: r.day, detail })
-    if (r.deaths > 0) v('alive', `${r.deaths} NPC(s) died on day ${r.day} (calm world: no deaths expected): ${this.deaths.splice(0).join(' | ')}`)
+    const died = this.deaths.splice(0)
+    for (const d of died) {
+      if (d.needs) v('alive', `died of hunger/thirst on day ${r.day}: ${d.text}`)
+      else this.info.push(`day ${r.day}: ${d.text}`)
+    }
     if (r.day >= 1) {
       if (r.ate < 0.8) v('eating', `only ${(r.ate * 100).toFixed(0)} % of NPCs ate on day ${r.day}`)
       if (r.drank < 0.8) v('drinking', `only ${(r.drank * 100).toFixed(0)} % of NPCs drank on day ${r.day}`)
@@ -178,7 +191,7 @@ export class SoakRecorder {
 
   finish(): SoakReport {
     this.closeDay()
-    return { seed: this.seed, days: this.rows.length, rows: this.rows, violations: this.violations }
+    return { seed: this.seed, days: this.rows.length, rows: this.rows, violations: this.violations, info: this.info }
   }
 }
 
@@ -191,6 +204,7 @@ export function soakMarkdown(r: SoakReport): string {
   lines.push('', 'Work-goal share per profession (mean over days): ' + profs.map((p) => `${p} ${pct(r.rows.reduce((a, d) => a + (d.workShare[p] ?? 0), 0) / Math.max(1, r.rows.length))}`).join(' · '))
   lines.push('', r.violations.length ? `**${r.violations.length} violation(s):**` : '**No violations.**', '')
   for (const v of r.violations.slice(0, 60)) lines.push(`- \`${v.invariant}\` day ${v.day}: ${v.detail}`)
+  if (r.info.length) lines.push('', `Info (${r.info.length}):`, ...r.info.map((i) => `- ${i}`))
   if (r.violations.length > 60) lines.push(`- … ${r.violations.length - 60} more`)
   return lines.join('\n') + '\n'
 }

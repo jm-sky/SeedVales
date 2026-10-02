@@ -17,7 +17,7 @@ import { steerTo } from '../movement'
 import { type Exertion, hp, penalty, updateVitals } from '../vitals'
 import { companionDist, follow } from './companions'
 import { goalOptions } from './goals'
-import { threatNear } from './queries'
+import { badWaterKey, threatNear } from './queries'
 import { WORK_ACTS } from './works'
 
 const REPLAN_S = 12
@@ -64,6 +64,8 @@ function failGoal(sim: Sim, h: Human, mult = 1) {
   const st = ai.steps[ai.stepIdx]
   ai.lastFail = `${ai.goal}#${ai.stepIdx}:${st?.op === 'work' ? st.act : st?.op === 'goto' ? `goto(${st.x.toFixed(0)},${st.z.toFixed(0)})` : '-'}`
   if (ai.goal) ai.cooldowns[ai.goal] = sim.state.time.play + FAIL_COOLDOWN_S * mult
+  // An unreachable water point is skipped for a game hour (150 s) so the NPC tries another source instead of looping.
+  if (ai.goal === 'drink' && st?.op === 'goto') ai.cooldowns[badWaterKey(st.x, st.z)] = sim.state.time.play + 150
   perf.count('ai.failures')
   ai.goal = null
   ai.steps = []
