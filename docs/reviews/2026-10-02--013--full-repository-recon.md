@@ -986,3 +986,37 @@ The recon covered, among others:
 - `src/ui/panels/inventory/InventoryToolbar.vue`
 
 This is a broad static recon, not an exhaustive proof of every code path. Findings marked as current bugs above are based on direct code traces; the broader “dead item” candidate list should be finalized by the proposed automated reachability audit.
+
+---
+
+# Triage (Opus, session 13, 2026-10-02 — review--001 round 1 input)
+
+Legend: **fix** = regression test first, then fix (this round) · **defer** = recorded with a destination · **reject** = reason given. Batch A = quests/map/UI agent, batch B = economy/content/perf agent.
+
+| # | Verdict | Action |
+|---|---|---|
+| M-01 | ✅ fix (A) | MAP-01 leak: one "known settlement" predicate (explored cell or visited) for canvas, side list, waypoint and autopilot; regression test + e2e assertion. |
+| M-02 | ✅ fix (A) | Text changed to require kills (option 1). A real "drive off" outcome is a design item → backlog (later-vision-backlog L2, G-07 non-lethal resolutions). |
+| M-03 | ✅ fix (A) | Board quests get explicit objectives (rats eliminated n/m, repair pending/done) shown in the quest panel and the journal. |
+| M-04 | ✅ fix (A) | "Up to X c, paid by the settlement treasury" before acceptance; the amount actually paid is stored on the quest (`paid`, part of save format v9 — not released yet, no extra bump) and shown. |
+| M-05 | 🟡 fix (B) | Keep the band soft, but make it a contract: statistical test over a seed corpus with an explicit maximum miss rate/distance (no generator change). |
+| M-06 | ✅ defer | Real, but changes road layouts → `GEN_VERSION` bump; bundled with `render--008` step 4 (already a GEN bump touching roads). Test with the L-corner grid goes in there. |
+| M-07 | ✅ fix (B) | Remove `XL` from `SettlementSize` until a generator/content contract exists; size-contract test for SM/MD/LG (required structures, households). |
+| M-08 | ✅ defer | Accepted abstraction until the forge/smelting chain (later backlog L3 economy between settlements, recon G-01). |
+| M-09 | ✅ fix (B) | Order price ≥ replacement value of the reserved inputs + labour; invariant test. |
+| M-10 | 🟡 fix part (B) | Recipe economy audit (report + test with explicit, documented exceptions); price recalibration itself is deferred to an economy calibration pass (L3) — the audit makes the outliers visible, it does not silently change prices beyond the clear errors it documents. |
+| P-01 | 🟡 defer + measure (B) | Add scheduler counters (`npc.schedulerVisited` vs `npc.updated`, same for fauna) to perf/soak; a due-time queue is deferred until population grows (L5) — current cost is ~200 NPCs × 20 Hz of a distance check (`bench:sim` p95 ≤ 1 ms). |
+| P-02 | ✅ fix (B) | No per-tick clone of the animal array (deferred removals or reverse iteration). |
+| P-03 | ✅ fix (A) | Board quests: active index by stable key, history bounded (last N done/expired), long-run test. |
+| P-04 | ✅ fix (B) | Delete empty SpatialHash cells; test. |
+| P-05 | defer | Generator start-up cost only (world cache hides it); measure in `bench:startup` before changing. |
+| P-06 | already tracked | `render--003` / PERF.md. |
+| C-01 | ✅ fix (B) | Every NPC wish reachable through a plausible channel (smith order, trader stock, recipe); reachability audit test (wishes, recipe ingredients, build materials, ammo of obtainable weapons). |
+| C-02 | ✅ fix (B) | Item `availability: 'active' \| 'future' \| 'quest-only' \| 'unique'`; audit fails only for `active` items with no source. |
+| C-03 | defer | Authored quests (QUEST-03) already give items from named stores; item/knowledge rewards for board quests → QUEST-04 / later backlog L2. |
+| C-04 | ✅ fix (B) | Remove the unused `workbench` station kind. |
+| C-05 | accepted | Household background production is an explicit, logged ledger source (verify--001); documented as such in D-VERIFY-1 follow-up — not hidden. |
+| C-06 | defer | Skill-gain calibration → economy calibration pass (L3). |
+| C-07 | ✅ fix (A) | Panels mutate state only through `Game` methods (TradePanel, QuestsPanel, OrdersPanel and any other found); CLAUDE.md rule. |
+| UI-01…UI-07, G-01…G-07 | backlog | Product recommendations → inputs for `proposals--001` and later-vision-backlog (UI-01/UI-05 partly covered by M-01/M-03 fixes and the journal). |
+| Audits A–E | A, B, E in batch B; C exists partly (route-band/generator tests) → M-05; D done (verify--001 soak). |
