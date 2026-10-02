@@ -12,6 +12,7 @@ import type { CompanionRisk, CompanionTask, Human, ItemStack } from '../types'
 import { COMPANION, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { isDown } from '../combat'
+import { logMoney } from '../eventLog'
 import { addItem, findFood, removeStack, wearBetterArmor, wieldBest } from '../inventory'
 import { steerTo } from '../movement'
 import { dayIndex } from '../time'
@@ -77,6 +78,7 @@ export function hireCompanion(sim: Sim, npc: Human, task: CompanionTask, risk: C
   if (p.money < price) return { ok: false, msg: 'Not enough coins.' }
   p.money -= price
   npc.money += price
+  logMoney('player', `npc:${npc.id}`, price, 'hire_companion', npc.id, npc.settlementId)
   const cal = sim.state.time.cal
   npc.companion = { kind: 'hired', task, risk, since: cal, until: cal + days * DAY_S, paid: price, bondAt: cal }
   packProvisions(sim, npc, days)

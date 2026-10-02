@@ -4,6 +4,7 @@
  * @domain sim
  */
 import type { WorldData } from '../world/types'
+import type { EventLog } from './eventLog'
 import type { Actor, Animal, Building, Corpse, GameState, GroundItem, Human, Projectile, Trace, WeatherState } from './types'
 import { CALENDAR_SPEED, SIM_LOD } from '../config/calibration'
 import { Rng } from '../core/rng'
@@ -12,6 +13,7 @@ import { NodeCache } from '../world/nodes'
 import { SpatialHash } from '../world/spatial'
 import { Terrain, TerrainEdits } from '../world/terrain'
 import { CHUNK_M } from '../world/types'
+import { startEventLog, stopEventLog } from './eventLog'
 import { LandmarkSolids } from './landmarkSolids'
 
 export type SimEvent =
@@ -59,6 +61,8 @@ export class Sim {
   /** Set by threats to interrupt acceleration. */
   interruptReason: string | null = null
   paused = false
+  /** verify--001: event log + conservation ledger (null = off, zero cost; never saved). */
+  eventLog: EventLog | null = null
 
   world: WorldData
   state: GameState
@@ -71,6 +75,15 @@ export class Sim {
     this.landmarkSolids = new LandmarkSolids(world.landmarks)
     this.rng = new Rng(state.rng)
     this.reindex()
+  }
+
+  enableEventLog(cap?: number): EventLog {
+    return (this.eventLog = startEventLog(this, cap))
+  }
+
+  disableEventLog() {
+    this.eventLog = null
+    stopEventLog()
   }
 
   get player() {

@@ -11,6 +11,7 @@ import { SPECIES } from '../../data/species'
 import { perf } from '../../diag/perf'
 import { alertAround } from '../alerts'
 import { isDown, killNpc, meleeAttack, weaponOf } from '../combat'
+import { logEvent, logging } from '../eventLog'
 import { decisionInterval } from '../fauna/perception'
 import { wieldBest } from '../inventory'
 import { steerTo } from '../movement'
@@ -48,6 +49,10 @@ export function planNpc(sim: Sim, h: Human, force = false) {
       ai.cooldowns[o.id] = now + FAIL_COOLDOWN_S * 0.5
       continue
     }
+    if (logging()) {
+      if (ai.goal) logEvent('goal_end', { goal: ai.goal, result: ai.stepIdx >= ai.steps.length ? 'done' : 'preempted' }, h.id, h.settlementId)
+      logEvent('goal_start', { goal: o.id, label: plan.label, score: Math.round(o.score * 100) / 100 }, h.id, h.settlementId)
+    }
     ai.goal = o.id
     ai.goalScore = o.score
     ai.label = plan.label
@@ -67,6 +72,7 @@ function failGoal(sim: Sim, h: Human, mult = 1) {
   // An unreachable water point is skipped for a game hour (150 s) so the NPC tries another source instead of looping.
   if (ai.goal === 'drink' && st?.op === 'goto') ai.cooldowns[badWaterKey(st.x, st.z)] = sim.state.time.play + 150
   perf.count('ai.failures')
+  if (logging() && ai.goal) logEvent('goal_end', { goal: ai.goal, result: 'fail', at: ai.lastFail }, h.id, h.settlementId)
   ai.goal = null
   ai.steps = []
   ai.stepIdx = 0

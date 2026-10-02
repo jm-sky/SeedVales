@@ -13,8 +13,9 @@ import { skillGain } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { isTree } from '../world/nodes'
 import { Biome } from '../world/types'
+import { logConsume, logMint, logProduce } from './eventLog'
 import { torchBurnH } from './fire'
-import { addItem, countItem, findTool, fitQty, newStack, removeItem, removeStack, wearTool } from './inventory'
+import { addItem, consumeItem, countItem, findTool, fitQty, newStack, removeStack, wearTool } from './inventory'
 import { seasonOf } from './time'
 import { drink, eat, heal, makeIll } from './vitals'
 
@@ -31,7 +32,8 @@ export function train(h: Human, skill: keyof Human['skills'], difficulty = 0.5, 
 }
 
 /** Gives items to actor; drops overflow on the ground next to them. */
-export function giveOrDrop(sim: Sim, h: Human, stack: ItemStack) {
+export function giveOrDrop(sim: Sim, h: Human, stack: ItemStack, source?: string) {
+  if (source) logProduce(stack.id, stack.qty, source, h)
   const fit = fitQty(h, stack)
   if (fit > 0) addItem(h.inv, { ...stack, qty: fit })
   if (fit < stack.qty) dropItem(sim, h.x + Math.cos(h.rot) * 0.8, h.z + Math.sin(h.rot) * 0.8, { ...stack, qty: stack.qty - fit })
@@ -75,9 +77,9 @@ export function fellTree(sim: Sim, h: Human, n: ResNode, efficiency = 1): Action
   if (!tool) return fail('You need an axe.')
   sim.state.nodes[n.id] = { kind: 'felled', at: sim.state.time.cal }
   const logs = n.kind === 'tree_dead' ? 1 : Math.max(1, Math.round(n.scale / 9))
-  giveOrDrop(sim, h, newStack('log', Math.max(1, Math.round(logs * efficiency))))
-  giveOrDrop(sim, h, newStack('branch', Math.round((3 + n.scale / 5) * efficiency)))
-  if (n.kind === 'tree_apple') giveOrDrop(sim, h, newStack('apple', 3))
+  giveOrDrop(sim, h, newStack('log', Math.max(1, Math.round(logs * efficiency))), 'fell_tree')
+  giveOrDrop(sim, h, newStack('branch', Math.round((3 + n.scale / 5) * efficiency)), 'fell_tree')
+  if (n.kind === 'tree_apple') giveOrDrop(sim, h, newStack('apple', 3), 'fell_tree')
   wearTool(tool, 2)
   train(h, 'woodcutting', 0.5, 3)
   sim.markNodeChunk(n.id)
@@ -106,13 +108,14 @@ export function mineRock(sim: Sim, h: Human, n: ResNode): ActionResult {
     const a = Math.atan2(h.x - n.x, h.z - n.z)
     const r = n.radius + 0.4
     dropItem(sim, n.x + Math.sin(a) * r, n.z + Math.cos(a) * r, newStack('rock_chunk', 1))
+    logProduce('rock_chunk', 1, 'mine_rock', h)
     what = 'a rock chunk'
-  } else giveOrDrop(sim, h, newStack('stone', 2))
+  } else giveOrDrop(sim, h, newStack('stone', 2), 'mine_rock')
   let extra = ''
   for (const d of sim.world.deposits) {
     if (Math.hypot(d.x - n.x, d.z - n.z) < d.radius + 40 && sim.rng.chance(0.35 * d.richness)) {
       const ore = d.ore === 'coal' ? 'coal' : `${d.ore}_ore`
-      giveOrDrop(sim, h, newStack(ore, 1))
+      giveOrDrop(sim, h, newStack(ore, 1), 'mine_rock')
       extra = ` and found ${itemDef(ore).name.toLowerCase()}!`
       break
     }
@@ -128,8 +131,9 @@ export function breakChunk(sim: Sim, h: Human, g: GroundItem): ActionResult {
   const tool = findTool(h, 'mine')
   if (!tool) return fail('You need a pickaxe.')
   g.stack.qty -= 1
+  logConsume('rock_chunk', 1, 'break_chunk', h)
   if (g.stack.qty <= 0) sim.removeGround(g)
-  giveOrDrop(sim, h, newStack('stone', ROCK.chunkStones))
+  giveOrDrop(sim, h, newStack('stone', ROCK.chunkStones), 'break_chunk')
   wearTool(tool, 1)
   return ok(`You broke the chunk: +${ROCK.chunkStones} ${ROCK.chunkStones === 1 ? 'stone' : 'stones'}.`)
 }
@@ -164,7 +168,7 @@ export function gatherNode(sim: Sim, h: Human, n: ResNode): ActionResult {
       break
     case 'stone':
       sim.state.nodes[n.id] = { kind: 'depleted', at: sim.state.time.cal }
-      giveOrDrop(sim, h, newStack('stone', 1))
+      giveOrDrop(sim, h, newStack('stone', 1), 'gather')
       sim.markNodeChunk(n.id)
       return ok('You picked up a stone.')
     case 'tree_apple':
@@ -176,7 +180,7 @@ export function gatherNode(sim: Sim, h: Human, n: ResNode): ActionResult {
       return fail('You cannot gather this.')
   }
   sim.state.nodes[n.id] = { kind: 'harvested', at: sim.state.time.cal, left: 0 }
-  giveOrDrop(sim, h, newStack(item, qty))
+  giveOrDrop(sim, h, newStack(item, qty), 'gather')
   train(h, n.kind === 'herb' ? 'medicine' : 'survival', 0.3)
   sim.markNodeChunk(n.id)
   return ok(`Gathered: ${itemDef(item).name} ×${qty}`)
@@ -210,10 +214,10 @@ export function butcher(sim: Sim, h: Human, c: Corpse): ActionResult {
   const rotten = sim.state.time.cal - c.diedAt > 6 * 3600
   const meat = Math.min(c.meat, Math.round(sp.corpse.meat * vm))
   const skill = h.skills.survival / 100
-  if (meat > 0 && !rotten) giveOrDrop(sim, h, newStack('raw_meat', Math.max(1, Math.round(meat * (0.7 + skill * 0.3))), { sp: c.species }))
-  if (sp.corpse.hide) giveOrDrop(sim, h, newStack('hide', sp.corpse.hide, { q: c.variant === 'albino' ? 3 : undefined }))
-  if (sp.corpse.bone) giveOrDrop(sim, h, newStack('bone', sp.corpse.bone))
-  if (sp.corpse.antler) giveOrDrop(sim, h, newStack('antler', sp.corpse.antler))
+  if (meat > 0 && !rotten) giveOrDrop(sim, h, newStack('raw_meat', Math.max(1, Math.round(meat * (0.7 + skill * 0.3))), { sp: c.species }), 'butcher')
+  if (sp.corpse.hide) giveOrDrop(sim, h, newStack('hide', sp.corpse.hide, { q: c.variant === 'albino' ? 3 : undefined }), 'butcher')
+  if (sp.corpse.bone) giveOrDrop(sim, h, newStack('bone', sp.corpse.bone), 'butcher')
+  if (sp.corpse.antler) giveOrDrop(sim, h, newStack('antler', sp.corpse.antler), 'butcher')
   c.butchered = true
   c.meat = 0
   wearTool(tool, 1)
@@ -243,18 +247,19 @@ export function dig(sim: Sim, h: Human, x: number, z: number): ActionResult {
   const inSettlement = sim.world.settlements.some((s) => Math.hypot(s.x - x, s.z - z) < s.radius + 20)
   if (nearSea && r < 0.3) {
     const pearl = sim.rng.chance(0.08)
-    giveOrDrop(sim, h, newStack(pearl ? 'pearl_shell' : 'shell', 1))
+    giveOrDrop(sim, h, newStack(pearl ? 'pearl_shell' : 'shell', 1), 'dig')
     return ok(pearl ? 'You dug up a pearl shell!' : 'You dug up a shell.')
   }
   if (inSettlement && r < 0.12) {
     const coins = sim.rng.int(1, 12)
     h.money += coins
+    logMint(coins, 'dig_coins', h.kind === 'npc' ? h : undefined)
     return ok(`You found ${coins} ${coins === 1 ? 'copper coin' : 'copper coins'}!`)
   }
   for (const d of sim.world.deposits) {
     if (Math.hypot(d.x - x, d.z - z) < d.radius && r < 0.25 * d.richness) {
       const ore = d.ore === 'coal' ? 'coal' : `${d.ore}_ore`
-      giveOrDrop(sim, h, newStack(ore, 1))
+      giveOrDrop(sim, h, newStack(ore, 1), 'dig')
       return ok(`You struck a deposit: ${itemDef(ore).name}!`)
     }
   }
@@ -275,7 +280,7 @@ export function raiseTerrain(sim: Sim, h: Human, x: number, z: number): ActionRe
   const tool = findTool(h, 'dig')
   if (!tool) return fail('You need a shovel.')
   if (countItem(h.inv, 'stone') < 1) return fail('You need a stone to raise the ground.')
-  removeItem(h.inv, 'stone', 1)
+  consumeItem(h.inv, 'stone', 1, 'terraform', h)
   sim.terrain.applyEdit(x, z, 1.6, { kind: 'add', amount: 0.35 })
   sim.markTerrain(x, z, 2)
   return ok('You raised the ground.')
@@ -348,6 +353,7 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
   if (d.category === 'medical') {
     const mult = 1 + h.skills.medicine / 100
     removeStack(h.inv, stack, 1)
+    logConsume(stack.id, 1, 'used', h)
     heal(target.vitals, (d.heal ?? 10) * mult)
     target.vitals.bleeding = 0
     if (stack.id === 'herbal_tea' && target.vitals.illness && target.vitals.illness.kind !== 'rabies') target.vitals.illness.severity *= 0.4
@@ -356,6 +362,7 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
   }
   if (d.herb) {
     removeStack(h.inv, stack, 1)
+    logConsume(stack.id, 1, 'eaten', h)
     if (d.herb.poison) {
       makeIll(target.vitals, 'poison', d.herb.poison)
       return ok(`${d.name} — poisonous!`)
@@ -367,6 +374,7 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
   }
   if (d.food) {
     removeStack(h.inv, stack, 1)
+    logConsume(stack.id, 1, 'eaten', h)
     eat(target.vitals, d.food.nutrition, d.food.water ?? 0)
     const spoiled = (stack.fresh ?? 999) < d.food.spoilH * SPOILED_FRAC
     const chance = (d.food.illnessChance ?? 0) + (spoiled ? 0.35 : 0)
@@ -386,7 +394,7 @@ export function repairBuilding(_sim: Sim, h: Human, b: Building, store?: Buildin
   if (!tool) return fail('You need a hammer or an axe.')
   const src = countItem(h.inv, 'branch') >= 2 ? h.inv : store?.inv && countItem(store.inv, 'branch') >= 2 ? store.inv : null
   if (!src) return fail('You need 2 branches.')
-  removeItem(src, 'branch', 2)
+  consumeItem(src, 'branch', 2, 'repair', h)
   b.durability = Math.min(100, b.durability + 30 + h.skills.construction * 0.2)
   wearTool(tool, 1)
   train(h, 'construction', 0.4, 2)
@@ -401,7 +409,7 @@ export function burnDen(sim: Sim, h: Human, den: DenState): ActionResult {
   if (!den.alive) return fail('The den is already destroyed.')
   if (!findTool(h, 'fire_start')) return fail('You need flint and steel or a torch.')
   if (countItem(h.inv, 'branch') < 5) return fail('You need 5 branches.')
-  removeItem(h.inv, 'branch', 5)
+  consumeItem(h.inv, 'branch', 5, 'burn_den', h)
   den.alive = false
   sim.emit({ type: 'sound', kind: 'fire', x: den.x, z: den.z })
   return ok('The den burned down.')

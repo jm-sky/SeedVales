@@ -1,7 +1,10 @@
-/** verify--001: CI-sized soak — 2 game days, NPC-life invariants hold (nobody starves, everyone eats/drinks/sleeps/works, nobody stuck). */
+/**
+ * verify--001: CI-sized soak — 2 game days, NPC-life invariants hold (nobody starves, everyone eats/drinks/sleeps, nobody stuck)
+ * plus the ledger/economy/fire/perf invariants (conservation of every item and of money, hearths lit, tick p95 inside the budget).
+ */
 import { describe, expect, it } from 'vitest'
 import { run, testSim } from '../sim/testWorld'
-import { DAY_S, SoakRecorder } from './soak'
+import { DAY_S, SOAK_LIMITS, SoakRecorder } from './soak'
 
 describe('diag: soak (verify--001)', () => {
   it('2 days: no invariant violations', () => {
@@ -17,5 +20,10 @@ describe('diag: soak (verify--001)', () => {
     const rep = rec.finish()
     expect(rep.violations).toEqual([])
     expect(rep.rows).toHaveLength(2)
+    expect(rep.residuals).toEqual({})
+    expect(rep.money.now).toBe(rep.money.start + rep.money.minted)
+    expect(rep.tick.samples).toBeGreaterThan(0)
+    expect(Object.values(rep.hearthShare).every((x) => x >= SOAK_LIMITS.hearthLitMin)).toBe(true)
+    expect(rep.rows.every((r) => Object.values(r.output).some((n) => n > 0))).toBe(true)
   }, 60_000)
 })

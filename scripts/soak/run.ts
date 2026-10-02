@@ -6,8 +6,19 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import v8 from 'node:v8'
+import vm from 'node:vm'
 import { DAY_S, soakMarkdown, SoakRecorder } from '../../src/game/diag/soak'
 import { run, testSim } from '../../src/game/sim/testWorld'
+
+// A forced GC before each heap reading makes the growth number meaningful.
+v8.setFlagsFromString('--expose-gc')
+;(globalThis as { gc?: () => void }).gc = vm.runInNewContext('gc') as () => void
+
+const heapMB = () => {
+  ;(globalThis as { gc?: () => void }).gc?.()
+  return process.memoryUsage().heapUsed / 1048576
+}
 
 const arg = (k: string, d: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1] ?? d
 const days = Number(arg('days', '10'))
@@ -26,7 +37,7 @@ for (const seed of seeds) {
   p.x = s0.x + 4
   p.z = s0.z + 4
   p.y = sim.terrain.heightAt(p.x, p.z)
-  const rec = new SoakRecorder(sim, seed)
+  const rec = new SoakRecorder(sim, seed, { heapMB })
   const t0 = performance.now()
   for (let t = 0; t < days * DAY_S; t += SAMPLE_S) {
     run(sim, SAMPLE_S, FRAME)

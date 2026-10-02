@@ -12,6 +12,7 @@ import { CALENDAR_SPEED, ROAST, SPOILED_FRAC } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { train } from './actions'
 import { giveOrDrop } from './actions'
+import { logConsume, logProduce } from './eventLog'
 import { addItem, findTool, newStack } from './inventory'
 
 /** Lit campfire within reach, and whether a spit stands next to it. */
@@ -59,6 +60,8 @@ export function completeRoast(sim: Sim, h: Human, n: number): ActionResult {
     while (left > 0 && s.qty > 0) {
       s.qty--
       left--
+      logConsume('raw_meat', 1, 'cooking', h)
+      logProduce('cooked_meat', 1, 'cooking', h)
       out.push(newStack('cooked_meat', 1, { fresh: cookedFreshness(s), ...(s.sp ? { sp: s.sp } : {}) }))
     }
     if (s.qty <= 0) h.inv.items.splice(h.inv.items.indexOf(s), 1)

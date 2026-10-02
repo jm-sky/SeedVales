@@ -10,7 +10,8 @@ import type { Sim } from './sim'
 import type { Building, GroundItem, Human, Inventory, ItemStack } from './types'
 import { FIRE, TORCH } from '../config/calibration'
 import { itemDef } from '../data/items'
-import { addItem, countItem, findTool, newStack, removeItem, removeStack } from './inventory'
+import { logProduce } from './eventLog'
+import { addItem, consumeItem, countItem, findTool, newStack, removeStack } from './inventory'
 import { addAsh } from './traces'
 
 /** Burn hours of one unit of fuel (0 = not a fuel). */
@@ -42,7 +43,7 @@ export function feedFire(inv: Inventory, b: Building, maxItems = Infinity): { ho
       hours += unit
     }
     if (n > 0) {
-      removeItem(inv, id, n)
+      consumeItem(inv, id, n, 'fuel')
       used += n
     }
   }
@@ -115,6 +116,7 @@ export function dismantleHearth(sim: Sim, p: Human, b: Building): ActionResult {
   sim.state.buildings.splice(i, 1)
   sim.rebuildBuildingIndex()
   addItem(p.inv, newStack('stone', FIRE.hearthStones))
+  logProduce('stone', FIRE.hearthStones, 'dismantle_hearth', p)
   return { ok: true, msg: `You take the hearth apart and keep ${FIRE.hearthStones} stones.` }
 }
 

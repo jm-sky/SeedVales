@@ -5,15 +5,16 @@
  * @subdomain duties
  */
 import type { Sim } from '../sim'
-import type { Animal, Human } from '../types'
+import type { Animal, Human, Inventory } from '../types'
 import { CARAVAN_FEE, DECISION, FIRE, WOOL_REGROW_DAYS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
 import { alertAround } from '../alerts'
 import { applyDamage, weaponOf } from '../combat'
+import { logMoney, logMove, logProduce, logTrade, logWork } from '../eventLog'
 import { npcFeedFire } from '../fire'
-import { addItem, countItem, findFood, newStack, removeItem, wieldBest } from '../inventory'
+import { addItem, consumeItem, countItem, findFood, newStack, removeItem, wieldBest } from '../inventory'
 import { forgeOrder } from '../orders'
 import { growthFactor } from '../time'
 import { payFromTreasury } from '../treasury'
@@ -26,6 +27,11 @@ type Act = (sim: Sim, h: Human, ref: string | undefined, eff: number) => boolean
 const HOME_MEAL = 2.2
 
 const storeOf = (sim: Sim, h: Human) => houseOf(sim, h)?.inv
+
+/** Tools a smith keeps in stock without an order, and the stock size at which it stops forging (demand-capped). */
+export const SMITH_TOOLS = ['knife', 'axe', 'shovel', 'hammer', 'pickaxe']
+export const SMITH_STOCK_CAP = 6
+export const smithStock = (inv: Inventory) => SMITH_TOOLS.reduce((n, t) => n + countItem(inv, t), 0)
 
 export const WORK_ACTS: Record<string, Act> = {
   drink_well: (_sim, h) => {
@@ -43,7 +49,7 @@ export const WORK_ACTS: Record<string, Act> = {
     const f = inv ? findFood(inv) : undefined
     if (!inv || !f) return false
     const d = itemDef(f.id)
-    removeItem(inv, f.id, 1)
+    consumeItem(inv, f.id, 1, 'eaten', h)
     eat(h.vitals, d.food!.nutrition * HOME_MEAL, d.food!.water ?? 0)
     return true
   },
@@ -55,7 +61,7 @@ export const WORK_ACTS: Record<string, Act> = {
     const b = sim.building(ref)
     const f = b?.inv ? findFood(b.inv) : undefined
     if (!b?.inv || !f) return false
-    removeItem(b.inv, f.id, 1)
+    consumeItem(b.inv, f.id, 1, 'eaten', h)
     eat(h.vitals, itemDef(f.id).food!.nutrition * HOME_MEAL)
     return true
   },
@@ -68,7 +74,10 @@ export const WORK_ACTS: Record<string, Act> = {
     if (h.money < price) return false
     h.money -= price
     seller.money += price
-    removeItem(inv, f.id, 1)
+    logMoney(`npc:${h.id}`, `npc:${seller.id}`, price, 'npc_buys_food', h.id, h.settlementId)
+    logTrade(seller, { dir: 'sell_food_to_npc', item: f.id, qty: 1, price, buyer: h.id })
+    logWork(seller, 'sale')
+    consumeItem(inv, f.id, 1, 'eaten', h)
     eat(h.vitals, itemDef(f.id).food!.nutrition * HOME_MEAL)
     return true
   },
@@ -144,6 +153,7 @@ export const WORK_ACTS: Record<string, Act> = {
       if (d.category === 'resource' || d.category === 'food' || d.category === 'herb') {
         h.inv.items.splice(i, 1)
         addItem(b.inv, s)
+        logMove(h, s.id, s.qty, 'carried', `warehouse:${b.settlementId}`)
       }
     }
     return true
@@ -153,6 +163,7 @@ export const WORK_ACTS: Record<string, Act> = {
     if (!b?.field) return false
     b.field.growth = Math.min(1, b.field.growth + 0.05 * eff * growthFactor(sim.state.time.cal) * (0.5 + b.field.moisture))
     train(h, 'farming', 0.3)
+    logWork(h, 'tend_field')
     return true
   },
   water_field: (sim, h, ref) => {
@@ -161,6 +172,7 @@ export const WORK_ACTS: Record<string, Act> = {
     if (!b?.field || !bucket) return false
     bucket.water = 0
     b.field.moisture = Math.min(1, b.field.moisture + 0.5)
+    logWork(h, 'water_field')
     return true
   },
   fill_bucket: (_sim, h) => {
@@ -173,14 +185,16 @@ export const WORK_ACTS: Record<string, Act> = {
     const b = sim.building(ref)
     if (!b?.field || b.field.growth < 1) return false
     const qty = Math.round((20 + h.skills.farming / 5) * eff)
-    giveOrDrop(sim, h, newStack(b.field.crop, qty))
+    giveOrDrop(sim, h, newStack(b.field.crop, qty), 'harvest')
     b.field.growth = 0
     train(h, 'farming', 0.6, 3)
     return true
   },
   fill_trough: (sim, h, ref) => {
     const b = sim.building(ref)
-    return !!b && fillTrough(sim, h, b).ok
+    const ok = !!b && fillTrough(sim, h, b).ok
+    if (ok) logWork(h, 'fill_trough')
+    return ok
   },
   /** Takes firewood from the settlement warehouse (conservation: the branches leave the stores, the fire burns them). */
   take_fuel: (sim, h, ref) => {
@@ -190,6 +204,7 @@ export const WORK_ACTS: Record<string, Act> = {
       const n = Math.min(countItem(b.inv, id), FIRE.carryMax - countItem(h.inv, 'branch') - countItem(h.inv, 'log'))
       if (n <= 0) continue
       for (const r of removeItem(b.inv, id, n)) addItem(h.inv, r)
+      logMove(h, id, n, `warehouse:${b.settlementId}`, 'carried')
     }
     return countItem(h.inv, 'branch') + countItem(h.inv, 'log') > 0
   },
@@ -197,23 +212,33 @@ export const WORK_ACTS: Record<string, Act> = {
     const b = sim.building(ref)
     if (!b) return false
     if (b.tender?.id === h.id) b.tender = undefined
-    return npcFeedFire(h, b)
+    const fed = npcFeedFire(h, b)
+    if (fed) logWork(h, 'feed_fire')
+    return fed
   },
-  light_torch: (sim, _h, ref) => {
+  light_torch: (sim, h, ref) => {
     const b = sim.building(ref)
     if (!b) return false
     b.lit = true
+    logWork(h, 'light_torch')
     return true
   },
-  douse_torch: (sim, _h, ref) => {
+  douse_torch: (sim, h, ref) => {
     const b = sim.building(ref)
     if (!b) return false
     b.lit = false
+    logWork(h, 'douse_torch')
     return true
   },
-  look: () => true,
+  look: (_sim, h) => {
+    logWork(h, 'look')
+    return true
+  },
   trade_stand: () => true,
-  herd: () => true,
+  herd: (_sim, h) => {
+    logWork(h, 'herd')
+    return true
+  },
   shear: (sim, h) => {
     const inv = storeOf(sim, h)
     if (!inv) return false
@@ -225,13 +250,18 @@ export const WORK_ACTS: Record<string, Act> = {
       a.shornAt = cal
       n++
     }
-    if (n > 0) addItem(inv, newStack('wool', n))
+    if (n > 0) {
+      addItem(inv, newStack('wool', n))
+      logProduce('wool', n, 'shear', h)
+    }
     return n > 0
   },
   herb_garden: (sim, h, _ref, eff) => {
     const inv = storeOf(sim, h)
     if (!inv || growthFactor(sim.state.time.cal) === 0) return false
-    addItem(inv, newStack(sim.rng.chance(0.5) ? 'mint' : 'chamomile', Math.max(1, Math.round(2 * eff))))
+    const herb = newStack(sim.rng.chance(0.5) ? 'mint' : 'chamomile', Math.max(1, Math.round(2 * eff)))
+    addItem(inv, herb)
+    logProduce(herb.id, herb.qty, 'herb_garden', h)
     train(h, 'medicine', 0.2)
     return true
   },
@@ -239,8 +269,9 @@ export const WORK_ACTS: Record<string, Act> = {
     const inv = storeOf(sim, h)
     if (!inv) return false
     if (countItem(inv, 'raw_meat') < 2) return true // too little to dry (e.g. a hare) — nothing to do, not a failure
-    removeItem(inv, 'raw_meat', 2)
+    consumeItem(inv, 'raw_meat', 2, 'drying', h)
     addItem(inv, newStack('dried_meat', 1))
+    logProduce('dried_meat', 1, 'drying', h)
     return true
   },
   smith: (sim, h) => {
@@ -255,21 +286,22 @@ export const WORK_ACTS: Record<string, Act> = {
     }
     if (countItem(inv, 'iron_ingot') < (order ? 4 : 1)) {
       if (countItem(inv, 'iron_ore') >= 2 && countItem(inv, 'coal') >= 1) {
-        removeItem(inv, 'iron_ore', 2)
-        removeItem(inv, 'coal', 1)
+        consumeItem(inv, 'iron_ore', 2, 'smelt', h)
+        consumeItem(inv, 'coal', 1, 'smelt', h)
         addItem(inv, newStack('iron_ingot', 1))
+        logProduce('iron_ingot', 1, 'smelt', h)
         return true
       }
       return false
     }
-    const tools = ['knife', 'axe', 'shovel', 'hammer', 'pickaxe']
-    const stock = tools.reduce((n, t) => n + countItem(inv, t), 0)
-    if (stock >= 6) return false
-    const t = sim.rng.pick(tools)
-    removeItem(inv, 'iron_ingot', 1)
+    const stock = smithStock(inv)
+    if (stock >= SMITH_STOCK_CAP) return false
+    const t = sim.rng.pick(SMITH_TOOLS)
+    consumeItem(inv, 'iron_ingot', 1, 'forge', h)
     const skill = h.skills.blacksmith
     const q = skill > 80 && sim.rng.chance(0.3) ? 3 : skill > 50 && sim.rng.chance(0.5) ? 2 : skill > 20 ? 1 : 0
     addItem(inv, newStack(t, 1, { q }))
+    logProduce(t, 1, 'forge_stock', h)
     train(h, 'blacksmith', 0.5, 2)
     return true
   },
@@ -299,7 +331,7 @@ export const WORK_ACTS: Record<string, Act> = {
     wieldBest(h, 'ranged') // a close fight may have left the knife in hand
     const w = weaponOf(h)
     if (w.kind !== 'ranged' || d > 45 || countItem(h.inv, 'arrow') <= 0) return false
-    removeItem(h.inv, 'arrow', 1)
+    consumeItem(h.inv, 'arrow', 1, 'ammo', h)
     h.rot = Math.atan2(a.x - h.x, a.z - h.z)
     h.action = { kind: 'shoot', at: sim.state.time.play }
     sim.emit({ type: 'shot', id: h.id })
@@ -318,8 +350,9 @@ export const WORK_ACTS: Record<string, Act> = {
   fletch: (sim, h) => {
     const inv = storeOf(sim, h)
     if (!inv || countItem(inv, 'branch') < 1) return false
-    removeItem(inv, 'branch', 1)
+    consumeItem(inv, 'branch', 1, 'fletch', h)
     addItem(inv, newStack('arrow', 6))
+    logProduce('arrow', 6, 'fletch', h)
     train(h, 'ranged', 0.3)
     return true
   },
@@ -330,7 +363,10 @@ export const WORK_ACTS: Record<string, Act> = {
     if (!there?.inv || !here?.inv) return false
     const move = (from: typeof here, to: typeof here, id: string, keep: number, max: number) => {
       const n = Math.min(max, countItem(from.inv!, id) - keep)
-      if (n > 0) for (const s of removeItem(from.inv!, id, n)) addItem(to.inv!, s)
+      if (n > 0) {
+        for (const s of removeItem(from.inv!, id, n)) addItem(to.inv!, s)
+        logMove(h, id, n, `warehouse:${from.settlementId}`, `warehouse:${to.settlementId}`)
+      }
       return Math.max(0, n)
     }
     let moved = 0
@@ -346,6 +382,8 @@ export const WORK_ACTS: Record<string, Act> = {
     }
     // The home settlement pays its caravan trader for the exchange (treasury → trader, D-ECON-3).
     payFromTreasury(sim, h.settlementId, h, CARAVAN_FEE.base + CARAVAN_FEE.perUnit * moved)
+    logTrade(h, { dir: 'caravan', from: here.id, to: there.id, moved })
+    logWork(h, 'caravan_trade')
     h.trip = { phase: 'returning', since: h.trip?.since ?? sim.state.time.cal }
     perf.count('economy.caravanTrades')
     return true

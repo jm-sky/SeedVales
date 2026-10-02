@@ -5,6 +5,7 @@
  */
 import type { Sim } from './sim'
 import type { Quest } from './types'
+import { logEvent } from './eventLog'
 import { animalsNear, countByDen, nestTag } from './queries'
 import { addRep } from './reputation'
 import { payFromTreasury } from './treasury'
@@ -41,6 +42,7 @@ export function questSystem(sim: Sim) {
       }
       s.quests.push(q)
       sim.message(`On the notice board: ${q.title}`, 'quest')
+      logEvent('quest', { id: q.id, kind: q.kind, status: 'available' }, undefined, q.settlementId)
     }
   }
   // Wolves threatening a settlement.
@@ -64,6 +66,7 @@ export function questSystem(sim: Sim) {
         kills: 0,
       })
       sim.message(`New notice: Wolves near ${sett.name}`, 'quest')
+      logEvent('quest', { id: s.quests.at(-1)!.id, kind: 'wolves', status: 'available' }, undefined, sett.id)
     }
   }
   // Resolution / expiry.
@@ -79,12 +82,16 @@ export function questSystem(sim: Sim) {
         if (q.status === 'active' && q.kills > 0) completeQuest(sim, q)
         else {
           q.status = 'expired'
+          logEvent('quest', { id: q.id, kind: q.kind, status: 'expired' }, undefined, q.settlementId)
           sim.message(`${q.title}: the villagers dealt with the problem themselves.`, 'quest')
         }
       }
     }
     if (q.kind === 'wolves' && q.kills >= q.killsNeeded && q.status === 'active') completeQuest(sim, q)
-    if (q.kind === 'wolves' && q.status === 'available' && s.time.cal - q.createdAt > 5 * 86400) q.status = 'expired'
+    if (q.kind === 'wolves' && q.status === 'available' && s.time.cal - q.createdAt > 5 * 86400) {
+      q.status = 'expired'
+      logEvent('quest', { id: q.id, kind: q.kind, status: 'expired' }, undefined, q.settlementId)
+    }
   }
 }
 
@@ -92,12 +99,14 @@ export function acceptQuest(sim: Sim, id: string): string {
   const q = sim.state.quests.find((qq) => qq.id === id)
   if (!q || q.status !== 'available') return 'Quest unavailable.'
   q.status = 'active'
+  logEvent('quest', { id: q.id, kind: q.kind, status: 'active' }, undefined, q.settlementId)
   sim.message(`Quest accepted: ${q.title}`, 'quest')
   return 'Quest accepted.'
 }
 
 export function completeQuest(sim: Sim, q: Quest) {
   q.status = 'done'
+  logEvent('quest', { id: q.id, kind: q.kind, status: 'done' }, undefined, q.settlementId)
   // Reward is paid by the settlement treasury (never minted); a poor settlement pays what it has.
   const paid = payFromTreasury(sim, q.settlementId, sim.player, q.reward)
   if (paid < q.reward) sim.message(`The settlement treasury is empty — you were paid only ${paid} of ${q.reward} c.`, 'bad')

@@ -10,7 +10,7 @@ import type { Human } from './types'
 import { CAPABILITY_NAMES, itemDef, QUALITY_NAMES } from '../data/items'
 import { train } from './actions'
 import { giveOrDrop } from './actions'
-import { findTool, hasItems, newStack, removeItem, wearTool } from './inventory'
+import { consumeItem, findTool, hasItems, newStack, wearTool } from './inventory'
 
 export function nearStation(sim: Sim, h: Human, st: StationKind): boolean {
   return sim.buildingsNear(h.x, h.z, 5).some((b) => {
@@ -41,13 +41,13 @@ export function rollQuality(sim: Sim, skill: number): number {
 export function completeCraft(sim: Sim, h: Human, r: Recipe): ActionResult {
   const c = canCraft(sim, h, r)
   if (!c.ok) return { ok: false, msg: c.reason! }
-  for (const i of r.inputs) removeItem(h.inv, i.item, i.qty)
+  for (const i of r.inputs) consumeItem(h.inv, i.item, i.qty, 'craft', h)
   if (r.tool) {
     const t = findTool(h, r.tool)
     if (t) wearTool(t, 1)
   }
   const q = r.quality ? rollQuality(sim, h.skills[r.skill]) : undefined
-  giveOrDrop(sim, h, newStack(r.output.item, r.output.qty, q !== undefined ? { q } : {}))
+  giveOrDrop(sim, h, newStack(r.output.item, r.output.qty, q !== undefined ? { q } : {}), 'craft')
   train(h, r.skill, 0.5, 2)
   const qn = q !== undefined ? ` (quality: ${QUALITY_NAMES[q]})` : ''
   return { ok: true, msg: `Crafted: ${itemDef(r.output.item).name} ×${r.output.qty}${qn}` }

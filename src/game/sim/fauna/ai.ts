@@ -11,6 +11,7 @@ import { itemDef } from '../../data/items'
 import { SPECIES, VARIANT_MULT } from '../../data/species'
 import { perf } from '../../diag/perf'
 import { isDown, isProtected, killAnimal, meleeAttack } from '../combat'
+import { logConsume } from '../eventLog'
 import { steerTo } from '../movement'
 import { nearestNaturalWater } from '../npc/queries'
 import { hourOf, isNight } from '../time'
@@ -156,6 +157,7 @@ function eatPortion(sim: Sim, a: Animal, ref: string | undefined) {
     const g = sim.groundNear(a.x, a.z, 3).find((gi) => gi.id === id)
     if (!g) return
     g.stack.qty--
+    logConsume(g.stack.id, 1, 'animal_eat')
     if (g.stack.qty <= 0) sim.removeGround(g)
     a.hungerH = Math.max(0, a.hungerH - CARRION.hungerPerMeat)
     return

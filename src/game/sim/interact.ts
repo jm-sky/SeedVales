@@ -15,6 +15,7 @@ import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, unloadInto, unloadToBuilding } from './cart'
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
+import { logMoney, logProduce } from './eventLog'
 import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { askToJoin, dismissCompanion } from './npc/companions'
@@ -299,6 +300,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
         if (innkeeper) {
           p.money -= 8
           innkeeper.money += 8
+          logMoney('player', `npc:${innkeeper.id}`, 8, 'inn')
         } else payToTreasury(sim, sid, p, 8)
       }
       const comfort = optionId === 'inn_sleep' ? 0.85 : optionId === 'bed_sleep' ? 0.8 : sleepComfort(sim, null)
@@ -322,7 +324,12 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'cancel_site': {
       const s = sim.state.sites.find((ss) => ss.id === (t as { id: string }).id)
       if (!s) return ''
-      for (const [item, qty] of Object.entries(s.delivered)) if (qty > 0) dropItem(sim, s.x, s.z, { id: item, qty })
+      for (const [item, qty] of Object.entries(s.delivered)) {
+        if (qty > 0) {
+          dropItem(sim, s.x, s.z, { id: item, qty })
+          logProduce(item, qty, 'site_refund', p)
+        }
+      }
       sim.state.sites.splice(sim.state.sites.indexOf(s), 1)
       return 'You dismantled the building site (the materials are on the ground).'
     }
@@ -382,6 +389,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (!n || p.money < 15) return ''
       p.money -= 15
       n.money += 15
+      logMoney('player', `npc:${n.id}`, 15, 'heal_service')
       heal(p.vitals, 45 + n.skills.medicine * 0.4)
       p.vitals.bleeding = 0
       p.vitals.convalescenceH = Math.max(0, p.vitals.convalescenceH - 8)

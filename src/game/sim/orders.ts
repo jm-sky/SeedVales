@@ -11,7 +11,8 @@ import type { Human, Inventory, Order } from './types'
 import { itemDef } from '../data/items'
 import { recipeById } from '../data/recipes'
 import { rollQuality } from './craft'
-import { addItem, fitQty, hasItems, newStack, removeItem } from './inventory'
+import { logConsume, logMoney, logProduce } from './eventLog'
+import { addItem, consumeItem, fitQty, hasItems, newStack, removeItem } from './inventory'
 import { houseOf } from './npc/queries'
 
 export const orderPrice = (recipeId: string) => {
@@ -35,6 +36,7 @@ export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
   if (sim.player.money < dep) return 'Not enough coins for the deposit.'
   sim.player.money -= dep
   smith.money += dep
+  logMoney('player', `npc:${smith.id}`, dep, 'order_deposit', smith.id, smith.settlementId)
   const store = houseOf(sim, smith)!.inv!
   const reserved = r.inputs.flatMap((inp) => removeItem(store, inp.item, inp.qty))
   const id = r.output.item
@@ -49,13 +51,18 @@ export function placeOrder(sim: Sim, smith: Human, recipeId: string): string {
 export function forgeOrder(sim: Sim, smith: Human, store: Inventory, o: Order): boolean {
   const r = recipeById(o.recipeId)
   if (!r) return false
-  if (o.reserved) o.reserved = undefined // materials were set aside when ordering
+  if (o.reserved) {
+    // Materials were set aside when ordering; forging uses them up.
+    for (const s of o.reserved) logConsume(s.id, s.qty, 'forge', smith)
+    o.reserved = undefined
+  }
   else {
     // Orders from before reservation (old saves): consume from the store now.
     if (!hasItems(store, r.inputs)) return false
-    for (const inp of r.inputs) removeItem(store, inp.item, inp.qty)
+    for (const inp of r.inputs) consumeItem(store, inp.item, inp.qty, 'forge', smith)
   }
   o.item = newStack(r.output.item, 1, { q: rollQuality(sim, smith.skills.blacksmith) })
+  logProduce(r.output.item, 1, 'forge_order', smith)
   o.status = 'ready'
   return true
 }
@@ -70,6 +77,7 @@ export function collectOrder(sim: Sim, orderId: string): string {
   if (fitQty(sim.player, o.item) < o.item.qty) return 'You can\'t carry that — make room in your inventory.'
   sim.player.money -= rest
   smith.money += rest
+  logMoney('player', `npc:${smith.id}`, rest, 'order_balance', smith.id, smith.settlementId)
   const item = o.item
   // Collected orders leave the list (no unbounded growth).
   sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
@@ -90,6 +98,7 @@ export function cancelOrder(sim: Sim, orderId: string): string {
   const refund = smith ? Math.min(o.paid, smith.money) : 0
   if (smith) smith.money -= refund
   sim.player.money += refund
+  if (smith) logMoney(`npc:${smith.id}`, 'player', refund, 'order_refund', smith.id, smith.settlementId)
   sim.state.px.orders.splice(sim.state.px.orders.indexOf(o), 1)
   return refund < o.paid ? `Order cancelled — only ${refund} of ${o.paid} c refunded.` : `Order cancelled, deposit of ${refund} c refunded.`
 }

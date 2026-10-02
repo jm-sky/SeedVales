@@ -6,6 +6,7 @@ import type { Capability } from '../data/items'
 import type { Human, Inventory, ItemStack } from './types'
 import { itemDef, MATERIAL_MULT, QUALITY_MULT, QUALITY_NAMES } from '../data/items'
 import { SPECIES } from '../data/species'
+import { logConsume } from './eventLog'
 
 export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): ItemStack {
   const d = itemDef(id)
@@ -57,6 +58,13 @@ export function removeItem(inv: Inventory, id: string, qty: number): ItemStack[]
     left -= take
     if (s.qty <= 0) inv.items.splice(i, 1)
   }
+  return out
+}
+
+/** `removeItem` for items that leave the world (eaten, burnt, used up): logged as a ledger sink. */
+export function consumeItem(inv: Inventory, id: string, qty: number, sink: string, actor?: Human): ItemStack[] {
+  const out = removeItem(inv, id, qty)
+  for (const s of out) logConsume(s.id, s.qty, sink, actor)
   return out
 }
 
@@ -203,7 +211,10 @@ export function spoilInventory(inv: Inventory, hours: number, factor = 1) {
     const s = inv.items[i]!
     if (s.fresh === undefined) continue
     s.fresh -= hours * factor
-    if (s.fresh <= 0) inv.items.splice(i, 1)
+    if (s.fresh <= 0) {
+      logConsume(s.id, s.qty, 'spoilage')
+      inv.items.splice(i, 1)
+    }
   }
 }
 

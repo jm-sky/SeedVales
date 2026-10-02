@@ -10,6 +10,7 @@ import { CALENDAR_SPEED, FOOD } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { regrowNodes } from './actions'
 import { projectileSystem } from './combat'
+import { logConsume, logProduce } from './eventLog'
 import { faunaSystem } from './fauna/ai'
 import { burnFuel, burnGroundTorch, removeBurntOut } from './fire'
 import { addItem, newStack, spoilInventory } from './inventory'
@@ -64,7 +65,10 @@ function ecology(sim: Sim, dt: number) {
       // Rats eat stored food.
       if (b.inv && sim.rng.chance(0.3 * h)) {
         const food = b.inv.items.find((i) => i.fresh !== undefined)
-        if (food) food.qty = Math.max(0, food.qty - 1)
+        if (food) {
+          logConsume(food.id, Math.min(1, food.qty), 'rats')
+          food.qty = Math.max(0, food.qty - 1)
+        }
         b.inv.items = b.inv.items.filter((i) => i.qty > 0)
       }
     }
@@ -78,12 +82,16 @@ function ecology(sim: Sim, dt: number) {
   for (let i = s.ground.length - 1; i >= 0; i--) {
     const gi = s.ground[i]!
     if (gi.lit && burnGroundTorch(gi, h)) {
+      logConsume(gi.stack.id, gi.stack.qty, 'burnt_out')
       sim.removeGround(gi)
       continue
     }
     if (gi.stack.fresh !== undefined) {
       gi.stack.fresh -= h * 1.2
-      if (gi.stack.fresh <= 0) sim.removeGround(gi)
+      if (gi.stack.fresh <= 0) {
+        logConsume(gi.stack.id, gi.stack.qty, 'spoilage')
+        sim.removeGround(gi)
+      }
     }
   }
   // Corpses: rot then leave bones (removed after 48 h).
@@ -110,7 +118,9 @@ function households(sim: Sim, dtPlay: number) {
     const acc = house.foodAcc ?? 0
     let n = acc + hh.memberIds.length * 1.1 * g * days
     while (n >= 1) {
-      addItem(house.inv, newStack(sim.rng.pick(pool), 1))
+      const food = newStack(sim.rng.pick(pool), 1)
+      addItem(house.inv, food)
+      logProduce(food.id, 1, 'household_garden')
       n -= 1
     }
     house.foodAcc = n

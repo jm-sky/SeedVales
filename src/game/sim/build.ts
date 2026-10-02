@@ -12,7 +12,8 @@ import { distToSegment } from '../core/math'
 import { CAPABILITY_NAMES, itemDef } from '../data/items'
 import { blueprintById } from '../data/recipes'
 import { train } from './actions'
-import { countItem, findTool, removeItem } from './inventory'
+import { logConsume } from './eventLog'
+import { consumeItem, countItem, findTool } from './inventory'
 import { startActivity } from './player'
 import { addRep, settlementAt } from './reputation'
 
@@ -69,13 +70,14 @@ export function deliverMaterials(sim: Sim, site: ConstructionSite): { item: stri
       if (g.stack.id !== m.item || Math.hypot(g.x - site.x, g.z - site.z) > 6) continue
       const take = Math.min(need, g.stack.qty)
       g.stack.qty -= take
+      logConsume(m.item, take, 'construction', p)
       need -= take
       site.delivered[m.item] = (site.delivered[m.item] ?? 0) + take
       if (g.stack.qty <= 0) sim.removeGround(g)
     }
     const have = Math.min(need, countItem(p.inv, m.item))
     if (have > 0) {
-      removeItem(p.inv, m.item, have)
+      consumeItem(p.inv, m.item, have, 'construction', p)
       site.delivered[m.item] = (site.delivered[m.item] ?? 0) + have
       need -= have
     }

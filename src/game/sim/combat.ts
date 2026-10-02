@@ -13,8 +13,9 @@ import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { train } from './actions'
 import { alertAround } from './alerts'
+import { logEvent, logging } from './eventLog'
 import { fleeHome } from './fauna/perception'
-import { qualityMult, removeItem, wearTool } from './inventory'
+import { consumeItem, qualityMult, wearTool } from './inventory'
 import { companionsOnKill } from './npc/companions'
 import { questOnKill } from './quests'
 import { addRep, addStat, settlementAt } from './reputation'
@@ -50,10 +51,20 @@ export function isProtected(sim: Sim, a: Actor) {
   return !!a.vitals.ko && a.vitals.ko.protectUntil > sim.state.time.play
 }
 
+/** Best guess of what killed an NPC (for the event log): needs first, then illness, bleeding, otherwise injury. */
+function deathCause(h: Human): string {
+  const v = h.vitals
+  if (v.hunger <= 0) return 'hunger'
+  if (v.thirst <= 0) return 'thirst'
+  if (v.illness) return `illness:${v.illness.kind}`
+  return v.bleeding > 0 ? 'bleeding' : 'injury'
+}
+
 /** NPC death (HP ≤ COMBAT.npcDeathHp from any cause: hits, bleeding, starvation). */
 export function killNpc(sim: Sim, h: Human) {
   if (h.vitals.dead) return
   h.vitals.dead = true
+  if (logging()) logEvent('death', { cause: deathCause(h), goal: h.ai.goal ?? undefined, profession: h.profession, x: Math.round(h.x), z: Math.round(h.z) }, h.id, h.settlementId)
   sim.emit({ type: 'death', id: h.id })
   sim.message(`${h.name} is dead.`, 'bad')
 }
@@ -263,7 +274,7 @@ export function fireRanged(sim: Sim, h: Human, yaw: number, pitch: number, drawF
     return false
   }
   const ammoId = ammo.id
-  removeItem(h.inv, ammoId, 1)
+  consumeItem(h.inv, ammoId, 1, 'ammo', h)
   h.attackReadyAt = now + w.cooldown
   h.action = { kind: 'shoot', at: now }
   const df = Math.max(0.2, Math.min(1, drawFrac))

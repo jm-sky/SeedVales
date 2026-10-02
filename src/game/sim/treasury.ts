@@ -6,6 +6,7 @@
 import type { Sim } from './sim'
 import type { Human } from './types'
 import { TAX } from '../config/calibration'
+import { logMoney } from './eventLog'
 
 export function payToTreasury(sim: Sim, sid: number, from: Human, amount: number): number {
   const st = sim.state.settlements[sid]
@@ -13,6 +14,7 @@ export function payToTreasury(sim: Sim, sid: number, from: Human, amount: number
   if (!st || paid <= 0) return 0
   from.money -= paid
   st.treasury += paid
+  logMoney(from.kind === 'player' ? 'player' : `npc:${from.id}`, `treasury:${sid}`, paid, 'to_treasury', from.id, sid)
   return paid
 }
 
@@ -23,6 +25,7 @@ export function payFromTreasury(sim: Sim, sid: number, to: Human, amount: number
   if (paid <= 0) return 0
   st!.treasury -= paid
   to.money += paid
+  logMoney(`treasury:${sid}`, to.kind === 'player' ? 'player' : `npc:${to.id}`, paid, 'from_treasury', to.id, sid)
   return paid
 }
 

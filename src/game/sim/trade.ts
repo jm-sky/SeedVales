@@ -11,6 +11,7 @@ import { TRADE } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { PROFESSIONS } from '../data/professions'
 import { train } from './actions'
+import { logMoney, logTrade } from './eventLog'
 import { countGoodwill, goodwillToday } from './gifts'
 import { addItem, countItem, fitQty, qualityMult, removeStack } from './inventory'
 import { doorOf, household, houseOf } from './npc/queries'
@@ -122,6 +123,8 @@ export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): Act
   sim.player.money -= price
   npc.money += price
   addItem(sim.player.inv, taken)
+  logMoney('player', `npc:${npc.id}`, price, 'player_buys', npc.id, npc.settlementId)
+  logTrade(npc, { dir: 'sell_to_player', item: taken.id, qty: q, price })
   // Goodwill from a purchase shares the daily favour counter with gifts (diminishing, review 006 #3).
   npc.opinion = Math.min(100, npc.opinion + 1 / (1 + goodwillToday(sim, npc)))
   countGoodwill(sim, npc)
@@ -139,6 +142,8 @@ export function sellToNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): Acti
   npc.money -= price
   sim.player.money += price
   addItem(inv, given)
+  logMoney(`npc:${npc.id}`, 'player', price, 'player_sells', npc.id, npc.settlementId)
+  logTrade(npc, { dir: 'buy_from_player', item: given.id, qty: q, price })
   train(sim.player, 'trade', 0.3)
   return { ok: true, msg: `Sold: ${itemDef(given.id).name} ×${q} for ${price} c` }
 }
