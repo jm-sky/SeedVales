@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { testSim } from '../sim/testWorld'
 import { Biome } from '../world/types'
-import { CLUMP_DENSITY, GRASS_RINGS, grassDensity, hash01, maxInstances, TILE_M, tileInstances } from './grassPlacement'
+import { CLUMP_DENSITY, GRASS_RINGS, grassDensity, grassSeasonal, hash01, maxInstances, TILE_M, tileInstances } from './grassPlacement'
 
 describe('grass placement', () => {
   it('density: meadow grows, road/water/rock/beach/footprints/steep ground do not', () => {
@@ -14,6 +14,20 @@ describe('grass placement', () => {
     expect(grassDensity(Biome.Beach, 0, 0, false, false)).toBe(0)
     expect(grassDensity(Biome.Snow, 0, 0, false, false)).toBe(0)
     expect(grassDensity(Biome.ForestConifer, 0, 0, false, false)).toBeLessThan(grassDensity(Biome.Steppe, 0, 0, false, false))
+  })
+
+  it('season: short after winter, full in summer, flowers only from spring to late summer', () => {
+    const spring = grassSeasonal(0.02)
+    const summer = grassSeasonal(0.4)
+    const winter = grassSeasonal(0.9)
+    expect(spring.growth).toBeLessThan(0.6)
+    expect(summer.growth).toBe(1)
+    expect(winter.growth).toBeLessThan(0.6)
+    expect(summer.flowers).toBe(1)
+    expect(winter.flowers).toBe(0)
+    expect(grassSeasonal(0.7).flowers).toBe(0) // autumn
+    expect(grassSeasonal(1.4)).toEqual(summer) // wraps by year
+    for (let f = 0; f < 1; f += 0.01) expect(Math.abs(grassSeasonal(f + 0.01).growth - grassSeasonal(f).growth)).toBeLessThan(0.05) // no jumps
   })
 
   it('hash is deterministic and spread over [0,1)', () => {

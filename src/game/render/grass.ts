@@ -11,56 +11,101 @@ import * as THREE from 'three'
 import type { Sim } from '../sim/sim'
 import { perf } from '../diag/perf'
 import { CHUNK_M } from '../world/types'
-import { FADE_FAR, FADE_NEAR, type Footprint, GRASS_RINGS, maxInstances, TILE_M, tileInstances } from './grassPlacement'
+import { FADE_FAR, FADE_NEAR, type Footprint, GRASS_RINGS, grassTint, hash01, maxInstances, TILE_M, tileInstances } from './grassPlacement'
+import { flowerType, GROUND_PATCH_GLSL, groundPatch } from './groundPatch'
 import { type QualityProfile } from './quality'
 import { applyWind } from './wind'
 
 const GRASS_BUDGET_MS = 2.5
 /** While tiles are still being built, upload the ring buffer at most every N frames. */
 const COMMIT_EVERY_FRAMES = 20
-const BLADE_H = 0.4
+/** Full-growth blade height (m); the seasonal growth uniform scales it (user, 2026-10-02: thinner and longer). */
+const BLADE_H = 0.62
+const BLADES_PER_CLUMP = 16
+const FLOWERS_PER_CLUMP = 3
 const DRY = new THREE.Color(0xb8a45a)
+const LOD1_H = 0.8
+/** Blade-ring tiles whose centre is closer than this use the curved clump; the rest single-triangle blades. */
+const FINE_M = 20
 
-/** Curved blade clump: 4 blades × 3 triangles, base → tip colour gradient, normals up (lit like the ground). */
-export function bladeClumpGeometry(): THREE.BufferGeometry {
+/**
+ * Clump: 16 thin curved blades (3 triangles each, base → tip colour gradient) + 3 flower heads (two crossed
+ * quads among the blade tips, no stem — not visible at camera height) marked by `aFlower` = 11..13; the shader shows a head only inside a flower patch in the
+ * flower season. Normals point up (lit like the ground). More blades per instance is cheaper than more
+ * instances: no extra matrices to build or upload. `coarse` = the same blades as single triangles and
+ * one quad per flower head (≈ 40 % of the triangles) for the outer part of the blade ring.
+ */
+export function bladeClumpGeometry(coarse = false): THREE.BufferGeometry {
   const pos: number[] = []
   const col: number[] = []
+  const flw: number[] = []
   const idx: number[] = []
-  const base = new THREE.Color(0x42702a)
-  const tip = new THREE.Color(0x93bb4c)
-  // 7 blades in a ~0.2 m radius, golden-angle spread so no two lean the same way.
-  const blades: number[][] = []
-  for (let i = 0; i < 7; i++) blades.push([Math.cos(i * 2.4) * 0.05 * (i % 4), Math.sin(i * 2.4) * 0.05 * (i % 4), i * 2.4, 0.08 + 0.03 * (i % 3), 0.7 + 0.1 * ((i * 5) % 4)])
-  for (const [ox, oz, yaw, lean, hs] of blades) {
-    const dx = Math.cos(yaw!)
-    const dz = Math.sin(yaw!)
-    const h = BLADE_H * hs!
+  const base = new THREE.Color(0x3e6a28)
+  const tip = new THREE.Color(0x96bc50)
+  const vert = (x: number, y: number, z: number, c: THREE.Color, f = 0) => {
+    pos.push(x, y, z)
+    col.push(c.r, c.g, c.b)
+    flw.push(f)
+    return pos.length / 3 - 1
+  }
+  for (let i = 0; i < BLADES_PER_CLUMP; i++) {
+    // Golden-angle spread in a ~0.2 m radius; heights 0.55–1.05 of BLADE_H so the clump edge is ragged.
+    const r = 0.04 + 0.26 * Math.sqrt((i + 0.5) / BLADES_PER_CLUMP)
+    const ox = Math.cos(i * 2.4) * r
+    const oz = Math.sin(i * 2.4) * r
+    const yaw = i * 2.4 + 0.9
+    const dx = Math.cos(yaw)
+    const dz = Math.sin(yaw)
+    const hs = 0.55 + 0.5 * (((i * 7) % 11) / 10)
+    const h = BLADE_H * hs
+    const lean = (0.1 + 0.05 * (i % 3)) * hs
+    // Outward lean: blades bend away from the clump centre plus a little sideways.
+    const ux = ox / r
+    const uz = oz / r
     const v0 = pos.length / 3
-    // Rows at t = 0, 0.55 (two verts each) and the tip; the blade bends along (−dz, dx).
-    const rows: [number, number][] = [[0, 0.07], [0.55, 0.05]]
-    for (const [t, w] of rows) {
-      const bend = lean! * t * t
-      const cx = ox! + -dz * bend
-      const cz = oz! + dx * bend
-      for (const sgn of [-1, 1]) {
-        pos.push(cx + dx * w * sgn, h * t, cz + dz * w * sgn)
-        const c = base.clone().lerp(tip, t)
-        col.push(c.r, c.g, c.b)
-      }
+    if (coarse) {
+      for (const sgn of [-1, 1]) vert(ox + dx * 0.022 * sgn, 0, oz + dz * 0.022 * sgn, base)
+      vert(ox + ux * lean, h, oz + uz * lean, tip)
+      idx.push(v0, v0 + 1, v0 + 2)
+      continue
     }
-    pos.push(ox! + -dz * lean!, h, oz! + dx * lean!)
-    col.push(tip.r, tip.g, tip.b)
+    for (const [t, w] of [[0, 0.022], [0.5, 0.014]] as [number, number][]) {
+      const bend = lean * t * t
+      const c = base.clone().lerp(tip, t)
+      for (const sgn of [-1, 1]) vert(ox + ux * bend + dx * w * sgn, h * t, oz + uz * bend + dz * w * sgn, c)
+    }
+    vert(ox + ux * lean - dz * 0.02, h, oz + uz * lean + dx * 0.02, tip)
     idx.push(v0, v0 + 1, v0 + 2, v0 + 1, v0 + 3, v0 + 2, v0 + 2, v0 + 3, v0 + 4)
+  }
+  const white = new THREE.Color(1, 1, 1)
+  for (let k = 0; k < FLOWERS_PER_CLUMP; k++) {
+    const a = k * 2.1 + 0.4
+    const fx = Math.cos(a) * 0.12
+    const fz = Math.sin(a) * 0.12
+    const fh = BLADE_H * (0.7 + 0.12 * k)
+    const hr = 0.032
+    for (let q = 0; q < (coarse ? 1 : 2); q++) {
+      const ca = q * Math.PI * 0.5 + a
+      const cx = Math.cos(ca) * hr
+      const cz = Math.sin(ca) * hr
+      // A small tilted quad (flat-ish head seen from the camera height).
+      const v0 = vert(fx - cx, fh - 0.01, fz - cz, white, k + 11)
+      vert(fx + cx, fh - 0.01, fz + cz, white, k + 11)
+      vert(fx - cx, fh + 0.03, fz - cz, white, k + 11)
+      vert(fx + cx, fh + 0.03, fz + cz, white, k + 11)
+      idx.push(v0, v0 + 1, v0 + 2, v0 + 1, v0 + 3, v0 + 2)
+    }
   }
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+  g.setAttribute('aFlower', new THREE.Float32BufferAttribute(flw, 1))
   g.setAttribute('normal', new THREE.Float32BufferAttribute(new Array(pos.length / 3).fill(0).flatMap(() => [0, 1, 0]), 3))
   g.setIndex(idx)
   return g
 }
 
-/** Two crossed quads (1 m wide, 0.6 m tall) for the far ring; uv for the blade texture. */
+/** Two crossed quads (2.4 m wide, 0.8 m tall at full growth) for the far ring; uv for the blade texture. */
 export function crossQuadGeometry(): THREE.BufferGeometry {
   const pos: number[] = []
   const uv: number[] = []
@@ -74,7 +119,7 @@ export function crossQuadGeometry(): THREE.BufferGeometry {
     const dz = Math.sin(a) * 0.5
     const v0 = pos.length / 3
     for (const [t, u] of [[0, 0], [0, 1], [1, 0], [1, 1]] as [number, number][]) {
-      pos.push(dx * 1.2 * (u * 2 - 1), t * 0.55, dz * 1.2 * (u * 2 - 1))
+      pos.push(dx * 1.2 * (u * 2 - 1), t * LOD1_H, dz * 1.2 * (u * 2 - 1))
       uv.push(u, t)
       const c = base.clone().lerp(tip, t)
       col.push(c.r, c.g, c.b)
@@ -85,15 +130,20 @@ export function crossQuadGeometry(): THREE.BufferGeometry {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+  g.setAttribute('aFlower', new THREE.Float32BufferAttribute(new Array(pos.length / 3).fill(0), 1))
   g.setAttribute('normal', new THREE.Float32BufferAttribute(new Array(pos.length / 3).fill(0).flatMap(() => [0, 1, 0]), 3))
   g.setIndex(idx)
   return g
 }
 
-/** Alpha mask of a tuft of blades, generated (no asset): N×N RGBA, alpha = inside a blade. */
+/**
+ * Alpha mask of a tuft of thin blades, generated (no asset): N×N RGBA, alpha = inside a blade. Flower heads
+ * are marked with blue = 0 — the shader shows them (in the patch colour) only inside a flower patch.
+ */
 export function bladeTextureData(n = 64): Uint8Array {
   const data = new Uint8Array(n * n * 4)
-  const blades = [[0.18, 0.5, 0.18], [0.34, 0.8, -0.1], [0.5, 1, 0.12], [0.66, 0.75, -0.16], [0.82, 0.55, 0.2]]
+  const blades = [[0.1, 0.55, 0.12], [0.2, 0.85, -0.08], [0.3, 0.7, 0.15], [0.4, 1, 0.1], [0.5, 0.78, -0.14], [0.6, 0.95, 0.06], [0.7, 0.66, -0.1], [0.8, 0.88, 0.14], [0.9, 0.6, -0.12]]
+  const heads = [[0.26, 0.74], [0.55, 0.86], [0.83, 0.7]]
   for (let y = 0; y < n; y++) {
     for (let x = 0; x < n; x++) {
       const u = (x + 0.5) / n
@@ -102,12 +152,15 @@ export function bladeTextureData(n = 64): Uint8Array {
       for (const [bx, h, lean] of blades as number[][]) {
         if (v >= h!) continue
         const cx = bx! + lean! * v * v
-        const hw = 0.075 * (1 - v / h!) + 0.006
+        const hw = 0.032 * (1 - v / h!) + 0.004
         if (Math.abs(u - cx) < hw) a = 255
       }
+      let flower = false
+      for (const [hx, hy] of heads as number[][]) if ((u - hx!) ** 2 + ((v - hy!) * 1.6) ** 2 < 0.035 ** 2) flower = true
       const k = (y * n + x) * 4
-      data[k] = data[k + 1] = data[k + 2] = 255
-      data[k + 3] = a
+      data[k] = data[k + 1] = 255
+      data[k + 2] = flower ? 0 : 255
+      data[k + 3] = flower ? 255 : a
     }
   }
   return data
@@ -119,6 +172,8 @@ interface Uniforms {
   uGrassSeason: { value: number }
   uGrassSnow: { value: number }
   uGrassDry: { value: THREE.Color }
+  uGrassGrowth: { value: number }
+  uFlowers: { value: number }
 }
 
 const FADE_GLSL = `
@@ -127,7 +182,16 @@ uniform vec4 uGrassFade;
 uniform float uGrassSeason;
 uniform float uGrassSnow;
 uniform vec3 uGrassDry;
+uniform float uGrassGrowth;
+attribute float aFlower;
+attribute vec2 aPatch; // per instance: x = flower-patch weight, y = flower species (FLOWER_COLOURS index)
+varying float vFlowerK;
+varying vec3 vFlowerC;
+${GROUND_PATCH_GLSL}
 `
+// Per instance: ring fade, snow, seasonal height (origin hash), flower heads shown only inside flower patches
+// in the flower season (aPatch). Colour variation (biome tint, dark splashes, per-clump hue) is in instanceColor,
+// computed once per clump on the CPU — per-vertex patch noise here cost ≈ +2 ms GPU on medium.
 const FADE_VERTEX = `
 {
   mat4 gM = modelMatrix;
@@ -138,11 +202,16 @@ const FADE_VERTEX = `
   float gd = distance(gO.xz, uGrassCenter);
   float gf = (1.0 - smoothstep(uGrassFade.z, uGrassFade.w, gd)) * smoothstep(uGrassFade.x, uGrassFade.y, gd);
   gf *= 1.0 - smoothstep(0.3, 0.7, uGrassSnow);
-  gf *= 1.0 - uGrassSeason * 0.45;
-  transformed *= gf;
+  gf *= 1.0 - uGrassSeason * 0.2;
   float gh = fract(sin(dot(gO.xz, vec2(12.9898, 78.233))) * 43758.5453);
+  float bloom = aPatch.x * uFlowers * 1.4;
+  vFlowerK = step(fract(gh * 5.37), bloom);
+  vFlowerC = flowerColourOf(aPatch.y);
+  if (aFlower > 0.5) gf *= step(fract(gh * 7.31 + mod(aFlower, 10.0) * 0.377), bloom);
+  transformed.y *= uGrassGrowth * (0.82 + 0.36 * fract(gh * 3.1));
+  transformed *= gf;
   #ifdef USE_COLOR
-  vColor.rgb = mix(vColor.rgb, uGrassDry, uGrassSeason * 1.2) * (0.85 + 0.36 * gh);
+  vColor.rgb = aFlower > 10.5 ? vFlowerC : mix(vColor.rgb, uGrassDry, uGrassSeason * 1.2);
   #endif
 }`
 
@@ -154,16 +223,43 @@ function makeMaterial(u: Uniforms, opts: { map?: THREE.Texture; heightScale: num
       .replace('#include <common>', `#include <common>\n${FADE_GLSL}`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>\n${FADE_VERTEX}`)
     // Blades are lit like the ground from both sides: no back-face normal flip (it made them black).
-    sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nnormal = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);')
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nnormal = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);')
+      .replace('#include <common>', '#include <common>\nvarying float vFlowerK;\nvarying vec3 vFlowerC;')
+      // LOD1: texels with blue = 0 are flower heads — patch colour inside a flower patch, cut away elsewhere.
+      .replace('#include <map_fragment>', '#include <map_fragment>\n#ifdef USE_MAP\nif (texture2D(map, vMapUv).b < 0.5) { if (vFlowerK < 0.5) discard; diffuseColor.rgb = vFlowerC; }\n#endif')
   }
   m.customProgramCacheKey = () => `grass:${opts.map ? 1 : 0}`
   applyWind(m, { amplitude: opts.amplitude, heightScale: opts.heightScale })
   return m
 }
 
-interface Ring {
+/**
+ * Per-clump look, once at tile build: colour = biome tint × dark meadow splash × per-clump brightness/hue jitter
+ * (instanceColor); patch = flower-patch weight + species (aPatch). Same patches as the ground under it.
+ */
+function clumpLook(biome: number, x: number, z: number, col: Float32Array, pat: Float32Array, i: number) {
+  const [tr, tg, tb] = grassTint(biome)
+  const [flower, dark] = groundPatch(x, z)
+  const h = hash01(Math.round(x * 10), Math.round(z * 10), 9)
+  const h2 = hash01(Math.round(x * 10), Math.round(z * 10), 10) - 0.5
+  const k = (1 - dark * 0.3) * (0.86 + 0.26 * h)
+  col[i * 3] = tr * k * (1 + h2 * 0.16)
+  col[i * 3 + 1] = tg * k
+  col[i * 3 + 2] = tb * k * (1 - h2 * 0.2)
+  pat[i * 2] = flower
+  pat[i * 2 + 1] = flowerType(x, z)
+}
+
+interface RingMesh {
   mesh: THREE.InstancedMesh
-  tiles: Map<string, Float32Array> // matrices (16 floats per instance)
+  patch: THREE.InstancedBufferAttribute
+}
+
+interface Ring {
+  /** [0] = main mesh; the blade ring has [1] = coarse mesh for tiles beyond FINE_M (same tile cache). */
+  meshes: RingMesh[]
+  tiles: Map<string, { m: Float32Array; c: Float32Array; p: Float32Array }> // per instance: matrix (16), colour (3), patch (2)
   committed: string
   /** Frame of the last buffer upload (commit throttle). */
   commitFrame: number
@@ -179,10 +275,12 @@ export class Grass {
     uGrassSeason: { value: 0 },
     uGrassSnow: { value: 0 },
     uGrassDry: { value: DRY },
+    uGrassGrowth: { value: 1 },
+    uFlowers: { value: 0 },
   }
   private profile: QualityProfile
   private tex: THREE.DataTexture | null = null
-  private geo: [THREE.BufferGeometry | null, THREE.BufferGeometry | null] = [null, null]
+  private geo: (THREE.BufferGeometry | null)[] = [null, null, null]
   private mats: THREE.Material[] = []
   private foot = new Map<string, Footprint[]>()
   private sim: Sim
@@ -196,26 +294,19 @@ export class Grass {
   }
 
   private build() {
-    for (const r of this.rings) if (r) { this.group.remove(r.mesh); r.mesh.dispose() }
+    for (const r of this.rings) for (const { mesh } of r?.meshes ?? []) { this.group.remove(mesh); mesh.dispose() }
     for (const m of this.mats) m.dispose()
     this.mats = []
     this.rings = [null, null]
     const { near, far, k } = GRASS_RINGS[this.profile]
     this.u.uGrassFade.value.set(-2, -1, near - FADE_NEAR, near)
-    const mk = (lod: 0 | 1, outer: number, inner: number, mat: THREE.Material, geo: THREE.BufferGeometry) => {
+    const mk = (lod: 0 | 1, outer: number, inner: number, mat: THREE.Material, geos: THREE.BufferGeometry[]): Ring | null => {
       const cap = maxInstances(lod, outer, inner, k)
       if (cap <= 0) return null
-      const mesh = new THREE.InstancedMesh(geo, mat, cap)
-      mesh.frustumCulled = false
-      mesh.count = 0
-      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-      mesh.castShadow = false
-      mesh.receiveShadow = false
-      this.group.add(mesh)
       this.mats.push(mat)
-      return { mesh, tiles: new Map<string, Float32Array>(), committed: '', commitFrame: 0, cap } as Ring
+      return { meshes: geos.map((geo) => this.ringMesh(geo, mat, cap)), tiles: new Map(), committed: '', commitFrame: 0, cap }
     }
-    if (near > 0) this.rings[0] = mk(0, near, 0, makeMaterial(this.u, { heightScale: BLADE_H, amplitude: 0.22 }), (this.geo[0] ??= bladeClumpGeometry()))
+    if (near > 0) this.rings[0] = mk(0, near, 0, makeMaterial(this.u, { heightScale: BLADE_H, amplitude: 0.22 }), [(this.geo[0] ??= bladeClumpGeometry()), (this.geo[2] ??= bladeClumpGeometry(true))])
     // LOD1 has its own fade uniform copy (fade in before the near ring ends, out at the far edge).
     const u1: Uniforms = { ...this.u, uGrassFade: { value: new THREE.Vector4(Math.max(0, near - FADE_NEAR - 2), Math.max(1, near), far - FADE_FAR, far) } }
     this.u1 = u1
@@ -226,7 +317,25 @@ export class Grass {
       t.needsUpdate = true
       return t
     })()
-    this.rings[1] = mk(1, far, Math.max(0, near - FADE_NEAR - 2), makeMaterial(u1, { map: this.tex, heightScale: 0.55, amplitude: 0.3 }), (this.geo[1] ??= crossQuadGeometry()))
+    this.rings[1] = mk(1, far, Math.max(0, near - FADE_NEAR - 2), makeMaterial(u1, { map: this.tex, heightScale: LOD1_H, amplitude: 0.3 }), [(this.geo[1] ??= crossQuadGeometry())])
+  }
+
+  /** One instanced mesh of a ring: matrix + colour + flower-patch instance attributes, all dynamic. */
+  private ringMesh(geo: THREE.BufferGeometry, mat: THREE.Material, cap: number): RingMesh {
+    const mesh = new THREE.InstancedMesh(geo, mat, cap)
+    mesh.frustumCulled = false
+    mesh.count = 0
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    // Per-clump tint (biome, dark splash, jitter) — multiplied into vColor by three.
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3).fill(1), 3)
+    mesh.instanceColor.setUsage(THREE.DynamicDrawUsage)
+    const patch = new THREE.InstancedBufferAttribute(new Float32Array(cap * 2), 2)
+    patch.setUsage(THREE.DynamicDrawUsage)
+    geo.setAttribute('aPatch', patch)
+    mesh.castShadow = false
+    mesh.receiveShadow = false
+    this.group.add(mesh)
+    return { mesh, patch }
   }
   private u1: Uniforms = this.u
 
@@ -236,10 +345,15 @@ export class Grass {
     this.build()
   }
 
-  /** Season tint (0..0.8) and snow cover (0..1), the same values the terrain material uses. */
-  setSeason(season: number, snow: number) {
+  /**
+   * Season tint (0..0.8) and snow cover (0..1), the same values the terrain material uses; blade height factor
+   * and flower amount from `grassSeasonal`.
+   */
+  setSeason(season: number, snow: number, growth = 1, flowers = 0) {
     this.u.uGrassSeason.value = this.u1.uGrassSeason.value = season
     this.u.uGrassSnow.value = this.u1.uGrassSnow.value = snow
+    this.u.uGrassGrowth.value = this.u1.uGrassGrowth.value = growth
+    this.u.uFlowers.value = this.u1.uFlowers.value = flowers
   }
 
   /** Terrain or building edits invalidate the tile caches (placement reads heights and footprints). */
@@ -300,33 +414,46 @@ export class Grass {
         if (performance.now() - t0 > budgetMs) break
         const data = tileInstances(this.sim.terrain, this.footprints(n.tx, n.tz), n.tx, n.tz, lod, k)
         const buf = new Float32Array((data.length / 5) * 16)
+        const col = new Float32Array((data.length / 5) * 3)
+        const pat = new Float32Array((data.length / 5) * 2)
         const { m, p, q, s, up } = this.scratch
         for (let i = 0; i < data.length / 5; i++) {
           p.set(data[i * 5]!, data[i * 5 + 1]!, data[i * 5 + 2]!)
           q.setFromAxisAngle(up, data[i * 5 + 3]!)
           s.setScalar(data[i * 5 + 4]!)
           m.compose(p, q, s).toArray(buf, i * 16)
+          clumpLook(this.sim.terrain.biomeAt(p.x, p.z), p.x, p.z, col, pat, i)
         }
-        ring.tiles.set(n.k, buf)
+        ring.tiles.set(n.k, { m: buf, c: col, p: pat })
       }
-      // Commit when the set of ready tiles changed.
+      // Commit when the set of ready tiles (or their fine/coarse split) changed.
       const ready = need.filter((n) => ring.tiles.has(n.k))
-      const sig = ready.map((n) => n.k).join('|')
+      const fine = (n: { d: number }) => ring.meshes.length === 1 || n.d < FINE_M
+      const sig = ready.map((n) => (fine(n) ? 'f' : 'c') + n.k).join('|')
       // Commits are coalesced: every commit re-uploads the whole instance buffer (up to ~2.5 MB), and while walking
       // a ring gains a tile every few frames (GPU bench: raf p95 10.7 -> 23.6 ms on medium march with a commit per tile).
       const stale = sig !== ring.committed
       const pending = ready.length < need.length
       if (stale && (ring.committed === '' || !pending || this.frame - ring.commitFrame >= COMMIT_EVERY_FRAMES)) {
-        const arr = ring.mesh.instanceMatrix.array as Float32Array
-        let off = 0
-        for (const n of ready) {
-          const buf = ring.tiles.get(n.k)!
-          if (off + buf.length > arr.length) break // never beyond the buffer (cap is an upper bound anyway)
-          arr.set(buf, off)
-          off += buf.length
-        }
-        ring.mesh.count = off / 16
-        ring.mesh.instanceMatrix.needsUpdate = true
+        ring.meshes.forEach((rm, mi) => {
+          const arr = rm.mesh.instanceMatrix.array as Float32Array
+          const carr = rm.mesh.instanceColor!.array as Float32Array
+          const parr = rm.patch.array as Float32Array
+          let off = 0
+          for (const n of ready) {
+            if (fine(n) !== (mi === 0)) continue
+            const t = ring.tiles.get(n.k)!
+            if (off + t.m.length > arr.length) break // never beyond the buffer (cap is an upper bound anyway)
+            arr.set(t.m, off)
+            carr.set(t.c, (off / 16) * 3)
+            parr.set(t.p, (off / 16) * 2)
+            off += t.m.length
+          }
+          rm.mesh.count = off / 16
+          rm.mesh.instanceMatrix.needsUpdate = true
+          rm.mesh.instanceColor!.needsUpdate = true
+          rm.patch.needsUpdate = true
+        })
         ring.committed = sig
         ring.commitFrame = this.frame
       }
@@ -335,7 +462,7 @@ export class Grass {
         const keep = new Set(need.map((n) => n.k))
         for (const k of ring.tiles.keys()) if (!keep.has(k)) ring.tiles.delete(k)
       }
-      total += ring.mesh.count
+      for (const rm of ring.meshes) total += rm.mesh.count
     }
     this.instances = total
     perf.gauge('render.grassInstances', total)

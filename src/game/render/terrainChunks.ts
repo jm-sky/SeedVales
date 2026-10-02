@@ -65,6 +65,8 @@ export class TerrainChunks {
   /** Season tint 0 = summer green, 1 = autumn/winter faded (snow handled separately). */
   seasonTint = 0
   snowCover = 0
+  /** 0..1 flower season (meadow patch tint, shader path only). */
+  flowers = 0
   private builtTint = -1
   private terrain: Terrain
   private lods: { maxDist: number; step: number }[]
@@ -143,6 +145,7 @@ export class TerrainChunks {
     if (this.shading) {
       this.shading.season.value = this.seasonTint
       this.shading.snow.value = this.snowCover
+      this.shading.flowers.value = this.flowers
     }
     const tintChanged = !this.shading && Math.abs(this.builtTint - (this.seasonTint + this.snowCover * 2)) > 0.15
     if (tintChanged) {

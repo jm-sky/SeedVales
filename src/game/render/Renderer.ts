@@ -6,6 +6,7 @@
  */
 import * as THREE from 'three'
 import type { Sim } from '../sim/sim'
+import { DAYS_PER_YEAR } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { daylight, hourOf, seasonOf } from '../sim/time'
 import { Actors } from './actors'
@@ -15,6 +16,7 @@ import { Carts } from './carts'
 import { Dynamics } from './dynamics'
 import { GpuTimer } from './gpuTimer'
 import { Grass } from './grass'
+import { grassSeasonal } from './grassPlacement'
 import { Landmarks } from './landmarks'
 import { QUALITY, type QualityProfile } from './quality'
 import { snapShadowCenter } from './shadowSnap'
@@ -220,7 +222,9 @@ export class Renderer {
     const season = seasonOf(cal)
     this.terrain.seasonTint = season === 'autumn' ? 0.6 : season === 'winter' ? 0.8 : 0
     this.terrain.snowCover = season === 'winter' && (w.kind === 'snow' || w.wetness > 0.2) ? 0.8 : 0
-    this.grass?.setSeason(this.terrain.seasonTint, this.terrain.snowCover)
+    const gs = grassSeasonal((cal / 86400) / DAYS_PER_YEAR)
+    this.terrain.flowers = gs.flowers
+    this.grass?.setSeason(this.terrain.seasonTint, this.terrain.snowCover, gs.growth, gs.flowers)
   }
 
   private lightCount(): number {

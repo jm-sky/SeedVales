@@ -51,6 +51,49 @@ const BIOME_DENSITY: Record<number, number> = {
   [Biome.Mountain]: 0.1,
 }
 
+/** Keyframes over the year fraction (0 = 1 March, spring start): blade height factor and flower amount. */
+const GROWTH_KEYS: [number, number][] = [[0, 0.4], [0.2, 0.8], [0.38, 1], [0.62, 1], [0.75, 0.75], [0.85, 0.45], [1, 0.4]]
+const FLOWER_KEYS: [number, number][] = [[0, 0], [0.08, 0.3], [0.18, 1], [0.42, 1], [0.55, 0.35], [0.65, 0], [1, 0]]
+
+function keyed(keys: [number, number][], f: number): number {
+  for (let i = 1; i < keys.length; i++) {
+    const [b, vb] = keys[i]!
+    if (f <= b) {
+      const [a, va] = keys[i - 1]!
+      return va + (vb - va) * ((f - a) / (b - a))
+    }
+  }
+  return keys[keys.length - 1]![1]
+}
+
+/**
+ * Seasonal grass look (user, 2026-10-02): short after winter, growing through spring, full in summer, lodged
+ * in late autumn; flowers from mid spring to late summer. `yearFrac` = fractional day of the year / days per year.
+ */
+export function grassSeasonal(yearFrac: number): { growth: number; flowers: number } {
+  const f = ((yearFrac % 1) + 1) % 1
+  return { growth: keyed(GROWTH_KEYS, f), flowers: keyed(FLOWER_KEYS, f) }
+}
+
+/**
+ * Blade colour multiplier per biome (user, 2026-10-02: grass should match the ground colour): yellower on the
+ * steppe, darker in forests and swamp. Linear RGB, applied as the instance colour.
+ */
+const BIOME_TINT: Record<number, [number, number, number]> = {
+  [Biome.Meadow]: [1, 1, 1],
+  [Biome.Steppe]: [1.3, 1.1, 0.72],
+  [Biome.Swamp]: [0.82, 0.88, 0.7],
+  [Biome.ForestDeciduous]: [0.85, 0.92, 0.8],
+  [Biome.ForestMixed]: [0.8, 0.88, 0.78],
+  [Biome.ForestConifer]: [0.78, 0.85, 0.75],
+  [Biome.Mountain]: [1.05, 1, 0.85],
+}
+const NO_TINT: [number, number, number] = [1, 1, 1]
+
+export function grassTint(biome: number): [number, number, number] {
+  return BIOME_TINT[biome] ?? NO_TINT
+}
+
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
   return t * t * (3 - 2 * t)

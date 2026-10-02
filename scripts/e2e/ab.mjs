@@ -85,6 +85,84 @@ const FRAMES = [
     sv.game.renderer.rig.distance = 14
     sv.game.renderer.rig.pitch = 0.3
   `)]),
+  // render--007 step 0: trees at 10–150 m — standing in a meadow, facing the nearest forest edge.
+  ['forest-edge', (sv) => {
+    const sim = sv.game.sim
+    const t = sim.terrain
+    const cal = sim.state.time.cal
+    sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 20 * 86400 + 10 * 3600
+    Object.assign(sim.state.weather, { kind: 'clear', intensity: 0, temp: 16, wetness: 0.1, fog: 0.05, until: sim.state.time.cal + 30 * 86400 })
+    const s = sim.world.settlements[0]
+    for (let r = 150; r < 3000; r += 30) for (let a = 0; a < 6.28; a += 0.2) {
+      const x = s.x + Math.cos(a) * r
+      const z = s.z + Math.sin(a) * r
+      if (t.biomeAt(x, z) !== 2 || t.roadAt(x, z) !== 0 || t.waterDepthAt(x, z) > 0) continue
+      for (let b = 0; b < 6.28; b += 0.4) {
+        const fx = x + Math.cos(b) * 45
+        const fz = z + Math.sin(b) * 45
+        if (t.biomeAt(fx, fz) === 7 && t.biomeAt(x + Math.cos(b) * 20, z + Math.sin(b) * 20) === 2 && t.biomeAt(x + Math.cos(b) * 80, z + Math.sin(b) * 80) === 7) {
+          sv.teleport(x, z)
+          sv.face(fx, fz)
+          sv.game.renderer.rig.distance = 8
+          sv.game.renderer.rig.pitch = 0.08
+          return
+        }
+      }
+    }
+  }],
+  // world--002 relief A/B: the other frames sit where the hilliness field is ~0 (settlement surroundings),
+  // so this one searches for the lowland meadow spot with the largest height range within 150 m.
+  ['rolling-hills', (sv) => {
+    const sim = sv.game.sim
+    const t = sim.terrain
+    const cal = sim.state.time.cal
+    sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 20 * 86400 + 9 * 3600
+    Object.assign(sim.state.weather, { kind: 'clear', intensity: 0, temp: 16, wetness: 0.1, fog: 0.05, until: sim.state.time.cal + 30 * 86400 })
+    let best = null
+    for (let i = 0; i < 3000; i++) {
+      const x = 600 + ((i * 397) % 6800)
+      const z = 600 + ((i * 631) % 6800)
+      const h = t.heightAt(x, z)
+      if (t.biomeAt(x, z) !== 2 || h < 2 || h > 45 || t.waterDepthAt(x, z) > 0) continue
+      let lo = h
+      let hi = h
+      // No mountain foot in reach (relief is zero on mountains; their slopes would win the search).
+      for (let a = 0; a < 6.28; a += 0.8) for (const r of [60, 150, 400]) {
+        const y = t.heightAt(x + Math.cos(a) * r, z + Math.sin(a) * r)
+        if (r < 400) { lo = Math.min(lo, y); hi = Math.max(hi, y) } else hi = y > 50 ? Infinity : hi
+      }
+      if (hi < Infinity && (!best || hi - lo > best.d)) best = { x, z, d: hi - lo }
+    }
+    sv.teleport(best.x, best.z)
+    sv.face(best.x + 100, best.z + 40)
+    sv.game.renderer.rig.distance = 12
+    sv.game.renderer.rig.pitch = 0.2
+  }],
+  // Water at 5–60 m with afternoon sun: lake (waterKind 2) and river (1) banks, camera facing the water.
+  ...[['lake-shore', 2], ['river-bank', 1]].map(([name, kind]) => [name, new Function('sv', `
+    const sim = sv.game.sim
+    const t = sim.terrain
+    const w = sim.world
+    const cal = sim.state.time.cal
+    sim.state.time.cal = Math.floor(cal / (60 * 86400)) * 60 * 86400 + 20 * 86400 + 16 * 3600
+    Object.assign(sim.state.weather, { kind: 'clear', intensity: 0, temp: 16, wetness: 0.1, fog: 0.05, until: sim.state.time.cal + 30 * 86400 })
+    for (let i = 0; i < 40000; i++) {
+      const x = 400 + ((i * 89) % 7400)
+      const z = 400 + ((i * 151) % 7400)
+      if (w.waterKind[Math.round(z / 8) * w.n + Math.round(x / 8)] !== ${kind} || t.waterDepthAt(x, z) < 0.6 || t.heightAt(x, z) > 40) continue
+      for (let b = 0; b < 6.28; b += 0.5) {
+        const sx = x + Math.cos(b) * 16
+        const sz = z + Math.sin(b) * 16
+        if (t.waterDepthAt(sx, sz) === 0 && t.waterDepthAt(x + Math.cos(b) * 10, z + Math.sin(b) * 10) === 0 && t.slopeAt(sx, sz) < 0.25) {
+          sv.teleport(sx, sz)
+          sv.face(x - Math.cos(b) * 20, z - Math.sin(b) * 20)
+          sv.game.renderer.rig.distance = 9
+          sv.game.renderer.rig.pitch = 0.3
+          return
+        }
+      }
+    }
+  `)]),
 ]
 
 const only = process.env.SV_FRAMES?.split(',')

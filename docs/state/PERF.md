@@ -237,3 +237,16 @@ GPU timer (`gpu.frame`, medium): meadow 2.24 → 3.07 ms, march 3.32 → 4.66 ms
 **Finding unrelated to grass (❓ Opus/user):** the settlements are the expensive scenes on this iGPU — medium ≈ 10–12 ms (draw calls 480–610), **high ≈ 16–29 ms (700–890 draw calls, 1.8–2.3 M triangles)** with grass off as well. Low is comfortable (≤ 2.6 ms RAF). Candidates when this matters: building/prop merging per settlement, shadow-caster limits, lower high-profile NPC count draw cost (render--003).
 
 **Tuned values after measuring (grassPlacement.ts):** low `near 14 / far 36 / k 0.6` (was blade-less clump ring 24 m ×0.4 — low now gets a short blade ring), medium `22 / 70` (was 20/65), high `38 / 95` (was 36/90). A trial with medium 24/80 and high 40/110 was heavier than the margin allows (medium march GPU 4.7 → 7.8 ms, high march RAF 5.9 → 21 ms in one noisy run) and was backed off. `CLUMP_DENSITY` unchanged (3 / 2 per m²). Caps in `grassPlacement.test.ts` updated (LOD0 ≤ 4300/11500/24500, LOD1 ≤ 9500/44000/78000 instances).
+
+## WSL session 11 (2026-10-02) — grass rework on the real GPU
+
+Same machine (Arc 140V, `SV_GPU=1`, `SV_SCENES=meadow`, one run each — GPU runs are noisy, judge medians and `gpu.frame`). Grass reworked per user feedback (render--007 "Session 11"): 16 thin blades per clump (was 7), flowers, patches.
+
+| variant | medium meadow RAF med/p95 · gpu | medium march gpu | high meadow RAF · gpu | high march gpu |
+|---|---|---|---|---|
+| session 10 (7 blades) | 3.32/6.92 · 3.07 | 4.66 | 3.97/8.43 · — | — |
+| first rework (noise per vertex) | — · 5.14 | 6.78 | — · 6.92 | 16.21 |
+| + per-clump instance attributes | — · 4.13 | 7.95 | — · 10.69 | 17.9 |
+| **+ fine/coarse geometric LOD (kept)** | **1.91/5.35 · 3.67** | **4.22** | **3.01/6.14 · 5.35** | **6.52** |
+
+Triangles in the meadow view: medium 1.65 M, high 2.42 M (first rework 1.84 M / 3.20 M). Conclusion: twice the blades for ≈ +0.6 ms GPU on medium in a meadow and no march regression. Low is unchanged in structure (its 14 m blade ring is entirely "fine"); mobile e2e green.
