@@ -10,6 +10,7 @@
  */
 import * as THREE from 'three'
 import type { TemplatePart } from './assets'
+import { applyWind } from './wind'
 
 export const IMPOSTOR_VIEWS = 8
 /** Width of the dithered model ↔ impostor cross-fade (m). */
@@ -53,6 +54,18 @@ export function withTreeFadeOut(src: THREE.Material): THREE.Material {
       .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (svBayer4(gl_FragCoord.xy) >= 1.0 - smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)) discard;')
   }
   m.customProgramCacheKey = () => 'tree-fade-out'
+  applyWind(m, TREE_WIND)
+  return m
+}
+
+/** Crown sway of the real tree models (step 3b): template units are ~7–9 tall, mask² keeps the trunk still. */
+const TREE_WIND = { amplitude: 0.3, heightScale: 8 }
+
+/** Shadow depth material that sways with the tree and keeps the leaf alpha cut-out. */
+export function treeDepthMaterial(src: THREE.Material): THREE.MeshDepthMaterial {
+  const s = src as THREE.MeshLambertMaterial
+  const m = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: s.map ?? null, alphaTest: s.alphaTest })
+  applyWind(m, TREE_WIND)
   return m
 }
 

@@ -17,7 +17,7 @@ import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
 import { NATURE_MODEL } from './assetNames'
 import { loadGltf, mergeTemplate, part, type TemplatePart } from './assets'
-import { bakeImpostors, createImpostorMesh, type ImpostorAtlas, TREE_FADE_M, treeFadeUniforms, withTreeFadeOut } from './treeImpostors'
+import { bakeImpostors, createImpostorMesh, type ImpostorAtlas, TREE_FADE_M, treeDepthMaterial, treeFadeUniforms, withTreeFadeOut } from './treeImpostors'
 
 /** Per-frame budget of a vegetation rebuild job (ms); terrain chunk builds have their own 5 ms. */
 const VEG_BUDGET_MS = 2.5
@@ -96,6 +96,13 @@ export class Vegetation {
   /** Whether trees beyond the model ring are baked impostors (tests, diagnostics). */
   get impostorsActive() {
     return this.atlas !== null
+  }
+
+  private depthMats = new Map<THREE.Material, THREE.MeshDepthMaterial>()
+  private depthFor(m: THREE.Material): THREE.MeshDepthMaterial {
+    let d = this.depthMats.get(m)
+    if (!d) this.depthMats.set(m, (d = treeDepthMaterial(m)))
+    return d
   }
 
   /** Impostor instances of the last commit (tests, diagnostics). */
@@ -323,6 +330,7 @@ export class Vegetation {
         meshes = parts.map((pt) => {
           const im = new THREE.InstancedMesh(pt.geometry, pt.material, cap)
           im.castShadow = kind === 'near'
+          if (this.atlas && id.startsWith('tree_')) im.customDepthMaterial = this.depthFor(pt.material)
           im.frustumCulled = false
           this.group.add(im)
           return im
