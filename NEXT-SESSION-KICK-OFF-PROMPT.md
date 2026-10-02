@@ -18,7 +18,7 @@ You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State: v1 
 ## 1. Start
 
 1. Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 11"), `docs/plans/render--007--nature-pass.md` ("Result": Session 11, Session 12, Session 11 continued, and Session 14 if the Blender session wrote it), `docs/design/DECISIONS.md` (D-REN-14/15/16, D-TOOLS-1), `docs/state/PERF.md` (WSL session 11 sections), `docs/research/2026-10-02--003--threejs-graphics-techniques-and-optimization.md` (execution order §16).
-2. `git pull`; a new review on main is triaged first (skill `wave-review` §3).
+2. `git pull`; a new review on main is triaged first (skill `wave-review` §3) — **the session-11 ultrareview (`docs/reviews/2026-10-02--011--session-11-ultrareview.md`, if committed) is task one.**
 3. `pnpm install --frozen-lockfile`; `pnpm check` (237), `pnpm e2e:run` (3/3 · 32/32 · 11/11, 0 console errors). Red = task one.
 
 ## 2. Work order
@@ -27,7 +27,7 @@ You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State: v1 
 2. **Water:** judge the first pass on the GPU at noon and dusk (`lake-shore`, `river-bank`, `settlement-dusk`); planar reflection on **high only** per plan step 4.2 — implement only if a same-scene A/B shows a clear win and `water-shore` high stays within budget; otherwise record the drop.
 3. **Opus exit review of 4n** (skill `wave-review`) → triage → plan `render--007` done (exit gate in the plan; FEATURES RENDER-05/06/07 stay `implemented_unverified` until the user's look/device check).
 4. **`render--003`:** attribution tool exists (`scripts/bench/draw-attribution.mjs`), actor culling done (high crowded 934 → 363 draws) — **GPU A/B pending** (`SV_VISUAL='{"actorCull":false}'` vs default, crowded/small settlement, one run per command); next by the table: character part/material merge (asset work, Blender session) and the structures shadow pass. Original item: (research 003 §10: per-subsystem draw calls terrain / vegetation / grass / structures / actors / shadow pass) — before any high-only effect. High settlements are 16–29 ms on the laptop.
-5. **Fire (`render--001` 1a → 1b)** per its plan.
+5. **`render--001`:** 1a, 1b, 8, 3 and the clouds of 2 done in session 11 (plan "Result"); next: step 2 precipitation (stateless GPU streaks/flakes, shelter test), then 4 CHAR-01 and 5 FAUNA-09; GPU cost of fire/particles (`night-campfires`, `crowded-settlement`) once the WSL GPU path is stable.
 6. If time remains: `world--001` steps 2–3; `diag--002` step 5 (real-input travel); harness: `tour-01-npcs-close` camera inside a house wall.
 
 After each item: skill `verify`, skill `handoff` (FEATURES evidence, plan "Result", PROGRESS), commit + push to `main` (pull first — the Blender session pushes to main too; resolve doc conflicts by keeping both sections).
