@@ -706,11 +706,11 @@
   {
    "id": "QUEST-03",
    "vision": "§26.2",
-   "scope": "later",
-   "behavior": "Wieloetapowe zadania narracyjne (kopalnia złota)",
-   "verify": "—",
-   "status": "deferred",
-   "evidence": "prompt §4"
+   "scope": "v2",
+   "behavior": "Authored multi-stage narrative quests (data-driven stage machine, giver dialog, journal); first slice Q03, Q07, G03, G01 (quests--001)",
+   "verify": "vitest QUEST-03 (engine + one test per ending), acceptance step per quest",
+   "status": "in_progress",
+   "evidence": "docs/design/quests-engine.md, D-QUEST-1"
   },
   {
    "id": "SAVE-01",

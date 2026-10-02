@@ -1,6 +1,6 @@
 # Authored quests: stage-machine engine + four starter quests
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** opus — step 1 (engine design, save format), quest-by-quest acceptance review; sonnet — implementation of steps 2–6  
 **Domain:** quests  
 **Sub domains:** sim, dialog, ui, save  
@@ -29,6 +29,8 @@ Deferred to later waves: Q01 (needs FAUNA-09 white hare), Q02/Q06/G02/G06 (two s
 
 ### 1. Engine design — **Model: opus**
 A data-driven stage machine, not hand-written code per quest: a quest definition in `data/quests/<id>.ts` (id, giver, start conditions as predicates over sim state, state flags, stages with transitions, endings with world effects and rewards); runtime state in `state.authoredQuests[id] = { stage, flags, choice, settled, startedAt }` (saved → `SAVE_VERSION` bump, rejection test, D-SAVE-7). Hooks: dialog node conditions/effects (flags, `choice`), field observations (a position + dwell-time trigger, not dialog), item/building predicates, a quest-system tick that only re-evaluates **active** quests (PERF-01; no world scans). Layering: definitions are `data/`, evaluation `sim/`, journal UI `ui/` through `Game` methods. Conservation: reward = a transfer from a named source (settlement treasury / household stock), never minted (D-ECON-3). Parallel quests allowed (QUEST-WORLD "Parallel quests"). Deliverable: design note in `docs/design/` + `DECISIONS` entry, reviewed before step 2.
+
+**Done 2026-10-02 (session 13, Opus):** [quests-engine.md](../design/quests-engine.md), D-QUEST-1. Open questions answered by default: (1) giver dialog only; (2) QUEST-WORLD reward numbers accepted as defaults.
 
 ### 2. Engine + journal UI — **Model: sonnet**
 Implement per the note; journal panel (active quests, current stage text, choices made); noticeboard/giver dialog entry; map marker only for explored cells (MAP-01). Tests named `QUEST-03`: state machine transitions, exclusive endings, `choice` change before settlement, save round-trip, older save rejected.
