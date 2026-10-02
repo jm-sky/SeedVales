@@ -1143,6 +1143,42 @@
    "verify": "design pending",
    "status": "planned",
    "evidence": "plan survival--001 (design only)"
+  },
+  {
+   "id": "QUEST-04",
+   "vision": "§26.2, design/quests",
+   "scope": "later",
+   "behavior": "Remaining authored quests on the QUEST-03 engine (22 designs: H/V batch, treasure quests after LOOT-01, Q10 gold mine)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "docs/roadmap/later-vision-backlog.md"
+  },
+  {
+   "id": "TRANS-02",
+   "vision": "APPX: Transport",
+   "scope": "later",
+   "behavior": "Donkey and horse carts for heavy goods (after WORLD-09)",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "docs/roadmap/later-vision-backlog.md"
+  },
+  {
+   "id": "TRADE-03",
+   "vision": "§28 Transport",
+   "scope": "later",
+   "behavior": "Wandering trader tiers (donkey+packs / horse+guard / horse+wagon+2 guards), carter NPC, goods moving between settlements by demand",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "docs/roadmap/later-vision-backlog.md"
+  },
+  {
+   "id": "DEV-01",
+   "vision": "§Docs",
+   "scope": "later",
+   "behavior": "Code map generated from @domain/@subdomain JSDoc tags",
+   "verify": "—",
+   "status": "deferred",
+   "evidence": "docs/roadmap/later-vision-backlog.md"
   }
  ]
 }

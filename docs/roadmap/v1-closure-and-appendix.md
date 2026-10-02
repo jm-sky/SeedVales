@@ -78,6 +78,8 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 | [render--009--stockpile-visuals](../plans/render--009--stockpile-visuals.md) | *(draft, user note 2026-10-02, wave 4c after render--008)* stockpiles show stored amounts (firewood tiers 1/5/7/14/20+, stone, grain, food, hides/wool); Blender models; render-only, 2 s cadence, nearby buildings only |
 | [proposals--001--claude-proposals](../plans/proposals--001--claude-proposals.md) | **last stage:** Claude prepares 15–25 proposals from evidence (soak, reviews, vision gaps) autonomously; user picks a few; they are built and reviewed |
 
+After this roadmap: [later-vision-backlog.md](later-vision-backlog.md) (stages L1–L7, proposal, ❓ user).
+
 Order: finish `render--001` (4b) → `render--008` (4c, user additions — only when it fits; it must not delay the main order) → `verify--001` steps 1–3 (cheap, protects everything after) → `quests--001` → first full `review--001` round → wave 5 continues. The loop repeats after every wave and before each release candidate.
 
 ## Wave 6 — visual polish and graphics optimisation (conditional)
