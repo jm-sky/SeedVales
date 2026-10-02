@@ -206,33 +206,161 @@ Where practical, reuse the project's existing quality profiles and asset budgets
 
 Ambient audio from the vision: water drops in caves. Treat as a later cave-content/audio step unless the audio hook is trivial.
 
+## Code recon (2026-10-02)
+
+The current implementation is strongly **2.5D**: most world/sim systems index and reason in `x/z`, while `y` is usually derived from the single surface terrain. Caves therefore need an explicit vertical/spatial-context extension; treating them as render-only geometry would break movement, combat, perception and persistence.
+
+### Terrain mesh and the real entrance hole
+
+Current code:
+
+- `world/terrain.ts`: `Terrain.heightAt(x,z)` returns exactly one surface height (generated height + mutable edit delta).
+- `render/terrainChunks.ts`: each chunk is a regular indexed grid; every grid cell always emits two triangles. Near LOD uses 2 m steps, then 4/8/16 m. Far rings use 2×2 superchunks. Chunk-edge skirts are generated independently.
+- Terrain edits only change vertex heights; they cannot create topology holes.
+
+**Suggested input for Opus:** the least invasive Plane-1 implementation is to keep `Terrain.heightAt()` as the surface height and make the render mesh topology cave-aware: generated cave data exposes an entrance mask/polygon and `TerrainChunks.build()` omits triangles whose cells belong to that opening. Do **not** represent the entrance by lowering Plane 1; that would destroy the separation between the surface height and the cave floor.
+
+This needs an explicit LOD decision. A cave mouth cut at 2 m resolution can disappear or change shape at 4/8/16 m. Good options to evaluate:
+
+1. force a cave-containing chunk to LOD0/LOD1 while its entrance is in relevant view range, then use a closed/cheap far representation; or
+2. build the entrance as a small dedicated surface patch/mesh and omit a conservative larger hole from the normal terrain chunk at every LOD.
+
+Option 2 is likely more stable at chunk LOD boundaries and lets the entrance rim align exactly with Plane 2/3. Rocks remain seam masking, not topology.
+
+Also check chunk skirts: a normal skirt must not be generated through an entrance edge if the cave mouth touches a chunk boundary. Prefer placing entrances away from chunk borders or make the entrance patch own that seam.
+
+### Grounding and collision
+
+Current code:
+
+- `sim/collision.ts::groundHeight()` starts from `sim.terrain.heightAt(x,z)` (plus bridge decks).
+- `moveWithCollision()` always finishes with `a.y = groundHeight(sim,nx,nz)`, even when `full=false`.
+- Player idle movement also explicitly does `p.y = sim.terrain.heightAt(p.x,p.z)`.
+- slope checks compare only two surface `heightAt()` samples.
+
+This means an actor one frame inside a cave would currently be snapped back to Plane 1.
+
+**Suggested direction:** introduce one simulation-level ground query, e.g. `walkSurfaceHeight(sim, spatialContext, x, z)`, and make movement/grounding use it. Surface keeps today's `groundHeight()`; cave context samples Plane 2 and cave-local collision. Avoid changing generic `Terrain.heightAt()` to return cave floor based on global position: the same `x/z` legitimately has both a surface and cave height.
+
+Cave wall/ceiling collision cannot be expressed by today's slope-only 2.5D collision. Plane 2 can provide floor grounding, but Plane 3 and steep side walls need a cave-local collision representation/query. It can still be heightmap-derived; it does not need a general-purpose physics engine.
+
+### Third-person camera
+
+Current code:
+
+- `render/cameraRig.ts` receives only `Terrain`.
+- Every camera ray sample compares against `terrain.heightAt(x,z)`.
+- Final camera position is also clamped above `terrain.heightAt()`.
+
+Therefore the current camera will be pushed to the surface while underground and knows nothing about Plane 3.
+
+**Suggested direction:** decouple `CameraRig` from direct `Terrain.heightAt()`. Give it a collision/clearance callback or small read-only environment interface supplied by `Renderer/Sim`. In cave context it must test **both floor and ceiling/walls**, shortening the boom before intersection. This is preferable to teaching render code about cave state via special cases inside `Terrain`.
+
+The existing camera defaults are useful calibration input: distance 6 m, max 16 m, target ≈ player `y + 1.6`. Cave tunnel height/width should be derived from this rather than guessed.
+
+### Spatial hash, perception and combat
+
+Current code:
+
+- `world/spatial.ts::SpatialHash` keys only `x/z`; `Positioned` has no `y` or layer.
+- Actor, ground-item, corpse and trace indices in `Sim` all use this 2D hash.
+- `fauna/perception.ts`, `npc/queries.ts::threatNear()`, `alerts.ts`, player threat checks and many other queries use `sim.actors.query(x,z,r)` and 2D distance.
+- `combat.ts::meleeAttack()` uses only `x/z` distance and cone; it would hit through a cave roof.
+- projectile actor hit testing does use projectile `y` against actor height, but projectile-ground collision is `p.y < sim.terrain.heightAt(p.x,p.z)`; an arrow fired inside a cave would immediately collide with the surface above/around it or otherwise use the wrong floor.
+- `interact.ts::findTargets()` queries actors/ground/corpses/nodes in `x/z` only.
+
+**Strong suggestion for Opus:** use an explicit compact spatial context, preferably a scalar key such as `spaceId: 0 | CaveId` (0 = surface) rather than an object union inside hot indexed entities. Make `SpatialHash` partition by `spaceId` in the key/query API. This directly protects most existing call sites once the query requires/provides the caller's space.
+
+Do not rely on `y` thresholds alone. A high chamber can put legitimate same-cave actors several metres apart vertically, while a thin roof can put surface/cave actors close in `y`. Logical space + same-space LOS is safer.
+
+The entrance transition is the one deliberate bridge between contexts. While crossing the mouth, change `spaceId` at a deterministic threshold/portal region, not by guessing from `y` every frame.
+
+### Mutable world objects and save/load
+
+Current code:
+
+- actors already store full `x/y/z`;
+- `GroundItem`, `Corpse`, `Trace`, `Cart`, buildings/sites/dens store only `x/z`;
+- `dropItem()` accepts only `x/z`, so cave drops would currently lose their vertical/spatial identity immediately;
+- animal corpses copy only `x/z`;
+- `save/validate.ts::actorOk()` validates actor `x/z` but **does not validate actor `y`**, even though `ActorBase` contains it;
+- snapshot/save is otherwise simple JSON of `GameState`, so adding fields is mechanically straightforward and intentionally requires a `SAVE_VERSION` bump.
+
+**Suggested slice:** add `spaceId` to every mutable entity that can exist in a cave. Add `y` where the entity is not always safely derivable from its active walk surface (at minimum ground items/corpses; likely traces and carts if they are permitted underground). Tighten save validation to require actor `y` and the new context fields.
+
+Buildings/settlement structures probably remain surface-only in the first cave slice. Cave chests/torches/resources should preferably use cave-specific generated/content records rather than extending every settlement-building index unless gameplay requires normal `Building` semantics.
+
+### NPC / animal movement and navigation
+
+Current code:
+
+- `AiStep.goto` contains only `x/z`.
+- `steerTo()` is straight-line steering + local detours; long-distance road routing is still a list of 2D points.
+- `steerTo()` calls `moveWithCollision()`, which currently snaps `y` to Plane 1.
+- far-LOD actors still use the same movement function, only with reduced collision work.
+- goals routinely generate arbitrary `x/z` targets around homes/resources/water.
+- no general navmesh or arbitrary-3D pathfinder exists.
+
+So a "unified 3D navigation system" would be a much larger architectural change than caves need.
+
+**Suggested direction:** keep current 2D steering *inside each walkable context* and add an explicit entrance transition/portal:
+
+- surface goal → cave entrance surface anchor,
+- cross a short entrance corridor/portal,
+- switch `spaceId`,
+- cave-local `goto x/z` over Plane 2,
+- reverse for exit.
+
+This reuses `steerTo()` after making grounding/collision context-aware. Cave topology can expose a small local waypoint graph (entrance + tunnel junctions + chamber centres) only where straight-line steering would cut through walls. No global navmesh is required for the first slice.
+
+AI targets must carry/derive their target space. An NPC on the surface must not straight-line toward the `x/z` of an underground target; it first needs a route via that cave's entrance.
+
+### Generated-world representation and cache
+
+Current code:
+
+- `WorldData` stores large world grids as typed arrays and object collections (settlements, landmarks, etc.).
+- `world/serialize.ts` serializes only the fixed top-level grid arrays as binary typed-array blocks; other fields are JSON metadata.
+- world cache is keyed by seed + `GEN_VERSION`.
+
+**Suggested direction:** store a compact deterministic `GenCave` descriptor in `WorldData.caves`: id, entrance/rim data, local origin/bounds, seed, size/type and topology/control points. Reconstruct Plane 2/3 local heightmaps/meshes deterministically from that descriptor when the cave is within build range. This avoids embedding many local Float32 arrays in the JSON metadata or expanding the binary serializer for nested arrays.
+
+If profiling later shows reconstruction is expensive, cache the derived local cave mesh/heightmaps separately; do not start by allocating all cave heightmaps for the full world.
+
+### Concrete recon conclusion
+
+The lowest-risk architecture to hand to Opus is:
+
+1. **Plane 1 stays the canonical surface heightfield.** A cave entrance is a topology hole/entrance patch in rendering, not a lowered surface height.
+2. **Each cave gets a compact generated descriptor + local Plane 2/3 derived data.**
+3. **Add `spaceId`** and partition spatial queries by it.
+4. **Replace hard-wired surface grounding with context-aware walk-surface queries.**
+5. **Camera receives a context-aware collision query**, not `Terrain.heightAt()` directly.
+6. **Navigation remains mostly 2D per space**, connected by an explicit entrance portal/transition and optional small cave waypoint graph.
+7. **Save mutable underground entities with context and needed `y`**, while generated cave geometry remains seed-derived world data.
+
+This preserves the current architecture instead of replacing it with a general 3D engine.
+
 ## Steps
 
-### 1. Architecture recon and design lock — **Model: opus**
+### 1. Architecture decision from recon — **Model: opus**
 
-Before implementation, inspect the actual current code for:
+The code recon above is the input. Opus should validate/adjust it and record the final architecture in a short design note + `docs/design/DECISIONS.md` before full implementation.
 
-- terrain mesh generation and terrain edits,
-- terrain height queries / grounding,
-- player collision,
-- third-person camera obstruction,
-- spatial grid/query keys,
-- NPC/animal navigation,
-- perception + combat target queries,
-- item/drop position/state,
-- save serialization/validation,
-- render streaming/culling.
+Decide explicitly:
 
-Produce a short design note / DECISIONS entry answering:
+1. **Plane 1 opening:** dedicated entrance patch + conservative hole in `TerrainChunks` (preferred) vs LOD-aware triangle omission directly in every chunk mesh.
+2. **Cave data:** compact `GenCave` descriptor with derived local Plane 2/3 (preferred) vs persisted/generated local height arrays.
+3. **Ground API:** exact context-aware replacement for direct surface `heightAt()` grounding.
+4. **Cave collision:** representation/query for floor + walls + ceiling; it must stay cheaper/smaller than a general physics-engine rewrite.
+5. **Spatial context:** exact scalar `spaceId`/cave-id representation and which entity types receive it.
+6. **Entrance transition:** deterministic portal/threshold region for changing context without teleporting position.
+7. **Navigation:** 2D steering per context + entrance portal + optional local cave waypoint graph (preferred) vs a more general solution only if code evidence justifies it.
+8. **Camera environment query:** how the rig tests cave floor/walls/ceiling without depending directly on surface `Terrain`.
+9. **Mutable cave contents:** which records gain `y + spaceId` and which cave contents use a new cave-specific state type.
+10. **LOD/streaming:** how entrance topology remains visually stable across terrain LODs and when local Plane 2/3 geometry is built/disposed.
 
-1. how Plane 1 gets a real hole without breaking chunk terrain,
-2. local cave heightmap representation and resolution,
-3. how Plane 2/3 mesh generation shares borders at the entrance,
-4. spatial-context representation (`caveId`/layer or equivalent),
-5. surface↔cave navigation transition,
-6. ownership of immutable generated cave data vs mutable save state.
-
-Do not implement the full system before these six points are resolved against the current code.
+Do not implement the full system before these decisions are recorded.
 
 ### 2. One deterministic prototype cave — **Model: sonnet**
 
@@ -385,8 +513,10 @@ No cave outside the local active range should add recurring simulation work.
 
 These do **not** block writing the plan; step 1 should resolve them against the real code.
 
-1. **Spatial context representation:** explicit `caveId/layer` is the preferred direction, but exact data shape should follow the current spatial-grid/save architecture.
-2. **Heightmap resolution and dimensions:** choose from camera/collision requirements and measured cost, not an arbitrary world-scale constant.
-3. **Minimum clearances / cover:** derive concrete numbers from the current player capsule and camera boom, then put them in calibration.
-4. **Navigation representation:** entrance transition + local cave navigation vs extending the existing surface navigation directly.
-5. **Dungeon variant:** keep as a generator mode/future extension unless a first gameplay use needs it earlier.
+1. **Spatial context representation:** recon strongly favours a scalar `spaceId` (`0 = surface`, cave id otherwise) because `SpatialHash` is currently a hot 2D index. Opus confirms exact typing/API.
+2. **Entrance topology across terrain LOD:** recon favours a dedicated entrance patch + conservative hole, but this should be compared with direct index omission after the planned web research on heightmap caves.
+3. **Heightmap resolution and dimensions:** choose from camera/collision requirements and measured cost, not an arbitrary world-scale constant.
+4. **Minimum clearances / cover:** derive concrete numbers from the current player radius and CameraRig (default 6 m boom, target +1.6 m, max 16 m), then put them in calibration.
+5. **Navigation representation:** recon favours 2D steering per space + explicit entrance portal + small local cave waypoint graph only where necessary.
+6. **Mutable cave state shape:** decide whether drops/corpses/traces/carts all gain `y + spaceId`, and define a cave-specific state record for chests/depleted cave resources.
+7. **Dungeon variant:** keep as a generator mode/future extension unless a first gameplay use needs it earlier.
