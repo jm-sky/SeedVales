@@ -291,3 +291,35 @@ Medium: crowded 578 → 342, small 525 → 296. GPU times for this change: pendi
 | 2 | 7.20 | 6.39 | 13.84 | 12.29 |
 
 Round 2 is cheaper than the kit in both scenes and pairs → high ring 200 m (D-REN-16). The GPU path (`SV_GPU=1`) crashed WSL three times this session during long bench loops — run GPU benches one per command and record each result immediately.
+
+## WSL GPU path stability (investigation 2026-10-02, status: hypothesis, awaiting monitored repro)
+
+Symptom: the whole WSL VM died 3× on 2026-10-02 (boots ended 10:38, 12:42, 13:29) during loops of `SV_GPU=1` render benches (Chrome → Mesa d3d12 → Arc 140V). SwiftShader never crashed.
+
+### Evidence (✅ confirmed)
+- Machine: Core Ultra 7 268V, Arc 140V driver 32.0.101.8724 (2026-04-16), WSL 2.4.13.0, kernel 5.15.167.4-1, Direct3D 1.611.1, Windows 10.0.26200. Host RAM 32 GB, commit limit 52.8 GB, pagefile 20 GB. **No `.wslconfig`** → VM limit 16 GB (hv_balloon max 16162 MB).
+- Windows System log in all three crash windows: **no dxgkrnl / Display 4101 (TDR) / WHEA / Hyper-V / vmcompute events**, and the host did not reboot. The VM vanishes silently.
+- Guest `journalctl -b -1/-2` end abruptly mid-run with no panic/OOM. Last kernel lines: `dxgkio_reserve_gpu_va: Ioctl failed: -75` (EOVERFLOW). That line also appears once per Chrome launch on runs that *survive* (24 in one boot), so it is a symptom of the big VA reservation, not a unique crash marker. Rare `dxgvmb_send_sync_msg: wait_for_completion failed` + `destroy_allocation -512` occurred before the 10:38 death.
+- Memory during one `medium` GPU run (one Chrome): host free RAM 6.2 → ~4.5 GB, `vmmemWSL` 6.3 → 8.5 GB, host commit 42.3 → 44.6 of 52.8 GB. Host runs Outlook/Edge/Cursor/SSMS/Firefox; several Claude sessions and Cursor-server also run in the VM.
+- Separate event: 2026-10-01 08:32 the **host** rebooted after a WHEA fatal error (corrected PCIe AER errors on root port 0:1C:5 before it). Unrelated to the VM deaths unless the same GPU/PCIe fault; noted for the driver/BIOS update option.
+
+### Hypotheses (🟡 not yet separated)
+1. Host memory pressure: the d3d12 path allocates GPU memory from shared host RAM *outside* the VM limit; several uncapped Chrome launches + other workloads leave too little headroom and the VM is killed.
+2. Uncapped frame rate (`--disable-frame-rate-limit --disable-gpu-vsync`) keeps the shared GPU saturated → long submissions / GPU-PV stalls.
+3. Resource accumulation across consecutive Chrome launches (loops of 3–6 crashed, single runs mostly survived).
+4. Driver/GPU-PV bug in the Arc 32.0.101.8724 + WSL 2.4.13 combination.
+
+### Mitigations applied (harness)
+- `scripts/e2e/lib.mjs`: in `SV_GPU=1` mode the frame-rate limit and vsync flags are **no longer** passed; `SV_GPU_UNCAPPED=1` restores them (hypothesis 2).
+- Host-side monitor `scripts/bench/wsl-host-monitor.ps1` (Windows PowerShell; survives a VM death; the last row of `%TEMP%\svmon.csv` is the host state before the crash) and VM-side `scripts/bench/wsl-vm-monitor.sh` (RAM, Chrome count, dxg errors → `test-results/bench/wsl-vm.log`).
+- Recommended `.wslconfig` in `docs/state/wslconfig.recommended.txt` (12 GB, 8 GB swap, 6 CPUs; hypothesis 1 — more VM RAM would shrink the host headroom, so we go *down*, not up).
+
+### Repro protocol (one factor at a time; stop at the first crash)
+Preconditions: user work saved, other Claude/Cursor sessions closed, monitors running, `uptime` load < 1.
+1. Apply `.wslconfig`, `wsl --shutdown`, reopen. Start both monitors.
+2. One `SV_GPU=1 timeout 600 node scripts/bench/render-bench.mjs medium` per command, 60 s cooldown between, up to 6 runs (capped frame rate). Record after each run: host free MB, `vmmemWSL`, `dxgk_err` count.
+3. If it survives, repeat with `high`, then with `SV_GPU_UNCAPPED=1` (separates hypothesis 2).
+4. On a crash: collect the last `svmon.csv` rows, Windows System events for the window (script header), `journalctl -b -1 -k | tail`, and record below which factor was changed last.
+
+### Result log
+_(empty — fill in per run: date, config, run #, outcome, host free MB min, vmmem max)_

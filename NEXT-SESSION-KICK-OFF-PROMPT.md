@@ -9,6 +9,7 @@ You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State: v1 
 ## 0. Environment notes (WSL)
 
 - Real GPU: `SV_GPU=1` for `bench:render`, `ab.mjs`, `tour.mjs` (Arc 140V via Mesa d3d12). Committed baselines are SwiftShader (D-PERF-5) — do not mix.
+- **WSL GPU stability investigation:** see `docs/state/PERF.md` "WSL GPU path stability" (repro protocol, monitors, recommended `.wslconfig`). GPU mode is now frame-capped by default (`SV_GPU_UNCAPPED=1` = old behaviour). Do not start GPU loops without the monitors and the user's go-ahead.
 - **The `SV_GPU=1` path crashed WSL three times in session 11, each during a long GPU bench loop.** Run GPU benches one per command (`timeout 600 node scripts/bench/render-bench.mjs …`), append each result to a file under `test-results/` immediately, and never chain several GPU runs in one command or in the background. Software-rendering runs (default) never crashed.
 - **GPU numbers on this laptop vary ±50 % run to run** (and another workload on the machine makes them meaningless — check `uptime` first). Quote only **alternating pairs** (A, B, A, B, A, B → medians), never single runs. Bench helpers: `SV_SCENES=dense-forest` (march/teleport always run), `SV_VISUAL='{"treeAssets":false}' SV_VISUAL_TAG=kit` for the kit-tree A/B. Visual flags: `grass`, `impostors`, `treeAssets` (`render/visualFlags.ts`).
 - World cache (new): tests and e2e reuse generated worlds from `node_modules/.cache/seedvales/` (CLAUDE.md "Commands"); `SV_WORLD_CACHE=0` disables it.

@@ -28,8 +28,9 @@ export async function launch({ mobile = false } = {}) {
   const browser = await chromium.launch({
     executablePath: CHROME,
     // SV_GPU=1 (WSL2): real GPU through Mesa d3d12 (needs /dev/dxg + /usr/lib/wsl/lib); numbers are then GPU numbers, not SwiftShader.
+    // Frame rate stays capped/vsynced by default (uncapped runs are a suspected WSL-crash trigger, PERF.md "WSL GPU path stability"); SV_GPU_UNCAPPED=1 restores the old flags.
     args: process.env.SV_GPU
-      ? ['--use-angle=gl', '--use-gl=angle', '--ignore-gpu-blocklist', '--enable-webgl', '--disable-frame-rate-limit', '--disable-gpu-vsync']
+      ? ['--use-angle=gl', '--use-gl=angle', '--ignore-gpu-blocklist', '--enable-webgl', ...(process.env.SV_GPU_UNCAPPED ? ['--disable-frame-rate-limit', '--disable-gpu-vsync'] : [])]
       : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
     env: process.env.SV_GPU
       ? { ...process.env, GALLIUM_DRIVER: 'd3d12', LD_LIBRARY_PATH: `/usr/lib/wsl/lib:${process.env.LD_LIBRARY_PATH ?? ''}` }

@@ -1,0 +1,7 @@
+# Copy to C:\Users\madeyskij\.wslconfig, then run `wsl --shutdown` from Windows and reopen WSL.
+# Rationale: docs/state/PERF.md "WSL GPU path stability". Host has 32 GB; the Arc GPU shares system RAM,
+# so the VM must leave headroom. Change ONE thing at a time between GPU runs.
+[wsl2]
+memory=12GB
+swap=8GB
+processors=6
