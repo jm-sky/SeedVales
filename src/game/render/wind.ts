@@ -62,10 +62,12 @@ export interface WindOptions {
   amplitude?: number
   /** Height (metres, local y) at which the mask reaches 1 (default 1). */
   heightScale?: number
+  /** Per-vertex mask instead of the height ramp: `{ decl, expr }`, e.g. a baked wind-weight attribute. */
+  mask?: { decl: string; expr: string }
 }
 
 /** The vertex-shader hook: runs after `begin_vertex`, adds the world offset converted to local space. */
-export function windVertexChunk(heightScale: number): string {
+export function windVertexChunk(heightScale: number, maskExpr?: string): string {
   return `
 {
   mat4 svM = modelMatrix;
@@ -73,7 +75,7 @@ export function windVertexChunk(heightScale: number): string {
   svM = svM * instanceMatrix;
   #endif
   vec3 svOrigin = (svM * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-  float svMask = clamp(position.y / ${heightScale.toFixed(3)}, 0.0, 1.0);
+  float svMask = ${maskExpr ?? `clamp(position.y / ${heightScale.toFixed(3)}, 0.0, 1.0)`};
   transformed += inverse(mat3(svM)) * svWindOffset(svOrigin, svMask);
 }`
 }
@@ -89,9 +91,9 @@ export function applyWind(material: THREE.Material, opts: WindOptions = {}) {
     sh.uniforms.uWind = windUniforms.uWind
     sh.uniforms.uWindAmp = { value: amp }
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', `#include <common>\n${WIND_GLSL_DECL}`)
-      .replace('#include <begin_vertex>', `#include <begin_vertex>\n${windVertexChunk(hs)}`)
+      .replace('#include <common>', `#include <common>\n${WIND_GLSL_DECL}${opts.mask ? `\n${opts.mask.decl}` : ''}`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>\n${windVertexChunk(hs, opts.mask?.expr)}`)
   }
   const prevKey = material.customProgramCacheKey
-  material.customProgramCacheKey = () => `${prevKey.call(material)}|wind:${hs}`
+  material.customProgramCacheKey = () => `${prevKey.call(material)}|wind:${hs}${opts.mask ? `:${opts.mask.expr}` : ''}`
 }

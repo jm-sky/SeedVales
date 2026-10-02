@@ -17,11 +17,17 @@ export const IMPOSTOR_VIEWS = 8
 export const TREE_FADE_M = 8
 const MAX_ROWS = 16
 
-/** Shared by the model fade-out (vegetation materials) and the impostor fade-in. */
+/**
+ * Shared by the model fade-outs (vegetation materials) and the impostor fade-in. Bands are complementary in the
+ * same 4×4 dither: a pixel kept by the nearer representation is dropped by the farther one, so the fade band is
+ * never see-through (the first version kept the *same* half of the pixels on both sides — a screen door).
+ */
 export const treeFadeUniforms = {
   uTreeCenter: { value: new THREE.Vector2() },
-  /** x = fade start, y = fade end (m from the player). */
+  /** Model → impostor band: x = fade start, y = fade end (m from the player). */
   uTreeRing: { value: new THREE.Vector2(40, 48) },
+  /** LOD0 → LOD1 band (offline tree assets only). */
+  uTreeLod: { value: new THREE.Vector2(34, 40) },
 }
 
 const BAYER_GLSL = `
@@ -32,13 +38,41 @@ float svBayer4(vec2 p) {
   return (m[k] + 0.5) / 16.0;
 }`
 
-/** Material clone of a tree model part that dithers out across the fade band (models end where impostors start). */
-export function withTreeFadeOut(src: THREE.Material): THREE.Material {
+/** Which distance band a model material covers: `single` = the one-LOD kit models (model ring → impostors). */
+export type TreeBand = 'single' | 'lod0' | 'lod1'
+
+const COLLAPSE: Record<TreeBand, string> = {
+  single: 'vTreeD > uTreeRing.y + 0.5',
+  lod0: 'vTreeD > uTreeLod.y + 0.5',
+  lod1: 'vTreeD < uTreeLod.x - 0.5 || vTreeD > uTreeRing.y + 0.5',
+}
+const KEEP: Record<TreeBand, string> = {
+  single: 'b < 1.0 - smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)',
+  lod0: 'b < 1.0 - smoothstep(uTreeLod.x, uTreeLod.y, vTreeD)',
+  lod1: 'b >= 1.0 - smoothstep(uTreeLod.x, uTreeLod.y, vTreeD) && b < 1.0 - smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)',
+}
+
+/** Wind for the tree models: kit models use a height ramp; offline assets a baked weight (`aTreeVC.r`). */
+export interface TreeWind {
+  amplitude: number
+  heightScale: number
+  mask?: { decl: string; expr: string }
+}
+
+/** Crown sway of the kit models (step 3b): template units are ~7–9 tall, mask² keeps the trunk still. */
+export const KIT_TREE_WIND: TreeWind = { amplitude: 0.3, heightScale: 8 }
+
+/**
+ * Material clone of a tree model part that is visible only inside its distance band, with a dithered edge;
+ * instances outside the band are collapsed in the vertex stage (rebuild margins cost no rasterisation).
+ * `ao` = multiply the colour by `aTreeVC.g` (baked AO of the offline assets).
+ */
+export function withTreeFade(src: THREE.Material, band: TreeBand = 'single', wind: TreeWind = KIT_TREE_WIND, ao = false): THREE.Material {
   const m = src.clone()
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, treeFadeUniforms)
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform vec2 uTreeCenter;\nuniform vec2 uTreeRing;\nvarying float vTreeD;')
+      .replace('#include <common>', `#include <common>\nuniform vec2 uTreeCenter;\nuniform vec2 uTreeRing;\nuniform vec2 uTreeLod;\nvarying float vTreeD;${ao ? '\nvarying float vTreeAo;' : ''}`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
 {
   mat4 tM = modelMatrix;
@@ -46,26 +80,44 @@ export function withTreeFadeOut(src: THREE.Material): THREE.Material {
   tM = tM * instanceMatrix;
   #endif
   vTreeD = distance((tM * vec4(0.0, 0.0, 0.0, 1.0)).xz, uTreeCenter);
-  // Instances in the rebuild margin beyond the ring: collapsed (no rasterisation), not only discarded.
-  if (vTreeD > uTreeRing.y + 0.5) transformed = vec3(0.0);
+  if (${COLLAPSE[band]}) transformed = vec3(0.0);${ao ? '\n  vTreeAo = aTreeVC.g;' : ''}
 }`)
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', `#include <common>\nuniform vec2 uTreeRing;\nvarying float vTreeD;${BAYER_GLSL}`)
-      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (svBayer4(gl_FragCoord.xy) >= 1.0 - smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)) discard;')
+      .replace('#include <common>', `#include <common>\nuniform vec2 uTreeRing;\nuniform vec2 uTreeLod;\nvarying float vTreeD;${ao ? '\nvarying float vTreeAo;' : ''}${BAYER_GLSL}`)
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>\n{ float b = svBayer4(gl_FragCoord.xy); if (!(${KEEP[band]})) discard; }`)
+    if (ao) sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= mix(1.0, vTreeAo, 0.85);')
   }
-  m.customProgramCacheKey = () => 'tree-fade-out'
-  applyWind(m, TREE_WIND)
+  m.customProgramCacheKey = () => `tree-fade:${band}:${ao ? 1 : 0}`
+  // The wind mask attribute is declared by applyWind (before this material's own begin_vertex code runs).
+  applyWind(m, wind)
   return m
 }
 
-/** Crown sway of the real tree models (step 3b): template units are ~7–9 tall, mask² keeps the trunk still. */
-const TREE_WIND = { amplitude: 0.3, heightScale: 8 }
+/** Back-compat name for the kit-model path (model ring → impostors). */
+export const withTreeFadeOut = (src: THREE.Material) => withTreeFade(src)
 
 /** Shadow depth material that sways with the tree and keeps the leaf alpha cut-out. */
-export function treeDepthMaterial(src: THREE.Material): THREE.MeshDepthMaterial {
+export function treeDepthMaterial(src: THREE.Material, wind: TreeWind = KIT_TREE_WIND, band: TreeBand = 'single'): THREE.MeshDepthMaterial {
   const s = src as THREE.MeshLambertMaterial
   const m = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: s.map ?? null, alphaTest: s.alphaTest })
-  applyWind(m, TREE_WIND)
+  // Same band collapse as the colour pass (no dither): overlapping LOD sets must not cast two shadows.
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, treeFadeUniforms)
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform vec2 uTreeCenter;\nuniform vec2 uTreeRing;\nuniform vec2 uTreeLod;')
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+{
+  mat4 tM = modelMatrix;
+  #ifdef USE_INSTANCING
+  tM = tM * instanceMatrix;
+  #endif
+  float vTreeD = distance((tM * vec4(0.0, 0.0, 0.0, 1.0)).xz, uTreeCenter);
+  float tMid = ${band === 'lod0' ? '(uTreeLod.x + uTreeLod.y) * 0.5' : '(uTreeRing.x + uTreeRing.y) * 0.5'};
+  if (${band === 'lod1' ? 'vTreeD < (uTreeLod.x + uTreeLod.y) * 0.5 || ' : ''}vTreeD > tMid) transformed = vec3(0.0);
+}`)
+  }
+  m.customProgramCacheKey = () => `tree-depth:${band}`
+  applyWind(m, wind)
   return m
 }
 
@@ -193,7 +245,7 @@ varying float vTreeD;${BAYER_GLSL}`)
   vec2 uv0 = vec2((v0 + cellUv.x) / ${IMPOSTOR_VIEWS}.0, (vImpRow + cellUv.y) / ${rowsN}.0);
   vec2 uv1 = vec2((mod(v0 + 1.0, ${IMPOSTOR_VIEWS}.0) + cellUv.x) / ${IMPOSTOR_VIEWS}.0, uv0.y);
   diffuseColor *= mix(texture2D(map, uv0), texture2D(map, uv1), t);
-  if (svBayer4(gl_FragCoord.xy) >= smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)) discard;
+  if (svBayer4(gl_FragCoord.xy) < 1.0 - smoothstep(uTreeRing.x, uTreeRing.y, vTreeD)) discard; // complement of the models' keep rule
 }`)
       .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nnormal = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);')
   }

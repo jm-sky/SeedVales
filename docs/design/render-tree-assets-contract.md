@@ -85,3 +85,14 @@ Grass, flowers, rocks, bushes (separate later steps); wind animation (shader-sid
 ## Delivery notes (session 12, asset side)
 
 Delivered per this contract; clarifications only (no contract change): `halfWidth` = radial max x 1.02, `minY` = 0 with the impostor clipped at y = 0, `COLOR_0` = (wind, AO, 1) so `vertexColors` must be disabled on load, Dead_A shares the bark texture, no normal atlas. Details: render--007 plan "Session 12".
+
+## Round 2 requests (game side, session 11 continued, after integrating the session-12 drop)
+
+Measured on the Arc 140V (see render--007 plan "offline tree assets integrated"): the new trees are cheaper than the kit on medium and in dense forest on high, but **marching through mixed terrain on high costs ~50 % more GPU at equal triangle count** — the likely cause is overdraw of LOD1's merged leaf cards. In priority order:
+
+1. **Tight-cut LOD1 leaf cards:** replace the merged quads (κ 0.7) with cards cut to the leaf-cluster outline (6–8 vertices each) so transparent area per card drops well below half. Report per variant: LOD1 card count, total card area and **opaque-coverage ratio** (opaque texels / card area), before and after. Triangle budget may rise to ~1 000 for this if needed.
+2. **Lighter pine LOD1 (~400–500 tris)** — pines dominate dense conifer forest; keep the silhouette IoU ≥ 0.85 the build already measures.
+3. *(optional)* **Normal atlas** for the impostors (contract section "Impostor atlas"), so impostors take the sun direction and the LOD1 → impostor band matches better.
+4. *(low)* Per-row cell aspect for tall variants (pines ≈ 18 px/m).
+
+Acceptance on the game side as before (ab frames, alternating GPU pairs of `dense-forest` incl. `march-10mps`, high and medium); the high model ring goes back up (150–200 m) only if march stays within ~+1 ms of the kit.

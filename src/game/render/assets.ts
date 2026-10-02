@@ -116,7 +116,7 @@ export function toLambert(src: THREE.Material): THREE.Material {
 }
 
 /** De-quantize (meshopt/KHR_mesh_quantization) attributes so geometries can be merged. */
-function toFloat32(a: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): THREE.BufferAttribute {
+export function toFloat32(a: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): THREE.BufferAttribute {
   if (a instanceof THREE.BufferAttribute && a.array instanceof Float32Array && !a.normalized) return a
   const n = a.count
   const s = a.itemSize

@@ -17,13 +17,16 @@ import { isTree } from '../world/nodes'
 import { CHUNK_M } from '../world/types'
 import { NATURE_MODEL } from './assetNames'
 import { loadGltf, mergeTemplate, part, type TemplatePart } from './assets'
-import { bakeImpostors, createImpostorMesh, type ImpostorAtlas, TREE_FADE_M, treeDepthMaterial, treeFadeUniforms, withTreeFadeOut } from './treeImpostors'
+import { bakeImpostors, createImpostorMesh, type ImpostorAtlas, TREE_FADE_M, type TreeBand, treeDepthMaterial, treeFadeUniforms, type TreeWind, withTreeFade, withTreeFadeOut } from './treeImpostors'
+import { ASSET_TREE_WIND, loadTreeAssets, TREE_VARIANTS, type TreeAssets } from './treeModels'
 
 /** Per-frame budget of a vegetation rebuild job (ms); terrain chunk builds have their own 5 ms. */
 const VEG_BUDGET_MS = 2.5
 /** Rebuild after moving this far (m); the model/impostor sets overlap by this margin, the shader fades exactly. */
 const REBUILD_M = 12
 const TREE_KINDS = ['tree_broad', 'tree_apple', 'tree_pine', 'tree_dead']
+/** Width of the dithered LOD0 → LOD1 band (m). */
+const LOD_FADE_M = 6
 
 
 function impostors(): Record<string, TemplatePart[]> {
@@ -53,7 +56,11 @@ export class Vegetation {
   private nearM: number
   private farM: number
   private treeM: number
+  private lod0M: number
+  /** Model ring of the one-LOD kit trees (fallback when trees.glb is missing): ≈ vegNear × 0.6 = 27 / 48 / 72 m. */
+  private kitM: number
   private cell: number
+  private assets: TreeAssets | null = null
   private atlas: ImpostorAtlas | null = null
   private imp: { mesh: THREE.InstancedMesh; imp: THREE.InstancedBufferAttribute } | null = null
   private lastX = Number.NaN
@@ -64,12 +71,14 @@ export class Vegetation {
     this.nearM = q.vegNear
     this.farM = q.vegFar
     this.treeM = q.treeModel
+    this.lod0M = q.treeLod0
+    this.kitM = q.vegNear * 0.6
     this.cell = q.impostorCell
     // Procedural near fallback until assets are ready.
     for (const [k, v] of Object.entries(this.far)) this.near.set(`${k}#0`, v)
   }
 
-  async load() {
+  async load(opts: { treeAssets?: boolean } = {}) {
     try {
       const g = await loadGltf('nature.glb')
       for (const [kind, def] of Object.entries(NATURE_MODEL)) {
@@ -82,13 +91,41 @@ export class Vegetation {
     } catch (e) {
       console.warn('nature.glb failed; procedural vegetation', e)
     }
+    if (opts.treeAssets !== false) try {
+      this.useTreeAssets(await loadTreeAssets())
+    } catch (e) {
+      console.warn('trees.glb / impostor atlas failed; kit trees with a runtime-baked atlas', e)
+    }
     this.dirty = true
+  }
+
+  /** Offline LOD0/LOD1 trees + their atlas (contract render-tree-assets-contract.md); replaces the kit trees. */
+  useTreeAssets(a: TreeAssets) {
+    this.assets = a
+    this.atlas = a.atlas
+    const cache = new Map<string, THREE.Material>()
+    for (const [key, parts] of a.templates) {
+      const band = key.endsWith('#0') ? 'lod0' : 'lod1'
+      this.near.set(`tree:${key}`, parts.map((p) => {
+        const ck = `${p.material.uuid}:${band}`
+        let m = cache.get(ck)
+        if (!m) cache.set(ck, (m = withTreeFade(p.material, band, ASSET_TREE_WIND, true)))
+        return { geometry: p.geometry, material: m }
+      }))
+    }
+  }
+
+  /** Whether the offline LOD0/LOD1 tree assets are in use (tests, diagnostics). */
+  get treeAssetsActive() {
+    return this.assets !== null
   }
 
   setQuality(q: QualitySettings) {
     this.nearM = q.vegNear
     this.farM = q.vegFar
     this.treeM = q.treeModel
+    this.lod0M = q.treeLod0
+    this.kitM = q.vegNear * 0.6
     this.cell = q.impostorCell
     this.markDirty()
   }
@@ -99,9 +136,9 @@ export class Vegetation {
   }
 
   private depthMats = new Map<THREE.Material, THREE.MeshDepthMaterial>()
-  private depthFor(m: THREE.Material): THREE.MeshDepthMaterial {
+  private depthFor(m: THREE.Material, wind?: TreeWind, band?: TreeBand): THREE.MeshDepthMaterial {
     let d = this.depthMats.get(m)
-    if (!d) this.depthMats.set(m, (d = treeDepthMaterial(m)))
+    if (!d) this.depthMats.set(m, (d = treeDepthMaterial(m, wind, band)))
     return d
   }
 
@@ -152,7 +189,9 @@ export class Vegetation {
    */
   update(px: number, pz: number, budgetMs = VEG_BUDGET_MS) {
     treeFadeUniforms.uTreeCenter.value.set(px, pz)
-    treeFadeUniforms.uTreeRing.value.set(this.treeM - TREE_FADE_M, this.treeM)
+    const ring = this.assets ? this.treeM : this.kitM
+    treeFadeUniforms.uTreeRing.value.set(ring - TREE_FADE_M, ring)
+    treeFadeUniforms.uTreeLod.value.set(this.lod0M - LOD_FADE_M, this.lod0M)
     const ck = `${Math.floor(px / (CHUNK_M / 2))},${Math.floor(pz / (CHUNK_M / 2))}`
     if (ck !== this.lastChunk || this.dirty || !(Math.hypot(px - this.lastX, pz - this.lastZ) < REBUILD_M)) {
       this.lastChunk = ck
@@ -213,9 +252,11 @@ export class Vegetation {
       a.push(x, y, z, rot, sc)
     }
     const atlas = this.atlas
-    // Without an atlas: the old split (models to 0.6 × vegNear, procedural impostors beyond).
-    const treeNear = atlas ? this.treeM + REBUILD_M + 2 : this.nearM * 0.6
-    const impFrom = this.treeM - TREE_FADE_M - REBUILD_M - 2
+    const assets = this.assets
+    const M = REBUILD_M + 2
+    // Kit trees: one model up to kitM (with an atlas: dithered into impostors; without: procedural cones beyond).
+    const treeNear = atlas ? this.kitM + M : this.nearM * 0.6
+    const impFrom = (assets ? this.treeM : this.kitM) - TREE_FADE_M - M
     const imps: number[] = [] // [x, y, z, rot, scale, row]*
     const r = this.farM
     const r2 = r * r
@@ -229,6 +270,17 @@ export class Vegetation {
           const d = Math.hypot(n.x - px, n.z - pz)
           if (tree && st?.kind === 'felled') {
             if (d < this.nearM * 1.5) push('far:stump', n.x, n.y, n.z, n.rot, 1)
+            continue
+          }
+          if (tree && assets) {
+            // Offline trees: LOD0 → LOD1 → impostor bands, overlapping by the rebuild margin (the shader fades exactly).
+            const vars = TREE_VARIANTS[n.kind]!
+            const v = vars[n.variant % vars.length]!
+            const s = n.scale / assets.maxY.get(v)!
+            if (d < this.lod0M + M) push(`near:tree:${v}#0`, n.x, n.y, n.z, n.rot, s)
+            if (d > this.lod0M - LOD_FADE_M - M && d < this.treeM + M) push(`near:tree:${v}#1`, n.x, n.y, n.z, n.rot, s)
+            if (d > impFrom) imps.push(n.x, n.y, n.z, n.rot, s, assets.atlas.rows.get(v)!)
+            count++
             continue
           }
           if (!tree && (n.kind === 'herb' || n.kind === 'mushroom' || n.kind === 'stone') && st) continue
@@ -316,7 +368,9 @@ export class Vegetation {
     const used = new Set<string>()
     let drawCalls = 0
     for (const [key, buf] of staged) {
-      const [kind, id] = key.split(':') as [string, string]
+      const cut = key.indexOf(':')
+      const kind = key.slice(0, cut)
+      const id = key.slice(cut + 1)
       const parts = kind === 'near' ? this.near.get(id) : this.far[id]
       if (!parts) continue
       const n = buf.length / 16
@@ -329,8 +383,9 @@ export class Vegetation {
         const cap = Math.ceil(n * 1.3) + 8
         meshes = parts.map((pt) => {
           const im = new THREE.InstancedMesh(pt.geometry, pt.material, cap)
-          im.castShadow = kind === 'near'
+          im.castShadow = kind === 'near' && !(id.startsWith('tree:') && id.endsWith('#1'))
           if (this.atlas && id.startsWith('tree_')) im.customDepthMaterial = this.depthFor(pt.material)
+          if (id.startsWith('tree:')) im.customDepthMaterial = this.depthFor(pt.material, ASSET_TREE_WIND, id.endsWith('#0') ? 'lod0' : 'lod1')
           im.frustumCulled = false
           this.group.add(im)
           return im

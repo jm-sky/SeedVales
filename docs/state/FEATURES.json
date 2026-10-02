@@ -925,8 +925,8 @@
    "scope": "v2",
    "behavior": "Trees with branches and alpha-cutout leaf cards (CC0/CC-BY models, LOD0/LOD1, wind), real models to ~120 m medium / ~200 m high, baked multi-view impostors beyond with a dithered transition (no procedural cone/blob impostors)",
    "verify": "A/B frames forest-edge/dense-forest/meadow-hills + draw calls/render.prep per profile + asset budget table",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--007--nature-pass.md step 3 (D-REN-14)"
+   "status": "implemented_unverified",
+   "evidence": "plan: docs/plans/render--007--nature-pass.md step 3 (D-REN-14, D-REN-15); session 11: impostors (runtime bake, then the offline atlas of session 12), offline LOD0/LOD1 trees (render/treeModels.ts, dithered bands in treeImpostors.ts, wind from baked weights, band-aware shadow depth), rings low 20/60, medium 40/120, high 50/120 m; tests vegetation.test.ts RENDER-07 (kit + offline bands); GPU pairs in the plan and PERF.md; open: high march +50% (LOD1 card overdraw) -> contract render-tree-assets-contract.md 'Round 2', leaf back-light, user look"
   },
   {
    "id": "WORLD-11",

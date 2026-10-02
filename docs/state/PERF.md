@@ -261,3 +261,14 @@ Note: the session-11 "frame" values are the bench's `frame` column (CPU frame ti
 | high | 6.52 ms · 2.09 M | 6.02 ms · 2.32 M | 7.34 ms · 2.86 M |
 
 The longer model ring waits for LOD1 meshes (Blender session, `docs/design/render-tree-assets-contract.md`). Bench noise this session: another workload started at 08:39 (load average 12), the high runs after it degraded run after run (dense-forest gpu 5.7 → 18.6 ms with no code change) and were discarded.
+
+### Offline LOD0/LOD1 trees (session 11 cont., Arc 140V, gpu.frame median)
+
+| profile · scene | kit trees (48/72 m ring + atlas) | offline trees | note |
+|---|---|---|---|
+| medium · dense-forest | 4.3 ms | 3.9 ms | single pair, ring 40/120 m |
+| medium · march | 5.68 ms | 5.14 ms | single pair |
+| high · dense-forest | 9.3 ms | 6.4 ms | median of 3 alternating pairs, ring 50/150 m, LOD1 no shadows |
+| high · march | 9.3 ms | 14.1 ms | same; equal triangles (≈ 2.05 M) → LOD1 card overdraw; high ring set to 120 m until tighter cards (contract "Round 2") |
+
+High runs on this laptop varied ±50 % on the same build (dense-forest 4.3 vs 8.3 ms in consecutive runs); quote alternating pairs only.

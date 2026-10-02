@@ -114,7 +114,7 @@ export class Renderer {
     await this.structures.load()
     await this.landmarks.load()
     onProgress?.('Vegetation…')
-    await this.vegetation.load()
+    await this.vegetation.load({ treeAssets: this.visual.treeAssets })
     if (this.visual.impostors) this.vegetation.bakeImpostors(this.renderer)
     onProgress?.('Characters…')
     await this.actors.load()

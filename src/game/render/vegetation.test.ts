@@ -9,6 +9,7 @@ import { testSim } from '../sim/testWorld'
 import { CHUNK_M } from '../world/types'
 import { QUALITY } from './quality'
 import { TREE_FADE_M } from './treeImpostors'
+import { TREE_VARIANTS } from './treeModels'
 import { Vegetation } from './vegetation'
 
 const visibleCounts = (v: Vegetation) => v.meshes.filter((m) => m.visible).map((m) => m.count).join(',')
@@ -92,5 +93,29 @@ describe('render: vegetation streaming (PERF-02)', () => {
     }
     expect(inner).toBeGreaterThan(0)
     expect(v.visibleSets().some((k) => k.startsWith('near:tree_'))).toBe(true)
+  })
+
+  it('RENDER-07: offline trees use LOD0 near, LOD1 to the model ring, impostors beyond; every standing tree is in a band', () => {
+    const sim = testSim()
+    const q = QUALITY.medium
+    const p = { x: sim.player.x, z: sim.player.z }
+    const v = new Vegetation(sim, q)
+    // Fake assets (loading needs fetch/GL): one tiny template per variant and LOD, unit bounds.
+    const templates = new Map<string, { geometry: THREE.BufferGeometry; material: THREE.Material }[]>()
+    const maxY = new Map<string, number>()
+    const rows = new Map<string, number>()
+    let row = 0
+    for (const vars of Object.values(TREE_VARIANTS)) for (const name of vars) {
+      for (const lod of [0, 1]) templates.set(`${name}#${lod}`, [{ geometry: new THREE.BoxGeometry(1, 1, 1), material: new THREE.MeshLambertMaterial() }])
+      maxY.set(name, 10)
+      rows.set(name, row++)
+    }
+    v.useTreeAssets({ templates, maxY, atlas: { texture: new THREE.Texture(), rows, bounds: [...rows.keys()].map(() => new THREE.Vector4(1, 0, 1, 0)), dispose() {} } })
+    expect(v.treeAssetsActive).toBe(true)
+    v.update(p.x, p.z)
+    const sets = v.visibleSets()
+    expect(sets.some((k) => k.startsWith('near:tree:') && k.endsWith('#1'))).toBe(true)
+    expect(sets.some((k) => k.startsWith('far:tree_') || k.startsWith('near:tree_'))).toBe(false) // no kit trees or cones
+    expect(v.impostorInstances).toBeGreaterThan(0)
   })
 })

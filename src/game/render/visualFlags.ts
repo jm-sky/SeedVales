@@ -21,9 +21,11 @@ export interface VisualFlags {
   grass: boolean
   /** Tree impostors baked from the models beyond the `treeModel` ring (render--007 step 3c); false = the old split. */
   impostors: boolean
+  /** Offline LOD0/LOD1 trees + baked atlas from `trees.glb` (session 12); false = the kit trees. */
+  treeAssets: boolean
 }
 
-export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true }
+export const VISUAL_DEFAULTS: VisualFlags = { tone: 'none', exposure: 1, sky: 'dome', tintUniforms: true, smooth: true, detail: true, grass: true, impostors: true, treeAssets: true }
 
 export function readVisualFlags(): VisualFlags {
   try {
