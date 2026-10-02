@@ -2,9 +2,9 @@
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { acceptQuest } from '@/game/sim/quests'
-import { BADGES, REP_NAMES, tryApologize } from '@/game/sim/reputation'
+import { BADGES, REP_NAMES } from '@/game/sim/reputation'
 import { REP_DIMS } from '@/game/sim/types'
+import BoardQuestObjectives from './BoardQuestObjectives.vue'
 import PanelFrame from './PanelFrame.vue'
 
 const { game, version } = useGameStrict()
@@ -19,12 +19,10 @@ const d = computed(() => {
   }
 })
 function accept(id: string) {
-  game.value.showToast(acceptQuest(game.value.sim, id))
-  version.value++
+  game.value.acceptBoardQuest(id)
 }
 function apologize(id: string) {
-  game.value.showToast(tryApologize(game.value.sim, id))
-  version.value++
+  game.value.apologize(id)
 }
 </script>
 
@@ -56,8 +54,8 @@ function apologize(id: string) {
         <p class="mt-1 text-xs">
           {{ q.desc }}
         </p>
-        <div class="mt-1 flex items-center justify-between text-xs">
-          <span>Progress: {{ q.kills }}/{{ q.killsNeeded }} · reward {{ q.reward }} c</span>
+        <div class="mt-1 flex items-end justify-between text-xs">
+          <BoardQuestObjectives :quest="q" />
           <Button
             v-if="q.status === 'available'"
             size="xs"

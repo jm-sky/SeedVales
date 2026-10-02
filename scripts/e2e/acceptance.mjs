@@ -470,6 +470,20 @@ try {
     return { corner: px(4, 4), player: px(Math.round(pos.x * c.width), Math.round(pos.z * c.height) + 12) }
   }, await S(() => ({ x: window.__sv.game.sim.player.x / window.__sv.game.sim.world.size, z: window.__sv.game.sim.player.z / window.__sv.game.sim.world.size })))
   check(results, '12. mapa: mgła wojny zakrywa nieodkryte tereny (MAP-01)', fog.corner.join() === '22,19,15' && fog.player.join() !== '22,19,15', fog)
+  // MAP-01 (review 013 M-01): the side list names only known settlements; an unexplored one is absent.
+  const mapNames = await S(() => {
+    const sim = window.__sv.game.sim
+    const cellM = 64 // FOG.cellM
+    const n = Math.ceil(sim.world.size / cellM)
+    const explored = (x, z) => {
+      const i = Math.floor(z / cellM) * n + Math.floor(x / cellM)
+      return ((sim.state.px.explored?.[i >>> 5] ?? 0) & (1 << (i & 31))) !== 0
+    }
+    const unknown = sim.world.settlements.filter((s) => !sim.state.px.visited?.includes(s.id) && !explored(s.x, s.z)).map((s) => s.name)
+    return { unknown }
+  })
+  const mapText = await page.locator('[data-testid="map-canvas"]').locator('xpath=../..').innerText()
+  check(results, '12. mapa: nieodkryta osada nie wycieka do listy (MAP-01)', mapNames.unknown.length > 0 && mapNames.unknown.every((n) => !mapText.includes(n)), { mapNames, mapText })
   await shot(page, 'acc-12-map')
   await clickTest('panel-close')
   await page.waitForTimeout(600)

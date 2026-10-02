@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { buildingName, transferToStorage } from '@/game/sim/interact'
+import { buildingName } from '@/game/sim/interact'
 import ItemRow from './ItemRow.vue'
 import PanelFrame from './PanelFrame.vue'
 
@@ -17,9 +17,7 @@ const d = computed(() => {
   return { b, title: `${buildingName(b)}${foreign ? ' (someone else\'s property!)' : ''}`, items: [...b.inv.items], mine: [...g.sim.player.inv.items], foreign }
 })
 function move(i: number, toStorage: boolean) {
-  const msg = transferToStorage(game.value.sim, d.value!.b, i, toStorage)
-  game.value.showToast(msg)
-  version.value++
+  game.value.moveStorage(d.value!.b, i, toStorage)
 }
 </script>
 

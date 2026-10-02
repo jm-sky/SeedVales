@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
+import BoardQuestObjectives from './BoardQuestObjectives.vue'
 import PanelFrame from './PanelFrame.vue'
 
 const { game, version } = useGameStrict()
@@ -74,9 +75,7 @@ const d = computed(() => {
         <p class="mt-1 text-xs">
           {{ q.desc }}
         </p>
-        <p class="mt-1 text-xs text-muted-foreground">
-          Progress: {{ q.kills }}/{{ q.killsNeeded }} · reward {{ q.reward }} c
-        </p>
+        <BoardQuestObjectives :quest="q" />
       </div>
     </div>
     <details

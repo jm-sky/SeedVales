@@ -93,7 +93,7 @@ try {
   await shot(page, 'mob-04-craft')
   await tap('panel-close')
   await tap('touch-menu-map')
-  const map = !!(await page.$('[data-testid="autopilot-1"]'))
+  const map = !!(await page.$('[data-testid^="autopilot-"]'))
   await shot(page, 'mob-05-map')
   await tap('panel-close')
   const minimap = !!(await page.$('[data-testid="minimap"]'))

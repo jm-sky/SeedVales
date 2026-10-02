@@ -3,9 +3,8 @@ import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { formatCoins } from '@/game/data/items'
-import { giveGift } from '@/game/sim/gifts'
 import { professionName } from '@/game/sim/newGame'
-import { buyFromNpc, buyPrice, sellPrice, sellToNpc, tradeStock } from '@/game/sim/trade'
+import { buyPrice, sellPrice, tradeStock } from '@/game/sim/trade'
 import ItemRow from './ItemRow.vue'
 import PanelFrame from './PanelFrame.vue'
 import type { ItemStack } from '@/game/sim/types'
@@ -28,16 +27,13 @@ const d = computed(() => {
   }
 })
 function buy(s: ItemStack) {
-  game.value.showToast(buyFromNpc(game.value.sim, d.value!.npc, s).msg)
-  version.value++
+  game.value.buyFrom(d.value!.npc, s)
 }
 function give(s: ItemStack) {
-  game.value.showToast(giveGift(game.value.sim, d.value!.npc, s, 1).msg)
-  version.value++
+  game.value.giftTo(d.value!.npc, s)
 }
 function sell(s: ItemStack) {
-  game.value.showToast(sellToNpc(game.value.sim, d.value!.npc, s).msg)
-  version.value++
+  game.value.sellTo(d.value!.npc, s)
 }
 </script>
 

@@ -14,16 +14,53 @@ import { hp } from './vitals'
 
 /** A resolved/expired problem is not re-posted for the same building/settlement within a day (no spam when populations fluctuate). */
 const QUEST_REPOST_S = 86400
+/** Finished (done/expired) quests kept as history, besides those still inside the repost cooldown (P-03). */
+export const QUEST_HISTORY_MAX = 20
+
+/** Stable key of a recurring problem: `rats:<buildingId>` / `wolves:<settlementId>`. */
+export const questKey = (q: Quest) => (q.kind === 'rats' ? `rats:${q.buildingId}` : `wolves:${q.settlementId}`)
+
+export interface QuestObjective {
+  id: 'kills' | 'repair'
+  label: string
+  done: boolean
+  current?: number
+  needed?: number
+}
+
+/** Explicit objectives of a board quest, derived from quest fields and sim state (never from text). */
+export function questObjectives(sim: Sim, q: Quest): QuestObjective[] {
+  const kills: QuestObjective = {
+    id: 'kills',
+    label: `${q.kind === 'rats' ? 'Rats eliminated' : 'Wolves killed'}: ${Math.min(q.kills, q.killsNeeded)}/${q.killsNeeded}`,
+    done: q.kills >= q.killsNeeded,
+    current: Math.min(q.kills, q.killsNeeded),
+    needed: q.killsNeeded,
+  }
+  if (q.kind !== 'rats') return [kills]
+  const b = sim.building(q.buildingId)
+  const done = !!b && !b.ratNest
+  return [kills, { id: 'repair', label: `Repair the ${b?.kind === 'warehouse' ? 'warehouse' : 'building'}: ${done ? 'done' : 'pending'}`, done }]
+}
+
+/** Reward line: a promise ("up to") until completion, then what the treasury actually paid. */
+export function questRewardText(q: Quest): string {
+  if (q.status === 'done' && q.paid !== undefined) return `paid ${q.paid} c${q.paid < q.reward ? ` of ${q.reward} c (the treasury ran short)` : ''}`
+  return `up to ${q.reward} c, paid by the settlement treasury`
+}
 
 export function questSystem(sim: Sim) {
   const s = sim.state
   // Rats: guard notices nests with visible rats.
   const perNest = countByDen(sim)
+  // Latest quest per recurring-problem key (one pass; the bounded history keeps this small).
+  const latest = new Map<string, Quest>()
+  for (const q of s.quests) latest.set(questKey(q), q)
+  const blocks = (q: Quest | undefined) => !!q && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S)
   for (const b of s.buildings) {
     if (!b.ratNest) continue
     const rats = perNest.get(nestTag(b.id)) ?? 0
-    const existing = s.quests.find((q) => q.kind === 'rats' && q.buildingId === b.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
-    if (!existing && rats >= 3) {
+    if (!blocks(latest.get(`rats:${b.id}`)) && rats >= 3) {
       const guard = sim.npcsOf(b.settlementId).find((n) => n.profession === 'guard' && !n.vitals.dead)
       if (!guard) continue
       const sett = s.settlements[b.settlementId]!
@@ -42,6 +79,7 @@ export function questSystem(sim: Sim) {
         kills: 0,
       }
       s.quests.push(q)
+      latest.set(questKey(q), q)
       sim.message(`On the notice board: ${q.title}`, 'quest')
       logEvent('quest', { id: q.id, kind: q.kind, status: 'available' }, undefined, q.settlementId)
     }
@@ -49,15 +87,14 @@ export function questSystem(sim: Sim) {
   // Wolves threatening a settlement.
   for (const sett of sim.world.settlements) {
     const wolves = animalsNear(sim, sett.x, sett.z, sett.radius + 350, 'wolf')
-    const existing = s.quests.find((q) => q.kind === 'wolves' && q.settlementId === sett.id && (q.status === 'available' || q.status === 'active' || s.time.cal - q.createdAt < QUEST_REPOST_S))
-    if (!existing && wolves.length >= 2) {
+    if (!blocks(latest.get(`wolves:${sett.id}`)) && wolves.length >= 2) {
       const giver = sim.npcsOf(sett.id).find((n) => n.profession === 'hunter') ?? sim.npcsOf(sett.id).find((n) => n.profession === 'guard')
       if (!giver) continue
-      s.quests.push({
+      const wq: Quest = {
         id: `q-wolves-${sett.id}-${Math.floor(s.time.cal)}`,
         kind: 'wolves',
         title: `Wolves near ${sett.name}`,
-        desc: `${giver.name}: "A wolf pack is prowling around the pens. Drive the wolves off or kill them."`,
+        desc: `${giver.name}: "A wolf pack is prowling around the pens. Kill them before they take the herds."`,
         settlementId: sett.id,
         giverId: giver.id,
         status: 'available',
@@ -65,9 +102,11 @@ export function questSystem(sim: Sim) {
         createdAt: s.time.cal,
         killsNeeded: Math.min(3, wolves.length),
         kills: 0,
-      })
+      }
+      s.quests.push(wq)
+      latest.set(questKey(wq), wq)
       sim.message(`New notice: Wolves near ${sett.name}`, 'quest')
-      logEvent('quest', { id: s.quests.at(-1)!.id, kind: 'wolves', status: 'available' }, undefined, sett.id)
+      logEvent('quest', { id: wq.id, kind: 'wolves', status: 'available' }, undefined, sett.id)
     }
   }
   // Resolution / expiry.
@@ -94,6 +133,25 @@ export function questSystem(sim: Sim) {
       logEvent('quest', { id: q.id, kind: q.kind, status: 'expired' }, undefined, q.settlementId)
     }
   }
+  pruneQuestHistory(sim)
+}
+
+/**
+ * P-03: keeps all live quests, the last QUEST_HISTORY_MAX finished ones, and any finished quest still inside
+ * the repost cooldown (so the cooldown stays correct). Bounded by max(20, problems resolved per day).
+ */
+export function pruneQuestHistory(sim: Sim) {
+  const s = sim.state
+  let finished = 0
+  for (const q of s.quests) if (q.status === 'done' || q.status === 'expired') finished++
+  if (finished <= QUEST_HISTORY_MAX) return
+  let drop = finished - QUEST_HISTORY_MAX
+  s.quests = s.quests.filter((q) => {
+    if (drop <= 0 || (q.status !== 'done' && q.status !== 'expired')) return true
+    if (s.time.cal - q.createdAt < QUEST_REPOST_S) return true
+    drop--
+    return false
+  })
 }
 
 export function acceptQuest(sim: Sim, id: string): string {
@@ -110,6 +168,7 @@ export function completeQuest(sim: Sim, q: Quest) {
   logEvent('quest', { id: q.id, kind: q.kind, status: 'done' }, undefined, q.settlementId)
   // Reward is paid by the settlement treasury (never minted); a poor settlement pays what it has.
   const paid = payFromTreasury(sim, q.settlementId, sim.player, q.reward)
+  q.paid = paid
   if (paid < q.reward) sim.message(`The settlement treasury is empty — you were paid only ${paid} of ${q.reward} c.`, 'bad')
   const giver = sim.human(q.giverId)
   if (giver) giver.opinion = Math.min(100, giver.opinion + 25)

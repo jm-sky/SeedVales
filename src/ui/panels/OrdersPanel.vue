@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
 import { RECIPES } from '@/game/data/recipes'
-import { cancelOrder, canOrder, collectOrder, orderPrice, placeOrder } from '@/game/sim/orders'
+import { canOrder, orderPrice } from '@/game/sim/orders'
 import { formatClock } from '@/game/sim/time'
 import PanelFrame from './PanelFrame.vue'
 
@@ -22,16 +22,13 @@ const d = computed(() => {
   }
 })
 function order(id: string) {
-  game.value.showToast(placeOrder(game.value.sim, d.value!.n, id))
-  version.value++
+  game.value.orderFrom(d.value!.n, id)
 }
 function cancel(id: string) {
-  game.value.showToast(cancelOrder(game.value.sim, id))
-  version.value++
+  game.value.cancelSmithOrder(id)
 }
 function collect(id: string) {
-  game.value.showToast(collectOrder(game.value.sim, id))
-  version.value++
+  game.value.collectSmithOrder(id)
 }
 </script>
 

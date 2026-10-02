@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
-import { giftGain, giveGift, wantedItem } from '@/game/sim/gifts'
+import { giftGain, wantedItem } from '@/game/sim/gifts'
 import ItemRow from './ItemRow.vue'
 import PanelFrame from './PanelFrame.vue'
 import type { ItemStack } from '@/game/sim/types'
@@ -27,8 +27,7 @@ const d = computed(() => {
   }
 })
 function give(s: ItemStack) {
-  game.value.showToast(giveGift(game.value.sim, d.value!.npc, s, 1).msg)
-  version.value++
+  game.value.giftTo(d.value!.npc, s)
 }
 </script>
 

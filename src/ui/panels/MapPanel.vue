@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { isExplored, isVisited, navGoal, questGoal } from '@/game/sim/navigation'
+import { isExplored, isVisited, knownSettlements, navGoal, questGoal } from '@/game/sim/navigation'
 import { drawArrow, fogMask, worldMapImage } from '@/ui/map/worldMapImage'
 import PanelFrame from './PanelFrame.vue'
 
@@ -16,7 +16,7 @@ const view = computed(() => {
   const p = sim.player
   return {
     goal: navGoal(sim),
-    settlements: sim.world.settlements.map((s) => ({ ...s, visited: isVisited(sim, s.id), km: (Math.hypot(s.x - p.x, s.z - p.z) / 1000).toFixed(1) })),
+    settlements: knownSettlements(sim).map((s) => ({ ...s, visited: isVisited(sim, s.id), km: (Math.hypot(s.x - p.x, s.z - p.z) / 1000).toFixed(1) })),
     quests: sim.state.quests.filter((q) => q.status === 'active').map((q) => questGoal(sim, q)).filter((g) => !!g),
     authored: game.value.questMarkers(),
   }
@@ -34,7 +34,6 @@ function draw() {
   const sc = S / w.size
   ctx.font = 'bold 12px sans-serif'
   for (const s of view.value.settlements) {
-    if (!isExplored(sim, s.x, s.z)) continue
     ctx.fillStyle = s.visited ? '#f5d88a' : '#b8b0a0'
     ctx.fillRect(s.x * sc - 4, s.z * sc - 4, 8, 8)
     ctx.fillStyle = s.visited ? '#fff' : '#ddd'
@@ -146,7 +145,7 @@ function auto(id: number) {
               size="xs"
               variant="outline"
               :data-testid="`waypoint-${s.id}`"
-              @click="game.setWaypoint(s.x, s.z, s.name)"
+              @click="game.targetSettlement(s.id)"
             >
               Target
             </Button>

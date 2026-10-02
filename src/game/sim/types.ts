@@ -369,7 +369,10 @@ export interface Quest {
   giverId: number
   buildingId?: string
   status: QuestStatus
+  /** Maximum reward; the settlement treasury may pay less (see `paid`). */
   reward: number
+  /** Amount actually paid at completion (M-04). */
+  paid?: number
   createdAt: number
   killsNeeded: number
   kills: number

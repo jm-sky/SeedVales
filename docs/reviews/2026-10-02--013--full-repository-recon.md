@@ -1020,3 +1020,14 @@ Legend: **fix** = regression test first, then fix (this round) · **defer** = re
 | C-07 | ✅ fix (A) | Panels mutate state only through `Game` methods (TradePanel, QuestsPanel, OrdersPanel and any other found); CLAUDE.md rule. |
 | UI-01…UI-07, G-01…G-07 | backlog | Product recommendations → inputs for `proposals--001` and later-vision-backlog (UI-01/UI-05 partly covered by M-01/M-03 fixes and the journal). |
 | Audits A–E | A, B, E in batch B; C exists partly (route-band/generator tests) → M-05; D done (verify--001 soak). |
+
+### Batch A results (2026-10-02)
+
+| Finding | Regression test | Result |
+|---|---|---|
+| M-01 | `navigation.test.ts` "MAP-01: an unexplored, unvisited settlement is unknown — hidden from the list, waypoint and autopilot refuse it"; e2e acceptance "12. mapa: nieodkryta osada nie wycieka do listy (MAP-01)" | fixed: `isKnownSettlement`/`knownSettlements`/`waypointToSettlement`/`autopilotToSettlement` in `sim/navigation.ts`; `Game.targetSettlement` and `Game.autopilotTo` refuse unknown places; MapPanel list uses `knownSettlements` (mobile e2e M4 now checks any `autopilot-*` button) |
+| M-02 | `questBoard.test.ts` "QUEST-01: the wolf quest text requires kills (no "drive off")" | fixed (option 1) |
+| M-03 | `questBoard.test.ts` "QUEST-01: a rat quest exposes kills and repair as separate objectives…", "…a wolf quest has one kills objective" | fixed: `questObjectives()` (from fields), rendered by `BoardQuestObjectives.vue` in QuestsPanel and JournalPanel |
+| M-04 | `questBoard.test.ts` "QUEST-01: the reward is shown as "up to X c"…" | fixed: `questRewardText()`, `Quest.paid?` (optional, no SAVE_VERSION bump) |
+| P-03 | `questBoard.test.ts` "PERF-01 / QUEST-01: many repost cycles keep state.quests bounded…" (120 cycles, max 22 entries) | fixed: per-key index (`rats:<buildingId>`, `wolves:<settlementId>`) built once per run, `pruneQuestHistory` keeps live quests + last 20 finished + any inside the repost cooldown (no new saved state) |
+| C-07 | `uiFacade.test.ts` "C-07: no UI file imports a sim mutator" | fixed: `Game.buyFrom/sellTo/giftTo/orderFrom/cancelSmithOrder/collectSmithOrder/acceptBoardQuest/apologize/moveStorage/hire/cancelPlayerActivity`; panels (Trade, Gift, Orders, Quests, Hire, Storage, ActivityBar) call only these |

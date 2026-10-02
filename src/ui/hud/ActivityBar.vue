@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
-import { cancelActivity } from '@/game/sim/player'
 
 const { game, version } = useGameStrict()
 const a = computed(() => {
@@ -11,7 +10,7 @@ const a = computed(() => {
   return { label: act.label, frac: Math.min(1, act.elapsed / act.total), accel: game.value.sim.timeScale }
 })
 function cancel() {
-  cancelActivity(game.value.sim, 'Cancelled.')
+  game.value.cancelPlayerActivity()
 }
 </script>
 

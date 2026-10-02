@@ -94,6 +94,46 @@ export function revealAround(sim: Sim): number {
 
 export const isVisited = (sim: Sim, settlementId: number) => !!sim.state.px.visited?.includes(settlementId)
 
+/** MAP-01: the single "known settlement" predicate (explored cell or visited) for map canvas, side list, waypoint and autopilot. */
+export function isKnownSettlement(sim: Sim, settlementId: number): boolean {
+  const s = sim.world.settlements[settlementId]
+  return !!s && (isVisited(sim, settlementId) || isExplored(sim, s.x, s.z))
+}
+
+export const knownSettlements = (sim: Sim) => sim.world.settlements.filter((s) => isKnownSettlement(sim, s.id))
+
+const UNKNOWN_PLACE = 'You have not heard of that place yet.'
+
+/** Waypoint on a settlement; refused while the settlement is unknown (MAP-01). */
+export function waypointToSettlement(sim: Sim, settlementId: number): string {
+  if (!isKnownSettlement(sim, settlementId)) return UNKNOWN_PLACE
+  const s = sim.world.settlements[settlementId]!
+  return setWaypoint(sim, s.x, s.z, s.name)
+}
+
+/** Autopilot along the road towards a known settlement (no teleport). Returns the message to show. */
+export function autopilotToSettlement(sim: Sim, settlementId: number): string {
+  if (!isKnownSettlement(sim, settlementId)) return UNKNOWN_PLACE
+  const p = sim.player
+  for (const r of sim.world.roads) {
+    if (r.from !== settlementId && r.to !== settlementId) continue
+    let bi = -1
+    let bd = Infinity
+    r.points.forEach((pt, i) => {
+      const d = Math.hypot(pt.x - p.x, pt.z - p.z)
+      if (d < bd) {
+        bd = d
+        bi = i
+      }
+    })
+    if (bd > 80) continue
+    const dir: 1 | -1 = r.to === settlementId ? 1 : -1
+    sim.state.px.autopilot = { roadId: r.id, idx: bi, dir }
+    return `Autopilot: road to ${sim.world.settlements[settlementId]!.name} (${Math.round(r.length)} m). Move or press Esc to stop.`
+  }
+  return 'You must be standing on a road leading to this settlement.'
+}
+
 /** Reveals the map around the player, marks settlements reached, clears a reached waypoint (low cadence). */
 export function navigationSystem(sim: Sim) {
   const p = sim.player

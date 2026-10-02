@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { FOG } from '../config/calibration'
 import { roundTrip } from '../save/snapshot'
-import { bearing, clearWaypoint, isExplored, isVisited, navGoal, navigationSystem, revealAround, setWaypoint } from './navigation'
+import { autopilotToSettlement, bearing, clearWaypoint, isExplored, isKnownSettlement, isVisited, knownSettlements, navGoal, navigationSystem, revealAround, setWaypoint, waypointToSettlement } from './navigation'
 import { testSim } from './testWorld'
 
 describe('UI-04 navigation', () => {
@@ -68,5 +68,29 @@ describe('UI-04 navigation', () => {
     const st = roundTrip(sim)
     expect(st.px.explored).toEqual(sim.state.px.explored)
     expect(isExplored(sim, -5, 10)).toBe(false) // off-world
+  })
+
+  it('MAP-01: an unexplored, unvisited settlement is unknown — hidden from the list, waypoint and autopilot refuse it', () => {
+    const sim = testSim()
+    sim.state.px.explored = undefined
+    sim.state.px.visited = []
+    const far = sim.world.settlements.find((s) => Math.hypot(s.x - sim.player.x, s.z - sim.player.z) > 1000)!
+    expect(isKnownSettlement(sim, far.id)).toBe(false)
+    expect(knownSettlements(sim).map((s) => s.id)).not.toContain(far.id)
+    expect(waypointToSettlement(sim, far.id)).toMatch(/not heard|unknown/i)
+    expect(sim.state.px.waypoint).toBeUndefined()
+    expect(autopilotToSettlement(sim, far.id)).toMatch(/not heard|unknown/i)
+    expect(sim.state.px.autopilot).toBeUndefined()
+    // Exploring its cell makes it known.
+    sim.player.x = far.x - 100
+    sim.player.z = far.z
+    revealAround(sim)
+    expect(isKnownSettlement(sim, far.id)).toBe(true)
+    expect(waypointToSettlement(sim, far.id)).toContain(far.name)
+    expect(sim.state.px.waypoint?.label).toBe(far.name)
+    // Visited alone also counts (e.g. an old save without the fog bitmask).
+    const other = sim.world.settlements.find((s) => s.id !== far.id && !isExplored(sim, s.x, s.z))!
+    sim.state.px.visited = [other.id]
+    expect(isKnownSettlement(sim, other.id)).toBe(true)
   })
 })

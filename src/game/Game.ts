@@ -6,7 +6,7 @@
 import type { QualityProfile } from './render/Renderer'
 import type { InteractOption, Target, TargetRef } from './sim/interact'
 import type { SimEvent } from './sim/sim'
-import type { GameState, ItemStack, WeaponKind } from './sim/types'
+import type { Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
 import type { WorldData } from './world/types'
 import { Ambience } from './audio/ambience'
 import { itemDef } from './data/items'
@@ -22,14 +22,20 @@ import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
 import { canCraft, craftTime } from './sim/craft'
 import { plantTorch } from './sim/fire'
-import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, waterTarget } from './sim/interact'
+import { giveGift } from './sim/gifts'
+import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
-import { clearWaypoint, revealAround, setWaypoint } from './sim/navigation'
+import { autopilotToSettlement, clearWaypoint, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
+import { hireCompanion } from './sim/npc/companions'
+import { cancelOrder, collectOrder, placeOrder } from './sim/orders'
 import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/player'
 import { type JournalEntry, questChoose, type QuestChooseResult, questJournal, type QuestMarker, questMarkers, questSay, type QuestSay, type QuestTopic, questTopics } from './sim/questDialog'
+import { acceptQuest } from './sim/quests'
+import { tryApologize } from './sim/reputation'
 import { Sim } from './sim/sim'
+import { buyFromNpc, sellToNpc } from './sim/trade'
 import { installSystems } from './sim/worldSystems'
 import { generateWorld } from './world/gen/generate'
 import { deserializeWorld } from './world/serialize'
@@ -607,28 +613,75 @@ export class Game {
     this.notify()
   }
 
-  /** Autopilot along the road towards a settlement (no teleport; time can be sped up 3×). */
+  // ---------------- Panel mutations (C-07: UI never calls sim mutators directly) ----------------
+
+  /** Runs a mutation that reports a message, shows it and refreshes the UI. */
+  private act(msg: string): string {
+    this.showToast(msg)
+    this.notify()
+    return msg
+  }
+
+  buyFrom(npc: Human, stack: ItemStack) {
+    this.act(buyFromNpc(this.sim, npc, stack).msg)
+  }
+
+  sellTo(npc: Human, stack: ItemStack) {
+    this.act(sellToNpc(this.sim, npc, stack).msg)
+  }
+
+  giftTo(npc: Human, stack: ItemStack) {
+    this.act(giveGift(this.sim, npc, stack, 1).msg)
+  }
+
+  orderFrom(smith: Human, recipeId: string) {
+    this.act(placeOrder(this.sim, smith, recipeId))
+  }
+
+  cancelSmithOrder(orderId: string) {
+    this.act(cancelOrder(this.sim, orderId))
+  }
+
+  collectSmithOrder(orderId: string) {
+    this.act(collectOrder(this.sim, orderId))
+  }
+
+  acceptBoardQuest(questId: string) {
+    this.act(acceptQuest(this.sim, questId))
+  }
+
+  apologize(badgeId: string) {
+    this.act(tryApologize(this.sim, badgeId))
+  }
+
+  moveStorage(b: Building, stackIdx: number, toStorage: boolean) {
+    this.act(transferToStorage(this.sim, b, stackIdx, toStorage))
+  }
+
+  /** Hires a companion; closes the panel on success. */
+  hire(npc: Human, task: CompanionTask, risk: CompanionRisk, days: number) {
+    const res = hireCompanion(this.sim, npc, task, risk, days)
+    if (res.ok) this.closePanel()
+    this.act(res.msg)
+  }
+
+  cancelPlayerActivity() {
+    cancelActivity(this.sim, 'Cancelled.')
+    this.notify()
+  }
+
+  /** Waypoint on a known settlement (MAP-01: unknown ones are refused). */
+  targetSettlement(settlementId: number) {
+    this.showToast(waypointToSettlement(this.sim, settlementId))
+    this.notify()
+  }
+
+  /** Autopilot along the road towards a known settlement (no teleport; time can be sped up 3×). */
   autopilotTo(settlementId: number): string {
-    const sim = this.sim
-    const p = sim.player
-    for (const r of sim.world.roads) {
-      if (r.from !== settlementId && r.to !== settlementId) continue
-      let bi = -1
-      let bd = Infinity
-      r.points.forEach((pt, i) => {
-        const d = Math.hypot(pt.x - p.x, pt.z - p.z)
-        if (d < bd) {
-          bd = d
-          bi = i
-        }
-      })
-      if (bd > 80) continue
-      const dir: 1 | -1 = r.to === settlementId ? 1 : -1
-      sim.state.px.autopilot = { roadId: r.id, idx: bi, dir }
-      this.panel = null
-      return `Autopilot: road to ${sim.world.settlements[settlementId]!.name} (${Math.round(r.length)} m). Move or press Esc to stop.`
-    }
-    return 'You must be standing on a road leading to this settlement.'
+    const before = this.sim.state.px.autopilot
+    const msg = autopilotToSettlement(this.sim, settlementId)
+    if (this.sim.state.px.autopilot !== before) this.panel = null
+    return msg
   }
 
   /** Saves; on failure (e.g. quota) shows the reason and returns '' — never pretends success. */

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { formatCoins } from '@/game/data/items'
-import { hireCompanion, hirePrice, hireRefusal, RISK_NAMES, TASK_NAMES } from '@/game/sim/npc/companions'
+import { hirePrice, hireRefusal, RISK_NAMES, TASK_NAMES } from '@/game/sim/npc/companions'
 import PanelFrame from './PanelFrame.vue'
 import type { CompanionRisk, CompanionTask } from '@/game/sim/types'
 
@@ -27,10 +27,7 @@ const d = computed(() => {
 })
 
 function hire() {
-  const res = hireCompanion(game.value.sim, d.value!.npc, task.value, risk.value, days.value)
-  game.value.showToast(res.msg)
-  if (res.ok) game.value.closePanel()
-  version.value++
+  game.value.hire(d.value!.npc, task.value, risk.value, days.value)
 }
 </script>
 
