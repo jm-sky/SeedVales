@@ -889,8 +889,8 @@
    "scope": "v2",
    "behavior": "Low-poly nie ogranicza jakości tam, gdzie nie kosztuje dużo FPS; ogień z cząsteczkami i iskrami (za profilem jakości)",
    "verify": "screenshot + bench:render",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+   "status": "implemented_unverified",
+   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md steps 1a/1b (session 11): render/fireSources.ts (emitters from spatial queries, light pool low 1/medium 3/high 4, per-fire flicker/level, held/planted torches, hearth ring), render/fireParticles.ts (stateless GPU flames/sparks/embers/smoke, caps per profile); tests fireSources.test.ts, fireParticles.test.ts, dynamics.test.ts; frames docs/state/frames/render--001/s11-*; GPU cost and look on a real screen pending (user)"
   },
   {
    "id": "RENDER-04",

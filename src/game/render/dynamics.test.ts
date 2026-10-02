@@ -27,6 +27,7 @@ describe('render: dynamics (PERF-01)', () => {
     expect(() => d.update(0.016, new THREE.Vector3(p.x, p.y + 3, p.z))).not.toThrow()
     // Nearby items are still drawn and the dropped torch still burns.
     expect((d as unknown as { items: THREE.InstancedMesh }).items.count).toBe(2)
-    expect((d as unknown as { flames: THREE.InstancedMesh }).flames.count).toBeGreaterThanOrEqual(1)
+    // Near fires are particle flames now (render--001 step 1b); the cone is only drawn beyond the particle range.
+    expect((d as unknown as { particles: { counts: { flames: number } } }).particles.counts.flames).toBeGreaterThanOrEqual(1)
   })
 })

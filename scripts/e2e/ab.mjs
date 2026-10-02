@@ -110,6 +110,23 @@ const FRAMES = [
       }
     }
   }],
+  // render--001 1b: particle fire close up at night — the settlement hearth from ~5 m, the player holding a lit torch.
+  ['fire-close-night', (sv) => {
+    const sim = sv.game.sim
+    const s = sim.world.settlements[0]
+    sv.setHour(22.5)
+    const h = sim.buildingsNear(s.x, s.z, 80).find((b) => b.kind === 'campfire')
+    if (!h) return
+    h.lit = true
+    h.fuel = Math.max(h.fuel ?? 0, 30)
+    sim.player.eq.off = { id: 'torch', qty: 1 }
+    sv.approach(h.x, h.z, 4.5)
+    // Turn so the hearth sits beside the player instead of behind them.
+    const p = sim.player
+    sv.face(h.x + (h.z - p.z) * 0.6, h.z - (h.x - p.x) * 0.6)
+    sv.game.renderer.rig.distance = 5
+    sv.game.renderer.rig.pitch = 0.18
+  }],
   // world--002 relief A/B: the other frames sit where the hilliness field is ~0 (settlement surroundings),
   // so this one searches for the lowland meadow spot with the largest height range within 150 m.
   ['rolling-hills', (sv) => {

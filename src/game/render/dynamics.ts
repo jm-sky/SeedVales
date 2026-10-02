@@ -13,6 +13,7 @@ import { groundHeight } from '../sim/collision'
 import { daylight } from '../sim/time'
 import { Actors } from './actors'
 import { sharedColorMat } from './assets'
+import { FireParticles } from './fireParticles'
 import { collectFires, FIRE_LOOK, type FireEmitter, type FireKind, flicker, LIGHT_POOL, PLANTED_TORCH_H, selectLights } from './fireSources'
 import { type QualityProfile } from './quality'
 
@@ -43,6 +44,7 @@ export class Dynamics {
   private fires: FireEmitter[] = []
   private picked: number[] = []
   private t = 0
+  private particles: FireParticles
   private corpses = new Map<number, THREE.Object3D>()
   private rain: THREE.Points
   private rainPos: Float32Array
@@ -72,6 +74,8 @@ export class Dynamics {
       m.frustumCulled = false
       this.group.add(m)
     }
+    this.particles = new FireParticles(profile)
+    this.group.add(this.particles.group)
     this.setQuality(profile)
     const N = 2500
     this.rainPos = new Float32Array(N * 3)
@@ -88,6 +92,7 @@ export class Dynamics {
    * removed only here — the light count is part of every lit program, so it never changes per frame.
    */
   setQuality(profile: QualityProfile) {
+    this.particles?.setQuality(profile)
     const want = LIGHT_POOL[profile]
     while (this.lights.length > want) this.group.remove(this.lights.pop()!)
     while (this.lights.length < want) {
@@ -133,12 +138,16 @@ export class Dynamics {
     // Fires & lights (render--001 step 1a): emitters from spatial queries only (fireSources.ts, PERF-01).
     const fires = this.fires
     const nf = collectFires(sim, p.x, p.z, 200, fires)
-    const nFlames = Math.min(200, nf)
-    for (let i = 0; i < nFlames; i++) {
+    this.particles.update(fires, nf, p.x, p.z, dt, this.t)
+    // Particle fire within range (step 1b); the flame cone only beyond it.
+    const pr2 = this.particles.range ** 2
+    let nFlames = 0
+    for (let i = 0; i < nf && nFlames < 200; i++) {
       const e = fires[i]!
+      if ((e.x - p.x) ** 2 + (e.z - p.z) ** 2 < pr2) continue
       const k = FLAME_SCALE[e.kind] * (e.kind === 'campfire' || e.kind === 'hearth' ? 0.35 + 0.65 * e.level : 1)
       m.compose(POS.set(e.x, e.y, e.z), Q0, SCL.set(k, k * (0.85 + 0.15 * flicker(this.t * 1.7, e.phase)), k))
-      this.flames.setMatrixAt(i, m)
+      this.flames.setMatrixAt(nFlames++, m)
     }
     this.flames.count = nFlames
     this.flames.instanceMatrix.needsUpdate = true
