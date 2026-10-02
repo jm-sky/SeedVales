@@ -3,7 +3,7 @@
 **Created:** 2026-10-02 (session 13, Opus, on the user's request: "check vision & appendix for anything left for later, so you could plan this")  
 **Domains:** all  
 **Sources:** [VISION.md](../VISION.md) (§6.1, §8, §13, §22, §26–28, "Assets"), [VISION-APPENDIX.md](../VISION-APPENDIX.md), [IMPORTANT-PRODUCT-NOTES.md](../IMPORTANT-PRODUCT-NOTES.md), `docs/state/FEATURES.json` (`scope: "later"` and open `v2`), deferred decisions in [DECISIONS.md](../design/DECISIONS.md), quest packs in [design/quests/](../design/quests/README.md)  
-**Status:** proposal — order and scope are ❓ for the user; nothing here starts before the current roadmap ([v1-closure-and-appendix](v1-closure-and-appendix.md): 4b → 4c → V → 5b → review loop → 5 → 6 → proposals--001) is through, unless the user pulls an item forward.
+**Status:** accepted by the user 2026-10-02 (D-PLAN-9): order L1→L7 ok; L5 partly; L6 = caves only (continents not planned); voices via Fish Audio free tier, produced by the user (Cursor + browser). Nothing here starts before the current roadmap ([v1-closure-and-appendix](v1-closure-and-appendix.md): 4b → 4c → V → 5b → review loop → 5 → 6 → proposals--001) is through, unless the user pulls an item forward.
 
 ## 1. Inventory
 
@@ -29,7 +29,7 @@ Legend: ✅ tracked (FEATURES id / decision exists) · 🆕 not tracked until th
 | More continents, tundra/desert/jungle, sea transport (§6) | ✅ WORLD-06 | world scale/streaming, boats | XL |
 | Horse riding, pack saddles, wagons (§4.3, §28 Transport) | ✅ WORLD-09 | animal following/hold (quest engine primitives exist), rider animation, roads | L |
 | Donkey/horse carts (APPX transport) | 🆕 **TRANS-02** (TRANS-01 notes it) | WORLD-09; cart wear (D-TRANS-2) | M |
-| Wandering trader tiers (poor: donkey + packs; middle: horse + guard; rich: horse + wagon + 2 guards + crossbow), carter NPC, how goods move between settlements (§28) | 🆕 **TRADE-03** (⚠ ECON-01 has one caravan trader per MD/LG) | WORLD-09/TRANS-02 for the richer tiers; the caravan stall fix (review 013) first | M–L |
+| Wandering trader tiers (poor: donkey + packs; middle: horse + guard; rich: horse + wagon + 2 guards + crossbow), carter NPC, how goods move between settlements (§28) | 🆕 **TRADE-03** (⚠ ECON-01 has one caravan trader per MD/LG) | WORLD-09/TRANS-02 for the richer tiers; the caravan stall fix (review 015) first | M–L |
 | Other professions: physician, fisher, miner, courier, carter, breeders, weaver, carpenter, leatherworker, reeve, mayor, … (§13) | ✅ NPC-06 | per profession: RES-06 (fisher), mine/Q10 (miner), SET-05 (reeve/mayor) | L (split) |
 | Multi-generation demography, family/friendship/conflict relations, funerals and grave visits (§8, §28) | ✅ NPC-08 | relation model design (❓ VISION: "to be designed"), NPC birth/ageing, save growth | XL |
 | Settlement growth/decline/destruction, new buildings/roads/farms, outposts, cemeteries (§7, §28) | ✅ SET-04 | NPC-08 (population), building AI (sites exist), road generation at runtime | XL |
@@ -63,9 +63,9 @@ Each stage = one or more plans with the usual `**Model:**` split (D-PLAN-7), a w
 
 `proposals--001` (Claude's own proposals, last stage of the current roadmap) should take this file as one of its inputs so its proposals do not duplicate these items.
 
-## 3. Open questions (❓ user)
+## 3. User decisions (2026-10-02, D-PLAN-9)
 
-1. Is the L1→L7 order right? In particular: content first (L2) before economy/transport (L3–L4)?
-2. MAP-02 (sensory visibility) — keep it in L1, or earlier (before wave 5)?
-3. L5/L6 are each bigger than everything built so far — do you want them at all in the browser version, or as "v3"?
-4. Voices (VOICE-01): still Fish Audio, and is a paid asset budget acceptable?
+1. Order L1 → L7 accepted.
+2. MAP-02 stays in L1.
+3. **L5 — partly:** design round decides which slice (candidates: family/friend relations affecting AI and reputation, funerals and graves, settlement repair/extension by NPCs; full multi-generation demography and settlement destruction are not committed). **L6 — caves only** (WORLD-05 + cave loot); WORLD-06 continents/new biomes/sea transport and QUAL-02 stay deferred, not planned.
+4. **Voices:** Fish Audio free tier; the user generates the clips (Cursor + browser). Our side: phrase-set list per profession/age/situation (`greeting`, `farewell`, `thanks`, `warning_danger`, `call_for_help`, `tired`, `hungry`, …) and the playback/selection code (VOICE-01).
