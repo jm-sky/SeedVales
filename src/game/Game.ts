@@ -31,6 +31,7 @@ import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/
 import { Sim } from './sim/sim'
 import { installSystems } from './sim/worldSystems'
 import { generateWorld } from './world/gen/generate'
+import { deserializeWorld } from './world/serialize'
 
 export interface GameOptions {
   seed: number
@@ -47,6 +48,21 @@ export async function loadWorld(seed: number, onProgress?: (l: string) => void):
   if (cached) {
     perf.count('world.cacheHit')
     return cached
+  }
+  // Dev server only: the on-disk world cache (scripts/world-cache-plugin.mjs) — e2e/A/B/bench browsers start
+  // with empty IndexedDB, this skips the in-browser generation. Stripped from production builds.
+  if (import.meta.env.DEV) {
+    try {
+      const r = await fetch(`/__sv-world/${seed}`)
+      if (r.status === 200) {
+        const w = deserializeWorld(new Uint8Array(await r.arrayBuffer()))
+        perf.count('world.devCacheHit')
+        storeWorldCache(w).catch((e) => console.warn('world cache write failed', e))
+        return w
+      }
+    } catch {
+      // no dev cache — generate below
+    }
   }
   onProgress?.('Generating the world (terrain, rivers, settlements, roads)…')
   await new Promise((r) => setTimeout(r, 30))

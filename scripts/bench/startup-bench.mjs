@@ -22,6 +22,8 @@ const qualities = args.filter((a) => !a.startsWith('--'))
 if (!qualities.length) qualities.push('low', 'medium')
 const RUNS = Number(args.find((a) => a.startsWith('--runs='))?.slice(7) ?? 3)
 const SETTLE_S = Number(args.find((a) => a.startsWith('--settle='))?.slice(9) ?? 4)
+// Cold start = the world is generated in the browser: keep the dev-server world cache out (scripts/world-cache-plugin.mjs).
+process.env.SV_WORLD_CACHE = '0'
 const server = process.env.SV_URL ? null : await startServer()
 if (server) process.env.SV_URL = server.url
 const { BASE, launch } = await import('../e2e/lib.mjs')

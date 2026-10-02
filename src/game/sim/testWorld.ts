@@ -4,6 +4,7 @@
  */
 import type { WorldData } from '../world/types'
 import { generateWorld } from '../world/gen/generate'
+import { deserializeWorld, serializeWorld } from '../world/serialize'
 import { createNewGame } from './newGame'
 import { Sim } from './sim'
 import { installSystems } from './worldSystems'
@@ -12,9 +13,29 @@ export { openSpot } from '../debug/openSpot'
 
 const worlds = new Map<number, WorldData>()
 
-export function testSim(seed = 1337): Sim {
+/** On-disk world cache installed by `scripts/vitest-world-cache.mjs` (absent → always generate). */
+export interface SvWorldCacheHook {
+  load(seed: number): Uint8Array | null
+  save(seed: number, bytes: Uint8Array): void
+}
+const diskCache = (): SvWorldCacheHook | undefined => (globalThis as { __svWorldCache?: SvWorldCacheHook }).__svWorldCache
+
+/** Generated world for a seed: per-file memory cache → on-disk cache (shared across files/runs) → generate. */
+export function testWorld(seed = 1337): WorldData {
   let w = worlds.get(seed)
-  if (!w) worlds.set(seed, (w = generateWorld(seed)))
+  if (w) return w
+  const bytes = diskCache()?.load(seed)
+  if (bytes) w = deserializeWorld(bytes)
+  else {
+    w = generateWorld(seed)
+    diskCache()?.save(seed, serializeWorld(w))
+  }
+  worlds.set(seed, w)
+  return w
+}
+
+export function testSim(seed = 1337): Sim {
+  const w = testWorld(seed)
   const sim = new Sim(w, createNewGame(w))
   installSystems(sim)
   return sim
