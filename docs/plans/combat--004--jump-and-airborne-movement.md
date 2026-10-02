@@ -8,6 +8,13 @@
 
 ---
 
+## User decisions (2026-10-02)
+
+- Use the minimal grounded traversal jump scope: small realistic jump, no mantle/climb and no general platforming controller.
+- Terrain traversability must explicitly distinguish slopes that are too steep to walk uphill.
+- Jump may sometimes overcome a short steep lip/step where ordinary uphill movement is blocked, but it must not turn a globally too-steep slope into a climbable surface.
+- Keep the existing concept that sufficiently steep mountain/terrain faces are intentionally inaccessible.
+
 ## Goal
 
 Add a small, grounded jump for traversal over low obstacles, logs, rocks and narrow gaps. This is intentionally not an arcade platforming system. Because the current player controller is ground-snapped and collision is mostly horizontal, treat jump as a movement-architecture change rather than a simple key binding.
@@ -94,7 +101,8 @@ Required cases:
 - jump from terrain onto terrain;
 - jump on/off bridge deck without snapping mid-air;
 - landing in shallow/deep water transitions correctly to wade/swim;
-- steep terrain remains governed by existing traversal rules after landing;
+- steep terrain remains governed by explicit traversability rules after landing; ordinary movement must know when an uphill slope is too steep to walk;
+- jumping may clear a short steep terrain lip if the airborne arc passes above it and lands on valid ground, but sustained slopes above the walkable threshold remain non-traversable;
 - falling from ordinary small terrain differences is handled gracefully, but this plan does not add lethal fall damage unless separately specified.
 
 ### Animation
@@ -108,7 +116,7 @@ Add `jump`, `fall`, `land` action/movement hints mapped to available clips/fallb
 3. Add transient vertical velocity / grounded state to the player controller without unnecessary save persistence.
 4. Add gravity, jump impulse, stamina cost and landing.
 5. Integrate bridge deck and water transitions.
-6. Add conservative jumpable-obstacle metadata/rules for a small useful set of obstacles.
+6. Add conservative jumpable-obstacle metadata/rules for a small useful set of obstacles and make the walkable-slope threshold an explicit shared traversal rule instead of an incidental collision detail.
 7. Add `Space` input context with `combat--003` compatibility.
 8. Add camera/animation polish.
 9. Add mobile Jump button outside combat if screen space allows; otherwise expose it contextually.
@@ -118,7 +126,7 @@ Add `jump`, `fall`, `land` action/movement hints mapped to available clips/fallb
 
 - Unit tests: jump arc uses gameplay seconds; cannot double-jump; stamina cost; disallowed states.
 - Collision tests: no jumping through house walls, large rocks or landmark solids.
-- Traversal tests: cross one explicitly jumpable low obstacle; land correctly on terrain and bridge.
+- Traversal tests: cross one explicitly jumpable low obstacle; land correctly on terrain and bridge; walking fails on a too-steep uphill segment; a jump can clear a short steep lip but cannot climb a sustained non-walkable slope.
 - Water tests: landing in deep water enters swim state without ground snapping.
 - E2E desktop/mobile: jump from standstill and while moving; combat `Space` still dodges when applicable.
 - Long-run regression: no persistent floating/sinking player after save/load, teleport/debug movement, KO wash-ashore or new-game spawn.
@@ -135,6 +143,6 @@ Add `jump`, `fall`, `land` action/movement hints mapped to available clips/fallb
 - Jump has real vertical simulation; it is not only a visual animation.
 - Ground snapping no longer destroys airborne motion.
 - Collision remains simulation-owned and deterministic.
-- The player cannot use jump to pass through major obstacles.
+- The player cannot use jump to pass through major obstacles or bypass sustained non-walkable terrain slopes.
 - Bridges, water and terrain transitions remain stable.
 - Scope stays small: traversal jump, not a general platforming/climbing controller.
