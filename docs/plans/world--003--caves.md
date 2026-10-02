@@ -178,6 +178,21 @@ The same applies to mutable cave contents such as opened chests, collected loot 
 
 Generated cave geometry is immutable world data/cache. Mutable state is savegame state. Any save schema change requires a `SAVE_VERSION` bump and old-save rejection per D-SAVE-7. Generator format/content changes require a `GEN_VERSION` bump.
 
+## Future quest integration
+
+Caves should later become first-class quest locations. The cave system should therefore expose stable cave ids, entrance positions and chamber/location references that authored quests can target without depending on render geometry.
+
+Examples for later quest content:
+
+- missing person / rescue,
+- predator den,
+- hidden treasure or chest,
+- mine / resource expedition,
+- bandit or occupied cave,
+- multi-stage exploration objective.
+
+This is **not part of the initial WORLD-05 implementation scope**; the goal now is only to avoid architecture that would make quest integration difficult later.
+
 ## Cave contents
 
 Caves may contain, deterministically where appropriate:
