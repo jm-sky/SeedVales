@@ -191,6 +191,57 @@ Caves may contain, deterministically where appropriate:
 
 The first geometry slice does not need every content type. Do not block basic cave traversal on loot/fauna polish.
 
+## Cave render/material strategy
+
+The cave should look convincing without becoming geometry-heavy. Performance is a first-class requirement: caves are local spaces, so visual quality should come mainly from **cheap materials, textures and lighting response**, not dense meshes or many dynamic lights.
+
+### Preferred material direction
+
+Use a low-cost cave material with:
+
+- one tiling rock/albedo texture or a small atlas,
+- normal/detail contribution if it is cheap enough on medium/high,
+- world/triplanar-style mapping only if measured cost is acceptable; otherwise use generated UVs,
+- deterministic low-frequency masks from world/local coordinates to break repetition,
+- colour variation between dry rock, darker soil/mineral bands and damp areas.
+
+A useful cheap effect is a **wet-wall mask**:
+
+- low-frequency procedural or texture mask controls wetness,
+- wet areas darken slightly,
+- roughness/specular response changes so torch light produces a small glint,
+- optional subtle normal/detail amplification in wet patches,
+- no screen-space reflection or expensive per-pixel simulation is needed.
+
+The wet mask should be static or slowly varying from cave-local coordinates. Do not animate expensive noise every frame.
+
+### Torch lighting
+
+Caves are expected to use torches.
+
+The cave material must therefore read well under warm local light:
+
+- dry rock = mostly diffuse/rough,
+- wet patches = visibly stronger highlight under torch light,
+- entrance daylight fades with depth,
+- deep cave readability comes from carried/planted torches rather than globally bright ambient light.
+
+Avoid adding many shadow-casting point lights. Reuse the existing torch/fire lighting path where possible and cap the number of active local shadow/light contributors. If the existing renderer has no cheap local-light budget suitable for caves, Opus should define one before content scale-up.
+
+### Geometry/material budget
+
+Preferred rules:
+
+- Plane 2/3 resolution only as fine as traversal silhouette requires;
+- use shader/texture detail for sub-metre rock detail rather than tessellation;
+- entrance rocks/boulders should reuse existing instanced assets;
+- cave props should be instanced/merged by material where practical;
+- one cave outside active range should cost ~0 recurring render CPU and no meaningful draw calls;
+- build local cave mesh/BVH once on stream-in, reuse it, dispose on stream-out;
+- benchmark entrance and chamber separately because entrance has surface terrain + cave geometry visible together.
+
+If `three-mesh-bvh` is adopted for camera/collision queries, build it only for active/local cave geometry. Static cave meshes are a good fit; mutable/destructible cave topology is deferred.
+
 ## Lighting and render
 
 First slice:
@@ -198,13 +249,93 @@ First slice:
 - exterior daylight should enter/read naturally at the mouth,
 - the deeper cave should become dark,
 - existing torches/lights can illuminate cave geometry,
-- no expensive global solution is required.
+- cave material should support cheap damp/wet-wall patches with a stronger specular response visible in torch light,
+- surface detail should come mainly from tiling textures/shader masks rather than extra geometry,
+- no expensive global illumination, SSR or general-purpose volumetric solution is required.
 
 Cull/stream cave geometry locally. A cave far from the player must not add meaningful draw-call or per-frame CPU cost.
 
 Where practical, reuse the project's existing quality profiles and asset budgets. Cave rocks should be instanced/merged similarly to other repeated world props.
 
 Ambient audio from the vision: water drops in caves. Treat as a later cave-content/audio step unless the audio hook is trivial.
+
+## Web research (2026-10-02)
+
+The research supports the current direction: a classic heightmap is fundamentally 2.5D (one height for one `x/z`), so caves/overhangs need additional local geometry rather than trying to force the main surface heightfield to represent both surface and underground space.
+
+Relevant references:
+
+- Three.js `BufferGeometry` exposes indexed triangles directly, so a terrain opening can be implemented by omitting selected triangles/cells from the surface mesh: <https://threejs.org/docs/pages/BufferGeometry.html>
+- Three.js custom geometry documentation confirms the indexed-geometry path and the need to manage normals/UVs explicitly for procedural meshes: <https://threejs.org/manual/pages/custom-buffergeometry.html>
+- Unity's terrain-hole implementation is a useful precedent: surface terrain can contain a cave opening, while aliased/visible hole edges are commonly hidden with rock geometry; holes are also treated specially by lighting/physics/navmesh: <https://docs.unity3d.com/es/2020.2/Manual/terrain-PaintHoles.html>
+- `three-mesh-bvh` is a mature option for fast raycasts and spatial queries against static Three.js geometry; it is a good candidate for cave camera/wall/ceiling queries if profiling justifies it: <https://github.com/gkjohnson/three-mesh-bvh>
+
+### Preferred geometry refinement after research
+
+The preferred candidate is now:
+
+```text
+Surface heightfield (Plane 1)
+        ↓
+real terrain hole
+        ↓
+dedicated entrance / rim mesh
+        ↓
+local cave domain
+        ├── floor heightfield (Plane 2)
+        ├── ceiling heightfield (Plane 3)
+        ├── explicit boundary wall strip
+        └── rocks / props / cave material
+```
+
+The dedicated entrance/rim mesh is important because the current terrain has 2/4/8/16 m LOD. The normal terrain hole can therefore be slightly conservative, while the entrance patch owns the exact visible rim and connection to Plane 2/3. This avoids the cave-mouth shape changing badly when the surrounding terrain chunk changes LOD.
+
+### Explicit wall strip
+
+The original idea that Plane 2 and Plane 3 naturally create the lower/upper halves of walls remains useful for shaping, but the final render mesh should not rely on two steep heightfields meeting perfectly.
+
+Preferred final mesh composition:
+
+- floor triangles from Plane 2,
+- ceiling triangles from Plane 3 (reversed winding / inward-facing normals),
+- explicit boundary triangles joining floor edge → ceiling edge along the cave footprint.
+
+This makes the cave watertight and removes tiny sky/void cracks. The wall strip geometry can still derive entirely from the same heightmaps/footprint, so there is no separate hand-authored wall system.
+
+### Scope of the heightfield approach
+
+The local floor+ceiling model is a deliberate constraint and a performance advantage.
+
+Good fit:
+
+- one underground layer,
+- natural tunnels,
+- chambers,
+- sloping entrances,
+- dungeon-like steep-wall variants.
+
+Not a good fit without a future architecture change:
+
+- one tunnel crossing above another at the same `x/z`,
+- many stacked cave floors,
+- complex vertical shafts with overlapping walkable levels.
+
+These cases are explicitly outside the first cave scope. Do not switch to voxels/marching cubes unless future gameplay actually requires them.
+
+### Noise strategy
+
+Do not let raw noise define navigability.
+
+Preferred order:
+
+1. generate tunnel/chamber topology,
+2. establish guaranteed floor width, ceiling clearance and rock cover,
+3. construct base Plane 2/3 shapes,
+4. apply bounded medium-scale noise,
+5. apply bounded fine noise,
+6. re-clamp/validate traversal clearance and surface cover.
+
+Noise amplitude must reduce near the entrance seam and any narrow navigation-critical section.
 
 ## Dependency: jump / airborne movement
 
@@ -491,9 +622,10 @@ All mutable contents use the same cave spatial context and save rules.
 - tune fine/medium noise,
 - tune tunnel/chamber proportions,
 - entrance-rock seam masking,
-- cave darkness / torch readability,
+- add/tune cheap cave material (rock texture/UV strategy, dry/damp variation, wet-wall specular mask),
+- tune cave darkness / torch readability and active-light budget,
 - optional water-drop ambient,
-- benchmark cave entrance + chamber scenes.
+- benchmark cave entrance + chamber scenes on low/medium/high.
 
 Keep cave render/streaming local and cheap. No large hidden second world mesh.
 
@@ -531,8 +663,11 @@ At minimum:
 Measure separately:
 
 - world generation/startup cost,
-- cave mesh build/stream cost,
+- cave Plane 2/3 + wall-strip mesh build/stream cost,
+- optional BVH build cost,
 - steady-state render at entrance and in chamber,
+- GPU cost of cave material with dry vs wet-wall shading,
+- draw calls and active dynamic lights/torch shadows,
 - transition while walking,
 - memory retained after leaving/unloading.
 
