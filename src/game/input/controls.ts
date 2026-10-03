@@ -11,12 +11,14 @@ export interface InputState {
   stickY: number
   run: boolean
   primary: boolean
+  /** Guard held (RMB / mobile Block): block, with the first moment as the parry window. */
+  secondary: boolean
   lookDX: number
   lookDY: number
   zoom: number
 }
 
-export const input: InputState = { keys: new Set(), stickX: 0, stickY: 0, run: false, primary: false, lookDX: 0, lookDY: 0, zoom: 0 }
+export const input: InputState = { keys: new Set(), stickX: 0, stickY: 0, run: false, primary: false, secondary: false, lookDX: 0, lookDY: 0, zoom: 0 }
 
 export type KeyAction = 'interact' | 'inventory' | 'character' | 'craft' | 'journal' | 'quests' | 'map' | 'combat' | 'sneak' | 'escape' | 'diag' | 'quick' | 'save' | 'build' | 'torch' | 'useBandage' | 'switchWeapon' | 'cycleTarget'
 
@@ -74,10 +76,15 @@ export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): (
       input.primary = true
       h.onAttack()
     }
-    if (e.button === 2) canvas.requestPointerLock?.()
+    if (e.button === 2) {
+      // RMB: grab the mouse if needed, and guard right away (the press must not be swallowed by the pointer-lock request).
+      if (document.pointerLockElement !== canvas) canvas.requestPointerLock?.()
+      input.secondary = true
+    }
   }
   const mu = (e: MouseEvent) => {
     if (e.button === 0) input.primary = false
+    if (e.button === 2) input.secondary = false
   }
   const mm = (e: MouseEvent) => {
     if (document.pointerLockElement === canvas) {
@@ -92,6 +99,7 @@ export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): (
   const blur = () => {
     input.keys.clear()
     input.primary = false
+    input.secondary = false
   }
   const ctx = (e: Event) => e.preventDefault()
   window.addEventListener('keydown', kd)

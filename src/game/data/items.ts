@@ -84,6 +84,15 @@ export interface HerbStats {
  */
 export type ItemAvailability = 'active' | 'future' | 'quest-only' | 'unique'
 
+/** Block/parry stats of a held shield (combat--002); weapons use the class table `DEFENCE` in calibration. */
+export interface DefenceStats {
+  arcDeg: number
+  reduction: number
+  efficiency: number
+  parryWindowS: number
+  canParry: boolean
+}
+
 export interface ItemDef {
   id: string
   name: string
@@ -95,6 +104,8 @@ export interface ItemDef {
   durability?: number
   caps?: Capability[]
   weapon?: WeaponStats
+  /** Held in the off hand to block (shield). */
+  defence?: DefenceStats
   armor?: ArmorStats
   food?: FoodStats
   herb?: HerbStats
@@ -206,6 +217,7 @@ const LIST: ItemDef[] = [
   { id: 'tent', name: 'Tent', category: 'misc', weight: 6, size: 'LG', price: 60 },
   { id: 'furs', name: 'Fur bedding', category: 'misc', weight: 4, size: 'LG', price: 35 },
   // Weapons (§20)
+  { id: 'wooden_shield', name: 'Wooden shield', category: 'misc', weight: 3.2, size: 'LG', price: 35, durability: 160, defence: { arcDeg: 140, reduction: 0.8, efficiency: 0.6, parryWindowS: 0.25, canParry: true } },
   melee('obsidian_dagger', 'Obsidian dagger', 0.35, 340, { reach: 0.6, damage: 11, dmgType: 'cut', cooldown: 0.5, sharpness: 0.95, stamina: 6 }, ['cut']),
   melee('damascus_dagger', 'Damascus dagger', 0.4, 480, { reach: 0.65, damage: 12, dmgType: 'cut', cooldown: 0.5, sharpness: 1, stamina: 6 }, ['cut']),
   melee('knife', 'Knife', 0.3, 8, { reach: 0.6, damage: 7, dmgType: 'cut', cooldown: 0.6, sharpness: 0.7, stamina: 6 }, ['cut']),

@@ -16,6 +16,7 @@ import { PROFESSIONS } from '../data/professions'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { isDown } from '../sim/combat'
+import { guardOf } from '../sim/guard'
 import { loadGltf } from './assets'
 import { applyLook, characterLook, darkenPrime } from './characterLook'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -256,6 +257,8 @@ export class Actors {
         return ['Fixing_Kneeling', false]
       }
       if (sim.state.px.bowDraw > 0) return ['Pistol_Aim_Neutral', false]
+      // Guard (combat--002): no dedicated block clip exists yet — the aim pose is the placeholder (visual gap, see the plan).
+      if (h.combat && guardOf(sim).held) return ['Pistol_Aim_Neutral', false]
     }
     switch (h.moving) {
       case 'run':

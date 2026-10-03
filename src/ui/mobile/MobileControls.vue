@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
 import { input } from '@/game/input/controls'
@@ -44,6 +44,15 @@ function attackDown() {
 function attackUp() {
   input.primary = false
 }
+function blockDown() {
+  input.secondary = true
+}
+function blockUp() {
+  input.secondary = false
+}
+onBeforeUnmount(() => {
+  input.secondary = false
+})
 function toggleRun() {
   input.run = !input.run
   version.value++
@@ -106,7 +115,16 @@ const MENU = [
       >
         Target
       </button>
-      <div />
+      <button
+        class="h-12 w-14 rounded-full bg-sky-700/80 text-xs font-semibold text-white"
+        data-testid="touch-block"
+        @pointerdown="blockDown"
+        @pointerup="blockUp"
+        @pointercancel="blockUp"
+        @pointerleave="blockUp"
+      >
+        Block
+      </button>
       <button
         class="col-span-2 h-16 rounded-full bg-primary/85 text-sm font-bold text-primary-foreground disabled:opacity-40"
         :disabled="!state.hasTarget"

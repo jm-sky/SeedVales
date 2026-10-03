@@ -77,6 +77,27 @@ export const COMBAT_LOCK = {
   classPenalty: { threat: 0, dangerous: 10, neutral: 25 },
 } as const
 
+/** Block and parry (combat--002, D-COMBAT-2): all tuning in one place. */
+export const DEFENCE = {
+  /** Defence by equipment class: front arc (full angle, degrees), share of raw damage a block removes, stamina efficiency (lower = cheaper), parry window (s from guard start). */
+  shield: { arcDeg: 140, reduction: 0.8, efficiency: 0.6, parryWindowS: 0.25, canParry: true },
+  oneHanded: { arcDeg: 100, reduction: 0.5, efficiency: 1, parryWindowS: 0.2, canParry: true },
+  twoHanded: { arcDeg: 80, reduction: 0.55, efficiency: 1.3, parryWindowS: 0.15, canParry: true },
+  unarmed: { arcDeg: 70, reduction: 0.25, efficiency: 1.6, parryWindowS: 0.1, canParry: false },
+  /** Defender stamina per point of incoming raw damage (× efficiency); a parry costs `parryCostMul` of that. */
+  staminaPerDamage: 1.2,
+  parryCostMul: 0.6,
+  /** Guard stays down this long after the stamina ran out (s). */
+  guardBreakS: 2,
+  /** A parried attacker cannot swing again for this long (s, added to `attackReadyAt`). */
+  parryAttackerDelayS: 0.9,
+  /** Durability lost by the blocking item per defended hit. */
+  wearPerBlock: 1,
+  /** Heavy animals: their attacks can be blocked but never parried by ordinary weapons (a shield may still parry a boar, never a bear/moose). */
+  heavyAnimals: ['bear', 'boar', 'moose', 'stag', 'horse', 'cow'] as readonly string[],
+  shieldParriesHeavy: ['boar', 'stag', 'cow', 'horse'] as readonly string[],
+} as const
+
 export const COMBAT = {
   /** Player knock-out: stand up after, protected (ignored by enemies) for. Gameplay seconds. */
   koStandUpS: 3,

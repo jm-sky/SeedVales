@@ -12,6 +12,7 @@ import { cartBlocked, cartDef } from './cart'
 import { playerGroundY } from './caveSpace'
 import { moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
+import { setGuard } from './guard'
 import { carriedWeight, carryCapacity } from './inventory'
 import { ACTIVITY_DONE } from './playerActivities'
 import { hourOf, isNight } from './time'
@@ -32,6 +33,8 @@ export interface PlayerInput {
   drawing: boolean
   /** Transient facing intent (combat lock); undefined = face the movement direction. */
   facing?: number
+  /** Guard held (transient, from RMB / mobile Block). */
+  guard?: boolean
 }
 
 export const playerInput: PlayerInput = { mx: 0, mz: 0, run: false, yaw: 0, pitch: 0, drawing: false }
@@ -87,6 +90,8 @@ export function playerSystem(sim: Sim, dt: number) {
   const px = sim.state.px
   const now = sim.state.time.play
   const inp = playerInput
+  // Guard intent → transient guard state (parry window starts on a real press; never while down or out of combat).
+  setGuard(sim, !!inp.guard && p.combat && !p.vitals.ko && !px.activity)
 
   // KO: lie still, then stand up with protection window.
   if (p.vitals.ko && now < p.vitals.ko.until) {

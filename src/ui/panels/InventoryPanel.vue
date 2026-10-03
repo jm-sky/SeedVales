@@ -45,6 +45,7 @@ const useLabel = (id: string) => {
   if (d.cart) return 'Push'
   if (d.weapon || (d.caps?.length && !d.waterCapacity)) return 'Wield'
   if (d.armor) return 'Wear'
+  if (d.defence) return 'Hold'
   if (d.waterCapacity) return 'Drink'
   if (d.food || d.herb || d.category === 'medical') return d.category === 'medical' ? 'Use' : 'Eat'
   return ''

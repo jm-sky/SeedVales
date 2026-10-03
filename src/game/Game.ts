@@ -236,6 +236,7 @@ export class Game {
     playerInput.yaw = rig.yaw
     playerInput.pitch = rig.pitch * -0.6 + 0.12
     playerInput.drawing = input.primary && !this.panel
+    playerInput.guard = input.secondary && !this.panel
     playerInput.facing = undefined
     const locked = this.updateLock(dt)
     if (locked) {
@@ -250,6 +251,8 @@ export class Game {
       if (Math.hypot(ax, ay) < 0.1) sim.player.rot = bearing
       if (this.manualLookT <= 0) rig.assistYaw(bearing, dt, COMBAT_LOCK.cameraRateRadS)
     } else if (sim.player.combat && Math.hypot(ax, ay) < 0.1) sim.player.rot = rig.yaw // combat facing follows camera
+    // Guarding while moving: facing follows the camera so the block arc points where the player looks (strafe/back-pedal).
+    if (playerInput.guard && sim.player.combat && playerInput.facing === undefined) playerInput.facing = rig.yaw
     sim.interruptReason = null
     // Game menu pauses the world (single-player).
     if (this.panel !== 'menu' && this.panel !== 'settings') sim.step(dt * sim.timeScale)
@@ -560,7 +563,13 @@ export class Game {
       return
     }
     if (this.sim.state.px.cart && (d.weapon || d.caps?.length)) return this.showToast('Both hands are on the cart — park it first.')
-    if (d.weapon || (d.caps && d.caps.length && !d.waterCapacity)) {
+    if (d.defence) {
+      if (p.eq.main && itemDef(p.eq.main.id).weapon?.twoHanded) return this.showToast('Both hands are busy (two-handed weapon).')
+      const moved = removeStack(p.inv, s, 1)!
+      if (p.eq.off) addItem(p.inv, p.eq.off) // a torch goes back to the pack
+      p.eq.off = moved
+      this.showToast(`${d.name} in your off hand — hold right mouse to block.`)
+    } else if (d.weapon || (d.caps && d.caps.length && !d.waterCapacity)) {
       const moved = removeStack(p.inv, s)!
       if (p.eq.main) addItem(p.inv, p.eq.main)
       p.eq.main = moved

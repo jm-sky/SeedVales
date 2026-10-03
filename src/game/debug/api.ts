@@ -7,6 +7,7 @@ import type { SpeciesId } from '../data/species'
  */
 import type { Game } from '../Game'
 import { perf } from '../diag/perf'
+import { guardOf } from '../sim/guard'
 import { addItem, countItem, newStack } from '../sim/inventory'
 import { makeAnimal } from '../sim/newGame'
 import { forceOfferQuest } from '../sim/questEngine'
@@ -17,6 +18,8 @@ export interface DebugApi {
   game: Game
   perf: typeof perf
   teleport(x: number, z: number): void
+  /** Player guard state (combat--002): held flag, press time, guard-break lockout end. */
+  guard(): { held: boolean; startedAt: number; brokenUntil: number }
   /** Open flat spot ≥ minR m from a settlement centre (layout-independent test setup). */
   openSpot(minR?: number, settlementId?: number): { x: number; z: number }
   teleportToSettlement(id: number, dx?: number, dz?: number): void
@@ -58,6 +61,7 @@ export function installDebugApi(game: Game) {
     game,
     perf,
     teleport: (x, z) => game.debugTeleport(x, z),
+    guard: () => ({ ...guardOf(sim()) }),
     pacing: () => {
       const timers = perf.report().timers
       const t = (k: string) => timers.find((x) => x.name === k)

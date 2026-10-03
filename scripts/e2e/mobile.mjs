@@ -176,6 +176,21 @@ try {
   const mLock = await S(() => window.__sv.game.combatTargetId)
   check(results, 'M8b. w walce przycisk Cel blokuje cel walki', mLock !== null, { mLock })
   await S(() => {
+    window.__sv.pause(false)
+    window.__sv.game.sim.player.combat = true
+  })
+  const blockBtn = page.locator('[data-testid="touch-block"]')
+  const bb = await blockBtn.boundingBox()
+  await page.dispatchEvent('[data-testid="touch-block"]', 'pointerdown', { pointerId: 7, pointerType: 'touch', isPrimary: true, bubbles: true, clientX: bb.x + 5, clientY: bb.y + 5 })
+  await page.waitForTimeout(300)
+  await S(() => window.__sv.step(0.3))
+  const mHeld = await S(() => window.__sv.guard().held)
+  await page.dispatchEvent('[data-testid="touch-block"]', 'pointercancel', { pointerId: 7, pointerType: 'touch', isPrimary: true, bubbles: true })
+  await page.waitForTimeout(300)
+  await S(() => window.__sv.step(0.3))
+  const mFree = await S(() => window.__sv.guard().held)
+  check(results, 'M8c. przycisk Block trzyma gardę, pointercancel ją zwalnia', mHeld && !mFree, { mHeld, mFree })
+  await S(() => {
     window.__sv.game.sim.player.combat = false
   })
   await S(() => window.__sv.pause(false))

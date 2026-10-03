@@ -985,6 +985,20 @@ try {
   check(results, '15. Tab w walce: blokada celu i przełączanie', lock1 !== null && lock2 !== null && lock1 !== lock2, { lock1, lock2 })
   check(results, '15. A/D okrąża cel, postać patrzy na cel', lockMoved > 0.5 && lockAfter.err < 0.35 && lockAfter.id === lock2, { lockBefore, lockAfter, lockMoved })
   check(results, '15. wyjście z walki zdejmuje blokadę', lockCleared === null, { lockCleared })
+  // 16. combat--002: RMB holds the guard (combat mode only), release clears it; blocking/parry rules are unit-tested.
+  await S(() => { window.__sv.game.sim.player.combat = true })
+  const rmbBox = await page.locator('[data-testid="game-canvas"]').boundingBox()
+  await page.mouse.move(rmbBox.x + rmbBox.width / 2, rmbBox.y + rmbBox.height / 2)
+  await page.mouse.down({ button: 'right' })
+  await page.waitForTimeout(300)
+  await S(() => window.__sv.step(0.3))
+  const gHeld = await S(() => window.__sv.guard())
+  await page.mouse.up({ button: 'right' })
+  await page.waitForTimeout(300)
+  await S(() => window.__sv.step(0.3))
+  const gFree = await S(() => window.__sv.guard())
+  await S(() => { window.__sv.game.sim.player.combat = false })
+  check(results, '16. PPM trzyma gardę, puszczenie ją zwalnia', gHeld.held && !gFree.held, { gHeld, gFree })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)

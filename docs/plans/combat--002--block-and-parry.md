@@ -1,6 +1,6 @@
 # Combat block and parry
 
-**Status:** planned  
+**Status:** done  
 **Model:** sonnet — implementation and tests; opus — decisions in `## Decisions for Opus` and final combat-feel review  
 **Domain:** combat  
 **Sub domains:** input, melee, stamina, equipment, animation, ai, ui, mobile  
@@ -802,3 +802,7 @@ Risk: shields are not weapons; awkward modelling and future projectile shield ru
 Consequence: no schema addition.
 
 Risk: hidden coupling, poor tuning control and weak support for shields being "clearly better" independent of offence.
+
+## Result (2026-10-03, session 14, Sonnet)
+
+Implemented with the plan's recommended options (D-COMBAT-2). `DEFENCE` in `calibration.ts`; `ItemDef.defence` + `wooden_shield` (recipe, `Hold` in the inventory, off hand); `sim/guard.ts` (transient guard state per Sim, `setGuard`, `defenceOf`, `resolveDefence`: arc via defender facing, parry only in the first `parryWindowS` of a fresh press, plain block, guard break on missing stamina with a 2 s lockout, heavy-animal rule, wear once per defended hit); `meleeAttack` calls it after the hit roll and skips `applyDamage` on a full parry; RMB hold / mobile Block (`touch-block`, pointer down/up/cancel/leave, cleared on blur/unmount); guard facing follows the camera while moving; guard pose = `Pistol_Aim_Neutral` placeholder; debug `__sv.guard()`. Counters `combat.blocks|parries|guardBreaks|blockRearBypass|blockedDamage`. Tests: `guard.test.ts` (9), e2e acceptance 16, mobile M8c. **Open (visual/art gaps, ❓ Opus-user):** no dedicated block/parry/stagger clip or shield mesh (placeholder pose, shield invisible in hand), NPC blocking (later slice), balance numbers need a feel pass (stamina regen 12/s vs block costs), projectile blocking out of scope.

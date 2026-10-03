@@ -16,6 +16,7 @@ import { alertAround } from './alerts'
 import { projectileGround } from './caveSpace'
 import { logEvent, logging, logProduce } from './eventLog'
 import { fleeHome } from './fauna/perception'
+import { resolveDefence } from './guard'
 import { consumeItem, qualityMult, wearTool } from './inventory'
 import { companionsOnKill } from './npc/companions'
 import { questOnKill } from './quests'
@@ -259,7 +260,15 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
     }
     train(a, 'melee', 0.5)
   }
-  applyDamage(sim, best, dmg, w.dmgType, a)
+  // Active defence (player guard) resolves after the attack connected and before body damage (D-COMBAT-2).
+  const defence = resolveDefence(sim, best, a, dmg)
+  if (defence.kind === 'parry') {
+    sim.message(`You parry ${a.kind === 'npc' ? (a as Human).name : 'the attack'}!`, 'good')
+    return best
+  }
+  if (defence.kind === 'block') sim.message('You block the blow.', 'info')
+  else if (defence.kind === 'break') sim.message('Your guard breaks!', 'bad')
+  if (defence.damage > 0) applyDamage(sim, best, defence.damage, w.dmgType, a)
   return best
 }
 

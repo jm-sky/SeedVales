@@ -35,6 +35,7 @@ export const RECIPES: Recipe[] = [
   { id: 'bread', name: 'Bread', inputs: [{ item: 'grain', qty: 3 }], output: { item: 'bread', qty: 1 }, station: 'campfire', skill: 'survival', timeS: 12, category: 'food' },
   { id: 'rope', name: 'Rope', inputs: [{ item: 'wool', qty: 3 }], output: { item: 'rope', qty: 1 }, skill: 'survival', timeS: 10, category: 'survival' },
   { id: 'cloth', name: 'Cloth', inputs: [{ item: 'wool', qty: 2 }], output: { item: 'cloth', qty: 1 }, tool: 'sew', skill: 'survival', timeS: 10, category: 'survival' },
+  { id: 'wooden_shield', name: 'Wooden shield', inputs: [{ item: 'branch', qty: 4 }, { item: 'hide', qty: 1 }], output: { item: 'wooden_shield', qty: 1 }, tool: 'hammer', skill: 'construction', timeS: 20, quality: true, category: 'weapons' },
   { id: 'club', name: 'Club', inputs: [{ item: 'branch', qty: 2 }], output: { item: 'club', qty: 1 }, tool: 'cut', skill: 'survival', timeS: 8, category: 'weapons' },
   { id: 'staff', name: 'Staff', inputs: [{ item: 'branch', qty: 1 }], output: { item: 'staff', qty: 1 }, tool: 'cut', skill: 'survival', timeS: 5, category: 'weapons' },
   { id: 'spear', name: 'Spear', inputs: [{ item: 'branch', qty: 2 }, { item: 'iron_ingot', qty: 1 }], output: { item: 'spear', qty: 1 }, tool: 'cut', skill: 'survival', timeS: 14, quality: true, category: 'weapons' },
