@@ -51,7 +51,7 @@ export class CaveField {
   grid(index: number): CaveGrid {
     let g = this.grids.get(index)
     if (!g) {
-      g = buildCaveGrid(this.caves[index]!, this.surface)
+      g = buildCaveGrid(this.caves[index]!, this.surface, true)
       this.grids.set(index, g)
     }
     return g

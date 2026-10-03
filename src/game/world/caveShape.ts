@@ -110,8 +110,12 @@ export class CaveGrid {
   }
 }
 
-/** Derives the grid of a cave. `surfaceAt` is the terrain height the roof cover is measured against. */
-export function buildCaveGrid(cave: GenCave, surfaceAt: SurfaceFn): CaveGrid {
+/**
+ * Derives the grid of a cave. `surfaceAt` is the terrain height the roof cover is measured against.
+ * `followGround` (runtime only; generator validation leaves it off so placement is unchanged) keeps the cutting
+ * floor from standing above the ground outside: no raised platform at the mouth.
+ */
+export function buildCaveGrid(cave: GenCave, surfaceAt: SurfaceFn, followGround = false): CaveGrid {
   const pts = spinePoints(cave)
   let minX = Infinity
   let minZ = Infinity
@@ -192,6 +196,8 @@ export function buildCaveGrid(cave: GenCave, surfaceAt: SurfaceFn): CaveGrid {
           // Cells that were closed take the block's mean floor; open ones keep theirs.
           if (g.flag[k] === CELL_CLOSED) cellFloor[k] = sum / cnt
           g.flag[k] = CELL_SKY
+          // The cutting floor never stands above the ground outside (no raised platform at the mouth).
+          if (followGround) cellFloor[k] = Math.min(cellFloor[k]!, surfaceAt(ox + (k % nx) + 0.5, oz + Math.floor(k / nx) + 0.5) - 0.05)
         }
       }
     }
@@ -205,6 +211,7 @@ export function buildCaveGrid(cave: GenCave, surfaceAt: SurfaceFn): CaveGrid {
       let h = 0
       let n = 0
       let nu = 0
+      let sky = false
       for (let dj = -1; dj <= 0; dj++) {
         for (let di = -1; di <= 0; di++) {
           const i = vi + di
@@ -214,13 +221,15 @@ export function buildCaveGrid(cave: GenCave, surfaceAt: SurfaceFn): CaveGrid {
           if (g.flag[k] === CELL_CLOSED) continue
           f += cellFloor[k]!
           n++
+          if (g.flag[k] === CELL_SKY) sky = true
           if (g.flag[k] === CELL_UNDER) {
             h += cellH[k]!
             nu++
           }
         }
       }
-      if (n) g.floor[vj * w + vi] = f / n
+      // Averaging must not lift a cutting vertex above the ground (steep slopes): the floor meets the terrain.
+      if (n) g.floor[vj * w + vi] = followGround && sky ? Math.min(f / n, surfaceAt(ox + vi, oz + vj) - 0.02) : f / n
       if (nu) g.ceil[vj * w + vi] = g.floor[vj * w + vi]! + h / nu
     }
   }

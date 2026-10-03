@@ -17,6 +17,25 @@ const info = await sv(page, (i) => {
 console.log(JSON.stringify(info))
 await page.waitForTimeout(1500)
 await shot(page, 'cave-0-mouth')
+// Overview shots of the mouth from the side and from above (camera orbit set directly).
+await sv(page, () => {
+  const r = window.__sv.game.renderer
+  r.rig.yaw0 = r.rig.yaw
+  // Debug: light the cave materials so the rock faces are readable in screenshots.
+  r.caves.group.traverse((o) => { if (o.material?.emissive) o.material.emissive.setRGB(0.35, 0.3, 0.25) })
+})
+for (const [name, yawOff, pitch, dist] of [['side', Math.PI / 2, 0.35, 14], ['top', 0, 1.3, 16], ['front-far', 0, 0.3, 14]]) {
+  await sv(page, ([yo, pi, di]) => {
+    const rig = window.__sv.game.renderer.rig
+    const c = window.__sv.game.sim.world.caves[0]
+    rig.yaw = rig.yaw0 + yo
+    rig.pitch = pi
+    rig.distance = di
+  }, [yawOff, pitch, dist])
+  await page.waitForTimeout(700)
+  await shot(page, `cave-0-${name}`)
+}
+await sv(page, () => { const rig = window.__sv.game.renderer.rig; rig.pitch = 0.32; rig.distance = 6 })
 // walk in: hold forward
 await page.keyboard.down('KeyW')
 for (let k = 1; k <= 4; k++) {
