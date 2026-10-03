@@ -6,6 +6,7 @@
 import type { ResNode } from '../world/nodes'
 import type { BoxSolid } from './landmarkSolids'
 import type { Sim } from './sim'
+import { JUMP, TRAVERSE } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { isTree } from '../world/nodes'
 import { caveOf, caveStep } from './caveSpace'
@@ -61,6 +62,8 @@ export function moveWithCollision(
   radius: number,
   full: boolean,
   avoidDeepWater = false,
+  /** Airborne player: the height the feet will have after this step (no ground snap); lets a short lip be cleared. */
+  airborne?: { y: number },
 ): boolean {
   let nx = a.x + dx
   let nz = a.z + dz
@@ -89,7 +92,7 @@ export function moveWithCollision(
     const h0 = t.heightAt(a.x, a.z)
     const h1 = t.heightAt(nx, nz)
     const len = Math.hypot(nx - a.x, nz - a.z)
-    if (len > 1e-4 && (h1 - h0) / len > 1.2) return false
+    if (len > 1e-4 && (h1 - h0) / len > TRAVERSE.maxUphillRise && !lipCleared(t, airborne, nx, nz, (nx - a.x) / len, (nz - a.z) / len, h1)) return false
     if (avoidDeepWater && t.waterDepthAt(nx, nz) > 0.9 && t.waterDepthAt(nx, nz) > t.waterDepthAt(a.x, a.z)) return false
     scratch.length = 0
     sim.nodes.query(nx, nz, radius + 3, scratch)
@@ -164,7 +167,7 @@ export function moveWithCollision(
   const moved = Math.hypot(nx - a.x, nz - a.z) > 1e-4
   a.x = nx
   a.z = nz
-  a.y = groundHeight(sim, nx, nz)
+  a.y = airborne ? airborne.y : groundHeight(sim, nx, nz)
   return moved
 }
 
@@ -176,4 +179,11 @@ function pickCaveStep(sim: Sim, isPlayer: boolean, ctx: number, a: { x: number; 
     if (step.ok) return { x, z, step }
   }
   return null
+}
+
+/** Airborne feet clear the rise at the destination and the terrain beyond is not a sustained too-steep face (D-MOVE-1). */
+function lipCleared(t: Sim['terrain'], airborne: { y: number } | undefined, nx: number, nz: number, dirx: number, dirz: number, h1: number): boolean {
+  if (!airborne || airborne.y < h1 - JUMP.lipClearM) return false
+  const ahead = t.heightAt(nx + dirx * JUMP.probeM, nz + dirz * JUMP.probeM)
+  return (ahead - h1) / JUMP.probeM <= TRAVERSE.maxUphillRise
 }

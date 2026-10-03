@@ -13,32 +13,20 @@ You continue SeedVales (Vue 3 + TS + Three.js, pnpm). You are **Sonnet**: you im
 - `pnpm soak` judges timing only on a quiet machine (D-VERIFY-1): don't run soak/bench in parallel with e2e or other agents.
 - GPU benchmarks (`SV_GPU=1`) only one per command, result straight to a file under `test-results/` (WSL crashes).
 
-## 1. Finish review--001 round 1
+## 1. Resume (state: `docs/state/PROGRESS.md` "Teraz")
 
-1. **UI batch of app review 016 (interrupted by a rate limit):** branch `worktree-agent-a50398712de203e8d` (worktree `.claude/worktrees/agent-a50398712de203e8d`), WIP commit `8b4c067`, **unverified**. Findings #3, #7, #8, #10, #11, #12, #13, #14, #15, #16 — read `docs/reviews/2026-10-03--016--app-review-round-1.md` (findings + Triage table, binding). Review the WIP diff (`git show 8b4c067`), finish what is missing (failing-first tests named with FEATURES IDs; `node scripts/e2e/review-run.mjs ui` small-button hits on mobile → 0, report before/after), verify, then cherry-pick onto main (or redo cleanly on main if the WIP is poor), fill the Fix-commit column, remove the worktree + branch.
-2. Small leftover: Q03 E1 journal still says Miles "owes you a load of firewood" when NPCs did the repair — make the text depend on `myRepairs`/beams (adjust the pinned test to the new rule, don't delete it).
-3. On main, quiet machine: `pnpm check`, `pnpm e2e:run`, **`pnpm soak --days=10 --seeds=1337,7,42,3,11,99`** (all 0 violations), `pnpm bench:sim` (no baseline update; earlier runs were under load — record numbers in PERF.md).
-4. **Round 2** (review--001 §5): app review + code review only of the fix range since round 1 (`git log` from `2b52d64`), via skills `wave-review` (code) and `app-review` (Opus reviewers in worktrees). Triage, fix, at most round 3; what remains → ❓ user in PROGRESS. Then mark `quests--001`, `verify--001` and `review--001` step 4 done (handoff).
+Review round 1 + 2, D-USER-1, audio steps 1–5, render--009, LOOT-01, SET-05 slice, combat--001/002 are **done**. The user's `git pull` brought new plans (wave 5d in the roadmap).
 
-## 2. User decisions D-USER-1 (2026-10-03) — implement
+1. **`combat--004` jump** (in progress): groundwork is committed (`TRAVERSE`/`JUMP` calibration, `moveWithCollision` airborne lip rule). Implement the rest as listed in PROGRESS "In progress"; record D-MOVE-1 (the plan's recommended options) in DECISIONS; failing-first tests (arc, no double jump, steep face not climbable by jump spam, bridge crossing from above, deep-water landing, teleport/KO resets motion); Space = jump (dodge in combat after `combat--003`), mobile Jump button; e2e jump step.
+2. `combat--003` directional dodge (low priority; depends on melee timing — read its plan first).
+3. **Wave 5d** (`docs/roadmap/v1-closure-and-appendix.md`): `items--001` → `economy--004` ‖ `combat--005` → `economy--003` (each plan's "Decisions for Opus": take the recommended option, record in DECISIONS).
+4. Audio leftovers (`audio--001` step 6 e2e "no `/sounds/` fetch before first input", fire loop, door/UI one-shots); `world--001` chests; wave 6; `proposals--001`; later backlog L1–L7.
+5. After wave 5c/5d: run a review round (skills `wave-review` + `app-review`, Opus), then soak on a quiet machine.
 
-1. **Names:** NPC surnames suggest the profession (check `SURNAMES` in `data/professions.ts` covers every profession with fitting names); **the home settlement's first guard is always "Mark Hornblower"** (`createNewGame`, new games only, no GEN bump). Test.
-2. **Quest icons above NPC heads:** `!` offered, `?` NPC has the next step/hand-in, ✔ stage completed with this NPC — authored and board quests, near the player only, hidden in unexplored cells (MAP-01). Read state via `Game` (e.g. `game.questMarkersFor(npcId)`), render as a sprite/HTML overlay consistent with the name labels. e2e assertion.
-3. **NPC name labels:** check what our version shows now; target: name + surname only when close (fades with distance), like the previous app; keep fog (D-USER-1 d).
-4. **Sounds:** start `audio--001` (`docs/plans/audio--001--recorded-sounds-and-voices.md`) — use `public/sounds/`; add the release gate item "complete credits/licence list" to the plan and PROGRESS ❓.
+## 2. Hygiene
 
-## 3. Then the roadmap (`docs/roadmap/v1-closure-and-appendix.md`, "Order update 2026-10-03")
-
-`render--009` step 3 (stockpiles WSL verification — CLAUDE.md handoff note; Opus decision on the 4 k tri budget: keep if `crowded-settlement` A/B is within noise, else reduce detail in the generator) → wave 5 (`world--001` steps 2–3 LOOT-01, `settlement--001`) with wave 5a `audio--001` alongside → wave 5c combat (`combat--001` → `002` → `004` → `003`; each plan's "Decisions for Opus": take the plan's recommended option, record it in DECISIONS, continue) → wave 6 → `proposals--001` → `docs/roadmap/later-vision-backlog.md` L1–L7 (D-PLAN-9).
-
-## 3a. Long-running autonomy (user, 2026-10-03: "work long, on your own")
-
-- **Keep going until the session limit.** After one item is verified and committed, take the next one from §1 → §2 → §3 without asking. Never end a turn with a plan, a summary of "what I would do next", or a question — do it.
-- **Blocked on a decision?** Take the plan's recommended option (or the safest reversible one), record it in DECISIONS as "Sonnet default, Opus/user to confirm", add it to PROGRESS ❓, continue. Blocked on a tool/environment problem: diagnose, work around, record; move to the next independent item meanwhile.
-- **Checkpoint often:** small verified commits (one finding / one plan step each), PROGRESS "Teraz" updated at every checkpoint, so an interrupted session (rate limit) loses nothing. Before a long command, commit what you have.
-- **Use worktree subagents for parallel independent items** (e.g. a fix batch while you review), at most 2–3 at a time, each with the hard rules from §0; cherry-pick their own commits. If an agent dies on a rate limit, commit its worktree changes as `wip(...)` on its branch and resume it later.
-- **Quality bar stays:** every fix has a failing-first test; every step ends with `verify`; soak/bench only on a quiet machine; no weakened criteria. Reviews (wave-review, app-review) run Opus subagents (`model: "opus"`) — D-PLAN-7.
-- **Do not push**; the user pushes. Do not touch `docs/assets/textures/` (user's untracked work).
+- The user does `git pull --rebase`; after a pull re-run `pnpm check` before continuing.
+- Sound licences / credits are a release gate (❓ user). Do not touch `docs/assets/textures/`.
 
 ## 4. End of session
 

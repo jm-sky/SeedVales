@@ -77,6 +77,21 @@ export const COMBAT_LOCK = {
   classPenalty: { threat: 0, dangerous: 10, neutral: 25 },
 } as const
 
+/** Walkability: the steepest uphill rise/run a step may have (~50°); steeper faces are inaccessible (peaks). Downhill is not limited. */
+export const TRAVERSE = { maxUphillRise: 1.2 } as const
+
+/** Jump (combat--004, D-MOVE-1): small grounded traversal jump, gameplay seconds. */
+export const JUMP = {
+  /** Take-off speed (m/s) and gravity (m/s²): apex ≈ 0.66 m, air time ≈ 0.73 s. */
+  vy: 3.6,
+  gravity: 9.8,
+  staminaCost: 8,
+  /** While airborne a rise is only passable when the feet are within this much of the destination terrain (m). */
+  lipClearM: 0.05,
+  /** A short lip is jumpable only when the terrain this far (m) beyond it is not a sustained face (gradient above TRAVERSE.maxUphillRise). */
+  probeM: 2,
+} as const
+
 /** Block and parry (combat--002, D-COMBAT-2): all tuning in one place. */
 export const DEFENCE = {
   /** Defence by equipment class: front arc (full angle, degrees), share of raw damage a block removes, stamina efficiency (lower = cheaper), parry window (s from guard start). */
