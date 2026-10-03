@@ -6,13 +6,14 @@
 import type { QualityProfile } from './render/Renderer'
 import type { InteractOption, Target, TargetRef } from './sim/interact'
 import type { SimEvent } from './sim/sim'
-import type { Actor, Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
+import type { Actor, Animal, Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
 import type { WorldData } from './world/types'
 import { Ambience } from './audio/ambience'
 import { COMBAT_LOCK, EDGE, JUMP } from './config/calibration'
 import { angleDiff } from './core/math'
 import { itemDef } from './data/items'
 import { blueprintById, recipeById } from './data/recipes'
+import { SPECIES } from './data/species'
 import { perf } from './diag/perf'
 import { attachControls, input, type KeyAction, moveAxes, wantsRun } from './input/controls'
 import { Renderer } from './render/Renderer'
@@ -44,6 +45,7 @@ import { tryApologize } from './sim/reputation'
 import { Sim } from './sim/sim'
 import { buyFromNpc, sellToNpc } from './sim/trade'
 import { askAboutTales } from './sim/treasureTales'
+import { hp } from './sim/vitals'
 import { installSystems } from './sim/worldSystems'
 import { generateWorld } from './world/gen/generate'
 import { deserializeWorld } from './world/serialize'
@@ -837,6 +839,14 @@ export class Game {
   setWaypoint(x: number, z: number, label?: string) {
     this.showToast(setWaypoint(this.sim, x, z, label))
     this.notify()
+  }
+
+  /** The combat-locked actor for the HUD (name and health share), null when nothing is locked (review 020 #6). */
+  lockInfo(): { name: string; hpPct: number } | null {
+    const a = this.combatTargetId !== null ? this.sim.actor(this.combatTargetId) : undefined
+    if (!a) return null
+    const name = a.kind === 'npc' ? (a as Human).name : SPECIES[(a as Animal).species].name
+    return { name, hpPct: Math.round((hp(a.vitals) / a.vitals.maxHp) * 100) }
   }
 
   /** Asks a villager about old tales (P-06): a treasure hint in words, logged in the journal messages. */

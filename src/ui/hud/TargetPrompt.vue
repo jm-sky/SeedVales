@@ -6,9 +6,11 @@ const { game, version } = useGameStrict()
 const t = computed(() => {
   void version.value
   const g = game.value
+  const lock = g.sim.player.combat ? g.lockInfo() : null
+  if (lock && !g.panel) return { label: `Locked: ${lock.name}`, hint: `${lock.hpPct}% health`, reason: '', more: false, lock: true }
   if (!g.target || g.panel || g.sim.state.px.activity) return null
   const first = g.options.find((o) => o.enabled) ?? g.options[0]
-  return { label: g.target.label, hint: g.options.length > 1 ? `${g.options.length} options` : first?.label ?? '', reason: first && !first.enabled ? first.reason : '', more: g.targetCount > 1 && !g.sim.player.combat }
+  return { label: g.target.label, hint: g.options.length > 1 ? `${g.options.length} options` : first?.label ?? '', reason: first && !first.enabled ? first.reason : '', more: g.targetCount > 1 && !g.sim.player.combat, lock: false }
 })
 </script>
 
@@ -21,7 +23,7 @@ const t = computed(() => {
     <span class="font-semibold">{{ t.label }}</span>
     <span class="ml-2 text-white/80">
       <kbd
-        v-if="!game.isTouch"
+        v-if="!game.isTouch && !t.lock"
         class="rounded border border-white/40 px-1 text-xs"
       >E</kbd>
       {{ t.hint }}
