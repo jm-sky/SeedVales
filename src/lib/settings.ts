@@ -10,6 +10,7 @@ export interface Volumes {
   master: number
   ambient: number
   effects: number
+  voices: number
 }
 
 export interface GameSettings {
@@ -35,7 +36,7 @@ function storage(): Store | null {
 const clamp01 = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : d)
 
 export function defaultSettings(touch = false): GameSettings {
-  return { quality: touch ? 'low' : 'medium', volume: { master: 0.8, ambient: 1, effects: 1 } }
+  return { quality: touch ? 'low' : 'medium', volume: { master: 0.8, ambient: 1, effects: 1, voices: 1 } }
 }
 
 export function loadSettings(touch = false, st: Store | null = storage()): GameSettings {
@@ -56,7 +57,7 @@ export function loadSettings(touch = false, st: Store | null = storage()): GameS
   const v = raw.volume ?? d.volume
   return {
     quality: q ?? d.quality,
-    volume: { master: clamp01(v.master, d.volume.master), ambient: clamp01(v.ambient, d.volume.ambient), effects: clamp01(v.effects, d.volume.effects) },
+    volume: { master: clamp01(v.master, d.volume.master), ambient: clamp01(v.ambient, d.volume.ambient), effects: clamp01(v.effects, d.volume.effects), voices: clamp01(v.voices, d.volume.voices) },
   }
 }
 

@@ -18,6 +18,7 @@ import { torchBurnH } from './fire'
 import { addItem, consumeItem, countItem, findTool, fitQty, newStack, removeStack, wearTool } from './inventory'
 import { questEvent } from './questHooks'
 import { seasonOf } from './time'
+import { bellyLoot, digTreasure, registerGiveStack } from './treasure'
 import { drink, eat, heal, makeIll } from './vitals'
 
 export interface ActionResult {
@@ -33,6 +34,8 @@ export function train(h: Human, skill: keyof Human['skills'], difficulty = 0.5, 
 }
 
 /** Gives items to actor; drops overflow on the ground next to them. */
+registerGiveStack((sim, h, s, source) => giveOrDrop(sim, h, s, source))
+
 export function giveOrDrop(sim: Sim, h: Human, stack: ItemStack, source?: string) {
   if (source) logProduce(stack.id, stack.qty, source, h)
   const fit = fitQty(h, stack)
@@ -223,7 +226,8 @@ export function butcher(sim: Sim, h: Human, c: Corpse): ActionResult {
   c.meat = 0
   wearTool(tool, 1)
   train(h, 'survival', 0.5, 2)
-  return ok(rotten ? 'The meat has rotted — only hide and bones are left.' : `You butchered the ${sp.name.toLowerCase()}.`)
+  const belly = bellyLoot(sim, h, c)
+  return ok(`${rotten ? 'The meat has rotted — only hide and bones are left.' : `You butchered the ${sp.name.toLowerCase()}.`}${belly ? ` ${belly}` : ''}`)
 }
 
 export interface DigLoot {
@@ -242,6 +246,8 @@ export function dig(sim: Sim, h: Human, x: number, z: number): ActionResult {
   sim.markTerrain(x, z, 2)
   wearTool(tool, 1)
   train(h, 'construction', 0.2)
+  const buried = digTreasure(sim, h, x, z)
+  if (buried) return ok(buried)
   // Loot rolls.
   const r = sim.rng.next()
   const nearSea = sim.terrain.isSeaAt(x + 12, z) || sim.terrain.isSeaAt(x - 12, z) || sim.terrain.isSeaAt(x, z + 12) || sim.terrain.isSeaAt(x, z - 12) || b === Biome.Beach

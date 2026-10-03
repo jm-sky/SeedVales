@@ -160,7 +160,7 @@ export class Game {
   }
 
   /** Player preferences (UI-05): quality switches at runtime, volumes go to the audio mixer. */
-  applySettings(s: { quality: QualityProfile; volume: { master: number; ambient: number; effects: number } }) {
+  applySettings(s: { quality: QualityProfile; volume: { master: number; ambient: number; effects: number; voices: number } }) {
     this.renderer.setQuality(s.quality)
     this.audio.setVolumes(s.volume)
     this.notify()

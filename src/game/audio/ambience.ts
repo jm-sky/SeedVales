@@ -39,15 +39,15 @@ export class Ambience {
   private t = 0
   enabled = true
   /** Player volume settings (UI-05), 0..1 each. */
-  private vol = { master: 0.8, ambient: 1, effects: 1 }
+  private vol = { master: 0.8, ambient: 1, effects: 1, voices: 1 }
 
-  setVolumes(v: { master: number; ambient: number; effects: number }) {
+  setVolumes(v: { master: number; ambient: number; effects: number; voices: number }) {
     this.vol = { ...v }
     if (this.ctx) {
       this.master.gain.setTargetAtTime(0.6 * v.master, this.ctx.currentTime, 0.05)
       this.busFx.gain.setTargetAtTime(v.effects, this.ctx.currentTime, 0.05)
       this.busAmb.gain.setTargetAtTime(v.ambient, this.ctx.currentTime, 0.05)
-      this.busVoice.gain.setTargetAtTime(v.effects, this.ctx.currentTime, 0.05)
+      this.busVoice.gain.setTargetAtTime(v.voices, this.ctx.currentTime, 0.05)
     }
   }
 
@@ -67,7 +67,7 @@ export class Ambience {
     }
     this.busFx = bus(this.vol.effects)
     this.busAmb = bus(this.vol.ambient)
-    this.busVoice = bus(this.vol.effects)
+    this.busVoice = bus(this.vol.voices)
     this.samples = new SamplePlayer(ctx, this.busFx)
     const noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
     const d = noise.getChannelData(0)

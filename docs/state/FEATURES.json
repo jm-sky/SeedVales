@@ -952,8 +952,8 @@
    "scope": "v2",
    "behavior": "Skarby: zakopane przy landmarkach, skrzynie z losowym lootem, rzadko w brzuchu drapieżnika (jaskinie po WORLD-05); kosztowności i broń wysokiej jakości; nie odradzają się po load",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/world--001--landmarks-and-treasure.md"
+   "status": "implemented_unverified",
+   "evidence": "session 14: buried treasure at landmarks + predator belly finds + valuables trade; sim/treasure.ts, data/loot.ts, treasure.test.ts. Not done: chests, caves (WORLD-05 deferred)"
   },
   {
    "id": "TRADE-02",

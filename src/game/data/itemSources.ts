@@ -8,6 +8,7 @@
  */
 import type { ItemDef } from './items'
 import { ITEMS } from './items'
+import { TREASURE_TABLE } from './loot'
 import { PROFESSIONS } from './professions'
 import { BLUEPRINTS, isOrderable, RECIPES } from './recipes'
 import { SPECIES } from './species'
@@ -27,6 +28,7 @@ export type ItemSourceKind =
   | 'farming'
   | 'household'
   | 'shearing'
+  | 'treasure'
 
 type Stock = readonly (readonly [item: string, qty: number])[]
 
@@ -86,6 +88,7 @@ function baseSources(): Origins {
   for (const id of MINED_ITEMS) add(id, 'mining')
   for (const id of DUG_ITEMS) add(id, 'digging')
   for (const id of SHEARED_ITEMS) add(id, 'shearing')
+  for (const e of TREASURE_TABLE) add(e.item, 'treasure')
   for (const sp of Object.values(SPECIES)) {
     if (sp.corpse.meat > 0) add('raw_meat', 'butchering')
     if (sp.corpse.hide > 0) add('hide', 'butchering')

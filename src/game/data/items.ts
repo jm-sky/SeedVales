@@ -154,6 +154,11 @@ const LIST: ItemDef[] = [
   res('shell', 'Shell', 0.05, 'XS', 2),
   res('pearl_shell', 'Pearl shell', 0.05, 'XS', 80),
   res('grain', 'Grain', 1, 'SM', 3),
+  // Valuables (LOOT-01): found only as treasure; the trader pays well, other NPCs little (cash limit).
+  res('gold_ring', 'Gold ring', 0.02, 'XXS', 120),
+  res('ruby', 'Ruby', 0.01, 'XXS', 220),
+  res('emerald', 'Emerald', 0.01, 'XXS', 280),
+  res('diamond', 'Diamond', 0.01, 'XXS', 520),
   // Food
   food('berries', 'Berries', 0.2, 2, { nutrition: 6, water: 2, spoilH: 48 }),
   food('apple', 'Apple', 0.2, 2, { nutrition: 8, water: 3, spoilH: 24 * 10 }),
@@ -201,6 +206,8 @@ const LIST: ItemDef[] = [
   { id: 'tent', name: 'Tent', category: 'misc', weight: 6, size: 'LG', price: 60 },
   { id: 'furs', name: 'Fur bedding', category: 'misc', weight: 4, size: 'LG', price: 35 },
   // Weapons (§20)
+  melee('obsidian_dagger', 'Obsidian dagger', 0.35, 340, { reach: 0.6, damage: 11, dmgType: 'cut', cooldown: 0.5, sharpness: 0.95, stamina: 6 }, ['cut']),
+  melee('damascus_dagger', 'Damascus dagger', 0.4, 480, { reach: 0.65, damage: 12, dmgType: 'cut', cooldown: 0.5, sharpness: 1, stamina: 6 }, ['cut']),
   melee('knife', 'Knife', 0.3, 8, { reach: 0.6, damage: 7, dmgType: 'cut', cooldown: 0.6, sharpness: 0.7, stamina: 6 }, ['cut']),
   melee('dagger', 'Dagger', 0.4, 25, { reach: 0.7, damage: 10, dmgType: 'pierce', cooldown: 0.6, sharpness: 0.8, stamina: 7 }, ['cut']),
   melee('short_sword', 'Short sword', 1.1, 70, { reach: 0.9, damage: 15, dmgType: 'cut', cooldown: 0.8, sharpness: 0.8, stamina: 10 }, ['cut']),

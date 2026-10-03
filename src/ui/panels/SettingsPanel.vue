@@ -16,7 +16,8 @@ const QUALITIES: { id: QualityProfile; label: string; hint: string }[] = [
 const VOLUMES: { id: keyof Volumes; label: string }[] = [
   { id: 'master', label: 'Master volume' },
   { id: 'ambient', label: 'Ambient (wind, waves, rain)' },
-  { id: 'effects', label: 'Effects (combat, animals, birds)' },
+  { id: 'effects', label: 'Effects (steps, work, combat, animals)' },
+  { id: 'voices', label: 'Voices (villagers)' },
 ]
 
 watch(s, (v) => {

@@ -474,6 +474,8 @@ export interface PlayerExtra {
   explored?: number[]
   /** Cave the player is in (WORLD-05): cave index + 1; absent/0 = on the surface. */
   cave?: number
+  /** Treasure spots already dug up (LOOT-01); the contents are derived from the world seed + spot id, so nothing else is stored. */
+  lootTaken?: string[]
 }
 
 export type WeaponKind = 'melee' | 'ranged'
