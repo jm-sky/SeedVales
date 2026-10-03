@@ -851,6 +851,14 @@ export class Game {
     return { name, hpPct: Math.round((hp(a.vitals) / a.vitals.maxHp) * 100) }
   }
 
+  /** Breaks the wax seal of a carried letter (G06): a normal world action the quest notices. */
+  breakSeal(s: ItemStack) {
+    if (s.id !== 'letter' || s.tag !== 'sealed') return
+    s.tag = 'opened'
+    this.showToast('You break the seal and read the letter.')
+    this.notify()
+  }
+
   /** Asks a villager about old tales (P-06): a treasure hint in words, logged in the journal messages. */
   askTales(npc: Human) {
     const msg = askAboutTales(this.sim, npc)

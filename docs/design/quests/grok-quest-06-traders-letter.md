@@ -120,3 +120,12 @@ Breaking the seal is a normal world action (N); it is not part of any authored o
 | Required | Sealed letter item; `priceMod.grain` per settlement for a season; four results |
 | Stub | Rumor as a 3-day tick; public meeting as one scene + journal note |
 | Out of scope | Full market simulation |
+
+## Implementation notes
+
+Implemented by `quests--003` W2 as `src/game/data/quests/g06.ts` (test `questG06.test.ts`). New: quest item `letter` (tags `sealed` → `read` / `amended`, `opened` by the player), `Game.breakSeal` + a "Break the seal" button in the item details of a sealed letter, `{treasury: 'V'}` as a money source, grain price modifiers (`sim/priceMods.ts`) in {H} and {V}.
+
+- **Start:** {V} visited and Stephen's opinion ≥ 10 or Q09 done. The letter is a declared grant (`authored-carried-message`); a lost one is replaced once.
+- **Results:** agreed (+40 % grain for 60 days in both villages, a rumour 72 h later costs honesty −5 in {V}), capped (+15 %, helpfulness +5), refused, public (needs `farmersHeard`; +15 %, 10 c from Stephen and 10 c from {V}'s treasury). Breaking the seal yourself: Jack refuses the conversation, result `refused`, Stephen −15 at the turn-in.
+- **Refusal:** after a week the carter delivers and the default outcome (+40 %) applies; the quest lapses.
+- **Not implemented:** the poorest households buying at base price (stub: only the price modifier), Margaret/Ralph as a staged public meeting (one dialog line), Jack's death paying 10 c.

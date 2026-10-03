@@ -418,7 +418,7 @@ function moneyHolder(c: QuestCtx, s: Source): { get: () => number; add: (n: numb
     return h ? { get: () => h.money, add: (n) => (h.money += n) } : undefined
   }
   if ('treasury' in s) {
-    const t = c.sim.state.settlements[homeId(c.sim)]
+    const t = c.sim.state.settlements[s.treasury === 'V' ? neighbourId(c.sim) : homeId(c.sim)]
     return t ? { get: () => t.treasury, add: (n) => (t.treasury += n) } : undefined
   }
   return undefined

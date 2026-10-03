@@ -40,5 +40,13 @@ const canSharpen = computed(() => {
     >
       Sharpen (whetstone)
     </button>
+    <button
+      v-if="stack.id === 'letter' && stack.tag === 'sealed'"
+      class="mt-1 rounded border px-2 py-1 text-xs"
+      data-testid="break-seal"
+      @click="game.breakSeal(stack)"
+    >
+      Break the seal
+    </button>
   </div>
 </template>
