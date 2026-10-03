@@ -12,8 +12,7 @@ try {
   const t0 = Date.now()
   await newGame(page)
   check(results, 'new game loads', true, `${((Date.now() - t0) / 1000).toFixed(1)} s`)
-  await page.waitForTimeout(3000)
-  await shot(page, 'smoke-start')
+  await shot(page, 'smoke-start', 3000)
   // audio--001: no sound file is fetched before the first input (autoplay policy, no wasted bandwidth).
   const early = soundReqs.length
   check(results, 'no sound fetch before the first input', early === 0, `${early} requests`)

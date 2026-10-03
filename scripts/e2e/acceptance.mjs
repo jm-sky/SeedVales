@@ -82,8 +82,7 @@ try {
   await newGame(page, '1337')
   const s0 = await S(() => window.__sv.state())
   check(results, '1. nowa gra z seeda 1337', s0.money === 150, `pozycja ${s0.x.toFixed(0)},${s0.z.toFixed(0)}`)
-  await page.waitForTimeout(2500)
-  await shot(page, 'acc-01-start')
+  await shot(page, 'acc-01-start', 2500)
 
   // 2. NPCs fulfil needs and duties (fast-forward 3 calendar hours = 450 s).
   const goals = await S(() => {
@@ -96,8 +95,7 @@ try {
     return [...seen]
   })
   check(results, '2. NPC realizują potrzeby i obowiązki', goals.includes('work') && (goals.includes('drink') || goals.includes('eat')), goals.join(','))
-  await page.waitForTimeout(1500)
-  await shot(page, 'acc-02-settlement')
+  await shot(page, 'acc-02-settlement', 1500)
 
   // 4a. Trade: buy an axe and a hammer from the trader through the trade panel.
   await S(() => {
@@ -140,8 +138,7 @@ try {
   if (await page.$('[data-testid="opt-chop"]')) await clickTest('opt-chop')
   await S(() => window.__sv.pause(false))
   const actKind = await S(() => window.__sv.state().activity)
-  await page.waitForTimeout(1500)
-  await shot(page, 'acc-03-chopping')
+  await shot(page, 'acc-03-chopping', 1500)
   await finishActivity()
   const after = await S(() => {
     const st = window.__sv.game.sim.state
@@ -243,8 +240,7 @@ try {
   await finishActivity()
   const built = await S(() => window.__sv.state().built)
   check(results, '5. budowa ogniska: plac → materiały → ukończenie', built.includes('campfire'), `${built.join(',')} target=${siteT?.label ?? '—'}`)
-  await page.waitForTimeout(1200)
-  await shot(page, 'acc-05-campfire')
+  await shot(page, 'acc-05-campfire', 1200)
 
   // 6. Travel outside, meet an animal and fight (melee via mouse clicks).
   await S(() => {
@@ -417,8 +413,7 @@ try {
     const sim = window.__sv.game.sim
     return { tree: sim.state.nodes[ids.tree]?.kind, campfires: sim.state.buildings.filter((b) => b.playerBuilt).length, wolf: !!sim.actor(ids.wolf), logs: window.__sv.count('log'), cal: sim.state.time.cal, quests: sim.state.quests.map((q) => q.status).join(',') }
   }, ids)
-  await page.waitForTimeout(2000)
-  await shot(page, 'acc-09-loaded')
+  await shot(page, 'acc-09-loaded', 2000)
   check(results, '9. zapis → odświeżenie → odczyt zachowuje zmiany', loaded.tree === 'felled' && !loaded.wolf && loaded.campfires === before.campfires && loaded.logs === before.logs && loaded.cal >= before.cal && loaded.cal - before.cal < 120 && loaded.quests === before.quests, { before, loaded })
 
   // 10. UI-03: character screen (K), primary ranged weapon, quick switch (X); inventory filter (I).
@@ -518,8 +513,7 @@ try {
     sv.approach(n.x, n.z, 3)
     return sim.state.nodes[treeId]?.kind
   }, ids.tree)
-  await page.waitForTimeout(1500)
-  await shot(page, 'acc-14-stump')
+  await shot(page, 'acc-14-stump', 1500)
   const boulder = await S(() => {
     const sv = window.__sv
     const sim = sv.game.sim
@@ -564,8 +558,7 @@ try {
   await key('KeyE')
   if (await page.$('[data-testid="opt-roast"]')) await clickTest('opt-roast')
   await S(() => window.__sv.pause(false))
-  await page.waitForTimeout(800)
-  await shot(page, 'acc-15-roasting')
+  await shot(page, 'acc-15-roasting', 800)
   await finishActivity()
   const roast = await S(() => ({ cooked: window.__sv.game.sim.player.inv.items.filter((x) => x.id === 'cooked_meat').map((x) => `${x.sp}×${x.qty}`), raw: window.__sv.count('raw_meat') }))
   check(results, '15. pieczenie 2 kawałków na raz (patelnia), mięso zachowuje gatunek', !!fireT && roast.raw === 1 && roast.cooked.length === 2, roast)

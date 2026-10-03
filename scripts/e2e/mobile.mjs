@@ -31,8 +31,7 @@ try {
   await newGame(page, '1337')
   const isTouch = await S(() => window.__sv.game.isTouch)
   check(results, 'M0. wykryto urządzenie dotykowe → kontrolki mobile', isTouch && !!(await page.$('[data-testid=joystick]')))
-  await page.waitForTimeout(2000)
-  await shot(page, 'mob-01-start')
+  await shot(page, 'mob-01-start', 2000)
 
   // Movement via joystick.
   // Hold the stick forward until the character has moved > 1 m (max 10 s): a fixed 2.5 s drag depended on the

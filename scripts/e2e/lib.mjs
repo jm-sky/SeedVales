@@ -72,9 +72,10 @@ export async function newGame(page, seed = '1337', quality = 'low') {
 export const sv = (page, fn, arg) => page.evaluate(fn, arg)
 
 /** Screenshots are evidence for humans and reviews; `SV_E2E_SHOTS=0` (e2e:run --fast) skips them during development (a SwiftShader screenshot costs 0.3–2 s). */
-export async function shot(page, name) {
+export async function shot(page, name, settleMs = 0) {
   const p = path.join(OUT, `${name}.png`)
-  if (process.env.SV_E2E_SHOTS === '0') return p
+  if (process.env.SV_E2E_SHOTS === '0') return p // fast mode: neither the screenshot nor the wait that only lets it settle
+  if (settleMs) await page.waitForTimeout(settleMs)
   await page.screenshot({ path: p })
   return p
 }
