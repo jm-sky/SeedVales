@@ -764,8 +764,10 @@ try {
   await questOpts('accept')
   await talkTo('q07', 'lucy')
   await questOpts('examine_meat')
+  await S(() => window.__sv.setHour(17.5)) // Mark is held only in the dusk window (review 014 #1)
   await talkTo('q07', 'mark')
   await questOpts('round')
+  await simFor(2)
   const q7a = await S(() => {
     const sim = window.__sv.game.sim
     const m = sim.human(sim.state.authoredQuests.q07.cast.mark)
