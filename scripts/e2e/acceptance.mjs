@@ -1060,6 +1060,33 @@ try {
   await S(() => window.__sv.game.togglePhotoMode())
   await page.waitForSelector('[data-testid=status-bars]', { timeout: 10000 })
   check(results, '19. tryb zdjęć: pauza, brak HUD, pasek, powrót', ph.mode && Math.abs(ph.play - ph0) < 0.01 && hudHidden && barShown, { ph0, ph, hudHidden, barShown })
+  // 20. WORLD-05: walk into a cave with the real W key (no teleport), the sun fades and the cave meshes exist; walk back out with S.
+  await restoreBody()
+  const caveIn0 = await S(() => {
+    const sv = window.__sv
+    sv.setHour(12)
+    sv.game.sim.player.combat = false
+    sv.teleportToCave(0, 5)
+    return { caves: sv.game.sim.world.caves.length, cave: sv.game.sim.state.px.cave ?? 0 }
+  })
+  await page.waitForTimeout(1200)
+  await page.keyboard.down('KeyW')
+  let caveIn = null
+  for (let i = 0; i < 12 && !(caveIn && caveIn.cave > 0); i++) {
+    await page.waitForTimeout(700)
+    caveIn = await S(() => { const g = window.__sv.game; return { cave: g.sim.state.px.cave ?? 0, y: g.sim.player.y, built: g.renderer.caves.builtCount } })
+  }
+  await page.keyboard.up('KeyW')
+  await shot(page, 'acc-cave-inside')
+  check(results, '20a. W key walks into the cave (layer set, cave mesh built)', caveIn0.caves > 0 && caveIn0.cave === 0 && caveIn && caveIn.cave > 0 && caveIn.built > 0, { caveIn0, caveIn })
+  await page.keyboard.down('KeyS')
+  let caveOut = null
+  for (let i = 0; i < 20 && !(caveOut && caveOut.cave === 0); i++) {
+    await page.waitForTimeout(700)
+    caveOut = await S(() => { const g = window.__sv.game; const p = g.sim.player; return { cave: g.sim.state.px.cave ?? 0, dy: Math.abs(p.y - g.sim.terrain.heightAt(p.x, p.z)) } })
+  }
+  await page.keyboard.up('KeyS')
+  check(results, '20b. S key walks back out onto the surface', caveOut && caveOut.cave === 0 && caveOut.dy < 0.6, { caveOut })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)

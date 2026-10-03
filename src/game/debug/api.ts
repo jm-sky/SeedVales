@@ -87,6 +87,9 @@ export function installDebugApi(game: Game) {
       const c = sim().world.caves[index]
       if (!c) return
       game.debugTeleport(c.x - Math.sin(c.yaw) * back, c.z - Math.cos(c.yaw) * back)
+      // Face the mouth (the camera looks along its yaw), so holding W walks in.
+      game.renderer.rig.yaw = c.yaw
+      sim().player.rot = c.yaw
     },
     setHour: (h) => {
       const s = sim().state.time
