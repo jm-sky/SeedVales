@@ -26,6 +26,34 @@ export const FRAMES = [
     sv.game.renderer.rig.distance = 10
     sv.game.renderer.rig.pitch = 0.35
   `)]),
+  ['stores-low', (sv) => {
+    const sim = sv.game.sim
+    const wh = sim.state.buildings.find((b) => b.kind === 'warehouse' && b.settlementId === sim.world.homeSettlement)
+    const wp = sim.state.buildings.find((b) => b.kind === 'woodpile' && b.settlementId === sim.world.homeSettlement)
+    const fill = (b, items) => { if (!b?.inv) return; b.inv.items = items.map(([id, qty]) => ({ id, qty })) }
+    fill(wh, [['stone', 2], ['grain', 3], ['bread', 3]])
+    fill(wp, [['log', 1], ['branch', 1]])
+    sv.setHour(12)
+    Object.assign(sim.state.weather, { kind: 'clear', fog: 0.05, until: sim.state.time.cal + 86400 })
+    sv.teleport(wh.x + Math.sin(wh.rot ?? 0) * 12, wh.z + Math.cos(wh.rot ?? 0) * 12)
+    sv.face(wh.x, wh.z)
+    sv.game.renderer.rig.distance = 9
+    sv.game.renderer.rig.pitch = 0.3
+  }],
+  ['stores-full', (sv) => {
+    const sim = sv.game.sim
+    const wh = sim.state.buildings.find((b) => b.kind === 'warehouse' && b.settlementId === sim.world.homeSettlement)
+    const wp = sim.state.buildings.find((b) => b.kind === 'woodpile' && b.settlementId === sim.world.homeSettlement)
+    const fill = (b, items) => { if (!b?.inv) return; b.inv.items = items.map(([id, qty]) => ({ id, qty })) }
+    fill(wh, [['stone', 40], ['grain', 35], ['bread', 45]])
+    fill(wp, [['log', 10], ['branch', 10]])
+    sv.setHour(12)
+    Object.assign(sim.state.weather, { kind: 'clear', fog: 0.05, until: sim.state.time.cal + 86400 })
+    sv.teleport(wh.x + Math.sin(wh.rot ?? 0) * 12, wh.z + Math.cos(wh.rot ?? 0) * 12)
+    sv.face(wh.x, wh.z)
+    sv.game.renderer.rig.distance = 9
+    sv.game.renderer.rig.pitch = 0.3
+  }],
   ['overcast', (sv) => { sv.setHour(13); Object.assign(sv.game.sim.state.weather, { kind: 'overcast', fog: 0.15, until: sv.game.sim.state.time.cal + 86400 }) }],
   ['meadow-hills', (sv) => {
     const sim = sv.game.sim

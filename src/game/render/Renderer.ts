@@ -62,6 +62,9 @@ export class Renderer {
   carts: Carts
   /** Where to draw the interaction-target ring (set by Game), or null. */
   markerAt: { x: number; z: number } | null = null
+  /** Combat target lock ring (combat--001); a separate channel from the interaction marker. */
+  combatMarker: TargetMarker
+  combatMarkerAt: { x: number; z: number } | null = null
   /** Placement ghost of the building panel (set by Game), or null. */
   ghostAt: GhostSpot | null = null
   sun = new THREE.DirectionalLight(0xfff2dd, 2)
@@ -118,13 +121,14 @@ export class Renderer {
     this.actors.cull = this.visual.actorCull
     this.dynamics = new Dynamics(sim, quality)
     this.marker = new TargetMarker(sim.terrain)
+    this.combatMarker = new TargetMarker(sim.terrain, 0xff5a4a, 0.85)
     this.ghost = new BuildGhost(sim.terrain)
     this.carts = new Carts(sim)
     if (this.visual.sky === 'dome') {
       this.skyDome = new SkyDome()
       this.scene.add(this.skyDome.mesh)
     }
-    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.caves.group, this.caveLight, this.actors.group, this.dynamics.group, this.marker.mesh, this.ghost.group, this.carts.group)
+    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.caves.group, this.caveLight, this.actors.group, this.dynamics.group, this.marker.mesh, this.combatMarker.mesh, this.ghost.group, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
@@ -338,6 +342,7 @@ export class Renderer {
     perf.measure('render.actors', () => this.actors.update(dt, this.rig.camera))
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)
+    this.combatMarker.update(dt, this.combatMarkerAt)
     this.ghost.update(dt, this.ghostAt)
     this.carts.update()
     perf.measure('render.landmarks', () => this.landmarks.update(p.x, p.z))

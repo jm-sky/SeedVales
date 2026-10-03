@@ -1,6 +1,6 @@
 # Visible stores: stockpiles that show how much a household or settlement holds
 
-**Status:** in_progress  
+**Status:** done  
 **Model:** opus — step 0 (tiers, slots, budget), look keep/drop; sonnet — render layer and tests; Blender session — models (step 2)  
 **Domain:** render  
 **Sub domains:** assets, structures, economy (read-only)  
@@ -74,3 +74,7 @@ Piles change visibly when wood is chopped/burnt and when the warehouse fills or 
   - stones: angular rocks dropped onto a height field of already placed rocks (stable seat only, mound profile, gravel); measured: no rock with > 2 cm gap underneath.
 - Third-party assets in `public/assets/parked/piles assets/` (Quaternius bags/crate CC0, K H wood pile CC-BY) were evaluated and **not used** (too heavy / wrong look); they stay untracked. The 32-log K H pile is a possible alternative variant if wanted.
 - Still open: step 3 (ab frames `stores-low`/`stores-full`, bench A/B, PERF.md), hides/wool, soak check of tiers.
+
+## Step 3 result (2026-10-03, session 14, WSL)
+
+`ab.mjs` frames `stores-low` / `stores-full` added (`scripts/e2e/frames.mjs`, stock forced through the sim) and looked at in the game lighting: sacks, crates with produce, barrels, stone and firewood read clearly next to the warehouse; low stock shows a single sack/crate/stone. Bench A/B and PERF.md entry: budget holds (+4 draw calls, ≈ 5.8 k triangles in the worst yard, `render.prep` within noise) → **4 k triangles per tier stays**. `pnpm check` and `pnpm e2e:run` green. Plan `done`; ❓ user: the look (frames in `test-results/ab/ab-current-stores-*.png`). Not done: hides/wool models, soak check of tiers against stock levels.

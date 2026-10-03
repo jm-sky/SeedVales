@@ -154,6 +154,7 @@ try {
     const sim = sv.game.sim
     const p = sim.player
     sv.pause(true)
+    p.combat = false // outside combat the button cycles interaction targets (combat--001)
     const yaw = sv.game.renderer.rig.yaw
     p.rot = yaw
     for (const [id, d] of [['stone', 1.2], ['branch', 2.2]]) sim.addGround({ id: sim.nextId(), x: p.x + Math.sin(yaw) * d, z: p.z + Math.cos(yaw) * d, stack: { id, qty: 1 }, droppedAt: sim.state.time.cal, lit: false })
@@ -164,6 +165,19 @@ try {
   await page.waitForTimeout(500)
   const tg1 = await S(() => window.__sv.game.target?.label)
   check(results, 'M8. przycisk Cel przełącza cel interakcji', !!tg0 && !!tg1 && tg0 !== tg1, `${tg0} → ${tg1}`)
+  // M8b (combat--001): in combat the same button locks the combat target.
+  await S(() => {
+    const sv = window.__sv
+    sv.game.sim.player.combat = true
+    sv.spawn('sheep', 0, 4)
+  })
+  await tap('touch-next-target')
+  await page.waitForTimeout(400)
+  const mLock = await S(() => window.__sv.game.combatTargetId)
+  check(results, 'M8b. w walce przycisk Cel blokuje cel walki', mLock !== null, { mLock })
+  await S(() => {
+    window.__sv.game.sim.player.combat = false
+  })
   await S(() => window.__sv.pause(false))
   await shot(page, 'mob-08-target')
 

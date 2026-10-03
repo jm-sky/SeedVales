@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import type { CaveGrid } from '../world/caveShape'
 import type { Terrain } from '../world/terrain'
+import { angleDiff } from '../core/math'
 
 export class CameraRig {
   camera: THREE.PerspectiveCamera
@@ -25,6 +26,11 @@ export class CameraRig {
   rotate(dx: number, dy: number) {
     this.yaw -= dx
     this.pitch = Math.min(1.35, Math.max(-0.35, this.pitch + dy))
+  }
+
+  /** Weak yaw assist toward `desired` (shortest way, at most `maxRate` rad/s); pitch is never touched. */
+  assistYaw(desired: number, dt: number, maxRate: number) {
+    this.yaw += Math.max(-maxRate * dt, Math.min(maxRate * dt, angleDiff(this.yaw, desired)))
   }
 
   zoom(delta: number) {

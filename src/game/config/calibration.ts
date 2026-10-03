@@ -57,6 +57,26 @@ export const STAMINA = {
   bowDrawPerS: 8,
 }
 
+/** Combat target lock (combat--001, D-COMBAT-1): transient, assist-only; free camera stays the default. */
+export const COMBAT_LOCK = {
+  /** Candidates within this distance (m) of the player. */
+  rangeM: 25,
+  /** A lock is dropped beyond this distance (hysteresis over rangeM). */
+  dropRangeM: 32,
+  /** Cycling prefers targets inside this camera cone (full angle, degrees); others rank after. */
+  coneDeg: 150,
+  /** The lock survives the target being off-screen (angle from the camera yaw, degrees) for this long (s) before dropping. */
+  lookAwayDeg: 120,
+  lookAwayGraceS: 5,
+  /** Camera yaw assist: max rate (rad/s) and the pause after manual look input (s). */
+  cameraRateRadS: 1.4,
+  cameraGraceS: 0.9,
+  /** Unlocked melee: the swing turns the player toward the best target by at most this much (degrees). */
+  softAssistDeg: 15,
+  /** Score penalties by class (lower score ranks first). */
+  classPenalty: { threat: 0, dangerous: 10, neutral: 25 },
+} as const
+
 export const COMBAT = {
   /** Player knock-out: stand up after, protected (ignored by enemies) for. Gameplay seconds. */
   koStandUpS: 3,

@@ -30,6 +30,8 @@ export interface PlayerInput {
   pitch: number
   /** Primary held (bow draw). */
   drawing: boolean
+  /** Transient facing intent (combat lock); undefined = face the movement direction. */
+  facing?: number
 }
 
 export const playerInput: PlayerInput = { mx: 0, mz: 0, run: false, yaw: 0, pitch: 0, drawing: false }
@@ -199,7 +201,8 @@ export function playerSystem(sim: Sim, dt: number) {
     if (blocked) {
       if (Math.floor(now) !== Math.floor(now - dt)) sim.message(blocked, 'bad')
     } else moveWithCollision(sim, p, (mx / mag) * d, (mz / mag) * d, 0.35, true)
-    p.rot = Math.atan2(mx, mz)
+    // Explicit facing (combat lock: face the target while strafing) wins over the movement direction.
+    p.rot = inp.facing ?? Math.atan2(mx, mz)
     p.moving = mode
     ex = mode === 'run' ? 'run' : mode === 'swim' ? 'swim' : 'walk'
     sim.actors.update(p)

@@ -330,3 +330,7 @@ _(empty — fill in per run: date, config, run #, outcome, host free MB min, vmm
 ## bench:sim 2026-10-03 (session 14, quiet machine, commit 762bfb3, no baseline update)
 
 All scenes ok: p95 small-settlement 0.158 ms, crowded-settlement 0.424, dense-forest 0.056, combat 0.102, chunk-traverse 0.063, accelerated-sleep 0.783, long-run-5-days 0.993 ms (budget 4 ms). Soak 10 d × seeds 1337, 7, 42, 3, 11, 99: 0 violations.
+
+## render--009 stockpiles A/B (2026-10-03, session 14, SwiftShader, medium)
+
+Scene `full-stockyard` (new in `render-bench.mjs`: every yard of the home settlement at its top tier) and the existing `crowded-settlement`, `SV_VISUAL='{"stockpiles":false}'` vs default: `render.prep` med/p95 0.40/2.78 ms (off) vs 0.40/2.89 (on) — +0.11 ms p95, inside run-to-run noise; crowded-settlement 1.21/3.39 both. Probe (`stores-full` frame, 5 s after the teleport): stockpiles add **4 draw calls** and **≈ 5.8 k triangles** (1 033 432 vs 1 027 596) with every pile at its top tier. Budget (≤ 10 draw calls, ≤ 0.1 ms p95 `render.prep`) holds; the 4 k triangles per tier template stays (Opus decision, Sonnet default: keep). GPU pair not run (WSL: one `SV_GPU` run per command; user step on device).

@@ -1,6 +1,6 @@
 # Combat target lock and soft targeting
 
-**Status:** planned  
+**Status:** done  
 **Model:** sonnet — implementation and tests; opus — decisions in `Decisions for Opus` and final keep/drop review of camera/movement feel  
 **Domain:** combat  
 **Sub domains:** input, player-movement, camera, targeting, ui, mobile, render, diagnostics  
@@ -535,3 +535,7 @@ Highest-risk areas:
 - Existing UI-06 interaction cycle, mobile M5 auto-target, mobile M8 Target cycling, cart restrictions, collision and bow draw all remain green.
 - Diagnostics exist before final game-feel tuning.
 - Final camera/movement feel receives an Opus keep/drop review.
+
+## Result (2026-10-03, session 14, Sonnet)
+
+Implemented with the plan's recommended options (D-COMBAT-1). `sim/combatTarget.ts` (eligibility, threat classes, ranking with a behind-the-camera penalty, deterministic cycling, lock validity, `lockedMove`, `turnToward`), `COMBAT_LOCK` in `calibration.ts`, `PlayerInput.facing` (movement keeps its direction, facing stays on the target), `CameraRig.assistYaw` (weak, paused `cameraGraceS` after manual look), `Game.combatTargetId` (+ `cycleCombatTarget`, `updateLock`, `dropLock`, `softAssist`), second `TargetMarker` (red ring) in `Renderer`, `TargetPrompt` hides the interaction `Tab` hint in combat. Sprint keeps the lock but uses camera-relative movement; acquiring clears autopilot; locked attacks face the target and pass `preferId`; unlocked desktop melee turns ≤ 15°; ranged unchanged (camera-driven projectile). Counters `combat.lock.acquire|switch|drop.<reason>`, `combat.softAssist.used`. Tests: `combatTarget.test.ts` (10); e2e acceptance step 15 (lock, cycle, A/D orbit with facing error 0.02 rad, leave combat clears), mobile M8b (in combat the Target button locks; M8 now sheathes first). **Not done / ❓ Opus-user feel review:** camera assist strength, orbit feel, mobile feel, hide of the interaction marker while locked (done) vs showing both.

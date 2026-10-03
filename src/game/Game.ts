@@ -6,9 +6,11 @@
 import type { QualityProfile } from './render/Renderer'
 import type { InteractOption, Target, TargetRef } from './sim/interact'
 import type { SimEvent } from './sim/sim'
-import type { Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
+import type { Actor, Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
 import type { WorldData } from './world/types'
 import { Ambience } from './audio/ambience'
+import { COMBAT_LOCK } from './config/calibration'
+import { angleDiff } from './core/math'
 import { itemDef } from './data/items'
 import { blueprintById, recipeById } from './data/recipes'
 import { perf } from './diag/perf'
@@ -20,6 +22,7 @@ import { consume, dropItem } from './sim/actions'
 import { canPlace, placeSite, startBuildWork } from './sim/build'
 import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
+import { combatCandidates, lockedMove, lockInvalid, nextCombatTarget, turnToward } from './sim/combatTarget'
 import { canCraft, craftTime } from './sim/craft'
 import { plantTorch } from './sim/fire'
 import { giveGift } from './sim/gifts'
@@ -101,6 +104,10 @@ export class Game {
   panelRef: TargetRef | null = null
   /** Target chosen with Tab (UI-06); kept while it stays in range. */
   pinnedTarget: string | null = null
+  /** Combat target lock (combat--001): transient, never saved; null = free camera/aim only. */
+  combatTargetId: number | null = null
+  private lockAwayT = 0
+  private manualLookT = 0
   /** Interactive objects currently in range (for the Tab hint). */
   targetCount = 0
   slot: string
@@ -212,8 +219,10 @@ export class Game {
     const rig = this.renderer.rig
     // Camera look.
     const sens = this.isTouch ? 0.006 : 0.0025
+    const manualLook = input.lookDX !== 0 || input.lookDY !== 0
     rig.rotate(input.lookDX * sens, input.lookDY * sens)
     input.lookDX = input.lookDY = 0
+    this.manualLookT = manualLook ? COMBAT_LOCK.cameraGraceS : Math.max(0, this.manualLookT - dt)
     if (input.zoom) {
       rig.zoom(input.zoom)
       input.zoom = 0
@@ -227,13 +236,27 @@ export class Game {
     playerInput.yaw = rig.yaw
     playerInput.pitch = rig.pitch * -0.6 + 0.12
     playerInput.drawing = input.primary && !this.panel
-    // Combat facing follows camera.
-    if (sim.player.combat && Math.hypot(ax, ay) < 0.1) sim.player.rot = rig.yaw
+    playerInput.facing = undefined
+    const locked = this.updateLock(dt)
+    if (locked) {
+      // Target-relative controls (not while sprinting: D-COMBAT-1 #2): W/S approach/retreat, A/D orbit; facing stays on the target.
+      const bearing = Math.atan2(locked.x - sim.player.x, locked.z - sim.player.z)
+      if (!playerInput.run) {
+        const m = lockedMove(bearing, ax, ay)
+        playerInput.mx = m.mx
+        playerInput.mz = m.mz
+        playerInput.facing = bearing
+      }
+      if (Math.hypot(ax, ay) < 0.1) sim.player.rot = bearing
+      if (this.manualLookT <= 0) rig.assistYaw(bearing, dt, COMBAT_LOCK.cameraRateRadS)
+    } else if (sim.player.combat && Math.hypot(ax, ay) < 0.1) sim.player.rot = rig.yaw // combat facing follows camera
     sim.interruptReason = null
     // Game menu pauses the world (single-player).
     if (this.panel !== 'menu' && this.panel !== 'settings') sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
-    this.renderer.markerAt = this.panel || sim.state.px.activity ? null : this.target
+    const lockedActor = this.combatTargetId !== null ? sim.actor(this.combatTargetId) : undefined
+    this.renderer.markerAt = this.panel || sim.state.px.activity || lockedActor ? null : this.target
+    this.renderer.combatMarkerAt = lockedActor && !this.panel ? { x: lockedActor.x, z: lockedActor.z } : null
     this.renderer.ghostAt = this.panel === 'build' && this.buildPreviewId ? this.blueprintSpot(this.buildPreviewId) : null
     this.renderer.render(dt)
     this.audio.frame(dt, sim)
@@ -387,10 +410,30 @@ export class Game {
     const w = p.eq.main ? itemDef(p.eq.main.id).weapon : undefined
     if (w?.kind === 'ranged') return // bow uses hold/release
     if (!p.combat) this.toggleCombat()
+    const locked = this.combatTargetId !== null ? this.sim.actor(this.combatTargetId) : undefined
+    if (locked) {
+      // Locked: face the target (D-COMBAT-1) and prefer it; range and cone still apply.
+      p.rot = Math.atan2(locked.x - p.x, locked.z - p.z)
+      meleeAttack(this.sim, p, this.isTouch ? 220 : 80, locked.id)
+      return
+    }
     p.rot = this.renderer.rig.yaw
+    if (!this.isTouch) this.softAssist()
     // Mobile aid (vision §27): wide auto-target cone and auto-facing the chosen target.
     const hit = meleeAttack(this.sim, p, this.isTouch ? 220 : 80)
     if (hit && this.isTouch) p.rot = Math.atan2(hit.x - p.x, hit.z - p.z)
+  }
+
+  /** Unlocked desktop melee: turn at most COMBAT_LOCK.softAssistDeg toward the best target in reach (spatial query, only on a swing). */
+  private softAssist() {
+    const sim = this.sim
+    const p = sim.player
+    const list = combatCandidates(sim, p, p.rot)
+    const best = list.find((c) => c.dist <= 3 && c.angle < Math.PI / 2)
+    if (!best) return
+    const want = Math.atan2(best.actor.x - p.x, best.actor.z - p.z)
+    p.rot = turnToward(p.rot, want, (COMBAT_LOCK.softAssistDeg * Math.PI) / 180)
+    perf.count('combat.softAssist.used')
   }
 
   private refreshTarget() {
@@ -409,8 +452,49 @@ export class Game {
     this.options = this.target ? targetOptions(sim, this.target.ref) : []
   }
 
+  /** Valid locked actor this frame (drops the lock when it ends), or null. */
+  private updateLock(dt: number): Actor | null {
+    const id = this.combatTargetId
+    if (id === null) return null
+    const sim = this.sim
+    const p = sim.player
+    if (!p.combat) return this.dropLock('combat-off')
+    if (p.vitals.ko || p.vitals.dead) return this.dropLock('ko')
+    const bad = lockInvalid(sim, p, id)
+    if (bad) return this.dropLock(bad)
+    const a = sim.actor(id)!
+    const away = Math.abs(angleDiff(this.renderer.rig.yaw, Math.atan2(a.x - p.x, a.z - p.z))) > (COMBAT_LOCK.lookAwayDeg * Math.PI) / 180
+    this.lockAwayT = away ? this.lockAwayT + dt : 0
+    if (this.lockAwayT > COMBAT_LOCK.lookAwayGraceS) return this.dropLock('look-away')
+    return a
+  }
+
+  private dropLock(reason: string): null {
+    if (this.combatTargetId !== null) perf.count(`combat.lock.drop.${reason}`)
+    this.combatTargetId = null
+    this.lockAwayT = 0
+    return null
+  }
+
+  /** Combat-mode Tab / mobile Target: acquires or cycles the combat lock (the interaction cycle is untouched outside combat). */
+  cycleCombatTarget() {
+    const sim = this.sim
+    const list = combatCandidates(sim, sim.player, this.renderer.rig.yaw)
+    const next = nextCombatTarget(list, this.combatTargetId)
+    if (!next) {
+      this.dropLock('none')
+      return this.showToast('No combat targets in range.')
+    }
+    perf.count(this.combatTargetId === null ? 'combat.lock.acquire' : 'combat.lock.switch')
+    this.combatTargetId = next.actor.id
+    this.lockAwayT = 0
+    if (sim.state.px.autopilot) sim.state.px.autopilot = undefined // D-COMBAT-1 #7
+    this.notify()
+  }
+
   /** Tab / mobile "Cel": next interactive object in range (distance + facing order), pinned until out of range. */
   cycleTarget() {
+    if (this.sim.player.combat) return this.cycleCombatTarget()
     const list = findTargets(this.sim, this.sim.player.rot)
     const next = nextTarget(list, this.target ? targetKey(this.target.ref) : null)
     if (!next) return this.showToast('No targets in range.')
@@ -433,6 +517,7 @@ export class Game {
   toggleCombat() {
     const p = this.sim.player
     p.combat = !p.combat
+    if (!p.combat) this.dropLock('combat-off')
     this.showToast(p.combat ? 'Weapon drawn (combat mode)' : 'Weapon sheathed')
   }
 

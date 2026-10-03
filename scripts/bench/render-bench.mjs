@@ -41,6 +41,20 @@ await newGame(page, '1337', quality)
 const scenes = [
   ['small-settlement', (sv) => { const st = sv.game.sim.world.settlements[0]; sv.setHour(12); sv.teleport(st.x, st.z + 15) }],
   ['crowded-settlement', (sv) => { const st = sv.game.sim.world.settlements[2]; sv.setHour(12); sv.teleport(st.x, st.z + 15) }],
+  // render--009 step 3: every stockpile yard of the settlement at its top tier (stock forced), A/B with SV_VISUAL='{"stockpiles":false}'.
+  ['full-stockyard', (sv) => {
+    const sim = sv.game.sim
+    const sid = sim.world.homeSettlement
+    for (const b of sim.state.buildings) {
+      if (b.settlementId !== sid || !b.inv) continue
+      if (b.kind === 'warehouse') b.inv.items = [{ id: 'stone', qty: 40 }, { id: 'grain', qty: 35 }, { id: 'bread', qty: 45 }]
+      if (b.kind === 'woodpile') b.inv.items = [{ id: 'log', qty: 10 }, { id: 'branch', qty: 10 }]
+    }
+    const wh = sim.state.buildings.find((b) => b.kind === 'warehouse' && b.settlementId === sid)
+    sv.setHour(12)
+    sv.teleport(wh.x, wh.z + 14)
+    return true
+  }],
   ['dense-forest', (sv) => {
     const s = sv.game.sim
     sv.setHour(12)

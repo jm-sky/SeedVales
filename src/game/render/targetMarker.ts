@@ -10,11 +10,11 @@ export class TargetMarker {
   private t = 0
   private terrain: Terrain
 
-  constructor(terrain: Terrain) {
+  constructor(terrain: Terrain, color = 0xffe08a, scale = 1) {
     this.terrain = terrain
-    const geo = new THREE.RingGeometry(0.55, 0.7, 32)
+    const geo = new THREE.RingGeometry(0.55 * scale, 0.7 * scale, 32)
     geo.rotateX(-Math.PI / 2)
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.7, depthWrite: false })
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7, depthWrite: false })
     this.mesh = new THREE.Mesh(geo, mat)
     this.mesh.renderOrder = 2
     this.mesh.visible = false

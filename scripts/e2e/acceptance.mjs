@@ -944,6 +944,47 @@ try {
   const lbl = await S(() => [...document.querySelectorAll('[data-testid="npc-labels"] [data-npc-icon]')].map((e) => ({ icon: e.getAttribute('data-npc-icon'), text: e.textContent })))
   await shot(page, 'acc-14-npc-icon')
   check(results, '14. ikona zadania i nazwa nad NPC (D-USER-1)', !!doneNpc && lbl.some((l) => l.icon === 'done' && l.text.includes(doneNpc.name)), { doneNpc, lbl })
+  // 15. combat--001: in combat mode Tab locks/cycles the combat target; A/D orbit it with the facing kept on it; leaving combat clears it.
+  await S(() => {
+    const sv = window.__sv
+    const sp = sv.openSpot(150)
+    sv.teleport(sp.x, sp.z)
+    sv.game.sim.player.combat = false
+    window.__lockIds = [sv.spawn('sheep', 0, 5), sv.spawn('sheep', 2, 9)]
+    sv.game.sim.player.rot = 0
+    sv.game.renderer.rig.yaw = 0
+  })
+  await S(() => window.__sv.game.toggleCombat())
+  await key('Tab', 400)
+  const lock1 = await S(() => window.__sv.game.combatTargetId)
+  await key('Tab', 400)
+  const lock2 = await S(() => window.__sv.game.combatTargetId)
+  const lockBefore = await S(() => {
+    const g = window.__sv.game
+    const t = g.sim.actor(g.combatTargetId)
+    const p = g.sim.player
+    return { d: Math.hypot(t.x - p.x, t.z - p.z), x: p.x, z: p.z }
+  })
+  await page.keyboard.down('a')
+  await page.waitForTimeout(900)
+  await page.keyboard.up('a')
+  await page.waitForTimeout(300)
+  const lockAfter = await S(() => {
+    const g = window.__sv.game
+    const t = g.sim.actor(g.combatTargetId)
+    const p = g.sim.player
+    const bearing = Math.atan2(t.x - p.x, t.z - p.z)
+    let err = Math.abs(p.rot - bearing) % (Math.PI * 2)
+    if (err > Math.PI) err = Math.PI * 2 - err
+    return { d: Math.hypot(t.x - p.x, t.z - p.z), x: p.x, z: p.z, err, id: g.combatTargetId }
+  })
+  const lockMoved = Math.hypot(lockAfter.x - lockBefore.x, lockAfter.z - lockBefore.z)
+  await S(() => window.__sv.game.toggleCombat())
+  const lockCleared = await S(() => window.__sv.game.combatTargetId)
+  await shot(page, 'acc-15-combat-lock')
+  check(results, '15. Tab w walce: blokada celu i przełączanie', lock1 !== null && lock2 !== null && lock1 !== lock2, { lock1, lock2 })
+  check(results, '15. A/D okrąża cel, postać patrzy na cel', lockMoved > 0.5 && lockAfter.err < 0.35 && lockAfter.id === lock2, { lockBefore, lockAfter, lockMoved })
+  check(results, '15. wyjście z walki zdejmuje blokadę', lockCleared === null, { lockCleared })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)
