@@ -84,13 +84,13 @@ Initial menu target:
 
 | Tier | Example ingredients | Target hunger restore | Price intent |
 |---|---|---:|---:|
-| Simple meal | bread + vegetable | ~35–40 | cheap |
-| Hearty meal | bread + dried/salted meat | ~45–55 | medium |
-| Good meal | stew or meat + bread + vegetable/preserved side | ~55–65 | expensive |
+| Simple meal | bread + cabbage/carrot | ~32–40 | cheap |
+| Hearty meal | bread + dried/salted meat | ~49–55 | medium |
+| Good meal | stew + bread, or meat + bread + preserved vegetable | ~60–65 | expensive |
 
-Exact numbers are calibration, not a hard design requirement. The upper tier deliberately goes above the old 25–40 generic-meal note because the requested inn meal should be a substantial travel meal; verify that it does not trivialize hunger.
+Meal nutrition should normally equal the sum of the consumed food items' existing `FoodStats.nutrition` values rather than introducing a hidden service multiplier. Ingredient sets are chosen so the tiers naturally land in the target bands. Exact prices and combinations are calibration.
 
-Ingredient selection should prefer the oldest still-edible compatible stacks first so inns do not waste fresh food while an older batch spoils.
+Do not add FIFO-by-freshness semantics in this plan. The current inventory merges compatible food stacks and keeps weighted-average freshness, so a same-item "oldest stack first" rule would require a broader inventory redesign. Meal consumption should use the existing stack semantics.
 
 ### 3. Ordering is a short player activity
 
@@ -136,14 +136,16 @@ Keep the first set small and useful.
 
 - **Salt** — resource/commodity, required by salting and fermentation.
 - **Salted meat** — long-lived meat reserve.
-- **Sauerkraut** — long-lived cabbage reserve.
+- **Fermented/pickled cabbage** — long-lived cabbage reserve. Use an English setting-appropriate name such as **Fermented cabbage** rather than assuming the later regional term "sauerkraut".
+
+These choices fit the historical direction: salting/drying meat and pickling vegetables, including cabbage, are documented medieval preservation methods. Keep the game recipe deliberately simpler than a historical cooking simulation.
 
 Suggested first-pass properties:
 
 | Item | Inputs | Shelf-life target | Notes |
 |---|---|---:|---|
 | Salted meat | raw meat + salt | 60–90 d | durable inn/travel protein |
-| Sauerkraut | cabbage + salt | 60–120 d | durable vegetable side |
+| Fermented cabbage | cabbage + salt | 60–120 d | simplified preserved vegetable |
 | Dried meat | existing recipe | 40 d | already implemented |
 
 Use ordinary `FoodStats.spoilH`; do not create a separate preservation clock.
@@ -164,7 +166,7 @@ For the first implementation, make salt a **finite imported/trade commodity**:
 
 - seed modest salt stock in trader stores and/or settlement warehouses;
 - seed larger inn reserve where appropriate;
-- expose it through the normal item-source/reachability audit.
+- expose salt through the normal item-source/reachability audit via a real catalogue source such as trader stock; initial inn stock alone must not be the only reachability root.
 
 Do not add periodic free salt generation.
 
@@ -201,24 +203,15 @@ Biases may include:
 
 Keep `HOUSEHOLD_PANTRY` for universal basics, but move emergency preserves into a separate seeded reserve helper/table so the intent is clear.
 
-### 8. Ongoing inn resupply
+### 8. Resupply boundary
 
-Do not generate food directly inside the inn.
+This plan does **not** add an ongoing inn-resupply economy.
 
-Add a low-frequency inn resupply path that moves real stock into `inn.inv`:
+The first slice gives inns finite initial stock and lets it deplete. That is intentional: it proves that meals consume real inventory without introducing a second background production/procurement system.
 
-1. prefer settlement warehouse surplus;
-2. optionally buy household surplus when the treasury can afford it;
-3. move items physically in inventory terms (source stack decreases, inn stack increases);
-4. when buying from a household, treasury pays the household/NPC owner and the ledger records it;
-5. preserve household food reserves — do not take below the same reserve rules used by trade.
+Ongoing resupply belongs to `economy--002` / TRADE-03, where household production, regional availability and inter-settlement goods movement are designed together. When that work lands, inns should become another demand sink that purchases or receives real food from those flows.
 
-Keep this deliberately simple and low frequency (calendar-scale, not per tick).
-
-If implementing household procurement would overlap too much with `economy--002` step 5, the acceptable first slice is:
-- initial inn stock;
-- warehouse -> inn transfers only;
-- explicit follow-up note that household procurement lands with the L3 economy work.
+A small manual/explicit transfer helper may be added only if needed by tests or future economy integration, but no periodic free refill and no inn-specific production system are allowed here.
 
 ### 9. Recipes and crafting
 
@@ -229,7 +222,7 @@ The existing crafting system has only `campfire`, `anvil` and `dryrack` stations
 First slice options:
 
 - salted meat: knife/cut capability or no station, moderate craft time;
-- sauerkraut: no station or a simple container/tool requirement only if an existing suitable item can be reused;
+- fermented cabbage: no station in the first slice; treat the recipe as a simplified preservation action using cabbage + salt;
 - keep dried meat on the drying rack.
 
 Do not require a consumable barrel unless the game gains reusable container accounting. A barrel can remain the visual/storage representation of a stack in a building.
@@ -246,9 +239,8 @@ If a preservation station is later justified by multiple recipes, add it as a se
 | 3 | Add `InnMeal` data and meal availability/ingredient-selection helpers over `inn.inv` | sonnet |
 | 4 | Add short meal activity and completion transaction: re-check, consume, pay treasury, restore hunger; cancellation is free | sonnet |
 | 5 | Refactor inn lodging payment to the same explicit settlement-service payment helper; remove arbitrary trader-as-innkeeper lookup | sonnet |
-| 6 | Add low-frequency real-stock inn resupply from warehouse; add paid household-surplus procurement only if it does not duplicate `economy--002` | sonnet |
-| 7 | UI/interactions: show meal tiers, price, availability and "out of food" state on desktop/mobile without waiter/table simulation | sonnet |
-| 8 | Verification and tuning: unit tests, economy conservation, spoilage, save/load, e2e inn meal, mobile interaction, soak supply/depletion | sonnet + opus review |
+| 6 | UI/interactions: show meal tiers, price, availability and "out of food" state on desktop/mobile without waiter/table simulation | sonnet |
+| 7 | Verification and tuning: unit tests, economy conservation, spoilage, save/load, e2e inn meal, mobile interaction, finite-stock depletion | sonnet + opus review |
 
 ## Tests / acceptance criteria
 
@@ -267,7 +259,7 @@ If a preservation station is later justified by multiple recipes, add it as a se
 
 ### Preserved foods
 
-- `salted_meat` and `sauerkraut` are reachable through the item-source audit.
+- `salted_meat` and `fermented_cabbage` (final id/name chosen in implementation) are reachable through the item-source audit.
 - Salt itself has an explicit finite source; no periodic free minting.
 - Preservation recipes consume their inputs and produce exactly their outputs.
 - Preserved foods spoil using the existing freshness system and live materially longer than their fresh inputs.
@@ -277,10 +269,9 @@ If a preservation station is later justified by multiple recipes, add it as a se
 
 - Every inn starts with a non-zero useful pantry.
 - Only a subset of households receives extra emergency preserves; the result is deterministic for the same new game seed.
-- Inn resupply always has a source inventory and never duplicates items.
-- Paid household procurement conserves money.
-- Household reserve rules prevent the inn from emptying a family's protected food.
-- 10-day × 3-seed soak: no negative quantities, no money/item conservation drift, inns are neither permanently full from free generation nor universally empty after the first few customers.
+- Repeated meal purchases reduce inn stock and can make tiers unavailable.
+- No periodic system replenishes the inn in this slice.
+- 10-day × 3-seed soak: no negative quantities and no money/item conservation drift; depletion is observable and expected rather than masked by free generation.
 
 ### Save/versioning
 
@@ -312,7 +303,8 @@ No `GEN_VERSION` bump is expected unless world generation itself changes.
 - `src/game/sim/newGame.ts`
 - `src/game/sim/interact.ts`
 - `src/game/sim/player.ts` / activity completion path
-- `src/game/sim/worldSystems.ts` or a focused `sim/inns.ts` system
+- focused `src/game/sim/inns.ts` helper for meal availability/completion if keeping this out of `interact.ts`
+- `src/game/sim/playerActivities.ts`
 - `src/game/sim/eventLog.ts`
 - relevant unit/e2e/mobile tests
 
@@ -322,4 +314,4 @@ This plan owns the **player-facing inn meal service, preserved-food content and 
 
 `economy--002` continues to own the broader redesign of household background production, regional availability, inter-settlement demand/supply and long-term economic calibration.
 
-When both are implemented, the inn should consume the production/trade outputs of that economy rather than maintain special-case free production.
+When both are implemented, the inn should consume the production/trade outputs of that economy rather than maintain special-case free production or a private refill loop.
