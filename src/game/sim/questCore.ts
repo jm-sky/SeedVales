@@ -199,9 +199,15 @@ function roadPoint(sim: Sim, m: number): { x: number; z: number } | null {
 }
 
 /** Nearest landmark of a kind to a road between two places (≤ 1.2 km from it) or to the home settlement; null when none qualifies. */
-function landmarkPoint(sim: Sim, kind: string, pick: 'nearestRoad' | 'nearestHome', road?: readonly [QuestPlace, QuestPlace]): { x: number; z: number } | null {
+function landmarkPoint(sim: Sim, kind: string, pick: 'nearestRoad' | 'nearestHome' | 'nearestTown', road?: readonly [QuestPlace, QuestPlace]): { x: number; z: number } | null {
   const list = sim.world.landmarks.filter((l) => l.kind === kind)
   if (!list.length) return null
+  if (pick === 'nearestTown') {
+    const ts = sim.world.settlements[townId(sim)]
+    if (!ts) return null
+    const l = [...list].sort((a, b) => Math.hypot(a.x - ts.x, a.z - ts.z) - Math.hypot(b.x - ts.x, b.z - ts.z))[0]!
+    return Math.hypot(l.x - ts.x, l.z - ts.z) <= 4500 ? { x: l.x, z: l.z } : null
+  }
   if (pick === 'nearestHome') {
     const hs = sim.world.settlements[homeId(sim)]!
     const l = [...list].sort((a, b) => Math.hypot(a.x - hs.x, a.z - hs.z) - Math.hypot(b.x - hs.x, b.z - hs.z))[0]!
@@ -868,6 +874,10 @@ function applyEffect(c: QuestCtx, e: Effect) {
       break
     case 'hold':
       setHold(c, e.slot, e)
+      break
+    case 'harm':
+      applyPartDamage(sim.player.vitals, 'torso', e.amount, true)
+      sim.message('Stone and timber shift and fall on you.', 'bad')
       break
     case 'hurt': {
       const a = actorOf(c, e.slot)

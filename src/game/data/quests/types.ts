@@ -52,9 +52,9 @@ export type Anchor =
   /**
    * A landmark of `kind` (quests--003 W3): `nearestRoad` = the one closest to the road between the two places (within 1.2 km of
    * it; no such landmark → the anchor does not exist and a quest that needs it is never offered), `nearestHome` = closest to
-   * the home settlement.
+   * the home settlement, `nearestTown` = closest to {T} (within 4.5 km).
    */
-  | { k: 'landmark'; kind: LandmarkKind; pick: 'nearestRoad' | 'nearestHome'; road?: readonly [QuestPlace, QuestPlace] }
+  | { k: 'landmark'; kind: LandmarkKind; pick: 'nearestRoad' | 'nearestHome' | 'nearestTown'; road?: readonly [QuestPlace, QuestPlace] }
   /** A point `dx`, `dz` metres from another anchor (resolved once). */
   | { k: 'offset'; of: Anchor; dx: number; dz: number }
 
@@ -159,6 +159,8 @@ export type Effect =
   | { k: 'follow'; slot: SlotId; target: 'player' | SlotId }
   | { k: 'unfollow'; slot: SlotId }
   | { k: 'spawn'; slot: SlotId }
+  /** The player is hurt (a collapse): `amount` damage to the torso. */
+  | { k: 'harm'; amount: number }
   /** Wounds a cast animal (an NPC's arrow), `amount` damage to the torso. */
   | { k: 'hurt'; slot: SlotId; amount: number }
   /** Kills a cast animal without loot or a player kill (poison, another hunter): it leaves an ordinary corpse. */
