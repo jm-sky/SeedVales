@@ -9,6 +9,8 @@ import { dropItem } from './actions'
 import { layersApart, pointInCave } from './caveSpace'
 import { moveWithCollision } from './collision'
 import { findTargets } from './interact'
+import { requestJump } from './motion'
+import { playerInput } from './player'
 import { Sim } from './sim'
 import { testSim } from './testWorld'
 
@@ -150,5 +152,35 @@ describe('WORLD-05 items on the cave floor (world--003 step 3)', () => {
     dropItem(sim, p.x, p.z, { id: 'stone', qty: 1 })
     const surface = sim.groundNear(p.x, p.z, 3).find((g) => !g.cave)!
     expect(findTargets(sim, p.rot, 3.2).some((t) => t.ref.type === 'ground' && t.ref.id === surface.id)).toBe(false)
+  })
+})
+
+describe('WORLD-05 jumping inside a cave (combat--004 reconciliation)', () => {
+  it('a jump lands on the cave floor and the head stops under the roof — the player never pops up to the surface', () => {
+    const sim = testSim(1337)
+    const cave = sim.world.caves[0]
+    if (!cave) return
+    const pts = spinePoints(cave)
+    const dx = Math.sin(cave.yaw)
+    const dz = Math.cos(cave.yaw)
+    const p = sim.player
+    p.x = cave.x - dx * 4
+    p.z = cave.z - dz * 4
+    p.y = sim.terrain.heightAt(p.x, p.z)
+    const log = { maxDy: 0 }
+    for (const q of pts) walk(sim, q.x, q.z, log)
+    expect(sim.state.px.cave).toBe(1)
+    const floor = sim.terrain.caves.grid(0).floorAt(p.x, p.z)
+    const ceil = sim.terrain.caves.grid(0).ceilAt(p.x, p.z)
+    requestJump(sim)
+    let top = p.y
+    for (let i = 0; i < 80; i++) {
+      Object.assign(playerInput, { mx: 0, mz: 0, run: false })
+      sim.step(0.02)
+      top = Math.max(top, p.y)
+    }
+    expect(top).toBeLessThan(ceil - 0.5)
+    expect(p.y).toBeCloseTo(floor, 2)
+    expect(sim.state.px.cave).toBe(1)
   })
 })

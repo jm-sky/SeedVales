@@ -9,7 +9,7 @@ import { ACCEL, COMBAT, DODGE, JUMP, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { cartBlocked, cartDef } from './cart'
-import { playerGroundY } from './caveSpace'
+import { caveVolumeAt, HEAD_ROOM_M, playerGroundY } from './caveSpace'
 import { groundHeight, moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
 import { dodgeOf } from './dodge'
@@ -207,6 +207,12 @@ export function playerSystem(sim: Sim, dt: number) {
   if (!mo.grounded) {
     mo.vy -= JUMP.gravity * dt
     yNext = p.y + mo.vy * dt
+    // Under a cave roof the head stops the rise (the apex is clamped to the clearance).
+    const vol = caveVolumeAt(sim, p.x, p.z)
+    if (vol && yNext > vol.ceil - HEAD_ROOM_M) {
+      yNext = Math.max(p.y, vol.ceil - HEAD_ROOM_M)
+      mo.vy = Math.min(mo.vy, 0)
+    }
   }
   if (mag > 0.05 && !px.activity) {
     const pen = penalty(p.vitals) * (1 - armorSpeedPenalty(p))
@@ -279,7 +285,7 @@ export function playerSystem(sim: Sim, dt: number) {
 function landPlayer(sim: Sim, p: Human, mo: PlayerMotion, x: number, z: number) {
   p.x = x
   p.z = z
-  p.y = groundHeight(sim, x, z)
+  p.y = caveVolumeAt(sim, x, z)?.floor ?? groundHeight(sim, x, z)
   mo.grounded = true
   mo.vy = 0
 }

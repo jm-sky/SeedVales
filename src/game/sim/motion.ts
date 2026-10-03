@@ -5,6 +5,7 @@
  */
 import type { Sim } from './sim'
 import { JUMP, SWIM_DEPTH_M, TRAVERSE } from '../config/calibration'
+import { caveVolumeAt } from './caveSpace'
 import { groundHeight } from './collision'
 import { isDown } from './combat'
 
@@ -51,6 +52,8 @@ export function requestJump(sim: Sim): boolean {
 
 /** Walk surface under an airborne player: a bridge deck counts only when the feet are above it (crossing from above), else the terrain. */
 export function supportFor(sim: Sim, x: number, z: number, feetY: number): number {
+  const cave = caveVolumeAt(sim, x, z)
+  if (cave) return cave.floor // inside a cave the support is its floor, never the surface above
   const ground = groundHeight(sim, x, z)
   const terrain = sim.terrain.heightAt(x, z)
   return ground > terrain && feetY < ground - 0.3 ? terrain : ground
@@ -61,6 +64,7 @@ const LANDING_PROBE_M = 0.25
 
 /** True when the ground at (x, z) is stable to stand on: no cardinal neighbour within the probe rises faster than the walk limit. */
 export function stableSupport(sim: Sim, x: number, z: number): boolean {
+  if (caveVolumeAt(sim, x, z)) return true // cave floors are walkable by construction
   const t = sim.terrain
   const h = t.heightAt(x, z)
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {

@@ -6,6 +6,7 @@
 
 *Single snapshot of the current state (updated 2026-10-03, end of session 15, main at `85bd45d`). History per session is below; older archive in [progress-log.md](progress-log.md).*
 
+- **Authority:** the user allowed Sonnet to take decisions the plans assign to Opus (2026-10-03); record them in DECISIONS as user-authorised Sonnet defaults.
 - **Rules:** D-LANG-1 — English everywhere (UI, names, docs, comments); Polish docs are legacy. Never weaken tests or budgets; commit per feature, push only as the user asks.
 - **Verification (2026-10-03, WSL):** `pnpm check` 580/580 (102 files, type-check + lint + layers); `pnpm e2e:run` smoke 5/5 · acceptance 47/47 · mobile 16/16, 0 console errors; `pnpm soak --days=10 --seeds=1337,7,42` 0 violations (session 14: 6 seeds, 0). Benchmarks (`bench:sim`, render A/B) were not re-run this session — numbers in `PERF.md` predate quests W1/W2, market day and equipment modules.
 - **Formats:** `SAVE_VERSION` 9 (unreleased: new optional fields need no bump, D-SAVE-7), `GEN_VERSION` 10 (caves, D-CAVE-1).
@@ -13,7 +14,7 @@
 - **Active work:**
   - `quests--003` (in progress; plan header corrected): W2 open — G05 (boundary oak: `boundary` anchor + `fell` event), Q02 (creature group + den), Q06 (companion contract from dialog, E8); then W3 treasure quests; W4 Q10 blocked on deferred systems.
   - `render--011` (in progress): stage 2 items (`padded_jacket`, `leather_jerkin`, `studded_leather`, `chainmail`, `leather_cap`, `leather_trousers`, `bracers`), other professions' look, PERF A/B. `render--012` (Blender modules) later, on the user's art decision.
-  - **Caves (`world--003`, wave 5e): the user released them to this line on 2026-10-03 (the second agent no longer owns them) — implement per the plan, steps 3–8;** v1 and layer isolation (step 3 partial) are on main; expect conflicts in world gen / collision / camera / save and `git pull --rebase` first.
+  - **Caves (`world--003`, wave 5e): released to this line by the user on 2026-10-03 (the second agent no longer owns them); done this session: floor items, chamber loot, ambience, minimap marker, jump in caves, mouth skirt (see the plan's last Update); open: NPC/animal navigation, large caves, look pass of the entrance;** v1 and layer isolation (step 3 partial) are on main; expect conflicts in world gen / collision / camera / save and `git pull --rebase` first.
   - Other `in_progress` plans: `review--001` (loop closed for this wave), `proposals--001`, `audio--001` (steps 6+: fire loop exists; door/UI one-shots wait for a door mechanic), `world--001` (chests need a model), `settlement--001` (mayor slice), `render--003/004/005`, `diag--002`.
 - **Open issues:**
   - Opus wave review (`wave-review`) and app review (`app-review`) of the nine new quests and the equipment look are still to do.

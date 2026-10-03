@@ -89,3 +89,15 @@ export function projectileGround(sim: Sim, x: number, z: number, y: number): num
   }
   return sim.terrain.heightAt(x, z)
 }
+
+/** While the player is in a cave: the floor and ceiling heights at (x, z) when the cell is open, else null (jump landing and head clearance). */
+export function caveVolumeAt(sim: Sim, x: number, z: number): { floor: number; ceil: number } | null {
+  const c = sim.state?.px?.cave ?? 0
+  if (c <= 0) return null
+  const g = sim.terrain.caves.grid(c - 1)
+  if (g.flagAt(x, z) === 0) return null
+  return { floor: g.floorAt(x, z), ceil: g.ceilAt(x, z) }
+}
+
+/** Clearance (m) the head needs below a cave ceiling: a jump apex is clamped to it. */
+export const HEAD_ROOM_M = 1.9
