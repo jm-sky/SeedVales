@@ -27,7 +27,7 @@ await sv(page, () => {
 for (const [name, yawOff, pitch, dist] of [['side', Math.PI / 2, 0.35, 14], ['top', 0, 1.3, 16], ['front-far', 0, 0.3, 14]]) {
   await sv(page, ([yo, pi, di]) => {
     const rig = window.__sv.game.renderer.rig
-    const c = window.__sv.game.sim.world.caves[0]
+    const _c = window.__sv.game.sim.world.caves[0]
     rig.yaw = rig.yaw0 + yo
     rig.pitch = pi
     rig.distance = di

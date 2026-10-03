@@ -127,6 +127,8 @@ export interface ActorBase {
   /** Last action animation (render hint) and time. */
   action?: { kind: string; at: number }
   attackReadyAt: number
+  /** Cave layer of a non-player actor (index + 1); absent = surface. The player's lives in `px.cave` (D-CAVE-2). */
+  cave?: number
 }
 
 export type AgeGroup = 'child' | 'adult' | 'elder'

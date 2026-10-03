@@ -14,6 +14,7 @@ import { RARE_STOCK } from '../data/loot'
 import { NAMES, PROFESSIONS, SURNAMES } from '../data/professions'
 import { emptySkills } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
+import { buildCaveGrid, spinePoints } from '../world/caveShape'
 import { sampleGrid } from '../world/grid'
 import { addItem, newStack } from './inventory'
 import { assignHeadmen } from './mayor'
@@ -268,6 +269,23 @@ export function createNewGame(world: WorldData): GameState {
     addItem(player.inv, newStack(it, q))
   }
   player.eq.main = newStack(PLAYER_START_WEAPON)
+
+  // Cave dwellers (world--003 step 7, D-CAVE-2): a lone predator or a few rats deep in each cave. Own RNG stream and
+  // spawned after everyone else, so the rest of the population (and the player's id) is unchanged.
+  const crng = new Rng(world.seed ^ 0xca7ef)
+  world.caves.forEach((c, ci) => {
+    const pts = spinePoints(c)
+    const deep = pts[pts.length - 1]!
+    const grid = buildCaveGrid(c, (x, z) => sampleGrid(world.height, x, z))
+    const kinds: SpeciesId[] = c.size === 'medium' ? ['bear'] : ci % 2 === 0 ? ['wolf'] : ['rat', 'rat', 'rat']
+    for (const sp of kinds) {
+      const x = deep.x + crng.range(-1.5, 1.5)
+      const z = deep.z + crng.range(-1.5, 1.5)
+      const a = makeAnimal(nextId++, sp, sp === 'rat' ? 'adult' : rollVariant(crng, false), x, z, grid.floorAt(x, z), crng)
+      a.cave = ci + 1
+      animals.push(a)
+    }
+  })
 
   assignHeadmen({ state: { settlements, npcs } })
 

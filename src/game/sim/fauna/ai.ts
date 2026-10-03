@@ -10,6 +10,7 @@ import { CALENDAR_SPEED, CARRION, HUNT } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, VARIANT_MULT } from '../../data/species'
 import { perf } from '../../diag/perf'
+import { caveOf, caveSnap, layersApart } from '../caveSpace'
 import { isDown, isProtected, killAnimal, meleeAttack } from '../combat'
 import { logConsume } from '../eventLog'
 import { steerTo } from '../movement'
@@ -24,6 +25,7 @@ import { decideAnimal, decisionInterval } from './perception'
 type Target = { x: number; z: number }
 
 function pickWander(sim: Sim, a: Animal, r: number): Target {
+  if (a.cave) return caveSnap(sim, a.cave, a.homeX + sim.rng.range(-r, r), a.homeZ + sim.rng.range(-r, r), 6)
   for (let t = 0; t < 6; t++) {
     const ang = sim.rng.range(0, Math.PI * 2)
     const d = sim.rng.range(r * 0.2, r)
@@ -68,7 +70,7 @@ export function updateAnimal(sim: Sim, a: Animal, dt: number, full: boolean) {
   if (aggro && !isDown(sim, aggro) && !(aggro.kind === 'player' && isProtected(sim, aggro))) {
     const reach = sp.attackRange + 0.5
     ai.label = 'Attacking'
-    if (steerTo(sim, a, aggro.x, aggro.z, sp.run * speedMul, dt, reach, full, 0.3) === 'arrived') {
+    if (steerTo(sim, a, aggro.x, aggro.z, sp.run * speedMul, dt, reach, full, 0.3, caveOf(sim, aggro)) === 'arrived') {
       a.rot = Math.atan2(aggro.x - a.x, aggro.z - a.z)
       meleeAttack(sim, a, 120, aggro.id)
     }
@@ -181,6 +183,15 @@ function planAnimal(sim: Sim, a: Animal) {
   const hr = hourOf(cal)
   const go = (t: Target, run = false, range = 1) => ai.steps.push({ op: 'goto', x: t.x, z: t.z, run, range })
   ai.stepT = 0
+  // Cave dwellers (D-CAVE-2): bound to their cave, no water or hunting trips; they doze and shuffle between open cells.
+  if (a.cave) {
+    a.thirstH = 0
+    a.hungerH = 0
+    ai.goal = 'graze'
+    go(caveSnap(sim, a.cave, a.homeX + sim.rng.range(-8, 8), a.homeZ + sim.rng.range(-8, 8), 6), false, 1)
+    ai.steps.push({ op: 'work', act: sim.rng.chance(0.5) ? 'rest' : 'graze', dur: sim.rng.range(15, 50), label: sim.rng.chance(0.5) ? 'Resting' : 'Prowling' })
+    return
+  }
   // Domestic: follow owner (sheep/dog), stay near pen, drink at trough.
   if (sp.temperament === 'domestic' && a.householdId !== undefined) {
     const hh = sim.state.households[a.householdId]
@@ -249,7 +260,7 @@ function planAnimal(sim: Sim, a: Animal) {
       }
     }
     if (sp.preys && a.hungerH > 16 && (ai.cooldowns.hunt ?? 0) <= sim.state.time.play) {
-      const prey = sim.actors.query(a.x, a.z, sp.perception * 1.5).find((o) => o.kind === 'animal' && sp.preys!.includes((o as Animal).species) && !isDown(sim, o))
+      const prey = sim.actors.query(a.x, a.z, sp.perception * 1.5).find((o) => o.kind === 'animal' && !layersApart(sim, a, o) && sp.preys!.includes((o as Animal).species) && !isDown(sim, o))
       if (prey) {
         ai.goal = 'hunt'
         ai.goalAt = sim.state.time.play

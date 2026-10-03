@@ -4,12 +4,13 @@
  * @subdomain collision
  */
 import type { ResNode } from '../world/nodes'
+import type { CaveMover } from './caveSpace'
 import type { BoxSolid } from './landmarkSolids'
 import type { Sim } from './sim'
 import { JUMP, TRAVERSE } from '../config/calibration'
 import { perf } from '../diag/perf'
 import { isTree } from '../world/nodes'
-import { caveOf, caveStep } from './caveSpace'
+import { caveOf, caveStep, moverOf, setCave } from './caveSpace'
 
 export const NO_COLLIDE = new Set(['bridge', 'campfire', 'field', 'herbgarden', 'pen'])
 const scratch: ResNode[] = []
@@ -70,18 +71,18 @@ export function moveWithCollision(
   const size = sim.world.size
   nx = Math.min(size - 20, Math.max(20, nx))
   nz = Math.min(size - 20, Math.max(20, nz))
-  const isPlayer = a === sim.state.player
+  const mover = moverOf(sim, a)
   const hasCaves = sim.terrain.caves.count > 0
   const ctx = hasCaves ? caveOf(sim, a) : 0
   if (ctx > 0) {
     // Inside a cave: only the cave's own walls and floor matter (surface trees/buildings are above the roof).
-    const r = pickCaveStep(sim, isPlayer, ctx, a, nx, nz)
+    const r = pickCaveStep(sim, mover, ctx, a, nx, nz)
     const moved = r !== null
     if (r) {
       a.x = r.x
       a.z = r.z
       a.y = r.step.y
-      sim.state.px.cave = r.step.cave
+      setCave(sim, a, r.step.cave)
     }
     return moved
   }
@@ -148,7 +149,7 @@ export function moveWithCollision(
   }
   if (hasCaves) {
     // Cuttings: only the player may enter one, and only where the floor meets his height; slide along the edge.
-    const r = pickCaveStep(sim, isPlayer, 0, a, nx, nz)
+    const r = pickCaveStep(sim, mover, 0, a, nx, nz)
     if (!r) {
       nx = a.x
       nz = a.z
@@ -156,7 +157,7 @@ export function moveWithCollision(
       nx = r.x
       nz = r.z
       if (r.step.cave > 0) {
-        sim.state.px.cave = r.step.cave
+        setCave(sim, a, r.step.cave)
         a.x = nx
         a.z = nz
         a.y = r.step.y
@@ -172,10 +173,10 @@ export function moveWithCollision(
 }
 
 /** First allowed of: the wanted position, sliding along x, sliding along z; null when all are blocked. */
-function pickCaveStep(sim: Sim, isPlayer: boolean, ctx: number, a: { x: number; y: number; z: number }, nx: number, nz: number) {
+function pickCaveStep(sim: Sim, mover: CaveMover, ctx: number, a: { x: number; y: number; z: number }, nx: number, nz: number) {
   for (const [x, z] of [[nx, nz], [nx, a.z], [a.x, nz]] as const) {
     if (x === a.x && z === a.z) continue
-    const step = caveStep(sim, isPlayer, ctx, a.y, x, z)
+    const step = caveStep(sim, mover, ctx, a.y, x, z)
     if (step.ok) return { x, z, step }
   }
   return null

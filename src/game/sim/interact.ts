@@ -9,6 +9,7 @@ import { SPECIES } from '../data/species'
 import { isTree } from '../world/nodes'
 import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, unloadInto, unloadToBuilding } from './cart'
+import { layersApart } from './caveSpace'
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { maxEdge, serviceBlade, sharpenServicePrice } from './edge'
@@ -115,7 +116,7 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   // Inside a cave only things on its own floor are within reach: the surface above shares x/z but is rock away (world--003 step 3).
   if ((sim.state.px.cave ?? 0) > 0) return cands.sort((a, b) => a.dist - b.dist)
   for (const a of sim.actors.query(p.x, p.z, maxDist + 1)) {
-    if (a === p) continue
+    if (a === p || layersApart(sim, p, a)) continue
     if (a.kind === 'npc') push({ type: 'npc', id: a.id }, `${(a as Human).name}${sim.state.settlements[(a as Human).settlementId]?.headmanId === a.id ? ' (headman)' : ''}`, a.x, a.z)
     else if (a.kind === 'animal' && SPECIES[(a as Animal).species].temperament === 'domestic') push({ type: 'animal', id: a.id }, SPECIES[(a as Animal).species].name, a.x, a.z)
   }

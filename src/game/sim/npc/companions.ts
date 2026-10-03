@@ -3,6 +3,7 @@ import type { Sim } from '../sim'
 import type { CompanionRisk, CompanionTask, Human, ItemStack } from '../types'
 import { COMPANION, RUN_SPEED_MPS, WALK_SPEED_MPS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
+import { caveOf } from '../caveSpace'
 import { isDown } from '../combat'
 import { logMoney } from '../eventLog'
 import { addItem, findFood, removeStack, wearBetterArmor, wieldBest } from '../inventory'
@@ -224,13 +225,16 @@ export function companionsOnKill(sim: Sim, x: number, z: number) {
 /** Formation point behind the player for the i-th companion. */
 export function followPoint(sim: Sim, npc: Human): { x: number; z: number } {
   const p = sim.player
+  // Underground the formation point could lie in rock: stand next to the player instead.
+  if ((sim.state.px.cave ?? 0) > 0) return { x: p.x, z: p.z }
   const list = companionsOf(sim)
   const i = Math.max(0, list.indexOf(npc))
   const a = p.rot + Math.PI + (i - (list.length - 1) / 2) * 0.7
   return { x: p.x + Math.sin(a) * 2.5, z: p.z + Math.cos(a) * 2.5 }
 }
 
-export const companionDist = (sim: Sim, npc: Human) => Math.hypot(npc.x - sim.player.x, npc.z - sim.player.z)
+/** Distance to the player; on a different layer (one underground, the other not) it counts as far however near in x/z. */
+export const companionDist = (sim: Sim, npc: Human) => Math.hypot(npc.x - sim.player.x, npc.z - sim.player.z) + (caveOf(sim, npc) !== (sim.state.px.cave ?? 0) ? 40 : 0)
 
 /** Executes the follow goal (direct steering, like fighting): walk, or run to catch up. */
 export function follow(sim: Sim, h: Human, dt: number, full: boolean) {
@@ -238,7 +242,7 @@ export function follow(sim: Sim, h: Human, dt: number, full: boolean) {
   const d = companionDist(sim, h)
   const run = d > COMPANION.catchUpM || sim.player.moving === 'run'
   const speed = (run ? RUN_SPEED_MPS : WALK_SPEED_MPS * 1.1) * penalty(h.vitals)
-  const r = steerTo(sim, h, t.x, t.z, speed, dt, 0.8, full)
+  const r = steerTo(sim, h, t.x, t.z, speed, dt, (sim.state.px.cave ?? 0) > 0 ? 1.8 : 0.8, full, 0.35, sim.state.px.cave ?? 0)
   if (r === 'stuck') {
     // Unreachable (deep water, cliff): wait a while instead of pressing into the obstacle every tick.
     const now = sim.state.time.play

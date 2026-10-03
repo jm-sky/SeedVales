@@ -9,6 +9,7 @@ import type { Actor } from './types'
 import { SWIM_DEPTH_M } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { perf } from '../diag/perf'
+import { caveOf, caveWaypoint } from './caveSpace'
 import { moveWithCollision } from './collision'
 import { detourPoint } from './detour'
 
@@ -26,26 +27,40 @@ export function steerTo(
   range: number,
   full: boolean,
   radius = 0.35,
+  /** Layer the target lies on (cave index + 1, 0 = surface); defaults to the actor's own. */
+  targetCave?: number,
 ): 'arrived' | 'moving' | 'stuck' {
+  const ctx = sim.terrain.caves.count ? caveOf(sim, a) : 0
+  const tctx = targetCave ?? ctx
+  // Underground routing (D-CAVE-2): through the mouth and along the cave spine instead of straight through rock.
+  const wp = ctx > 0 || tctx > 0 ? caveWaypoint(sim, ctx, a.x, a.z, tx, tz, tctx) : null
+  if (wp) {
+    tx = wp.x
+    tz = wp.z
+  }
   const dx = tx - a.x
   const dz = tz - a.z
   const d = Math.hypot(dx, dz)
-  if (d <= range) {
+  if (!wp && d <= range && ctx === tctx) {
     a.moving = 'idle'
     return 'arrived'
+  }
+  if (wp && d < 0.3) {
+    a.moving = 'walk'
+    return 'moving'
   }
   const want = Math.atan2(dx, dz)
   // Turn smoothly (visual), but move along desired direction.
   a.rot += angleDiff(a.rot, want) * Math.min(1, dt * 8)
   const depth = full ? sim.terrain.waterDepthAt(a.x, a.z) : 0
   const sp = depth > SWIM_DEPTH_M ? Math.min(speed, 0.8) : speed
-  const step = Math.min(d - range * 0.5, sp * dt)
+  const step = Math.max(0, wp ? Math.min(d, sp * dt) : Math.min(d - range * 0.5, sp * dt))
   const ox = a.x
   const oz = a.z
   let dirx = dx / d
   let dirz = dz / d
   // Near LOD: go around a building in the way (corner waypoint) instead of pressing into the wall.
-  const via = full ? detourPoint(sim, a.x, a.z, tx, tz, radius) : null
+  const via = full && ctx === 0 && !wp ? detourPoint(sim, a.x, a.z, tx, tz, radius) : null
   if (via) {
     const vd = Math.hypot(via.x - a.x, via.z - a.z) || 1
     dirx = (via.x - a.x) / vd
