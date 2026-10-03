@@ -5,7 +5,7 @@
 **Domain:** transport  
 **Sub domains:** fauna, movement, inventory, economy, interaction, render, save, AI  
 **Roadmap:** ../roadmap/later-vision-backlog.md stage L4, **TRANS-02**  
-**Depends on:** [transport--001--riding-and-pack-animals.md](transport--001--riding-and-pack-animals.md)  
+**Depends on:** [transport--001--riding-and-pack-animals.md](transport--001--riding-and-pack-animals.md); [economy--002--production-chain-and-calibration.md](economy--002--production-chain-and-calibration.md) step 3 for cart wear/repair  
 **Created:** 2026-10-03  
 **Finished:** —
 
@@ -37,7 +37,7 @@ Verified on current main:
   - render pooling in src/game/render/carts.ts.
 - src/game/sim/player.ts already applies cart speed and cartBlocked while pushing.
 - src/game/sim/interact.ts already treats parked carts as interaction targets.
-- D-TRANS-2 explicitly defers cart wear.
+- D-TRANS-2 explicitly defers cart wear; that deferred decision is already scheduled for `economy--002` step 3. **Feature id `TRANS-02` and decision id `D-TRANS-2` are different things.**
 - transport--001 owns:
   - horse/donkey ownership;
   - purchase;
@@ -89,26 +89,45 @@ Recommended:
 - add a new wagon-capable cart definition, e.g. `wagon`;
 - do **not** convert wheelbarrow/handcart into animal-drawn vehicles;
 - keep using the existing `Cart` saved entity where practical;
-- extend it additively with hitch state rather than introducing a parallel Wagon world entity unless code review proves that cleaner.
+- unlike a pushed TRANS-01 cart, an animal-drawn wagon stays in `state.carts` while being driven; do **not** move it into `px.cart`;
+- extend `Cart` additively with the hitch relation only; keep active player driving state in `PlayerExtra`.
 
-Suggested extension:
+Recommended state:
 
 ```ts
 interface Cart {
   // existing fields
   hitchedAnimalId?: number
-  driver?: 'player'
+}
+
+interface PlayerExtra {
+  // existing fields
+  drivingCartId?: number
 }
 ```
 
-If `Cart` is item-id driven, wagon behavior should come from item data:
+`hitchedAnimalId` is the single saved source of truth for the hitch. Do not mirror `hitchedCartId` onto the animal unless implementation proves a measured need; derive it by lookup/index instead to avoid two-way consistency bugs.
 
-- capacity;
-- speed multiplier / pull class;
-- width/length/collision radius;
-- durability;
-- max slope;
-- max water depth.
+`Cart` is currently item-id driven through `ItemDef.cart`, which only has `{ capacity, speed }`. Extend that definition rather than scattering wagon constants.
+
+Recommended additive shape:
+
+```ts
+cart?: {
+  capacity: number
+  speed: number
+  mode?: 'push' | 'drawn' // missing = legacy push
+  emptyWeightKg?: number
+  widthM?: number
+  lengthM?: number
+  maxRise?: number
+  maxDrop?: number
+  maxWaterM?: number
+  stowable?: boolean
+}
+```
+
+Keep wheelbarrow/handcart behavior unchanged by defaults. Wagon-specific values live in item/calibration data, not movement code.
 
 ### 0.2 Eligible animals
 
@@ -152,7 +171,7 @@ This differs intentionally from Follow mode in transport--001: a wagon cannot wa
 
 **Model: sonnet**
 
-Add a dedicated wagon item definition using the existing cart machinery.
+Add a dedicated wagon item definition using the existing cart machinery. The wagon should be a world vehicle, not something normally picked up into the backpack like an empty wheelbarrow/handcart.
 
 Recommended first capacity:
 
@@ -167,14 +186,15 @@ Saved state must preserve:
 - durability;
 - position/rotation;
 - hitched animal id;
-- active driven state if stored separately;
+- `px.drivingCartId` while the player is actively driving;
 - ownership relationship where needed.
 
 Load repair rules:
 
 - missing/dead hitched animal → wagon becomes safely unhitched;
-- duplicate hitch reference → keep one deterministic owner and clear the others;
-- invalid driving state → park wagon and place player safely.
+- if multiple carts reference the same animal, deterministically keep one hitch and clear the rest;
+- `px.drivingCartId` must reference a real hitched wagon; otherwise clear it and place the player safely;
+- a wagon must never be restored into both `px.cart` and `state.carts`.
 
 Tests:
 
@@ -334,45 +354,25 @@ HUD status should explain:
 - too steep;
 - too deep.
 
-## Step 7 — cart wear and repair
+## Step 7 — integrate existing cart wear / repair
 
-**Model: opus design first**
+**Model: sonnet integration; opus only if economy--002 changed the contract**
 
-This is the right point to close deferred D-TRANS-2.
+Do **not** redesign D-TRANS-2 here. `economy--002` step 3 owns the wear/repair model for carts before L4 starts.
 
-Use one simple wear model shared by handcart/wagon where possible.
+TRANS-02 only extends that established model to the wagon:
 
-Recommended:
+- wagon reports distance/load into the same wear helper;
+- road/off-road/load effects use the already accepted coefficients;
+- broken wagon cannot be driven;
+- repair uses the existing parked-cart repair path/material sinks;
+- wagon-specific durability/capacity values remain item/calibration data.
 
-- wear by **kg·km** with terrain multiplier;
-- road multiplier < off-road;
-- overload multiplier rises sharply beyond rated capacity;
-- impacts/blocked attempts do not spam durability loss every frame.
-
-Example concept:
-
-```
-wear += distanceKm * (baseKg + cargoKg) * terrainMul * wearRate
-```
-
-Durability effects:
-
-- healthy: normal;
-- damaged: lower max safe load / mild speed penalty;
-- broken: cannot drive/push until repaired.
-
-Repair:
-
-- hammer capability;
-- wood/iron materials according to vehicle type;
-- repair interaction on parked vehicle;
-- no invisible free repair.
-
-Keep exact coefficients in calibration.
+If L4 is pulled forward before `economy--002` step 3, either implement that dependency first or temporarily leave wagon wear inactive exactly like current TRANS-01; do not create a competing second wear model.
 
 ## Step 8 — cargo and economy integration
 
-Reuse TRANS-01 inventory behavior.
+Reuse TRANS-01 inventory primitives, but not its `HEAVY_GOODS`-only loading policy blindly.
 
 Required:
 
@@ -387,14 +387,15 @@ Allow more item categories than TRANS-01 heavy-goods-only if desired, but make i
 
 Recommended:
 
-- wagon accepts any physical inventory item;
-- wheelbarrow/handcart keep their existing heavy-goods identity.
+- wagon accepts any physical inventory item up to weight capacity;
+- wheelbarrow/handcart keep their existing `HEAVY_GOODS`-only identity;
+- generalize transfer helpers where useful, but keep `loadHeavy()` behavior intact for TRANS-01.
 
 ## Step 9 — parking and unattended state
 
-Parked wagon:
+Parked or actively driven wagon:
 
-- remains a world cart;
+- remains in `state.carts`; it is never temporarily owned by `px.cart`;
 - keeps cargo and durability;
 - can remain hitched or be unhitched.
 
@@ -414,7 +415,7 @@ Do not despawn owned wagons or transport animals due to distance.
 
 **Model: sonnet; visual review by opus**
 
-Extend src/game/render/carts.ts or split when it becomes materially cleaner.
+Extend `src/game/render/carts.ts` initially, but split wagon geometry/placement if the current `build(kind)` push-cart assumptions make that clearer. Current render placement assumes pushed carts live in front of the player; driven wagons must instead render from their persistent `state.carts` transform.
 
 Render:
 
@@ -550,19 +551,20 @@ Measure:
 
 ## Suggested implementation order
 
-1. Step 0 contract.
-2. Wagon data/state.
-3. Hitch/unhitch.
-4. Basic driving.
-5. Wagon footprint collision.
-6. Terrain/water safety.
-7. Stamina/needs integration.
-8. Cargo/economy.
-9. Parking.
-10. Wear/repair.
-11. Render/UI/mobile.
-12. E2E/soak/perf.
-13. Opus final keep/drop review.
+1. Confirm transport--001 is stable and economy--002 step 3 wear/repair contract is available.
+2. Step 0 contract.
+3. Wagon data/state.
+4. Hitch/unhitch.
+5. Basic driving.
+6. Wagon footprint collision.
+7. Terrain/water safety.
+8. Stamina/needs integration.
+9. Cargo/economy.
+10. Parking.
+11. Wear/repair integration.
+12. Render/UI/mobile.
+13. E2E/soak/perf.
+14. Opus final keep/drop review.
 
 Use targeted tests during implementation; full verification at milestone boundaries and before completion.
 
