@@ -76,3 +76,27 @@ Nothing in gameplay. Soak/tooling only: `SMITH_TOOLS`, `SMITH_STOCK_CAP`, `smith
 - Day boundaries: output is tallied per gameplay hour (`play / 3600`), identical to the recorder's days; the calendar day is offset by the start time (calendar day 2 ≈ soak day 0).
 - The ring buffer (50 000) wraps within ~2 game days; aggregates (ledger, per-day output) do not depend on it. Event ids in violations are only reachable when the run is repeated with a bigger ring (`sim.enableEventLog(200000)`).
 - Heap numbers are `heapUsed` after a forced GC (`scripts/soak/run.ts` injects the probe; the vitest variant does not measure the heap).
+
+## Triage
+
+| # | Finding | Status | Fix and test |
+|---|---|---|---|
+| 1 | `working-output` trader, seed 1337: second caravan trip never arrives | ✅ fixed (2026-10-02) | Root causes below. Fix: `npc/provisions.ts` (provisions packed moved-not-created; `CARAVAN_PROVISIONS` / `CARAVAN_RETURN_NUTRITION` / `CARAVAN_MIN_NUTRITION` in `calibration.ts`), `goals.ts` (no home meal on the road, no shelter for a departing/outbound caravan), `duties.ts` (departure only with provisions, `TRIP_MAX_CAL` 2 → 3 days, turn back when starving far from the goal). Tests: `caravan.test.ts` "ECON-01 caravan: every MD/LG trader completes >= 2 trades in 10 days, with rain and an empty household store" (failed first: 0 trades for #70 under rain) and "ECON-01 caravan: provisions move from the household store / warehouse into the pack (nothing created)". |
+| 1b | seed 7 after the fix: hunter #13 starved on day 6 (`alive`) | ✅ fixed | Pre-existing weakness that the changed trajectory exposed (the unfixed code also has the hunter at hunger 0 / thirst 0 far from home at the same time): a hunter started a hare chase at hunger ~40, ~580 m from home, then could not get back to food in time. `HUNT_MIN_NEED` (50): no chase for game when hungry or thirsty (predator control unchanged). Test: `waterFail.test.ts` "a hungry or thirsty hunter does not start a chase for game". |
+
+### Root causes of finding 1 (event log, seed 1337, traders #70 / #128 / #133)
+
+1. **The pack is empty at the second departure.** `caravan_depart` packed at most 6 items from the *household store* only. A trader household has no field, so its store is usually empty; the first trip lived on bread that came from the destination warehouse, and the trader ate that bread at home (`eat_inv` has priority at home) so it left again with nothing (`food=` empty in the day-by-day trace, d6.5). Seed 1337 settlement warehouses held no bread at all; the food sits in farmer households.
+2. **`eat` pulled the trader home.** With an empty pack, the `eat` goal planned "Going for a meal" (`eat_store`, fails: empty) or "Buying food" from a *home* seller, i.e. a walk of 1.5 km back from the road (d7.13 → d7.63: 1514 m → 34 m, hunger 16 → 0), and `shelter` did the same inside `homeRadius + 200` (`onTrip` was only true farther out). The trip was therefore not on the road for hours.
+3. **`TRIP_MAX_CAL` of 2 days is too short for an LG route.** The route to Hollowgate is ~4.3 km; with the night camps a trader walks ~11 h a day, so even an undisturbed trip arrives at ~1.9–2.1 days (#128 and #133 were turned around 100–400 m before the warehouse in the test with rain).
+4. Smaller: the return-leg provisions were 4 items from the destination warehouse only (often none) and the last-resort warehouse meal used the *home* warehouse when the trader was on the road (`settlementAt(...) ?? h.settlementId`).
+
+### Before / after (days with output, `pnpm soak --days=10 --seeds=1337,7,42`)
+
+| seed | trader before | trader after | violations after |
+|---|---:|---:|---|
+| 1337 | 20 % (fail: days 3–8 empty) | 50 % | 0 |
+| 7 | 40 % | 40 % | 0 |
+| 42 | 30 % | 60 % | 0 |
+
+Traders now run one round trip per ~4–5 days (outbound 2 days incl. camps, back 2 days; departures on even days only) — output on 4–6 of 10 days is the design cadence of the caravan, not a defect. Not done (❓ for Opus): storms still do not make a caravan on the road shelter (as before); a trader household has no food production, so provisions depend on buying from farmers (`npc_buys_food` money flow, conservation unaffected: all food moves store → pack).

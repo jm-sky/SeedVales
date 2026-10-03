@@ -31,4 +31,16 @@ describe('npc: hunter leash (soak finding)', () => {
     if (plan?.label.startsWith('Hunting') && first?.op === 'goto') expect(Math.hypot(first.x - s.x, first.z - s.z)).toBeLessThan(s.radius + HUNT_LEASH_M + 1)
     expect(HUNT_LEASH_M).toBeGreaterThan(0)
   })
+
+  it('a hungry or thirsty hunter does not start a chase for game (soak finding, seed 7: starved far from home)', async () => {
+    const { dutyPlan, HUNT_MIN_NEED } = await import('./duties')
+    const sim = testSim(7)
+    const hunter = sim.state.npcs.find((n) => n.profession === 'hunter')!
+    for (const stat of ['hunger', 'thirst'] as const) {
+      hunter.vitals.hunger = 100
+      hunter.vitals.thirst = 100
+      hunter.vitals[stat] = HUNT_MIN_NEED - 1
+      expect(dutyPlan(sim, hunter)?.label ?? '').not.toMatch(/^Hunting: (Deer|Stag|Hare)/)
+    }
+  })
 })

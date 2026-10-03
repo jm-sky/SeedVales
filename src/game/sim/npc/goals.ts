@@ -15,7 +15,7 @@ import { settlementAt } from '../reputation'
 import { hourOf, isNight } from '../time'
 import { isBadWeather } from '../weather'
 import { companionDist } from './companions'
-import { deliverSurplus, dutyPlan, feedFirePlan } from './duties'
+import { caravanDepartureWindow, deliverSurplus, dutyPlan, feedFirePlan } from './duties'
 import { doorOf, houseOf, settlementBuildings, threatNear, waterSources } from './queries'
 import { householdFoodCount } from './works'
 
@@ -42,6 +42,8 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   const homeS = sim.world.settlements[h.settlementId]!
   // Caravan on the road: keeps travelling across the day, sleeps where it is (camp).
   const onTrip = h.profession === 'trader' && Math.hypot(h.x - homeS.x, h.z - homeS.z) > homeS.radius + 200
+  // Caravan about to leave or outbound, also in the home neighbourhood: weather does not make it shelter or turn back (it resumes the trip).
+  const tripOutbound = h.profession === 'trader' && homeS.size !== 'SM' && (h.trip?.phase === 'outbound' || (!h.trip && caravanDepartureWindow(cal)))
   // Companion (COMP-01/02): follows the player instead of duties, social life and wandering.
   const comp = h.companion
   // A companion far from home lives from its pack: it never walks back to eat or drink (D-NPC-6).
@@ -99,6 +101,12 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       },
     })
   }
+  const visitedWarehouseMeal = (here = settlementAt(sim, h.x, h.z, 300)) => {
+    const wh = here === null ? undefined : sim.building(sim.state.settlements[here]?.warehouseId)
+    if (!wh?.inv || !findFood(wh.inv) || !(v.hunger < 35 || b5.a < 0.4)) return null
+    const wd = doorOf(wh)
+    return { label: 'Taking from the warehouse', steps: [go(wd.x, wd.z, 2), work('eat_warehouse', 5, 'Eating from the settlement stores', wh.id, 'eat')] }
+  }
   const hungerU = need(v.hunger) * 1.0 + (v.hunger < 15 ? 0.35 : 0)
   if (hungerU > 0.02) {
     opts.push({
@@ -107,6 +115,8 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
       plan: () => {
         if (findFood(h.inv)) return { label: 'Eating', steps: [work('eat_inv', 4, 'Having a meal', undefined, 'eat')] }
         if (compAway) return null
+        // A caravan on the road lives from its pack (D-NPC-6) and never walks home to eat; only a visited settlement's warehouse is in reach.
+        if (onTrip) return visitedWarehouseMeal()
         if (house && householdFoodCount(sim, h) > 0) return { label: 'Going for a meal', steps: [go(door.x, door.z), work('eat_store', 6, 'Eating at home', house.id, 'eat')] }
         // Buy from a trader/household with food.
         if (h.money >= 6) {
@@ -117,13 +127,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
           }
         }
         // Last resort: warehouse of the settlement the NPC is in (home or visited).
-        const here = settlementAt(sim, h.x, h.z, 300) ?? h.settlementId
-        const wh = sim.building(sim.state.settlements[here]?.warehouseId)
-        if (wh?.inv && findFood(wh.inv) && (v.hunger < 35 || b5.a < 0.4)) {
-          const wd = doorOf(wh)
-          return { label: 'Taking from the warehouse', steps: [go(wd.x, wd.z, 2), work('eat_warehouse', 5, 'Eating from the settlement stores', wh.id, 'eat')] }
-        }
-        return null
+        return visitedWarehouseMeal(settlementAt(sim, h.x, h.z, 300) ?? h.settlementId)
       },
     })
   }
@@ -176,7 +180,7 @@ export function goalOptions(sim: Sim, h: Human): GoalOption[] {
   }
 
   // --- Weather shelter (neuroticism raises it) ---
-  if (isBadWeather(sim.weather) && house && !onTrip && !comp) {
+  if (isBadWeather(sim.weather) && house && !onTrip && !tripOutbound && !comp) {
     const inside = Math.hypot(h.x - door.x, h.z - door.z) < 3
     if (!inside) {
       const s = 0.4 + b5.n * 0.25 + (sim.weather.kind === 'storm' ? 0.2 : 0) - (isGuard ? 0.25 : 0)

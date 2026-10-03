@@ -6,14 +6,15 @@
  */
 import type { Sim } from '../sim'
 import type { AiStep, Animal, Human } from '../types'
-import { FIRE } from '../../config/calibration'
+import { CARAVAN_MIN_NUTRITION, CARAVAN_PROVISIONS, FIRE } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, type SpeciesId } from '../../data/species'
 import { isTree } from '../../world/nodes'
 import { isSettlementHearth } from '../fire'
-import { countItem } from '../inventory'
+import { countItem, findFood } from '../inventory'
 import { routeVia } from '../movement'
 import { daylight, hourOf, isNight, seasonOf } from '../time'
+import { caravanFoodAvailable, provisionSeller } from './provisions'
 import { doorOf, household, householdBuilding, houseOf, nearestAvailableNode, settlementBuildings } from './queries'
 
 export type DutyPlan = { label: string; steps: AiStep[] } | null
@@ -68,6 +69,8 @@ function deliverSurplus(sim: Sim, h: Human): DutyPlan {
 const HUNTED_GAME: SpeciesId[] = ['deer', 'stag', 'hare']
 /** A hunter's game must lie within this distance (m) of the settlement edge — a chase must not take them out of reach of food and water (soak finding, verify--001). */
 export const HUNT_LEASH_M = 450
+/** A hunter starts a chase only with hunger and thirst at or above this (soak finding: starved far from home, seed 7). */
+export const HUNT_MIN_NEED = 50
 
 function hunter(sim: Sim, h: Human): DutyPlan {
   const s = sim.world.settlements[h.settlementId]!
@@ -83,7 +86,9 @@ function hunter(sim: Sim, h: Human): DutyPlan {
   let target: Animal | undefined = wolves[0]
   if (!target) {
     // Bow hunting: non-aggressive game only (a lone archer does not provoke boars — D-SIM-9).
-    const game = cands.filter((a) => HUNTED_GAME.includes(a.species) && a.variant !== 'young' && Math.hypot(a.x - s.x, a.z - s.z) < s.radius + HUNT_LEASH_M)
+    // Hungry or thirsty: no new chase far from home (the NPC would starve on the way back; it feeds first, fletches meanwhile).
+    const fit = h.vitals.hunger >= HUNT_MIN_NEED && h.vitals.thirst >= HUNT_MIN_NEED
+    const game = !fit ? [] : cands.filter((a) => HUNTED_GAME.includes(a.species) && a.variant !== 'young' && Math.hypot(a.x - s.x, a.z - s.z) < s.radius + HUNT_LEASH_M)
     const bySp = (sp: string) => cands.filter((a) => a.species === sp).length
     const ok = game.filter((a) => bySp(a.species) >= 3)
     ok.sort((a, b) => Math.hypot(a.x - h.x, a.z - h.z) - Math.hypot(b.x - h.x, b.z - h.z))
@@ -145,8 +150,14 @@ function herbalist(sim: Sim, h: Human, eff: number): DutyPlan {
   return { label: 'Gathering herbs', steps: [go(herb.x, herb.z, 1), work('gather', 6, 'Gathering herbs', herb.id, 'kneel'), ...homeReturn(sim, h)] }
 }
 
-/** Max calendar seconds an expedition may stay outbound before giving up and returning. */
-const TRIP_MAX_CAL = 2 * 86400
+/** Max calendar seconds an expedition may stay outbound before giving up and returning (an LG route of ~4 km takes ~2 days with the night camps). */
+const TRIP_MAX_CAL = 3 * 86400
+
+/** Caravans leave on even calendar days between 7:00 and 10:00. */
+export function caravanDepartureWindow(cal: number): boolean {
+  const hr = hourOf(cal)
+  return Math.floor(cal / 86400) % 2 === 0 && hr >= 7 && hr < 10
+}
 
 /**
  * Traveling trade between road-connected settlements (MD/LG traders), every 2nd day.
@@ -159,12 +170,12 @@ function caravan(sim: Sim, h: Human): DutyPlan {
   if (!road) return null
   const other = sim.world.settlements[road.from === home.id ? road.to : road.from]!
   const cal = sim.state.time.cal
-  const day = Math.floor(cal / 86400)
-  const hr = hourOf(cal)
   const far = Math.hypot(h.x - home.x, h.z - home.z) > home.radius + 200
   if (h.trip?.phase === 'outbound' && cal - h.trip.since > TRIP_MAX_CAL) h.trip = { phase: 'returning', since: h.trip.since }
-  if (!h.trip && !far && day % 2 === 0 && hr >= 7 && hr < 10) {
-    // Departure: pack provisions (act starts the trip), then travel.
+  // Out of food and hungry with the destination still far: turn back instead of starving (near it, the destination's stores feed the trader).
+  if (h.trip?.phase === 'outbound' && far && !findFood(h.inv) && h.vitals.hunger < 20 && Math.hypot(h.x - other.x, h.z - other.z) > 1000) h.trip = { phase: 'returning', since: h.trip.since }
+  // Departure: pack provisions (act starts the trip), then travel — only when there is something to pack (D-NPC-6).
+  if (!h.trip && !far && caravanDepartureWindow(cal) && caravanFoodAvailable(sim, h) + (provisionSeller(sim, h)?.affordable ?? 0) >= CARAVAN_MIN_NUTRITION) {
     return caravanOutbound(sim, h, other, true)
   }
   if (h.trip?.phase === 'outbound') return caravanOutbound(sim, h, other, false)
@@ -181,7 +192,9 @@ function caravanOutbound(sim: Sim, h: Human, other: { id: number; name: string }
   if (!wh) return null
   const d = doorOf(wh)
   const pts = routeVia(sim, h.x, h.z, d.x, d.z)
-  const pack = depart ? [work('caravan_depart', 3, 'Packing provisions', undefined, 'interact')] : []
+  // Departure: top up the provisions from a household that sells food, then pack from the own store and the warehouse.
+  const buy = depart && caravanFoodAvailable(sim, h) < CARAVAN_PROVISIONS ? provisionSeller(sim, h)?.seller : undefined
+  const pack = depart ? [...(buy ? [go(buy.x, buy.z, 2), work('caravan_buy', 4, 'Buying provisions', String(buy.id), 'interact')] : []), work('caravan_depart', 3, 'Packing provisions', undefined, 'interact')] : []
   return { label: `Caravan to ${other.name}`, steps: [...pack, ...pts.map((p) => go(p.x, p.z, 4)), go(d.x, d.z, 2), work('caravan_trade', 30, 'Trading at the warehouse', wh.id, 'interact')] }
 }
 

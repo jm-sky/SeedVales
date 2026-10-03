@@ -83,6 +83,15 @@ export const TAX = { rate: 0.03, exempt: 20 }
 /** Caravan: fee the home settlement's treasury pays its trader per trip (base + per unit moved). */
 export const CARAVAN_FEE = { base: 5, perUnit: 1 }
 
+/**
+ * Caravan provisions in nutrition points (a bread is 25, a hunger bar is 100; a trader loses ~55 a day): packed at departure
+ * (household store, home warehouse, then bought from a household; moved, not created, D-NPC-6) — enough for the outbound leg.
+ * The return leg is stocked at the destination to `CARAVAN_RETURN_NUTRITION`. A caravan only departs when `CARAVAN_MIN_NUTRITION` can be had.
+ */
+export const CARAVAN_PROVISIONS = 200
+export const CARAVAN_RETURN_NUTRITION = 100
+export const CARAVAN_MIN_NUTRITION = 100
+
 /** Days for a sheep's wool to regrow after shearing. */
 export const WOOL_REGROW_DAYS = 10
 

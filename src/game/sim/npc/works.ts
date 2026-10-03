@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { Animal, Human, Inventory } from '../types'
-import { CARAVAN_FEE, DECISION, FIRE, WOOL_REGROW_DAYS } from '../../config/calibration'
+import { CARAVAN_FEE, CARAVAN_PROVISIONS, DECISION, FIRE, WOOL_REGROW_DAYS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
@@ -19,6 +19,7 @@ import { forgeOrder } from '../orders'
 import { growthFactor } from '../time'
 import { payFromTreasury } from '../treasury'
 import { drink, eat, heal, hp } from '../vitals'
+import { buyProvisions, caravanFoodAvailable, packCaravanProvisions, stockReturnProvisions } from './provisions'
 import { household, houseOf } from './queries'
 
 type Act = (sim: Sim, h: Human, ref: string | undefined, eff: number) => boolean
@@ -94,9 +95,14 @@ export const WORK_ACTS: Record<string, Act> = {
     }
     return true
   },
+  /** Buys the provisions the trader's own stores cannot cover from a household with food (the meals go into the pack, nothing is eaten). */
+  caravan_buy: (sim, h) => {
+    buyProvisions(sim, h, CARAVAN_PROVISIONS - caravanFoodAvailable(sim, h))
+    return true
+  },
   /** Starts a caravan expedition: provisions + explicit outbound phase. */
   caravan_depart: (sim, h) => {
-    WORK_ACTS.pack_food!(sim, h, undefined, 1)
+    packCaravanProvisions(sim, h)
     h.trip = { phase: 'outbound', since: sim.state.time.cal }
     return true
   },
@@ -374,12 +380,8 @@ export const WORK_ACTS: Record<string, Act> = {
       moved += move(here, there, id, 10, 6)
       moved += move(there, here, id, 10, 6)
     }
-    // Provisions for the way back, bought from the visited settlement's stores.
-    for (let i = 0; i < 4; i++) {
-      const f = findFood(there.inv)
-      if (!f) break
-      for (const s of removeItem(there.inv, f.id, 1)) addItem(h.inv, s)
-    }
+    // Provisions for the way back, from the visited settlement's warehouse, topped up from a household there.
+    stockReturnProvisions(sim, h, there)
     // The home settlement pays its caravan trader for the exchange (treasury → trader, D-ECON-3).
     payFromTreasury(sim, h.settlementId, h, CARAVAN_FEE.base + CARAVAN_FEE.perUnit * moved)
     logTrade(h, { dir: 'caravan', from: here.id, to: there.id, moved })
