@@ -709,8 +709,8 @@
    "scope": "v2",
    "behavior": "Authored multi-stage narrative quests (data-driven stage machine, giver dialog, journal); first slice Q03, Q07, G03, G01 (quests--001)",
    "verify": "vitest QUEST-03 (engine + one test per ending), acceptance step per quest",
-   "status": "in_progress",
-   "evidence": "docs/design/quests-engine.md, D-QUEST-1"
+   "status": "implemented_unverified",
+   "evidence": "quests--001 steps 1-6: src/game/sim/quest*.ts, data/quests/{q03,q07,g03,g01}.ts; vitest QUEST-03 (engine, one test per ending, review 014 fixes); acceptance steps 19-22, mobile M11; review 014 triaged. Pending: app review round 1 (016), user play-through"
   },
   {
    "id": "SAVE-01",
@@ -844,8 +844,8 @@
    "scope": "v2",
    "behavior": "Młode pomniejszone; prime/alfa powiększone i przyciemnione ~10%",
    "verify": "screenshot tour + test danych wariantu",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+   "status": "implemented_unverified",
+   "evidence": "render--001 step 5: darker shared materials for alpha/strong; scaled young/prime (session 12); look ❓ user"
   },
   {
    "id": "TRACE-01",
@@ -862,8 +862,8 @@
    "scope": "v2",
    "behavior": "Chmury na niebie; widoczny padający deszcz i śnieg",
    "verify": "screenshot tour + bench:render",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md (opady już istnieją — 2500 punktów w dynamics.ts; brak chmur i skalowania z profilem)"
+   "status": "implemented_unverified",
+   "evidence": "render--001 step 2: cloud layer (session 11) + GPU precipitation render/precipitation.ts, precipitation.test.ts (session 12); look ❓ user"
   },
   {
    "id": "WEATHER-02",
@@ -880,8 +880,8 @@
    "scope": "v2",
    "behavior": "Różnorodność postaci: kolory włosów, brody, fryzury, skala (X/Z ±5%, Y ±10%), tint ubrań, łączenie części modeli, fallback dziecka = pomniejszony dorosły; deterministycznie z id",
    "verify": "screenshot/plansza wariantów + bench:render (draw calls nie rosną)",
-   "status": "planned",
-   "evidence": "plan: docs/plans/render--001--weather-variety-effects.md"
+   "status": "implemented_unverified",
+   "evidence": "render--001 step 4 first slice: hair/cloth tint + body scale per actor id (characterLook.test.ts); beards/hairstyles/part mixing not done"
   },
   {
    "id": "RENDER-03",
