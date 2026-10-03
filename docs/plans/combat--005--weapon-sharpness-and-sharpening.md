@@ -1,6 +1,6 @@
 # Weapon sharpness, edge quality and sharpening
 
-**Status:** planned  
+**Status:** done  
 **Model:** opus — combat/item formulas and material-quality interaction; sonnet — implementation and tests  
 **Domain:** combat  
 **Sub domains:** items, weapons, crafting, blacksmith, durability, UI  
@@ -169,3 +169,7 @@ Cover at least:
 - combat and automatic weapon choice use the current condition;
 - item UI displays current/max sharpness and durability;
 - no pickup, merge or transfer path can refresh another weapon's condition.
+
+## Result (2026-10-03, session 14)
+
+Implemented as D-COMBAT-4: `sim/edge.ts` (`maxEdge`, `edgeOf`, `edgeFactor`, `dullEdge`, `sharpenEdge`), `EDGE` calibration, `ItemStack.edge`, whetstone item + recipe + `sharpen` activity (`Game.sharpen`, item-details button, sound `gridstone_sharpen`), combat damage factor + dulling in `meleeAttack`, `weaponScore`, UI sharpness line. Tests: `edge.test.ts` (6), `pnpm check` 471/471, soak 0 violations, e2e green. **Not done:** blacksmith sharpening service, NPC maintenance, hard-target dulling, e2e for the Sharpen button, damage-to-armour interplay.

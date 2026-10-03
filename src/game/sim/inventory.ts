@@ -7,6 +7,7 @@ import type { Human, Inventory, ItemStack } from './types'
 import { ITEM_BATCH } from '../config/calibration'
 import { itemDef, MATERIAL_MULT, QUALITY_MULT, QUALITY_NAMES } from '../data/items'
 import { SPECIES } from '../data/species'
+import { edgeFactor } from './edge'
 import { logConsume } from './eventLog'
 
 export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): ItemStack {
@@ -175,7 +176,7 @@ export function weaponScore(s: ItemStack): number {
   const d = itemDef(s.id)
   if (!d.weapon) return 0
   const wear = s.dur !== undefined && d.durability ? 0.5 + 0.5 * (s.dur / d.durability) : 1
-  return d.weapon.damage * qualityMult(s) * wear
+  return d.weapon.damage * qualityMult(s) * wear * edgeFactor(s, d.weapon)
 }
 
 /** Armour value for automatic choice: mean resistance × quality. */

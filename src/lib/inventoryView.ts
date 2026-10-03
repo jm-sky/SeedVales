@@ -1,5 +1,6 @@
 import { itemDef } from '@/game/data/items'
 import { SPECIES } from '@/game/data/species'
+import { edgeOf, maxEdge } from '@/game/sim/edge'
 import { qualityMult } from '@/game/sim/inventory'
 /**
  * Pure helpers for the inventory screen (UI-03): category filter, sorting and item parameters.
@@ -89,6 +90,7 @@ export function itemParams(s: ItemStack): ItemParam[] {
     if (s.sp) out.push({ label: 'Species', value: (SPECIES as Record<string, { name: string }>)[s.sp]?.name ?? s.sp })
     if (d.food.raw) out.push({ label: 'Note', value: 'raw — better cooked' })
   }
+  if (maxEdge(s) > 0) out.push({ label: 'Sharpness', value: `${Math.round(edgeOf(s) * 100)}% / ${Math.round(maxEdge(s) * 100)}% max` })
   if (d.durability && s.dur !== undefined) out.push({ label: 'Durability', value: `${Math.round((s.dur / d.durability) * 100)}%` })
   if (d.waterCapacity) out.push({ label: 'Water', value: `${s.water ?? 0} / ${d.waterCapacity}` })
   return out

@@ -16,6 +16,8 @@ export type Capability =
   | 'fire_start'
   /** Pan or pot: roast two pieces at once (FOOD-03). */
   | 'cook_vessel'
+  /** Whetstone: restores a blade's edge. */
+  | 'sharpen'
 
 /** Player-facing name of the tool that provides a capability (used in "Missing: …" reasons). */
 export const CAPABILITY_NAMES: Record<Capability, string> = {
@@ -30,6 +32,7 @@ export const CAPABILITY_NAMES: Record<Capability, string> = {
   sew: 'sewing kit',
   fire_start: 'flint and steel or torch',
   cook_vessel: 'pan or pot',
+  sharpen: 'whetstone',
 }
 
 export type ItemCategory = 'weapon' | 'armor' | 'tool' | 'food' | 'resource' | 'herb' | 'medical' | 'misc' | 'ammo'
@@ -203,6 +206,7 @@ const LIST: ItemDef[] = [
   { id: 'handcart', name: 'Handcart', category: 'tool', weight: 28, size: 'XL', price: 75, durability: 400, cart: { capacity: 160, speed: 0.68 } },
   tool('pan', 'Pan', 1.5, 'MD', 30, ['cook_vessel']),
   tool('pot', 'Pot', 2.5, 'MD', 40, ['cook_vessel']),
+  tool('whetstone', 'Whetstone', 0.4, 'XS', 3, ['sharpen'], { durability: 40 }),
   tool('hammer', 'Hammer', 1, 'SM', 20, ['hammer']),
   tool('torch', 'Torch', 0.6, 'MD', 3, ['light', 'fire_start'], { light: 14, stack: true, durability: 60 }),
   tool('flint', 'Flint and steel', 0.1, 'XS', 8, ['fire_start']),

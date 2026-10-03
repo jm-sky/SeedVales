@@ -46,6 +46,8 @@ export interface ItemStack {
   /** Craft quality 0..3 and material class 0..2. */
   q?: number
   m?: number
+  /** Current edge sharpness 0..1 of an edged weapon (combat--005); absent = at the weapon's maximum (documented compatibility default, no save bump). */
+  edge?: number
   /** Freshness remaining (calendar hours) for food. */
   fresh?: number
   /** Drinks held (waterskins). */

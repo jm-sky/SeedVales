@@ -14,6 +14,7 @@ import { perf } from '../diag/perf'
 import { train } from './actions'
 import { alertAround } from './alerts'
 import { projectileGround } from './caveSpace'
+import { dullEdge, edgeFactor } from './edge'
 import { logEvent, logging, logProduce } from './eventLog'
 import { fleeHome } from './fauna/perception'
 import { resolveDefence } from './guard'
@@ -255,8 +256,9 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
   if (isHuman(a)) {
     dmg *= 0.8 + a.attrs.str * 0.04
     if (a.eq.main) {
-      dmg *= qualityMult(a.eq.main)
+      dmg *= qualityMult(a.eq.main) * edgeFactor(a.eq.main, w)
       wearTool(a.eq.main, 0.5)
+      dullEdge(a.eq.main, w)
     }
     train(a, 'melee', 0.5)
   }

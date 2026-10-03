@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
+import { needsSharpening } from '@/game/sim/edge'
+import { findTool } from '@/game/sim/inventory'
 import { itemParams } from '@/lib/inventoryView'
 import type { ItemStack } from '@/game/sim/types'
 
 const props = defineProps<{ stack: ItemStack }>()
 const d = computed(() => itemDef(props.stack.id))
 const params = computed(() => itemParams(props.stack))
+const { game, version } = useGameStrict()
+const canSharpen = computed(() => {
+  void version.value
+  return needsSharpening(props.stack) && !!findTool(game.value.sim.player, 'sharpen')
+})
 </script>
 
 <template>
@@ -24,5 +32,13 @@ const params = computed(() => itemParams(props.stack))
     >
       <span class="text-muted-foreground">{{ p.label }}</span><span class="text-right">{{ p.value }}</span>
     </div>
+    <button
+      v-if="canSharpen"
+      class="mt-1 rounded border px-2 py-1 text-xs"
+      data-testid="sharpen"
+      @click="game.sharpen(stack)"
+    >
+      Sharpen (whetstone)
+    </button>
   </div>
 </template>

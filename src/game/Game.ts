@@ -9,7 +9,7 @@ import type { SimEvent } from './sim/sim'
 import type { Actor, Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
 import type { WorldData } from './world/types'
 import { Ambience } from './audio/ambience'
-import { COMBAT_LOCK, JUMP } from './config/calibration'
+import { COMBAT_LOCK, EDGE, JUMP } from './config/calibration'
 import { angleDiff } from './core/math'
 import { itemDef } from './data/items'
 import { blueprintById, recipeById } from './data/recipes'
@@ -25,10 +25,11 @@ import { meleeAttack } from './sim/combat'
 import { combatCandidates, lockedMove, lockInvalid, nextCombatTarget, turnToward } from './sim/combatTarget'
 import { canCraft, craftTime } from './sim/craft'
 import { requestDodge } from './sim/dodge'
+import { needsSharpening } from './sim/edge'
 import { plantTorch } from './sim/fire'
 import { giveGift } from './sim/gifts'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, warehouseDepositGain, warehouseTakeCost, waterTarget } from './sim/interact'
-import { addItem, removeStack } from './sim/inventory'
+import { addItem, findTool, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
 import { repairPlacement, requestJump } from './sim/motion'
 import { autopilotToSettlement, clearWaypoint, isExplored, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
@@ -458,6 +459,17 @@ export class Game {
       this.target = pinned ?? list[0] ?? waterTarget(sim, sim.player.rot)
     }
     this.options = this.target ? targetOptions(sim, this.target.ref) : []
+  }
+
+  /** Starts sharpening a blade (equipped or in the pack) with a whetstone. */
+  sharpen(s: ItemStack) {
+    const p = this.sim.player
+    if (this.sim.state.px.activity) return this.showToast('You are busy.')
+    if (!findTool(p, 'sharpen')) return this.showToast('You need a whetstone.')
+    if (!needsSharpening(s)) return this.showToast('The edge is already as sharp as this blade gets.')
+    const data = p.eq.main === s ? 'main' : p.eq.off === s ? 'off' : `inv:${p.inv.items.indexOf(s)}`
+    startActivity(this.sim, { kind: 'sharpen', label: `Sharpening ${itemDef(s.id).name}`, total: EDGE.sharpenTimeS, data })
+    this.closePanel()
   }
 
   /** Space / mobile Jump: a small traversal jump (outside panels; combat dodge replaces it in combat once combat--003 exists). */

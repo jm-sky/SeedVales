@@ -85,6 +85,20 @@ export const ITEM_BATCH = {
   durTol: 0.5,
 } as const
 
+/** Weapon edge (combat--005, D-COMBAT-4): dulling by use, sharpening with a whetstone. */
+export const EDGE = {
+  /** Largest damage loss of a fully dull blade (fraction): cut hurts most, pierce less, blunt none. */
+  cutPenalty: 0.4,
+  piercePenalty: 0.15,
+  /** Edge lost per hit that connects. */
+  dullPerHit: { cut: 0.012, pierce: 0.007 },
+  /** A blade never gets duller than this (still usable). */
+  floor: 0.05,
+  /** One sharpening restores this share of the weapon's maximum edge (and takes `sharpenTimeS` of gameplay time). */
+  sharpenGain: 0.5,
+  sharpenTimeS: 6,
+} as const
+
 /** Walkability: the steepest uphill rise/run a step may have (~50°); steeper faces are inaccessible (peaks). Downhill is not limited. */
 export const TRAVERSE = { maxUphillRise: 1.2 } as const
 

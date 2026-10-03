@@ -6,11 +6,14 @@
 import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { PlayerActivity } from './types'
+import { itemDef } from '../data/items'
 import { recipeById } from '../data/recipes'
 import { breakChunk, burnDen, buryCorpse, butcher, dig, drinkFromWater, fellTree, fillContainers, gatherNode, levelTerrain, mineRock, raiseTerrain, repairBuilding } from './actions'
 import { applyBuildProgress } from './build'
 import { completeRoast } from './cooking'
 import { completeCraft } from './craft'
+import { needsSharpening, sharpenEdge } from './edge'
+import { findTool, wearTool } from './inventory'
 
 type Done = (sim: Sim, a: PlayerActivity) => ActionResult | null
 
@@ -25,6 +28,16 @@ export const ACTIVITY_DONE: Record<string, Done> = {
   mine: (sim, a) => {
     const n = node(sim, a)
     return n ? mineRock(sim, sim.player, n) : null
+  },
+  sharpen: (sim, a) => {
+    const p = sim.player
+    const stone = findTool(p, 'sharpen')
+    // `data` names the blade: 'main', 'off' or 'inv:<index>' (an activity must not hold a stack reference — it is saved).
+    const blade = a.data === 'main' ? p.eq.main : a.data === 'off' ? p.eq.off : p.inv.items[Number((a.data ?? '').split(':')[1])]
+    if (!stone || !blade || !needsSharpening(blade)) return { ok: false, msg: 'Nothing to sharpen.' }
+    const edge = sharpenEdge(blade)
+    wearTool(stone, 1)
+    return { ok: true, msg: `${itemDef(blade.id).name} sharpened to ${Math.round(edge * 100)}%.` }
   },
   roast: (sim, a) => completeRoast(sim, sim.player, Number(a.data) || 1),
   break_chunk: (sim, a) => {
