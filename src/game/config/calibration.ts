@@ -77,6 +77,14 @@ export const COMBAT_LOCK = {
   classPenalty: { threat: 0, dangerous: 10, neutral: 25 },
 } as const
 
+/** Stack identity of condition-bearing items (items--001 / economy--004, D-ITEM-1): stacks merge only within these tolerances and are never averaged. */
+export const ITEM_BATCH = {
+  /** Food whose remaining freshness differs by more than this (hours) stays in a separate batch; a merged batch keeps the older value (never extends shelf life; 12 h ≈ half a day of production, 4 h made the caravan worst-case test lose a trade because spoilage is no longer refreshed by averaging). */
+  freshTolH: 12,
+  /** Durability values within this (points) merge; the merged stack keeps the lower value. */
+  durTol: 0.5,
+} as const
+
 /** Walkability: the steepest uphill rise/run a step may have (~50°); steeper faces are inaccessible (peaks). Downhill is not limited. */
 export const TRAVERSE = { maxUphillRise: 1.2 } as const
 

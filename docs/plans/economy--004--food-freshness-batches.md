@@ -1,6 +1,6 @@
 # Food freshness batches and oldest-first use
 
-**Status:** planned  
+**Status:** done  
 **Model:** opus — freshness/stack semantics; sonnet — implementation and tests  
 **Domain:** economy  
 **Sub domains:** food, inventory, cooking, inns, households, trade, survival  
@@ -146,3 +146,7 @@ Cover at least:
 - cooking/preservation derive output from actual source freshness;
 - UI can distinguish same-item batches;
 - D-FOOD-3 and `economy--003` no longer contradict the implemented model.
+
+## Result
+
+Implemented 2026-10-03 (session 14) with `items--001` — see D-ITEM-1 / D-FOOD-4. Old and fresh batches coexist, no rejuvenation or ageing of the other batch, implicit consumption oldest-first, spoilage batch-local, roasting per source stack (already). Soak 0 violations. Not done: freshness labels (Fresh/Aging/Eat soon) in the UI, D-FOOD-3 text edit beyond the supersede note, `economy--003`.

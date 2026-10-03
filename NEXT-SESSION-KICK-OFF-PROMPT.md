@@ -19,7 +19,7 @@ Review round 1 + 2, D-USER-1, audio steps 1–5, render--009, LOOT-01, SET-05 sl
 
 1. (done) `combat--004` jump — see PROGRESS; leftover: jump animation clip, mobile Jump e2e, Opus review.
 2. (done) `combat--003` dodge. Open: root-cause the acceptance-18 real-Space/menu-click oddity (see PROGRESS ❓).
-3. **Wave 5d** (`docs/roadmap/v1-closure-and-appendix.md`): `items--001` → `economy--004` ‖ `combat--005` → `economy--003` (each plan's "Decisions for Opus": take the recommended option, record in DECISIONS).
+3. **Wave 5d** (`docs/roadmap/v1-closure-and-appendix.md`): `items--001` + `economy--004` are done; next `combat--005` → `economy--003` → `render--010` (each plan's "Decisions for Opus": take the recommended option, record in DECISIONS).
 4. Audio leftovers (`audio--001` step 6 e2e "no `/sounds/` fetch before first input", fire loop, door/UI one-shots); `world--001` chests; wave 6; `proposals--001`; later backlog L1–L7.
 5. After wave 5c/5d: run a review round (skills `wave-review` + `app-review`, Opus), then soak on a quiet machine.
 

@@ -4,6 +4,7 @@
  */
 import type { Capability } from '../data/items'
 import type { Human, Inventory, ItemStack } from './types'
+import { ITEM_BATCH } from '../config/calibration'
 import { itemDef, MATERIAL_MULT, QUALITY_MULT, QUALITY_NAMES } from '../data/items'
 import { SPECIES } from '../data/species'
 import { logConsume } from './eventLog'
@@ -17,8 +18,16 @@ export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): I
   return { ...s, ...extra }
 }
 
-const canMerge = (a: ItemStack, b: ItemStack) =>
-  a.id === b.id && itemDef(a.id).stack && (a.q ?? -1) === (b.q ?? -1) && (a.m ?? -1) === (b.m ?? -1) && a.sp === b.sp && (a.dur === undefined || b.dur === undefined || a.dur === b.dur)
+/** The single stack-compatibility rule: same identity and equivalent condition (freshness within a batch tolerance, equal durability). */
+export const canMerge = (a: ItemStack, b: ItemStack) =>
+  a.id === b.id &&
+  !!itemDef(a.id).stack &&
+  (a.q ?? -1) === (b.q ?? -1) &&
+  (a.m ?? -1) === (b.m ?? -1) &&
+  a.sp === b.sp &&
+  (a.dur === undefined || b.dur === undefined || Math.abs(a.dur - b.dur) <= ITEM_BATCH.durTol) &&
+  (a.fresh === undefined || b.fresh === undefined || Math.abs(a.fresh - b.fresh) <= ITEM_BATCH.freshTolH) &&
+  (a.water ?? -1) === (b.water ?? -1)
 
 /** Key of stacks that look identical in a list (same id, quality, material, durability, freshness hour, water). */
 export const stackLookKey = (s: ItemStack) =>
@@ -43,9 +52,8 @@ export function addItem(inv: Inventory, stack: ItemStack): void {
   if (d.stack) {
     const ex = inv.items.find((s) => canMerge(s, stack))
     if (ex) {
-      if (ex.fresh !== undefined && stack.fresh !== undefined) {
-        ex.fresh = (ex.fresh * ex.qty + stack.fresh * stack.qty) / (ex.qty + stack.qty)
-      }
+      // One canonical condition per batch, never an average: the older freshness wins (a merge cannot extend shelf life).
+      if (ex.fresh !== undefined && stack.fresh !== undefined) ex.fresh = Math.min(ex.fresh, stack.fresh)
       if (ex.dur !== undefined && stack.dur !== undefined) ex.dur = Math.min(ex.dur, stack.dur)
       ex.qty += stack.qty
       return
@@ -66,14 +74,16 @@ export function countItem(inv: Inventory, id: string): number {
 export function removeItem(inv: Inventory, id: string, qty: number): ItemStack[] {
   const out: ItemStack[] = []
   let left = qty
-  for (let i = inv.items.length - 1; i >= 0 && left > 0; i--) {
-    const s = inv.items[i]!
-    if (s.id !== id) continue
+  // Implicit consumers (NPCs, recipes, cooking) take the batch with the least remaining freshness first; other items newest-first as before.
+  const order = inv.items.filter((s) => s.id === id).reverse()
+  if (order.some((s) => s.fresh !== undefined)) order.sort((a, b) => (a.fresh ?? Infinity) - (b.fresh ?? Infinity))
+  for (const s of order) {
+    if (left <= 0) break
     const take = Math.min(s.qty, left)
     out.push({ ...s, qty: take })
     s.qty -= take
     left -= take
-    if (s.qty <= 0) inv.items.splice(i, 1)
+    if (s.qty <= 0) inv.items.splice(inv.items.indexOf(s), 1)
   }
   return out
 }

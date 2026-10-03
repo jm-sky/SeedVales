@@ -1,6 +1,6 @@
 # Per-instance and per-batch item condition
 
-**Status:** planned  
+**Status:** done  
 **Model:** opus — data model/stack identity decisions; sonnet — implementation and tests  
 **Domain:** items  
 **Sub domains:** inventory, persistence, transfer, trade, UI  
@@ -142,3 +142,7 @@ Add focused tests covering at least:
 - every transfer path preserves exact stack state;
 - dependent food and weapon plans can add their rules without bypassing inventory invariants;
 - focused regression tests cover the known refresh/merge failure class.
+
+## Result
+
+Implemented 2026-10-03 (session 14) together with `economy--004` — D-ITEM-1: one `canMerge` rule with condition tolerances, merge keeps the older value, no averaging, `removeItem` is oldest-first for food; tests `itemCondition.test.ts` (7). Storage/trade/save round-trips verified for freshness; cart/gift/crafting paths already moved whole stacks (`removeStack` copies all fields). Not done: UI list keys by stack identity audit beyond `stackLookKey`, `combat--005` sharpness field.
