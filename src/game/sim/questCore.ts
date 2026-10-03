@@ -536,7 +536,9 @@ function invOf(c: QuestCtx, s: Source): Inventory | undefined {
   if (s === 'player') return c.sim.player.inv
   if ('purse' in s) return humanOf(c, s.purse)?.inv
   if ('store' in s) return storeInv(c, s.store)
-  return c.sim.building(c.sim.state.settlements[homeId(c.sim)]?.warehouseId)?.inv
+  const wp = (s as { warehouse: 'home' | 'V' | 'T' }).warehouse
+  const wid = wp === 'V' ? neighbourId(c.sim) : wp === 'T' ? townId(c.sim) : homeId(c.sim)
+  return c.sim.building(c.sim.state.settlements[wid]?.warehouseId)?.inv
 }
 
 /** Money is held by the player, a cast purse or the home treasury. */

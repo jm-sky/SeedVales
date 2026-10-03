@@ -21,6 +21,7 @@ import { Q07 } from './q07'
 import { Q08 } from './q08'
 import { Q09 } from './q09'
 import { Q11 } from './q11'
+import { Q12 } from './q12'
 import { Q13 } from './q13'
 
-export const AUTHORED_QUESTS: readonly QuestDef[] = [Q03, Q07, G03, G01, G08, G04, Q09, Q01, G07, G02, Q04, G06, Q08, G05, Q02, Q06, Q05, Q13, Q11]
+export const AUTHORED_QUESTS: readonly QuestDef[] = [Q03, Q07, G03, G01, G08, G04, Q09, Q01, G07, G02, Q04, G06, Q08, G05, Q02, Q06, Q05, Q13, Q11, Q12]

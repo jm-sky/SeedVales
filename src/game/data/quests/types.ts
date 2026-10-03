@@ -63,7 +63,7 @@ export type Source =
   | { purse: SlotId }
   | { store: SlotId }
   | { treasury: 'home' | 'V' | 'T' }
-  | { warehouse: 'home' }
+  | { warehouse: 'home' | 'V' | 'T' }
 
 /** Conditions: pure reads of the sim and the quest state. */
 export type Cond =
