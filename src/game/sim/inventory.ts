@@ -26,13 +26,14 @@ export const canMerge = (a: ItemStack, b: ItemStack) =>
   (a.q ?? -1) === (b.q ?? -1) &&
   (a.m ?? -1) === (b.m ?? -1) &&
   a.sp === b.sp &&
+  a.tag === b.tag &&
   (a.dur === undefined || b.dur === undefined || Math.abs(a.dur - b.dur) <= ITEM_BATCH.durTol) &&
   (a.fresh === undefined || b.fresh === undefined || Math.abs(a.fresh - b.fresh) <= ITEM_BATCH.freshTolH) &&
   (a.water ?? -1) === (b.water ?? -1)
 
 /** Key of stacks that look identical in a list (same id, quality, material, durability, freshness hour, water). */
 export const stackLookKey = (s: ItemStack) =>
-  [s.id, s.q ?? '', s.m ?? '', s.sp ?? '', s.dur === undefined ? '' : Math.round(s.dur), s.fresh === undefined ? '' : Math.round(s.fresh), s.water ?? '', s.edge === undefined ? '' : Math.round(s.edge * 20)].join('|')
+  [s.id, s.q ?? '', s.m ?? '', s.sp ?? '', s.tag ?? '', s.dur === undefined ? '' : Math.round(s.dur), s.fresh === undefined ? '' : Math.round(s.fresh), s.water ?? '', s.edge === undefined ? '' : Math.round(s.edge * 20)].join('|')
 
 /** Merges rows whose stacks look identical (review 016 #15): the first row stays the actor, `qty` is summed. */
 export function groupIdentical<T>(rows: T[], stackOf: (r: T) => ItemStack): { row: T; qty: number }[] {

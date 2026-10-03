@@ -336,7 +336,8 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
     }
     case 'hasItem': {
       const inv = k.from === 'player' ? p.inv : storeInv(c, k.from.store)
-      return !!inv && countItem(inv, k.item) >= k.qty
+      if (!inv) return false
+      return k.tag === undefined ? countItem(inv, k.item) >= k.qty : inv.items.filter((x) => x.id === k.item && x.tag === k.tag).reduce((n, x) => n + x.qty, 0) >= k.qty
     }
     case 'hour': {
       const cal = sim.state.time.cal
@@ -384,6 +385,8 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
       return sim.state.px.sneaking
     case 'stage':
       return (k.gte === undefined || st.stage >= k.gte) && (k.eq === undefined || st.stage === k.eq) && (k.lt === undefined || st.stage < k.lt)
+    case 'treasuryGte':
+      return (sim.state.settlements[homeId(sim)]?.treasury ?? 0) >= k.gte
     case 'visited': {
       const id = placeId(sim, k.place)
       return id >= 0 && !!sim.state.px.visited?.includes(id)
@@ -659,7 +662,7 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'grant': {
       const inv = e.to === 'player' ? sim.player.inv : invOf(c, e.to)
       if (!inv) break
-      addItem(inv, newStack(e.item, e.qty))
+      addItem(inv, newStack(e.item, e.qty, e.tag ? { tag: e.tag } : {}))
       logProduce(e.item, e.qty, `quest:${def.id}:${e.why}`)
       break
     }
@@ -734,6 +737,12 @@ function applyEffect(c: QuestCtx, e: Effect) {
         if (id >= 0) addRep(sim, id, e.delta, pl === (e.places ?? ['H'])[0] ? e.reason : undefined)
       }
       break
+    case 'repairHeld': {
+      const it = sim.player.eq.main
+      const d = it ? itemDef(it.id) : undefined
+      if (it && d?.durability) it.dur = d.durability
+      break
+    }
     case 'scare': {
       const a = actorOf(c, e.slot)
       if (a?.kind === 'animal' && !a.vitals.dead) {
@@ -760,6 +769,12 @@ function applyEffect(c: QuestCtx, e: Effect) {
         st.stageAt = sim.state.time.cal
       }
       break
+    case 'tag': {
+      const inv = invOf(c, e.from)
+      const s1 = inv?.items.find((x) => x.id === e.item)
+      if (s1) s1.tag = e.to
+      break
+    }
     case 'timedWarn': {
       const others = AUTHORED_QUESTS.filter((d) => d.id !== def.id && d.deadlineHours !== undefined && sim.state.authoredQuests[d.id]?.status === 'active')
       if (others.length) sim.message(`You already have a deadline running: ${others.map((d) => d.title).join(', ')}.`, 'bad')

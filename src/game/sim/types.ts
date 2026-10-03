@@ -54,6 +54,8 @@ export interface ItemStack {
   water?: number
   /** Animal species the meat comes from (FOOD-03); stacks of different species never merge. */
   sp?: string
+  /** Quest state of a unique item (e.g. a plowshare `flawed` → `mended`); stacks with different tags never merge. */
+  tag?: string
 }
 
 export interface Inventory {

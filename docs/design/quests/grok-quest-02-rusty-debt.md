@@ -132,3 +132,11 @@ If `bernardAdmits`, Bernard from now on accepts Sophie's offer of a new hammer m
 | Required | Named treasury/purse transfers; carried item with two states; inspection flag |
 | Stub | Mending = timed craft by Sophie without player input |
 | Out of scope | Full contract/ledger system |
+
+## Implementation notes
+
+Implemented by `quests--003` W2 as `src/game/data/quests/g02.ts` (test `questG02.test.ts`). New engine pieces (E2 partly): `ItemStack.tag` (stacks with different tags never merge), item `plowshare` (quest-only, 8 kg), `hasItem` with a tag filter, effects `tag` and `repairHeld`, condition `treasuryGte`.
+
+- **Start:** the player has visited {V} and the home treasury holds ≥ 35 c; on offer a `flawed` plowshare appears in Ralph's store (a ledger-logged grant: "made before the quest").
+- **Outcomes** follow the design table; the home treasury and the purses of Ralph and Bernard are real transfers, partial when short. `mended`: the share is carried to Bernard (topic only while it is `flawed`), 12 h later it turns `mended` in the pack, then Ralph pays 35 from the treasury. `repairHeld` restores the equipped main-hand item to full durability (Sophie's service, stub of "sharpen one weapon/tool").
+- **Not implemented:** the Q04 hammer link (`bernardAdmits` option B), Bernard/Sophie/Ralph death variants beyond the engine's lapse, an abandoned-share penalty (the quest ends after 14 days with Bernard −5).

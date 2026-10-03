@@ -58,7 +58,9 @@ export type Cond =
   | { k: 'day'; from?: number; to?: number }
   /** Hour of day [from, to) (wraps midnight when from > to), or `night: true`. */
   | { k: 'hour'; from?: number; to?: number; night?: boolean }
-  | { k: 'hasItem'; item: string; qty: number; from: 'player' | { store: SlotId } }
+  | { k: 'hasItem'; item: string; qty: number; from: 'player' | { store: SlotId }; tag?: string }
+  /** The home settlement's treasury holds at least this much. */
+  | { k: 'treasuryGte'; gte: number }
   | { k: 'counter'; id: string; gte: number | 'homePosts' }
   /** The home settlement has at least this many torch posts. */
   | { k: 'posts'; gte: number }
@@ -104,7 +106,11 @@ export type Effect =
   | { k: 'give'; from: Source; to: Source; item: string; qty: number }
   | { k: 'consume'; from: Source; item: string; qty: number }
   /** Goods that enter the world from outside (a trader's trip, a find) — an explicit, ledger-logged source (D-ECON-1). */
-  | { k: 'grant'; to: Source; item: string; qty: number; why: string }
+  | { k: 'grant'; to: Source; item: string; qty: number; why: string; tag?: string }
+  /** Re-tags the first stack of `item` in `from` (a plowshare `flawed` → `mended`). */
+  | { k: 'tag'; item: string; from: Source; to: string }
+  /** Service stub: the player's main-hand weapon or tool is restored to full durability. */
+  | { k: 'repairHeld' }
   | { k: 'opinion'; slot: SlotId; delta: number }
   /** `places` defaults to the home settlement. */
   | { k: 'rep'; delta: Partial<Record<QuestRepDim, number>>; reason: string; places?: QuestPlace[] }
