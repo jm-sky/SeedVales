@@ -57,6 +57,8 @@ export const FRAMES = [
   ['carrion', (sv) => {
     const sim = sv.game.sim
     const p = sim.player
+    const spot = sv.openSpot(120) // an open spot: the carcasses must not hide in the settlement grass
+    sv.teleport(spot.x, spot.z)
     sv.setHour(12)
     Object.assign(sim.state.weather, { kind: 'clear', fog: 0.05, until: sim.state.time.cal + 86400 })
     for (const [i, hours] of [[0, 2], [1, 12], [2, 36]]) {

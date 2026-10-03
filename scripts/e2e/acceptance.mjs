@@ -13,6 +13,15 @@ const key = async (k, wait = 700) => {
   await page.keyboard.press(k)
   await page.waitForTimeout(wait)
 }
+/** Distance-based movement checks must not depend on how battered the player is after the earlier steps. */
+const restoreBody = () => S(() => {
+  const v = window.__sv.game.sim.player.vitals
+  window.__sv.setNeeds({ hunger: 100, thirst: 100, vigor: 100, stamina: 100 })
+  v.convalescenceH = 0
+  v.illness = undefined
+  v.parts.lleg = 0
+  v.parts.rleg = 0
+})
 /** Wait until the UI target is set (5 Hz refresh at low FPS). */
 const waitTarget = async (pred) => {
   for (let i = 0; i < 20; i++) {
@@ -938,6 +947,7 @@ try {
   const lbl = await S(() => [...document.querySelectorAll('[data-testid="npc-labels"] [data-npc-icon]')].map((e) => ({ icon: e.getAttribute('data-npc-icon'), text: e.textContent })))
   await shot(page, 'acc-14-npc-icon')
   check(results, '14. ikona zadania i nazwa nad NPC (D-USER-1)', !!doneNpc && lbl.some((l) => l.icon === 'done' && l.text.includes(doneNpc.name)), { doneNpc, lbl })
+  await restoreBody()
   // 15. combat--001: in combat mode Tab locks/cycles the combat target; A/D orbit it with the facing kept on it; leaving combat clears it.
   await S(() => {
     const sv = window.__sv
@@ -1017,6 +1027,7 @@ try {
     return { y: p.y, stamina: p.vitals.stamina }
   })
   check(results, '17. Spacja: skok, lądowanie, koszt wytrzymałości', jumpApex - jump0.y > 0.3 && Math.abs(jumpEnd.y - jump0.y) < 0.5 && jumpEnd.stamina < jump0.stamina + 5, { jump0, jumpApex, jumpEnd })
+  await restoreBody()
   // 18. combat--003: Space in combat mode dodges (displacement, stamina), it does not jump.
   const dodge0 = await S(() => {
     const sv = window.__sv

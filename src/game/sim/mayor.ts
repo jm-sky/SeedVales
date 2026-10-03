@@ -100,7 +100,10 @@ export function cycleTaxRate(sim: Sim, sid: number): string {
   const cur = st.taxRate ?? 'normal'
   const next = TAX_RATES[(TAX_RATES.indexOf(cur) + 1) % TAX_RATES.length]!
   st.taxRate = next
-  return `Taxes in ${st.name}: ${next}.`
+  const effect = next === 'low' ? 'half the income, residents are content' : next === 'high' ? `+${Math.round((MAYOR.taxMul.high - 1) * 100)}% income, residents lose opinion of you every day` : 'normal income'
+  const msg = `Taxes in ${st.name}: ${next} (${effect}).`
+  sim.message(msg, 'info')
+  return msg
 }
 
 /** Tax multiplier for a settlement (1 unless a player mayor changed it). */

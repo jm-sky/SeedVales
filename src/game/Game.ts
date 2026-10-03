@@ -579,7 +579,10 @@ export class Game {
 
   /** Quick switch between the primary melee and ranged weapon (X / mobile button). */
   switchWeapon(kind?: WeaponKind) {
-    this.showToast(switchWeapon(this.sim, kind))
+    const hadShield = !!this.sim.player.eq.off && !!itemDef(this.sim.player.eq.off.id).defence
+    const msg = switchWeapon(this.sim, kind)
+    const stowed = hadShield && !this.sim.player.eq.off ? ' — the shield is stowed (this weapon needs both hands)' : ''
+    this.showToast(msg + stowed)
     this.notify()
   }
 
@@ -646,8 +649,10 @@ export class Game {
       p.eq.main = moved
       // A two-handed weapon or a bow needs both hands: a held shield/torch goes back to the pack (as `equipToMain` does).
       if (p.eq.off && (d.weapon?.twoHanded || d.weapon?.kind === 'ranged')) {
+        const stowed = itemDef(p.eq.off.id).name
         addItem(p.inv, p.eq.off)
         p.eq.off = undefined
+        this.showToast(`In hand: ${d.name} — ${stowed} stowed (both hands needed)`)
       }
       this.showToast(`In hand: ${d.name}`)
     } else if (d.armor) {

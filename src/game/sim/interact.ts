@@ -112,7 +112,7 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   }
   for (const a of sim.actors.query(p.x, p.z, maxDist + 1)) {
     if (a === p) continue
-    if (a.kind === 'npc') push({ type: 'npc', id: a.id }, (a as Human).name, a.x, a.z)
+    if (a.kind === 'npc') push({ type: 'npc', id: a.id }, `${(a as Human).name}${sim.state.settlements[(a as Human).settlementId]?.headmanId === a.id ? ' (headman)' : ''}`, a.x, a.z)
     else if (a.kind === 'animal' && SPECIES[(a as Animal).species].temperament === 'domestic') push({ type: 'animal', id: a.id }, SPECIES[(a as Animal).species].name, a.x, a.z)
   }
   for (const c of sim.corpsesNear(p.x, p.z, 7.1)) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Carcass: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)

@@ -104,7 +104,7 @@ Principle: exploration, world variety and discoverable content come before large
 | Plan / ID | Scope |
 |---|---|
 | `QUAL-02a` (in [`world--001`](../plans/world--001--landmarks-and-treasure.md) loot) | **rare Damascus / obsidian weapons as treasure and in the rare stock of selected blacksmiths/traders** — implemented (session 14); the production technology `QUAL-02` stays later |
-| [world--003--caves](../plans/world--003--caves.md) *(draft → next big world slice)* | `WORLD-05` caves + cave loot (`LOOT-01` caves part); prerequisites met: landmarks/treasure (`world--001`), grounding/jump model (`combat--004`), target lock/block (combat 001/002); needs generator (`GEN_VERSION`), interior camera/rendering, save/performance work — Opus design round first |
+| [world--003--caves](../plans/world--003--caves.md) *(draft → next big world slice; **v1 implemented by a second agent in another environment**, user 2026-10-03)* | `WORLD-05` caves + cave loot (`LOOT-01` caves part); prerequisites met: landmarks/treasure (`world--001`), grounding/jump model (`combat--004`), target lock/block (combat 001/002); needs generator (`GEN_VERSION`), interior camera/rendering, save/performance work — Opus design round first |
 | `WORLD-06a` (no plan yet) | additional biome(s) on the existing continent, **desert first** — opportunistic, medium-low priority; schedule only when world-generation work makes it convenient; never couples to continents or sea transport |
 
 Stays late, unchanged: living society (`NPC-08`, `SET-04`; L5, design round first), expanded inter-settlement economy `economy--002` / `TRADE-03` (L3), riding and animal-drawn carts (L4). Additional continents and sea transport (`WORLD-06`) are deferred beyond the planned roadmap. `DEV-01` is dropped.

@@ -77,3 +77,7 @@ Findings:
 - **❓ user:** #6 (lock marker strength), #8 (sharpness shown against the type cap), #10 (treasure has no hint).
 
 Because round 3 is the last round of this loop, the remaining minors and ❓ go to PROGRESS "Teraz".
+
+## Triage (session 14)
+
+Round 3 is the last round of this loop; no blocker/major. Fixed: **#2** round motes (generated dot sprite), **#3** carrion haze on every quality (comment and code agree), **#4** rotten tag in the `bad` colour with "may make you ill", **#5** block log folded (one line per 4 s), **#7** Jump/Dodge button moved clear of Action, **#9** headman shown in the target label, tax change explains its effect and goes to the log, **#11** mobile Block only in combat, **#12** pale bones overlay, **#13** `carrion` frame teleports to an open spot, **#14** toast when a shield is stowed. Left open (❓ user / later): **#1** labels through walls (needs a line-of-sight test per label — cheap raycast against `buildingsNear`, listed for the next UI pass), **#6** lock marker strength, **#8** sharpness shown against the type cap, **#10** treasure has no hint (proposal P-06), the inn menu on mobile and the guard pose screenshot were not verified.

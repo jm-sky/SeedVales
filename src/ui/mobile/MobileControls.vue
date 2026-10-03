@@ -79,7 +79,7 @@ const MENU = [
       <Joystick />
     </div>
     <button
-      class="pointer-events-auto absolute bottom-5 right-[13rem] h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
+      class="pointer-events-auto absolute bottom-5 right-[16.5rem] h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
       data-testid="touch-jump"
       @click="game.jump()"
     >
@@ -123,6 +123,7 @@ const MENU = [
         Target
       </button>
       <button
+        v-if="state.combat"
         class="h-12 w-14 rounded-full bg-sky-700/80 text-xs font-semibold text-white"
         data-testid="touch-block"
         @pointerdown="blockDown"

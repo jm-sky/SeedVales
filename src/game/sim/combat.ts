@@ -17,7 +17,7 @@ import { projectileGround } from './caveSpace'
 import { dullEdge, edgeFactor } from './edge'
 import { logEvent, logging, logProduce } from './eventLog'
 import { fleeHome } from './fauna/perception'
-import { resolveDefence } from './guard'
+import { guardOf, resolveDefence } from './guard'
 import { consumeItem, qualityMult, wearTool } from './inventory'
 import { companionsOnKill } from './npc/companions'
 import { questOnKill } from './quests'
@@ -268,7 +268,13 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
     sim.message(`You parry ${a.kind === 'npc' ? (a as Human).name : 'the attack'}!`, 'good')
     return best
   }
-  if (defence.kind === 'block') sim.message('You block the blow.', 'info')
+  if (defence.kind === 'block') {
+    const g = guardOf(sim)
+    if (sim.state.time.play - g.lastBlockMsgAt > 4) {
+      sim.message('You block the blows.', 'info')
+      g.lastBlockMsgAt = sim.state.time.play
+    }
+  }
   else if (defence.kind === 'break') sim.message('Your guard breaks!', 'bad')
   if (defence.damage > 0) applyDamage(sim, best, defence.damage, w.dmgType, a)
   return best

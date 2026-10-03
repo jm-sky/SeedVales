@@ -57,6 +57,7 @@ export class Dynamics {
   extraCarrion: readonly CarrionSpot[] = []
   /** Shared haze (carrion) and bone-pile materials/geometry for corpse overlays. */
   private static hazeMat = new THREE.MeshBasicMaterial({ color: 0x3f5a1f, transparent: true, opacity: 0.35, depthWrite: false })
+  private static boneMat = new THREE.MeshBasicMaterial({ color: 0xd9d2bd, transparent: true, opacity: 0.92 })
   private static hazeGeo = new THREE.SphereGeometry(0.7, 8, 6).scale(1.2, 0.45, 0.8)
   private precip: Precipitation
   private profile: QualityProfile
@@ -232,10 +233,12 @@ export class Dynamics {
       const phase = corpsePhase(c, sim.state.time.cal)
       o.scale.setScalar(phase === 'bones' ? 0.45 : c.butchered ? 0.6 : 1)
       const haze = o.getObjectByName('haze')
-      const wantHaze = phase === 'carrion' && this.profile !== 'low'
-      if (haze && !wantHaze) haze.removeFromParent()
-      else if (!haze && wantHaze) {
-        const h = new THREE.Mesh(Dynamics.hazeGeo, Dynamics.hazeMat)
+      // Carrion keeps its green haze on every quality (phones need the cue before "Butcher"); bones get a pale pile.
+      const want = phase === 'carrion' ? 'haze' : phase === 'bones' ? 'bones' : ''
+      if (haze && haze.userData.kind !== want) haze.removeFromParent()
+      if (want && haze?.userData.kind !== want) {
+        const h = new THREE.Mesh(Dynamics.hazeGeo, want === 'bones' ? Dynamics.boneMat : Dynamics.hazeMat)
+        h.userData.kind = want
         h.name = 'haze'
         h.position.y = 0.1
         o.add(h)

@@ -16,6 +16,8 @@ import { wearTool } from './inventory'
 export interface GuardState {
   /** The raw button state last tick (a parry window opens only on a real release → press, never when a suppressed guard resumes). */
   raw: boolean
+  /** Last time a block line was written to the log (folded: one line per few seconds). */
+  lastBlockMsgAt: number
   held: boolean
   /** Gameplay time the current guard press began (parry window origin). */
   startedAt: number
@@ -26,7 +28,7 @@ const states = new WeakMap<Sim, GuardState>()
 
 export function guardOf(sim: Sim): GuardState {
   let g = states.get(sim)
-  if (!g) states.set(sim, (g = { raw: false, held: false, startedAt: -1e9, brokenUntil: 0 }))
+  if (!g) states.set(sim, (g = { raw: false, lastBlockMsgAt: -1e9, held: false, startedAt: -1e9, brokenUntil: 0 }))
   return g
 }
 
