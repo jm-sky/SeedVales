@@ -274,11 +274,11 @@ export const Q03: QuestDef = {
     },
     {
       id: 'repair_npc',
-      journal: 'The old house holds. The beam was replaced without you and {joan} sleeps in {joan:his} own room again; {miles} repaid the common store its two beams from {miles:his} own woodpile.',
+      journal: 'The old house holds. The beam was replaced without you and {joan} sleeps in {joan:his} own room again.',
       effects: [
         opinion('miles', 3),
         { k: 'consume', from: milesStore, item: 'log', qty: 2 },
-        { k: 'if', when: [flag('storeDebt')], then: [{ k: 'give', from: milesStore, to: { warehouse: 'home' }, item: 'log', qty: 2 }] },
+        // No store loan on this path: storeGranted counts as the player's part, so `contributed` would hold.
       ],
     },
     {

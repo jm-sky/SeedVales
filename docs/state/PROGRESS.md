@@ -15,7 +15,7 @@
 - **D-LANG-1:** English everywhere. Polish docs are legacy.
 - Verification (latest, 2026-10-03, session 14, WSL): `pnpm check` **401/401**; `pnpm e2e:run` smoke 3/3 · acceptance 39/39 · mobile 14/14, 0 console errors; `review-run ui` small-button hits 400 → 0. UI batch of review 016 merged (cherry-pick of WIP, verified); Q03 NPC-repair ending has its own journal (`repair_npc`). **Full soak still to run on main.**
 - Formats: **`SAVE_VERSION` 9** (unreleased; authored quests, holds, visitor), `GEN_VERSION` 9.
-- **Review loop round 1** (review--001): recon 013 (batch A+B merged), code review 014 (all fixed), soak 015 (caravans D-NPC-9, orbiting NPCs `steerTo`, seed-3 famine D-ECON-6 — fixed), app review 016 (quest batch merged; **UI batch interrupted** — WIP commit `8b4c067` on branch `worktree-agent-a50398712de203e8d`, worktree `.claude/worktrees/agent-a50398712de203e8d`, unverified).
+- **Review loop round 1** (review--001): recon 013, code review 014, soak 015, app review 016 — all fixed and merged (UI batch verified in session 14). Round 2: code review 017 triaged (7 minor fixed, docs drift fixed); app review 018 running.
 - **Next step (Sonnet session):** see `NEXT-SESSION-KICK-OFF-PROMPT.md`.
 - User decisions 2026-10-03: D-USER-1 (profession surnames + Mark Hornblower; quest icons above NPCs; use recorded sounds, credits before release; refs are a floor; fog + close-range name labels; autumn colours later; start in the small settlement), D-PLAN-9 (later backlog), roadmap waves 5a audio / 5c combat.
 - ❓ user: combat balance (wolf 9 club hits); look of render--001/007 frames and stockpiles; WORLD-10 + audio listen; phone measurement; sound licences list (release gate).

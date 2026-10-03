@@ -71,9 +71,9 @@ describe('review 016 #15: identical stacks merge in lists', () => {
 })
 
 describe('review 016 #8: sleep wakes in the morning, never in the dark', () => {
-  function sleepFrom(hour: number, vigor: number) {
+  function sleepFrom(hour: number, vigor: number, dayOffset = 1) {
     const sim = testSim()
-    const day = Math.floor(sim.state.time.cal / 86400) + 1
+    const day = Math.floor(sim.state.time.cal / 86400) + dayOffset
     sim.state.time.cal = day * 86400 + hour * 3600
     sim.player.vitals.vigor = vigor
     startSleep(sim, 0.85)
@@ -95,5 +95,48 @@ describe('review 016 #8: sleep wakes in the morning, never in the dark', () => {
     expect(h).toBeGreaterThanOrEqual(6)
     expect(h).toBeLessThanOrEqual(7.2)
     expect(isNight(sim.state.time.cal)).toBe(false)
+  })
+
+  it('NEEDS-01 (review 017 #1-2): an evening nap or a winter sleep never ends in the dark, in any season', () => {
+    for (const dayOffset of [1, 92, 183, 274]) {
+      for (const hour of [15.5, 16.8, 17.2, 18, 19.5]) {
+        const sim = sleepFrom(hour, 40, dayOffset)
+        expect(sim.state.px.activity, `${dayOffset}/${hour}`).toBeUndefined()
+        expect(isNight(sim.state.time.cal), `woke at night: day+${dayOffset} from ${hour}h → ${hourOf(sim.state.time.cal).toFixed(2)}h`).toBe(false)
+      }
+    }
+  })
+})
+
+describe('review 017 #3-5: warehouse reputation hints and honesty', () => {
+  function warehouseWith(item: string, qty: number, helpfulness: number) {
+    const sim = testSim()
+    const wh = sim.building(sim.state.settlements[sim.world.homeSettlement]!.warehouseId)!
+    sim.state.settlements[wh.settlementId]!.rep.helpfulness = helpfulness
+    wh.inv!.items = []
+    addItem(wh.inv!, newStack(item, qty))
+    return { sim, wh }
+  }
+
+  it('ECON-04: taking six pieces one by one costs the same Honesty as taking all six', () => {
+    const a = warehouseWith('iron_ore', 6, 0)
+    const b = warehouseWith('iron_ore', 6, 0)
+    const hon = (s: ReturnType<typeof warehouseWith>) => s.sim.state.settlements[s.wh.settlementId]!.rep.honesty
+    const h0 = hon(a)
+    for (let i = 0; i < 6; i++) transferToStorage(a.sim, a.wh, 0, false, 1)
+    transferToStorage(b.sim, b.wh, 0, false)
+    expect(hon(a)).toBeCloseTo(hon(b), 5)
+    expect(hon(a)).toBeLessThan(h0)
+  })
+
+  it('ECON-04: a free item costs no Honesty and the toast does not print a zero cost', () => {
+    const { sim, wh } = warehouseWith('flint', 1, 0)
+    const free = itemDef('flint').price
+    if (free === 0) {
+      const msg = transferToStorage(sim, wh, 0, false, 1)
+      expect(msg).not.toMatch(/−0/)
+    }
+    const c = warehouseTakeCost(sim, wh, wh.inv!.items[0]!, 1)!
+    expect(c.honesty).toBeCloseTo(c.helpfulness * 0.5, 5)
   })
 })

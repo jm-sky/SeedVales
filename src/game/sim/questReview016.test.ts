@@ -185,6 +185,9 @@ describe('review 016 #17: notice board scope', () => {
     const other = sim.world.settlements.find((s) => s.id !== here)!
     const mk = (id: string, sid: number) => ({ id, kind: 'wolves' as const, title: `Wolves ${sid}`, desc: '', settlementId: sid, giverId: sim.state.npcs[0]!.id, status: 'available' as const, reward: 10, createdAt: 0, killsNeeded: 1, kills: 0 })
     sim.state.quests.push(mk('far', other.id), mk('near', here))
+    // MAP-01 (review 017 #6): an undiscovered settlement's notices are not listed at all.
+    expect(noticeBoard(sim).map((g) => g.settlementId)).toEqual([here])
+    sim.state.px.visited = [...(sim.state.px.visited ?? []), other.id]
     const groups = noticeBoard(sim)
     expect(groups.map((g) => g.settlementId)).toEqual([here, other.id])
     expect(groups[0]).toMatchObject({ here: true })

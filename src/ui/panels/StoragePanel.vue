@@ -24,11 +24,11 @@ const fmt = (n: number) => (Math.round(n * 10) / 10).toString()
 /** Reputation line shown before the action: "1 piece: −0.3 · all 6: −1.8 Helpfulness". */
 function repHint(s: ItemStack, toStorage: boolean): string {
   const g = game.value
-  const one = g.storageRepPreview(d.value!.b, s, 1, toStorage)
-  if (!one) return ''
-  const all = g.storageRepPreview(d.value!.b, s, s.qty, toStorage)!
+  const one = g.storageRepPreview(d.value!.b, s, 1, toStorage) ?? { helpfulness: 0, honesty: 0 }
+  const all = g.storageRepPreview(d.value!.b, s, s.qty, toStorage)
+  if (!all) return ''
   const sign = toStorage ? '+' : '−'
-  const honesty = !toStorage && all.honesty ? `, Honesty −${all.honesty}` : ''
+  const honesty = !toStorage && all.honesty ? `, Honesty −${fmt(all.honesty)}` : ''
   return s.qty > 1
     ? `1: ${sign}${fmt(one.helpfulness)} · all ${s.qty}: ${sign}${fmt(all.helpfulness)} Helpfulness${honesty}`
     : `${sign}${fmt(one.helpfulness)} Helpfulness${honesty}`

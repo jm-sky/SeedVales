@@ -6,6 +6,7 @@
 import type { Sim } from './sim'
 import type { Quest } from './types'
 import { logEvent } from './eventLog'
+import { isKnownSettlement } from './navigation'
 import { animalsNear, countByDen, nestTag } from './queries'
 import { questEvent } from './questHooks'
 import { addRep, settlementAt } from './reputation'
@@ -187,6 +188,8 @@ export function noticeBoard(sim: Sim): NoticeGroup[] {
   const here = settlementAt(sim, p.x, p.z, BOARD_MARGIN_M)
   const groups = new Map<number, NoticeGroup>()
   for (const q of [...sim.state.quests].reverse()) {
+    // MAP-01: notices of settlements the player has not heard of stay hidden (review 017 #6).
+    if (q.settlementId !== here && !isKnownSettlement(sim, q.settlementId)) continue
     let g = groups.get(q.settlementId)
     if (!g) {
       const w = sim.world.settlements[q.settlementId]!

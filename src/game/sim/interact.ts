@@ -499,7 +499,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
 /** Hours of an evening/night sleep: until the first daylight at or after 06:00 (at most 08:00), never ending in the dark. */
 export function hoursUntilMorning(cal: number): number {
   const hr = hourOf(cal)
-  for (let off = 0.5; off <= 14; off += 0.25) {
+  for (let off = 0.5; off <= 24; off += 0.25) {
     const w = (hr + off) % 24
     if (w >= 6 && w < 12 && !isNight(cal + off * 3600)) return off
   }
@@ -508,7 +508,9 @@ export function hoursUntilMorning(cal: number): number {
 
 export function startSleep(sim: Sim, comfort: number): string {
   const hr = hourOf(sim.state.time.cal)
-  const hours = isNight(sim.state.time.cal) || hr > 20 ? hoursUntilMorning(sim.state.time.cal) : Math.max(2, (100 - sim.player.vitals.vigor) / 12)
+  const nap = Math.max(2, (100 - sim.player.vitals.vigor) / 12)
+  // A nap that would end after dusk becomes a night's sleep (review 017 #1-2): nobody wakes up in the dark.
+  const hours = isNight(sim.state.time.cal) || hr > 20 || isNight(sim.state.time.cal + nap * 3600) ? hoursUntilMorning(sim.state.time.cal) : nap
   startActivity(sim, { kind: 'sleep', label: `Sleeping (comfort ${Math.round(comfort * 100)}%)`, total: hours * 150, accel: 40, data: String(comfort) })
   return 'You fall asleep… (time sped up, Esc to stop)'
 }
@@ -546,7 +548,9 @@ export function warehouseTakeCost(sim: Sim, b: Building, s: ItemStack, qty: numb
   if (b.kind !== 'warehouse') return null
   const rep = sim.state.settlements[b.settlementId]?.rep
   const n = Math.min(qty, s.qty)
-  return { helpfulness: takeGoodwill(itemDef(s.id).price * n), honesty: rep && rep.helpfulness < 10 ? 1 : 0 }
+  const helpfulness = takeGoodwill(itemDef(s.id).price * n)
+  // Without standing a take also looks like theft: Honesty cost scales with the value taken, so "1 × 6" and "all 6" cost the same (review 017 #3).
+  return { helpfulness, honesty: rep && rep.helpfulness < 10 ? Math.round(helpfulness * 5) / 10 : 0 }
 }
 
 /** Helpfulness gained by depositing `qty` pieces of a stack into a warehouse. */
@@ -579,7 +583,8 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
     // Taking back costs what depositing gave (no deposit/take loop, review 006 #5); without standing it also looks like theft.
     const cost = warehouseTakeCost(sim, b, s, n)!
     addRep(sim, b.settlementId, { helpfulness: -cost.helpfulness, ...(cost.honesty ? { honesty: -cost.honesty } : {}) })
-    costTxt = ` (Helpfulness −${fmt1(cost.helpfulness)}${cost.honesty ? `, Honesty −${cost.honesty}` : ''})`
+    const parts = [cost.helpfulness > 0 ? `Helpfulness −${fmt1(cost.helpfulness)}` : '', cost.honesty > 0 ? `Honesty −${fmt1(cost.honesty)}` : ''].filter(Boolean)
+    costTxt = parts.length ? ` (${parts.join(', ')})` : ''
   }
   const partial = n < Math.min(qty, s.qty)
   const moved = removeStack(b.inv, s, n)!

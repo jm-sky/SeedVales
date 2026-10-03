@@ -719,7 +719,7 @@ export class Game {
       return g > 0 ? { helpfulness: g, honesty: 0 } : null
     }
     const c = warehouseTakeCost(this.sim, b, stack, qty)
-    return c && c.helpfulness > 0 ? c : null
+    return c && (c.helpfulness > 0 || c.honesty > 0) ? c : null
   }
 
   /** Hires a companion; closes the panel on success. */

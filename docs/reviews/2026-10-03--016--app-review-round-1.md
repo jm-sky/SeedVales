@@ -69,7 +69,7 @@
 | 4 | fix | Q03 thank-you scene: lines by absent optional cast are skipped; the speaking cast matches the scene owner | `1347aee` (batch 016-Q) |
 | 5 | fix | Q07 journal text per stage; every accept option has an NPC reply | `1347aee` (batch 016-Q) |
 | 6 | ❓ user | Combat balance (wolf 9 club hits, player at 30 HP) — calibration decision for the user / combat wave 5c |  |
-| 7 | fix | Smith order price ≥ trader price was intended for scarce goods only: order price capped at max(trader buy price, inputs + labour) for items the trader stocks — check against D-ECON-5 | batch 016-U (this commit range) |
+| 7 | fix | Smith order price ≥ trader price was intended for scarce goods only: order price capped at max(trader buy price, inputs + labour) for items the trader stocks — check against D-ECON-5 | none: kept (D-ECON-7) |
 | 8 | fix | Inn/bed sleep wakes at the next 06:00–07:00 (or when rested and it is day), not in the dark | batch 016-U (this commit range) |
 | 9 | defer | Camera collision with roofs/walls/trunks → `combat--001` (camera work) / `render--003`; recorded there |  |
 | 10 | fix | Build placement: ghost shown and placed at the indicated spot; the camera/ghost make the spot visible (not hidden behind the player) | batch 016-U (this commit range) |
