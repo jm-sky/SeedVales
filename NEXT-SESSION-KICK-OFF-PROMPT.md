@@ -31,6 +31,15 @@ You continue SeedVales (Vue 3 + TS + Three.js, pnpm). You are **Sonnet**: you im
 
 `render--009` step 3 (stockpiles WSL verification — CLAUDE.md handoff note; Opus decision on the 4 k tri budget: keep if `crowded-settlement` A/B is within noise, else reduce detail in the generator) → wave 5 (`world--001` steps 2–3 LOOT-01, `settlement--001`) with wave 5a `audio--001` alongside → wave 5c combat (`combat--001` → `002` → `004` → `003`; each plan's "Decisions for Opus": take the plan's recommended option, record it in DECISIONS, continue) → wave 6 → `proposals--001` → `docs/roadmap/later-vision-backlog.md` L1–L7 (D-PLAN-9).
 
+## 3a. Long-running autonomy (user, 2026-10-03: "work long, on your own")
+
+- **Keep going until the session limit.** After one item is verified and committed, take the next one from §1 → §2 → §3 without asking. Never end a turn with a plan, a summary of "what I would do next", or a question — do it.
+- **Blocked on a decision?** Take the plan's recommended option (or the safest reversible one), record it in DECISIONS as "Sonnet default, Opus/user to confirm", add it to PROGRESS ❓, continue. Blocked on a tool/environment problem: diagnose, work around, record; move to the next independent item meanwhile.
+- **Checkpoint often:** small verified commits (one finding / one plan step each), PROGRESS "Teraz" updated at every checkpoint, so an interrupted session (rate limit) loses nothing. Before a long command, commit what you have.
+- **Use worktree subagents for parallel independent items** (e.g. a fix batch while you review), at most 2–3 at a time, each with the hard rules from §0; cherry-pick their own commits. If an agent dies on a rate limit, commit its worktree changes as `wip(...)` on its branch and resume it later.
+- **Quality bar stays:** every fix has a failing-first test; every step ends with `verify`; soak/bench only on a quiet machine; no weakened criteria. Reviews (wave-review, app-review) run Opus subagents (`model: "opus"`) — D-PLAN-7.
+- **Do not push**; the user pushes. Do not touch `docs/assets/textures/` (user's untracked work).
+
 ## 4. End of session
 
 Skill `verify`, skill `handoff`; PROGRESS "Teraz" with numbers and the next step; rewrite this kick-off; short report to the user (done / verified with numbers / open).
@@ -39,4 +48,4 @@ Skill `verify`, skill `handoff`; PROGRESS "Teraz" with numbers and the next step
 
 **Start message (paste into the Sonnet session):**
 
-> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it autonomously: §1 (finish review round 1: the interrupted UI batch of review 016, full soak, round 2), §2 (user decisions D-USER-1: profession surnames + Mark Hornblower, quest icons above NPCs, close-range name labels, start audio--001), then §3 in order. Verify after every step, handoff before every commit, no push without my consent. Don't stop at a plan or a question; finish with the next kick-off and a short report.
+> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it autonomously for as long as the session allows: §1 (finish review round 1: the interrupted UI batch of review 016, full soak, round 2), §2 (user decisions D-USER-1), then §3 through the roadmap, following §3a (long-running autonomy). Work on your own — no questions to me; decide with the plan's recommended option and record it in DECISIONS. Verify after every step, handoff before every commit, small checkpoint commits, no push. Don't stop at a plan, a summary or a question; when the session ends, leave PROGRESS and the next kick-off up to date.
