@@ -488,6 +488,8 @@ export interface PlayerExtra {
   cave?: number
   /** Treasure spots already dug up (LOOT-01); the contents are derived from the world seed + spot id, so nothing else is stored. */
   lootTaken?: string[]
+  /** Landmarks a villager has already told a treasure tale about (P-06). */
+  talesTold?: string[]
 }
 
 export interface MapPin {

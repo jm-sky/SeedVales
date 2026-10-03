@@ -82,6 +82,14 @@ watch(d, (v) => {
         Give a gift
       </Button>
       <Button
+        size="sm"
+        variant="outline"
+        data-testid="dialog-tales"
+        @click="game.askTales(d.n)"
+      >
+        Ask about old tales
+      </Button>
+      <Button
         v-if="d.quests.length"
         size="sm"
         variant="outline"

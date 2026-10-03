@@ -43,6 +43,7 @@ import { acceptQuest } from './sim/quests'
 import { tryApologize } from './sim/reputation'
 import { Sim } from './sim/sim'
 import { buyFromNpc, sellToNpc } from './sim/trade'
+import { askAboutTales } from './sim/treasureTales'
 import { installSystems } from './sim/worldSystems'
 import { generateWorld } from './world/gen/generate'
 import { deserializeWorld } from './world/serialize'
@@ -836,6 +837,13 @@ export class Game {
   setWaypoint(x: number, z: number, label?: string) {
     this.showToast(setWaypoint(this.sim, x, z, label))
     this.notify()
+  }
+
+  /** Asks a villager about old tales (P-06): a treasure hint in words, logged in the journal messages. */
+  askTales(npc: Human) {
+    const msg = askAboutTales(this.sim, npc)
+    this.sim.message(msg, 'quest')
+    this.act(msg)
   }
 
   /** Drops a map note (P-08) at the player's position. */
