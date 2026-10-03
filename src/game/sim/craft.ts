@@ -41,13 +41,22 @@ export function rollQuality(sim: Sim, skill: number): number {
 export function completeCraft(sim: Sim, h: Human, r: Recipe): ActionResult {
   const c = canCraft(sim, h, r)
   if (!c.ok) return { ok: false, msg: c.reason! }
-  for (const i of r.inputs) consumeItem(h.inv, i.item, i.qty, 'craft', h)
+  // Preservation is derived from what was consumed: the output keeps the weakest source's remaining-freshness share (never a free refresh).
+  let share = 1
+  for (const i of r.inputs) {
+    for (const s of consumeItem(h.inv, i.item, i.qty, 'craft', h)) {
+      const f = itemDef(s.id).food
+      if (f && s.fresh !== undefined) share = Math.min(share, Math.max(0, s.fresh / f.spoilH))
+    }
+  }
   if (r.tool) {
     const t = findTool(h, r.tool)
     if (t) wearTool(t, 1)
   }
   const q = r.quality ? rollQuality(sim, h.skills[r.skill]) : undefined
-  giveOrDrop(sim, h, newStack(r.output.item, r.output.qty, q !== undefined ? { q } : {}), 'craft')
+  const outFood = itemDef(r.output.item).food
+  const fresh = outFood && r.inputs.some((i) => itemDef(i.item).food) ? { fresh: outFood.spoilH * share } : {}
+  giveOrDrop(sim, h, newStack(r.output.item, r.output.qty, { ...(q !== undefined ? { q } : {}), ...fresh }), 'craft')
   train(h, r.skill, 0.5, 2)
   const qn = q !== undefined ? ` (quality: ${QUALITY_NAMES[q]})` : ''
   return { ok: true, msg: `Crafted: ${itemDef(r.output.item).name} ×${r.output.qty}${qn}` }

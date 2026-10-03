@@ -64,7 +64,7 @@ export const PROFESSIONS: Record<ProfessionId, ProfessionDef> = {
       { item: 'waterskin_m', qty: 2 }, { item: 'torch', qty: 6 }, { item: 'flint', qty: 2 }, { item: 'arrow', qty: 30 },
       { item: 'axe', qty: 1 }, { item: 'shovel', qty: 1 }, { item: 'pickaxe', qty: 1 }, { item: 'hammer', qty: 1 }, { item: 'pan', qty: 1 }, { item: 'wheelbarrow', qty: 1 },
       { item: 'short_bow', qty: 1 }, { item: 'backpack', qty: 1 }, { item: 'leather_jerkin', qty: 1 }, { item: 'sling', qty: 1 },
-      { item: 'apple', qty: 10 }, { item: 'dried_meat', qty: 4 }, { item: 'sewing_kit', qty: 1 }, { item: 'blanket', qty: 1 },
+      { item: 'apple', qty: 10 }, { item: 'dried_meat', qty: 4 }, { item: 'salt', qty: 8 }, { item: 'sewing_kit', qty: 1 }, { item: 'blanket', qty: 1 },
     ],
   },
   blacksmith: {

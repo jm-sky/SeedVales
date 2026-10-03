@@ -186,6 +186,9 @@ const LIST: ItemDef[] = [
   food('raw_meat', 'Raw meat', 1, 5, { nutrition: 10, spoilH: 18, raw: true, illnessChance: 0.35 }),
   food('cooked_meat', 'Roast meat', 0.8, 10, { nutrition: 30, spoilH: 24 * 3 }),
   food('dried_meat', 'Dried meat', 0.4, 14, { nutrition: 24, spoilH: 24 * 40 }),
+  res('salt', 'Salt', 0.3, 'XS', 4),
+  food('salted_meat', 'Salted meat', 0.5, 16, { nutrition: 22, spoilH: 24 * 75 }),
+  food('fermented_cabbage', 'Fermented cabbage', 0.8, 6, { nutrition: 14, spoilH: 24 * 90 }),
   food('stew', 'Stew', 1, 12, { nutrition: 40, water: 10, spoilH: 24 * 2 }),
   // Herbs (common/medium/rare, healing/poisonous)
   herb('mint', 'Mint', 2, { heal: 4, cures: true, rarity: 'common' }),

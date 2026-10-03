@@ -87,6 +87,7 @@ export const ACTIVITY_SOUNDS: Record<string, { id: string; periodS: number }> = 
   drink: { id: 'action-drink', periodS: 0 },
   gather: { id: 'inventory-pick-up', periodS: 1.5 },
   sharpen: { id: 'gridstone_sharpen', periodS: 0 },
+  meal: { id: 'action-cook', periodS: 0 },
 }
 
 /** Simulation `sound` event kinds and the ambience's synthetic kinds → recorded sound id. */

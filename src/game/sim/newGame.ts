@@ -8,6 +8,7 @@ import type { ProfessionId, WorldData } from '../world/types'
 import type { AgeGroup, AiState, Animal, Building, GameState, Household, Human, Kin, SettlementState } from './types'
 import { FIRE, START_CALENDAR_S, TREASURY_START } from '../config/calibration'
 import { hashString, Rng } from '../core/rng'
+import { HOUSEHOLD_RESERVE_SHARE, HOUSEHOLD_RESERVES, INN_PANTRY } from '../data/innMeals'
 import { HOUSEHOLD_PANTRY, PLAYER_START_ITEMS, PLAYER_START_WEAPON, WAREHOUSE_START } from '../data/itemSources'
 import { NAMES, PROFESSIONS, SURNAMES } from '../data/professions'
 import { emptySkills } from '../data/skills'
@@ -102,6 +103,11 @@ export function createNewGame(world: WorldData): GameState {
       b.lit = true
     }
     if (b.kind === 'house' || b.kind === 'inn') b.inv = { items: [] }
+    // Inn pantry (economy--003): a finite starting stock by settlement size; nothing refills it in this slice.
+    if (b.kind === 'inn') {
+      const size = world.settlements.find((s) => s.id === b.settlementId)?.size ?? 'SM'
+      for (const [it, q] of INN_PANTRY[size]) addItem(b.inv!, newStack(it, q))
+    }
   }
 
   const settlements: SettlementState[] = world.settlements.map((s) => ({
@@ -130,6 +136,10 @@ export function createNewGame(world: WorldData): GameState {
       }
       for (const st of prof.store) addItem(house.inv!, newStack(st.item, st.qty))
       for (const [it, q] of HOUSEHOLD_PANTRY) addItem(house.inv!, newStack(it, q))
+      // Emergency preserves: only some households, deterministic from seed + household id (own hash, the sim RNG stream is untouched).
+      if (hashString(`${world.seed}:reserve:${hid}`) % 100 < HOUSEHOLD_RESERVE_SHARE * 100) {
+        for (const [it, q] of HOUSEHOLD_RESERVES[gh.profession] ?? []) addItem(house.inv!, newStack(it, q))
+      }
       const hh: Household = { id: hid, settlementId: s.id, profession: gh.profession, houseId: house.id, memberIds: [] }
       households.push(hh)
       // Family name from the head's trade; picked by hash so the sim RNG stream is unchanged.

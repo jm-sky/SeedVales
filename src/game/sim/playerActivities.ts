@@ -13,6 +13,7 @@ import { applyBuildProgress } from './build'
 import { completeRoast } from './cooking'
 import { completeCraft } from './craft'
 import { needsSharpening, sharpenEdge } from './edge'
+import { completeMeal } from './inns'
 import { findTool, wearTool } from './inventory'
 
 type Done = (sim: Sim, a: PlayerActivity) => ActionResult | null
@@ -29,6 +30,7 @@ export const ACTIVITY_DONE: Record<string, Done> = {
     const n = node(sim, a)
     return n ? mineRock(sim, sim.player, n) : null
   },
+  meal: (sim, a) => completeMeal(sim, a.ref ?? '', a.data ?? ''),
   sharpen: (sim, a) => {
     const p = sim.player
     const stone = findTool(p, 'sharpen')

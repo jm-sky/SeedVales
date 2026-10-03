@@ -1,6 +1,6 @@
 # Inn meals and preserved food reserves
 
-**Status:** draft  
+**Status:** done  
 **Model:** opus — service/economy rules and calibration; sonnet — implementation and tests  
 **Domain:** economy  
 **Sub domains:** food, inns, crafting, trade, households, survival  
@@ -315,3 +315,7 @@ This plan owns the **player-facing inn meal service, preserved-food content and 
 `economy--002` continues to own the broader redesign of household background production, regional availability, inter-settlement demand/supply and long-term economic calibration.
 
 When both are implemented, the inn should consume the production/trade outputs of that economy rather than maintain special-case free production or a private refill loop.
+
+## Result (2026-10-03, session 14, Sonnet)
+
+Implemented as D-INN-1: `data/innMeals.ts`, `sim/inns.ts` (availability, completion transaction, lodging payment), inn interaction options (3 tiers with price/satiety, disabled with the missing-stock/money reason), `meal` activity, inn pantries + household reserves in `createNewGame`, salt in trader stock, salted meat and fermented cabbage recipes with derived freshness. Tests: `inns.test.ts` (7); `pnpm check` 478/478, soak 10 d × 6 seeds 0 violations, e2e green. **Not done:** e2e for the inn meal (UI tested through the interaction options only), mobile-specific check, a dedicated inn panel (options list is used), resupply (economy--002), pickled cucumbers.

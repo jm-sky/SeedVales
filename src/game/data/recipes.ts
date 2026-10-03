@@ -36,6 +36,8 @@ export const RECIPES: Recipe[] = [
   { id: 'rope', name: 'Rope', inputs: [{ item: 'wool', qty: 3 }], output: { item: 'rope', qty: 1 }, skill: 'survival', timeS: 10, category: 'survival' },
   { id: 'cloth', name: 'Cloth', inputs: [{ item: 'wool', qty: 2 }], output: { item: 'cloth', qty: 1 }, tool: 'sew', skill: 'survival', timeS: 10, category: 'survival' },
   { id: 'wooden_shield', name: 'Wooden shield', inputs: [{ item: 'branch', qty: 4 }, { item: 'hide', qty: 1 }], output: { item: 'wooden_shield', qty: 1 }, tool: 'hammer', skill: 'construction', timeS: 20, quality: true, category: 'weapons' },
+  { id: 'salted_meat', name: 'Salt meat', inputs: [{ item: 'raw_meat', qty: 1 }, { item: 'salt', qty: 1 }], output: { item: 'salted_meat', qty: 1 }, skill: 'survival', timeS: 6, category: 'food' },
+  { id: 'fermented_cabbage', name: 'Ferment cabbage', inputs: [{ item: 'cabbage', qty: 1 }, { item: 'salt', qty: 1 }], output: { item: 'fermented_cabbage', qty: 1 }, skill: 'survival', timeS: 6, category: 'food' },
   { id: 'whetstone', name: 'Whetstone', inputs: [{ item: 'stone', qty: 1 }], output: { item: 'whetstone', qty: 1 }, skill: 'survival', timeS: 8, category: 'survival' },
   { id: 'club', name: 'Club', inputs: [{ item: 'branch', qty: 2 }], output: { item: 'club', qty: 1 }, tool: 'cut', skill: 'survival', timeS: 8, category: 'weapons' },
   { id: 'staff', name: 'Staff', inputs: [{ item: 'branch', qty: 1 }], output: { item: 'staff', qty: 1 }, tool: 'cut', skill: 'survival', timeS: 5, category: 'weapons' },

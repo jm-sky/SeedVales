@@ -28,7 +28,7 @@ export const CLASS_OF: Record<string, RecipeClass> = {
   torch: 'processing', bandage: 'processing', salve: 'processing', herbal_tea: 'processing', dry_meat: 'processing', stew: 'processing',
   bread: 'processing', rope: 'processing', cloth: 'processing', iron_ingot: 'processing',
   club: 'cheap-craft', staff: 'cheap-craft', short_bow: 'cheap-craft', long_bow: 'cheap-craft', arrows: 'cheap-craft', arrows_bodkin: 'cheap-craft', spear: 'cheap-craft',
-  bucket: 'cheap-craft', wooden_shield: 'cheap-craft', whetstone: 'cheap-craft',
+  bucket: 'cheap-craft', wooden_shield: 'cheap-craft', whetstone: 'cheap-craft', salted_meat: 'processing', fermented_cabbage: 'processing',
   sling: 'leather', sling_stones: 'cheap-craft',
   leather_jerkin: 'leather', leather_cap: 'leather', leather_boots: 'leather', leather_gloves: 'leather', furs: 'leather',
   waterskin_s: 'leather', waterskin_m: 'leather', waterskin_l: 'leather',

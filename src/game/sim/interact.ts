@@ -8,6 +8,7 @@ import type { Sim } from './sim'
 import type { Animal, Building, Human, ItemStack } from './types'
 import { COMBAT, ROCK } from '../config/calibration'
 import { angleDiff } from '../core/math'
+import { INN_BED_PRICE, INN_MEALS } from '../data/innMeals'
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { isTree } from '../world/nodes'
@@ -17,6 +18,7 @@ import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { logMoney, logProduce } from './eventLog'
 import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
+import { mealIngredients, mealNutrition, mealRefusal, payLodging } from './inns'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
 import { acceptOffice, cycleTaxRate, mayorStatus } from './mayor'
 import { askToJoin, dismissCompanion } from './npc/companions'
@@ -25,7 +27,6 @@ import { questEvent } from './questHooks'
 import { acceptQuest } from './quests'
 import { addRep, addStat, depositGoodwill, settlementAt, takeGoodwill } from './reputation'
 import { hourOf, isNight } from './time'
-import { payToTreasury } from './treasury'
 import { heal } from './vitals'
 
 export type TargetRef =
@@ -186,7 +187,12 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
           o.push(...repair)
           break
         case 'inn':
-          o.push(opt('inn_sleep', 'Rent a bed (8c) and sleep', p.money >= 8, 'Not enough money'))
+          o.push(opt('inn_sleep', `Rent a bed (${INN_BED_PRICE}c) and sleep`, p.money >= INN_BED_PRICE, 'Not enough money'))
+          for (const m of INN_MEALS) {
+            const ids = mealIngredients(b, m)
+            const why = mealRefusal(sim, b, m)
+            o.push(opt(m.id, ids ? `${m.name} (${m.price}c, +${mealNutrition(ids)} satiety)` : `${m.name} (${m.price}c) — unavailable`, !why, why ?? undefined))
+          }
           break
         case 'market': {
           o.push(opt('market', 'Approach the trader'))
@@ -312,15 +318,7 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'bed_sleep':
     case 'camp_sleep':
     case 'inn_sleep': {
-      if (optionId === 'inn_sleep') {
-        const sid = sim.building((t as { id: string }).id)?.settlementId ?? 0
-        const innkeeper = sim.npcsOf(sid).find((n) => n.profession === 'trader' && !n.vitals.dead)
-        if (innkeeper) {
-          p.money -= 8
-          innkeeper.money += 8
-          logMoney('player', `npc:${innkeeper.id}`, 8, 'inn')
-        } else payToTreasury(sim, sid, p, 8)
-      }
+      if (optionId === 'inn_sleep') payLodging(sim, sim.building((t as { id: string }).id)?.settlementId ?? 0)
       const comfort = optionId === 'inn_sleep' ? 0.85 : optionId === 'bed_sleep' ? 0.8 : sleepComfort(sim, null)
       return startSleep(sim, comfort)
     }
@@ -453,6 +451,18 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       const trader = b ? sim.npcsOf(b.settlementId).find((n) => n.profession === 'trader' && !n.vitals.dead) : undefined
       if (trader && b && Math.hypot(trader.x - b.x, trader.z - b.z) > 60) return `The stall is empty — ${trader.name} is away.`
       return trader ? `Trader: ${trader.name} — go and talk to them (Trade).` : 'The stall is empty.'
+    }
+    case 'meal_good':
+    case 'meal_hearty':
+    case 'meal_simple': {
+      const inn = sim.building((t as { id: string }).id)
+      const meal = INN_MEALS.find((m) => m.id === optionId)
+      if (!inn || !meal) return ''
+      const why = mealRefusal(sim, inn, meal)
+      if (why) return why
+      // The transaction happens at completion (cancelling costs nothing).
+      startActivity(sim, { kind: 'meal', ref: inn.id, label: `Eating: ${meal.name}`, total: meal.eatS, data: meal.id })
+      return ''
     }
     case 'mine':
       equip('mine')
