@@ -1044,6 +1044,18 @@ try {
   })
   const dodged = Math.hypot(dodge1.x - dodge0.x, dodge1.z - dodge0.z)
   check(results, '18. Spacja w walce: unik (przesunięcie, bez skoku)', dodged > 0.8 && dodged < 2.2 && Math.abs(dodge1.y - dodge0.y) < 0.6, { dodge0, dodge1, dodged })
+  // 19. proposal P-16: photo mode pauses the world, hides the HUD, shows the photo bar; leaving restores both.
+  const ph0 = await S(() => {
+    window.__sv.game.togglePhotoMode()
+    return window.__sv.game.sim.state.time.play
+  })
+  await page.waitForTimeout(1200)
+  const ph = await S(() => ({ play: window.__sv.game.sim.state.time.play, mode: window.__sv.game.photoMode }))
+  const hudHidden = !(await page.$('[data-testid=status-bars]'))
+  const barShown = !!(await page.$('[data-testid=photo-bar]'))
+  await S(() => window.__sv.game.togglePhotoMode())
+  await page.waitForSelector('[data-testid=status-bars]', { timeout: 10000 })
+  check(results, '19. tryb zdjęć: pauza, brak HUD, pasek, powrót', ph.mode && Math.abs(ph.play - ph0) < 0.01 && hudHidden && barShown, { ph0, ph, hudHidden, barShown })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)

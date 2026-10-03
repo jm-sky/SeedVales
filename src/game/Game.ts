@@ -123,6 +123,8 @@ export class Game {
   private uiListeners = new Set<() => void>()
   private uiTimer = 0
   showDiag = false
+  /** Photo mode (proposal P-16): the world is paused, the HUD hidden, the camera stays free. */
+  photoMode = false
   toast = ''
   toastUntil = 0
   audio = new Ambience()
@@ -258,7 +260,7 @@ export class Game {
     if (playerInput.guard && sim.player.combat && playerInput.facing === undefined) playerInput.facing = rig.yaw
     sim.interruptReason = null
     // Game menu pauses the world (single-player).
-    if (this.panel !== 'menu' && this.panel !== 'settings') sim.step(dt * sim.timeScale)
+    if (this.panel !== 'menu' && this.panel !== 'settings' && !this.photoMode) sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
     const lockedActor = this.combatTargetId !== null ? sim.actor(this.combatTargetId) : undefined
     this.renderer.markerAt = this.panel || sim.state.px.activity || lockedActor ? null : this.target
@@ -315,7 +317,8 @@ export class Game {
         this.showDiag = !this.showDiag
         break
       case 'escape':
-        if (this.sim.state.px.activity) cancelActivity(this.sim, 'Interrupted.')
+        if (this.photoMode) this.togglePhotoMode()
+        else if (this.sim.state.px.activity) cancelActivity(this.sim, 'Interrupted.')
         else if (this.sim.state.px.autopilot) this.sim.state.px.autopilot = undefined
         else this.panel = this.panel ? null : 'menu'
         break
@@ -333,6 +336,9 @@ export class Game {
         break
       case 'map':
         this.togglePanel('map')
+        break
+      case 'photo':
+        this.togglePhotoMode()
         break
       case 'quests':
         this.togglePanel('quests')
@@ -460,6 +466,26 @@ export class Game {
       this.target = pinned ?? list[0] ?? waterTarget(sim, sim.player.rot)
     }
     this.options = this.target ? targetOptions(sim, this.target.ref) : []
+  }
+
+  togglePhotoMode() {
+    if (this.panel) return
+    this.photoMode = !this.photoMode
+    this.showToast(this.photoMode ? 'Photo mode — P or Esc to leave' : '')
+    this.notify()
+  }
+
+  /** Renders one frame and downloads the canvas as a PNG. */
+  takePhoto() {
+    this.renderer.render(0)
+    this.canvas.toBlob((blob) => {
+      if (!blob) return
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `seedvales-${Date.now()}.png`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+    }, 'image/png')
   }
 
   /** Starts sharpening a blade (equipped or in the pack) with a whetstone. */

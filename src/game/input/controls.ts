@@ -20,7 +20,7 @@ export interface InputState {
 
 export const input: InputState = { keys: new Set(), stickX: 0, stickY: 0, run: false, primary: false, secondary: false, lookDX: 0, lookDY: 0, zoom: 0 }
 
-export type KeyAction = 'interact' | 'inventory' | 'character' | 'craft' | 'journal' | 'quests' | 'map' | 'combat' | 'sneak' | 'escape' | 'diag' | 'quick' | 'save' | 'build' | 'torch' | 'useBandage' | 'switchWeapon' | 'cycleTarget' | 'jump'
+export type KeyAction = 'interact' | 'inventory' | 'character' | 'craft' | 'journal' | 'quests' | 'map' | 'combat' | 'sneak' | 'escape' | 'diag' | 'quick' | 'save' | 'build' | 'torch' | 'useBandage' | 'switchWeapon' | 'cycleTarget' | 'jump' | 'photo'
 
 export interface ControlHandlers {
   onAction(a: KeyAction): void
@@ -47,6 +47,7 @@ const KEYMAP: Record<string, KeyAction> = {
   KeyT: 'torch',
   KeyH: 'useBandage',
   Space: 'jump',
+  KeyP: 'photo',
 }
 
 export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): () => void {

@@ -8,6 +8,7 @@ import { loadSettings } from '@/lib/settings'
 import type { StartRequest } from './types'
 import DiagOverlay from './hud/DiagOverlay.vue'
 import Hud from './hud/Hud.vue'
+import PhotoBar from './hud/PhotoBar.vue'
 import ToastLine from './hud/ToastLine.vue'
 import MobileControls from './mobile/MobileControls.vue'
 import PanelHost from './panels/PanelHost.vue'
@@ -54,8 +55,11 @@ onBeforeUnmount(() => {
       data-testid="game-canvas"
     />
     <template v-if="game && !loading">
-      <Hud />
-      <MobileControls v-if="game.isTouch" />
+      <template v-if="!(version >= 0 && game.photoMode)">
+        <Hud />
+        <MobileControls v-if="game.isTouch" />
+      </template>
+      <PhotoBar v-else />
       <PanelHost
         @quit="emit('quit')"
         @restart="emit('restart', $event)"
