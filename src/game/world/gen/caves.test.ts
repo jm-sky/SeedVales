@@ -17,10 +17,13 @@ describe('WORLD-05 caves', () => {
   })
 
   let total = 0
+  let large = 0
   for (const seed of SEEDS) {
     it(`seed ${seed}: rules hold, geometry is roofed beyond a short cutting`, () => {
       const w = generateWorld(seed)
       total += w.caves.length
+      large += w.caves.filter((c) => c.size === 'large').length
+      expect(w.caves.filter((c) => c.size === 'large').length).toBeLessThanOrEqual(1)
       expect(new Set(w.caves.map((c) => c.id)).size).toBe(w.caves.length)
       for (const c of w.caves) {
         const k = Math.round(c.z / w.cell) * w.n + Math.round(c.x / w.cell)
@@ -60,5 +63,13 @@ describe('WORLD-05 caves', () => {
 
   it('finds caves on most seeds', () => {
     expect(total).toBeGreaterThanOrEqual(SEEDS.length)
+  })
+
+  it('large caves exist on some seeds, are longer than medium ones and never fold into themselves', () => {
+    expect(large).toBeGreaterThan(0)
+    const w = generateWorld(1337)
+    const len = (c: (typeof w.caves)[number]) => spinePoints(c).at(-1)!.s
+    const bySize = (k: string) => w.caves.filter((c) => c.size === k).map(len)
+    if (bySize('large').length && bySize('medium').length) expect(Math.min(...bySize('large'))).toBeGreaterThan(Math.max(...bySize('medium')) * 0.9)
   })
 })

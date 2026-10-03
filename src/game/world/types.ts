@@ -4,7 +4,7 @@
  * @subdomain world-gen
  */
 
-export const GEN_VERSION = 10
+export const GEN_VERSION = 11
 export const WORLD_SIZE_M = 8192
 export const CELL_M = 8
 export const GRID_N = WORLD_SIZE_M / CELL_M + 1 // vertices per side
@@ -141,7 +141,7 @@ export interface GenLandmark {
   radius: number
 }
 
-export type CaveSize = 'small' | 'medium'
+export type CaveSize = 'small' | 'medium' | 'large'
 
 /**
  * Cave (WORLD-05): a tunnel/chamber chain entered through a cutting in a mountain slope. Only this compact

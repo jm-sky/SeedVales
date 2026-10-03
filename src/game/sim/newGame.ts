@@ -277,7 +277,7 @@ export function createNewGame(world: WorldData): GameState {
     const pts = spinePoints(c)
     const deep = pts[pts.length - 1]!
     const grid = buildCaveGrid(c, (x, z) => sampleGrid(world.height, x, z))
-    const kinds: SpeciesId[] = c.size === 'medium' ? ['bear'] : ci % 2 === 0 ? ['wolf'] : ['rat', 'rat', 'rat']
+    const kinds: SpeciesId[] = c.size === 'large' ? ['bear', 'wolf'] : c.size === 'medium' ? ['bear'] : ci % 2 === 0 ? ['wolf'] : ['rat', 'rat', 'rat']
     for (const sp of kinds) {
       const x = deep.x + crng.range(-1.5, 1.5)
       const z = deep.z + crng.range(-1.5, 1.5)

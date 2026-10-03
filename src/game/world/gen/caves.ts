@@ -6,7 +6,7 @@
  * @domain world
  * @subdomain world-gen
  */
-import type { GenCave, GenLandmark, GenRoad, GenSettlement } from '../types'
+import type { CaveSize, GenCave, GenLandmark, GenRoad, GenSettlement } from '../types'
 import { CAVE } from '../../config/calibration'
 import { distToSegment } from '../../core/math'
 import { Rng } from '../../core/rng'
@@ -27,8 +27,8 @@ const MIN_SETTLEMENT_M = 220
 const MIN_ROAD_M = 60
 const MIN_CAVE_M = 450
 const MIN_LANDMARK_M = 120
-/** Wanted caves: [small, medium]. */
-export const CAVE_COUNTS = { small: 4, medium: 2 } as const
+/** Wanted caves per class. */
+export const CAVE_COUNTS = { small: 4, medium: 2, large: 1 } as const
 
 export const CAVE_NAMES = [
   'Wolfmaw Cave', 'The Hollow Deep', 'Ravenhole', 'Greywater Grotto', 'Bearclaw Cave', 'The Echoing Mouth',
@@ -55,9 +55,12 @@ function gradient(height: Float32Array, x: number, z: number): { dx: number; dz:
 }
 
 /** Builds one spine: tunnel(s) with a chamber at the end of each leg. Spacing ~6 m, gentle meander. */
-function makeSpine(rng: Rng, x: number, z: number, heading: number, size: 'small' | 'medium'): number[] {
+function makeSpine(rng: Rng, x: number, z: number, heading: number, size: CaveSize): number[] {
   const out: number[] = []
-  const legs = size === 'small' ? [rng.range(18, 26)] : [rng.range(14, 20), rng.range(12, 18), rng.range(10, 14)]
+  const legs =
+    size === 'small' ? [rng.range(18, 26)] :
+    size === 'medium' ? [rng.range(14, 20), rng.range(12, 18), rng.range(10, 14)] :
+    [rng.range(16, 22), rng.range(14, 20), rng.range(14, 18), rng.range(12, 16), rng.range(10, 14)]
   let cx = x
   let cz = z
   let h = heading
@@ -72,7 +75,7 @@ function makeSpine(rng: Rng, x: number, z: number, heading: number, size: 'small
     }
     // Chamber: two wide points a few metres apart.
     const cr = rng.range(CAVE.chamberRadius[0], CAVE.chamberRadius[1])
-    h += rng.range(-0.5, 0.5) * (li + 1)
+    h += rng.range(-0.5, 0.5) * Math.min(li + 1, 2)
     for (let k = 0; k < 2; k++) {
       cx += Math.sin(h) * 4.5
       cz += Math.cos(h) * 4.5
@@ -93,8 +96,22 @@ export function caveIsValid(cave: GenCave, height: Float32Array): boolean {
     if (p.x < 100 || p.z < 100 || p.x > WORLD_SIZE_M - 100 || p.z > WORLD_SIZE_M - 100) return false
     if (p.s > CAVE.maxCuttingM && lower(p.x, p.z) - spineFloor(cave.y0, p.s) < clearanceFor(p.r) + CAVE.minCover + 0.6) return false
   }
+  // A tunnel must not fold back into itself: non-neighbouring spine points keep their distance.
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = i + 3; j < pts.length; j++) {
+      if (Math.hypot(pts[i]!.x - pts[j]!.x, pts[i]!.z - pts[j]!.z) < 0.8 * (pts[i]!.r + pts[j]!.r)) return false
+    }
+  }
   const g = buildCaveGrid(cave, lower)
   if (g.open < 40) return false
+  // The first open point on the approach axis must meet the ground within a step (with some slack), so the player can walk in.
+  for (let t = 4; t >= 0; t -= 0.25) {
+    const bx = cave.x - Math.sin(cave.yaw) * t
+    const bz = cave.z - Math.cos(cave.yaw) * t
+    if (!g.flagAt(bx, bz)) continue
+    if (Math.abs(g.floorAt(bx, bz) - sampleGrid(height, bx, bz)) > CAVE.stepM * 0.85) return false
+    break
+  }
   for (let j = 0; j < g.nz; j++) {
     for (let i = 0; i < g.nx; i++) {
       const f = g.flag[j * g.nx + i]!
@@ -125,8 +142,9 @@ export function placeCaves(seed: number, g: CaveGridData, settlements: GenSettle
   }
   if (!cand.length) return out
   const near = cand.filter(([x, z]) => Math.hypot(x - home.x, z - home.z) < 4500)
-  const sizes: ('small' | 'medium')[] = []
-  for (let n = 0; n < Math.max(CAVE_COUNTS.small, CAVE_COUNTS.medium); n++) {
+  const sizes: CaveSize[] = []
+  for (let n = 0; n < Math.max(CAVE_COUNTS.small, CAVE_COUNTS.medium, CAVE_COUNTS.large); n++) {
+    if (n < CAVE_COUNTS.large) sizes.push('large')
     if (n < CAVE_COUNTS.medium) sizes.push('medium')
     if (n < CAVE_COUNTS.small) sizes.push('small')
   }
