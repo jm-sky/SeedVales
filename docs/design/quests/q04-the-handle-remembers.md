@@ -135,3 +135,11 @@ Effect: Bernard works less (N: lower smithy output until he asks for a new hamme
 ## Mechanics
 
 I: smith, orders, durability, materials. N: tool test, marking an item as damaged/keepsake, NPC work-quality modifier. **Author decisions:** do tools have an "unsafe" state; can keepsakes be decorations in buildings.
+
+## Implementation notes
+
+Implemented by `quests--003` W2 as `src/game/data/quests/q04.ts` (test `questQ04.test.ts`); `settlement` anchors gained a `place` ({V}).
+
+- **Start:** the player has visited {V}. **Test and crack** are observations at {V}'s anvil (the quest's own "strike" option marks the test, then 5 s looking at the head finds the crack; repeating the look always works — no skill roll).
+- **Work is a quest timer, not a CRAFT-02 order:** reforge consumes coal ×4 from the player, new consumes iron ingot ×2 and coal ×4 (no deposit; labour free as in the design); 12 h later Sophie finishes. Reforge → `repairHeld` (equipped main-hand item to full durability); new → a `hammer` (declared grant "forged-by-sophie") and 8 c from Sophie's purse (the design's nails/knife are not in her store). Keepsake ends at once with a bread from her store and opinions +15.
+- **Not implemented:** the order event/real order wrap (E5 `order`), Bernard's output modifier, the "damaged — do not use" marking, the G02 `bernardAdmits` line and the Sophie-makes-a-light-hammer epilogue.

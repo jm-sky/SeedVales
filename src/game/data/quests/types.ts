@@ -26,8 +26,8 @@ export type Anchor =
   | { k: 'building'; slot: SlotId; kind: StructureKind }
   /** Home-settlement torch post nearest to the slot's house. */
   | { k: 'torchpost'; slot: SlotId }
-  /** Home-settlement building of `kind` nearest to the settlement centre. */
-  | { k: 'settlement'; kind: StructureKind }
+  /** Building of `kind` (default home settlement, or {V}) nearest to the settlement centre. */
+  | { k: 'settlement'; kind: StructureKind; place?: QuestPlace }
   /** Live position of a cast actor (not cached). */
   | { k: 'actor'; slot: SlotId }
   /** A point beside the road leaving the home settlement, `m` metres beyond its edge (the ford camp). */

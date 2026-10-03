@@ -260,8 +260,9 @@ export function resolveAnchor(c: QuestCtx, a: Anchor): Resolved | null {
     const b = house ? nearest(sim.settlementBuildings(homeId(sim), 'torchpost'), house.x, house.z) : undefined
     if (b) r = { x: b.x, z: b.z, id: b.id }
   } else if (a.k === 'settlement') {
-    const hs = sim.world.settlements[homeId(sim)]!
-    const b = nearest(sim.settlementBuildings(homeId(sim), a.kind), hs.x, hs.z)
+    const sid = placeId(sim, a.place)
+    const hs = sim.world.settlements[sid]
+    const b = hs ? nearest(sim.settlementBuildings(sid, a.kind), hs.x, hs.z) : undefined
     if (b) r = { x: b.x, z: b.z, id: b.id }
   } else if (a.k === 'wild') r = wildPoint(sim, a.bearing, a.m)
   else r = roadPoint(sim, a.m)
