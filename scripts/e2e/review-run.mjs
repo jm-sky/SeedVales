@@ -3,12 +3,12 @@
  * Application review runner (review--001, skill `app-review`): starts its own Vite server (free port, no HMR),
  * runs the review scenarios and writes test-results/review/<scenario>/NN-<step>.png + observations.json
  * (+ ui-checks.json for review-ui). Prints one summary line per scenario.
- * Usage: node scripts/e2e/review-run.mjs [start] [economy] [combat] [build] [quests] [ui] [frames]   (default: all)
+ * Usage: node scripts/e2e/review-run.mjs [start] [economy] [combat] [build] [quests] [ui] [frames] [features]   (default: all)
  * Exit code: non-zero only for crashes or console errors; unperformable steps are recorded, not failed.
  */
 import { startServer } from './server.mjs'
 
-const ALL = ['start', 'economy', 'combat', 'build', 'quests', 'ui', 'frames']
+const ALL = ['start', 'economy', 'combat', 'build', 'quests', 'ui', 'frames', 'features']
 const wanted = process.argv.slice(2).map((a) => a.replace(/^review-/, '').replace(/\.mjs$/, ''))
 const scenarios = wanted.length ? wanted : ALL
 const unknown = scenarios.filter((s) => !ALL.includes(s))
