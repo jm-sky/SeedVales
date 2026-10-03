@@ -216,6 +216,14 @@ export class Ambience {
     bed('ambient-meadow-loop', (biome === Biome.Meadow || biome === Biome.Steppe) && day > 0.4 ? 0.5 : 0)
     bed('ambient-night-crickets-loop', day <= 0.4 && !mountain && !wet ? 0.4 : 0)
     bed('ambient-lake-frogs-loop', biome === Biome.Swamp || biome === Biome.Water ? 0.4 : 0)
+    // Fire loop: the nearest lit fire within earshot (spatial query, 5 Hz).
+    const p = this.simRef!.player
+    let fire = 0
+    for (const b of this.simRef!.buildingsNear(p.x, p.z, 14)) {
+      if (!b.lit) continue
+      fire = Math.max(fire, 1 - Math.hypot(b.x - p.x, b.z - p.z) / 14)
+    }
+    bed('ambient-fire-loop', fire * 0.5)
     const level = wet ? 0.3 + w.intensity * 0.3 : 0
     const stormBed = bed('ambient-rain-storm', storm ? level : 0)
     const rainBed = bed('ambient-rain-loop', storm ? 0 : level) || stormBed
@@ -257,6 +265,11 @@ export class Ambience {
         this.samples.play(footstepId(surface, gait === 'run'), gait === 'sneak' ? 0.25 : 0.45, 0.94 + Math.random() * 0.12, this.busFx)
       }
     } else this.stepT = 0
+  }
+
+  /** UI / small interaction one-shots (panel open, pick-up, drop) on the effects bus. */
+  ui(id: 'ui-click' | 'inventory-pick-up' | 'inventory-drop') {
+    this.samples?.play(id, 0.5, 1, this.busFx)
   }
 
   /** Plays an NPC voice line if the director allows it (distance gate, one voice at a time, per-NPC cooldown). */

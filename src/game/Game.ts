@@ -361,6 +361,7 @@ export class Game {
   }
 
   togglePanel(p: Panel) {
+    this.audio.ui('ui-click')
     this.panel = this.panel === p ? null : p
     if (this.panel) document.exitPointerLock?.()
     this.notify()
@@ -654,6 +655,7 @@ export class Game {
   }
 
   drop(s: ItemStack) {
+    this.audio.ui('inventory-drop')
     const p = this.sim.player
     const moved = removeStack(p.inv, s)
     if (moved) dropItem(this.sim, p.x + Math.sin(p.rot) * 0.8, p.z + Math.cos(p.rot) * 0.8, moved)
