@@ -7,7 +7,7 @@ const { launch, newGame, shot, sv } = await import('./lib.mjs')
 const { browser, page } = await launch()
 await newGame(page, '1337', 'medium')
 const sets = { none: [], plate: ['torso_outer:plate_cuirass', 'shoulders_outer:pauldrons'], helm: ['head_outer:iron_helm'], full: ['torso_outer:plate_cuirass', 'shoulders_outer:pauldrons', 'head_outer:iron_helm', 'boots_outer:leather_boots'] }
-for (const [prof, sex] of [['farmer', true]]) {
+for (const [prof, sex] of [['farmer', false], ['guard', true], ['herbalist', true]]) {
   for (const [name, items] of Object.entries(sets)) {
     const ok = await sv(page, ([prof, sex, items]) => {
       const s = window.__sv
