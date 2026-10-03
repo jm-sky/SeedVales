@@ -27,6 +27,7 @@ Animal-drawn carts are explicitly out of scope and remain a later TRANS-02 plan.
 Verified on current main before writing this plan:
 
 - src/game/data/species.ts already defines horse and donkey as ordinary domestic species.
+- Current generation only gives horse/donkey livestock to trader households in non-SM settlements, so the starting settlement does **not** currently guarantee transport access.
 - There is no mount/rider/saddle state or riding-control path.
 - Current transport is TRANS-01: player-pushed wheelbarrow/handcart with separate cargo inventory.
 - Animals already have quest-follow behavior and use the normal actor movement/LOD pipeline.
@@ -47,21 +48,25 @@ Verified on current main before writing this plan:
 
 Record the final decisions in docs/design/DECISIONS.md before implementation.
 
-### Ownership
+### Ownership and guaranteed starter availability
 
 Recommended first slice:
 
+- the **starting settlement must always contain at least one adult horse or donkey available for purchase**; prefer a horse when possible, otherwise donkey;
+- this guarantee must be deterministic and seed-safe: if normal household generation does not create one, add one to a suitable home-settlement household (prefer trader, then farmer/shepherd fallback) without changing unrelated RNG streams;
+- the animal remains household-owned until bought — never use a free "Claim" action;
+- buying transfers coins from player to the owning household/NPC and changes the animal to player ownership; no money is created or destroyed (D-ECON-1);
 - only adult horse/donkey can become player-owned transport animals;
 - ownership is explicit saved state, not inferred from proximity;
 - only owned animals can receive transport equipment;
-- breeding, animal markets and stable economy stay outside this plan.
+- breeding and full stable/horse-market systems stay outside this plan.
 
 Suggested Animal additions:
 
 - owner?: 'player'
 - transport?: AnimalTransportState
 
-### Riding eligibility
+### Riding eligibility and survivability
 
 Recommended:
 
@@ -69,7 +74,10 @@ Recommended:
 - donkey is pack-only in this first slice;
 - animal must be alive, calm, stationary enough and outside deep water;
 - player must be within about 2 m;
-- dismount finds a safe side position and never places the player inside blocked geometry.
+- dismount finds a safe side position and never places the player inside blocked geometry;
+- transport animals should be **meaningfully harder to lose accidentally** than ordinary disposable livestock: use higher HP/endurance and/or a transport-animal protection rule rather than making them invulnerable;
+- recommended first rule: owned transport animals enter a downed/protected state at 0 HP and only die from substantially deeper damage or prolonged untreated danger, similar in spirit to NPC protection but tuned for animals;
+- deliberate sustained attacks, severe combat or neglect may still kill them — the goal is protection from one bad hit or incidental simulation damage, not immortality.
 
 ### Combat
 
@@ -79,11 +87,17 @@ Recommended:
 - significant damage or horse panic/flee can force dismount;
 - mounted combat is a future feature.
 
-## Step 1 — saved transport state
+## Step 1 — starter guarantee, purchase and saved transport state
 
 **Model: sonnet**
 
-Add explicit saved state, following current save conventions.
+First make starter access deterministic, then add explicit saved state following current save conventions.
+
+Generation requirement:
+
+- every new game has at least one adult horse or donkey in the home settlement;
+- the guarantee should be added with an isolated deterministic derivation/hash or separate RNG stream so unrelated population/world results do not shift;
+- add a generation test over multiple seeds asserting the home settlement always contains at least one purchasable transport animal.
 
 Suggested state:
 
@@ -102,6 +116,8 @@ Rules:
 
 Tests:
 
+- multiple seeds: home settlement always has at least one adult horse/donkey available for purchase;
+- purchase conserves money and transfers ownership exactly once;
 - save/load preserves ownership, equipment, cargo and mounted id;
 - invalid mounted references cannot crash load;
 - cargo quantity is conserved across save/load.
@@ -186,12 +202,16 @@ Recommended initial travel speeds:
 
 Do not expose the raw species maximum immediately as normal travel speed.
 
-Terrain:
+Terrain and water safety:
 
 - use existing collision and slope checks;
 - shallow water allowed with a speed penalty;
 - mounted swimming is not supported in v1;
-- deep water stops the horse before invalid terrain.
+- **transport animals must not path or be driven into water deep enough to drown**;
+- mounted movement stops before deep water;
+- Follow/needs AI must treat deep water as blocked when choosing drinking/path targets;
+- drinking must select reachable shallow-bank positions, not the water-cell centre;
+- if a transport animal nevertheless ends up in deep water because of a bug/physics edge case, it should immediately seek the nearest safe shallow/land point instead of passively drowning.
 
 Stamina and needs:
 
@@ -257,15 +277,17 @@ Mobile:
 - contextual Mount/Dismount action;
 - avoid permanent extra buttons unless device review proves they are needed.
 
-## Step 8 — simulation integration
+## Step 8 — simulation integration and protection
 
 Invariants:
 
-- transport animals remain normal animals for needs, weather, damage and death;
+- transport animals remain normal animals for needs, weather and damage, but player-owned transport animals get the explicit survivability protection decided in Step 0;
+- they are not invulnerable and can still die from severe/prolonged damage;
 - fauna/settlement systems must not silently despawn or reassign owned animals;
 - normal wandering is suppressed while mounted;
 - danger/flee behavior can override follow;
-- cargo/equipment must never disappear on death.
+- cargo/equipment must never disappear on death;
+- transport animals must never intentionally choose a drowning route for follow, grazing or drinking.
 
 Recommended death behavior:
 
@@ -285,8 +307,12 @@ Unit/sim tests:
 6. pack capacity and item conservation;
 7. follow/stay/unreachable handling;
 8. save/load;
-9. animal death preserves cargo;
-10. pushed cart and riding are mutually exclusive.
+9. incidental damage/downing does not immediately kill a protected owned transport animal;
+10. severe damage can still kill it;
+11. follow/drinking never selects deep-water drowning routes;
+12. forced deep-water recovery reaches safe land/shallow water;
+13. animal death preserves cargo;
+14. pushed cart and riding are mutually exclusive.
 
 E2E:
 
@@ -362,7 +388,8 @@ Use targeted tests during each step; run the full verification gate at milestone
 
 The plan is done when:
 
-- one horse can be owned, saddled, mounted, ridden and safely dismounted;
+- every new game guarantees at least one purchasable adult horse or donkey in the starting settlement;
+- one horse can be bought, owned, saddled, mounted, ridden and safely dismounted;
 - one horse/donkey can carry persistent pack inventory;
 - transport animals can follow/stay without movement loops;
 - item transfers conserve quantities;
