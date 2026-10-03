@@ -158,3 +158,31 @@ export function questMarkers(sim: Sim): QuestMarker[] {
   return out
 }
 
+
+/** Icon above an NPC's head: `!` has a quest to offer, `?` takes part in an active quest, `done` finished a quest with the player. */
+export type NpcQuestIcon = 'offer' | 'turnin' | 'done'
+
+/** A finished quest keeps its tick above the NPC for one game day. */
+const DONE_ICON_S = 86400
+
+/** Quest icon for one NPC (authored quests via their topics, board quests via the giver); null when none applies. */
+export function npcQuestIcon(sim: Sim, npcId: number): NpcQuestIcon | null {
+  let icon: NpcQuestIcon | null = null
+  for (const def of questDefs(sim)) {
+    const st = sim.state.authoredQuests[def.id]
+    if (!st) continue
+    if (st.status === 'done') {
+      // The quest finished with this cast member: a tick for a day.
+      if (!icon && st.startedAt !== undefined && sim.state.time.cal - (st.endedAt ?? 0) < DONE_ICON_S && Object.values(st.cast).includes(npcId)) icon = 'done'
+      continue
+    }
+    const c = readCtxOf(sim, def, st)
+    const t = def.topics.find((tp) => st.cast[tp.slot] === npcId && talkable(st, !!tp.done) && allOf(c, tp.when))
+    if (!t) continue
+    if (st.status === 'offered' || st.status === 'refused') return 'offer'
+    if (st.status === 'active') icon = 'turnin'
+  }
+  if (icon) return icon
+  const hasBoard = sim.state.quests.some((q) => q.status === 'available' && q.giverId === npcId && q.settlementId === sim.state.npcs.find((n) => n.id === npcId)?.settlementId)
+  return hasBoard ? 'offer' : null
+}

@@ -26,12 +26,12 @@ import { giveGift } from './sim/gifts'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, warehouseDepositGain, warehouseTakeCost, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
-import { autopilotToSettlement, clearWaypoint, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
+import { autopilotToSettlement, clearWaypoint, isExplored, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
 import { hireCompanion } from './sim/npc/companions'
 import { cancelOrder, collectOrder, placeOrder } from './sim/orders'
 import { cancelActivity, playerInput, sleepComfort, startActivity } from './sim/player'
-import { type JournalEntry, questChoose, type QuestChooseResult, questJournal, type QuestMarker, questMarkers, questSay, type QuestSay, type QuestTopic, questTopics } from './sim/questDialog'
+import { type JournalEntry, type NpcQuestIcon, npcQuestIcon, questChoose, type QuestChooseResult, questJournal, type QuestMarker, questMarkers, questSay, type QuestSay, type QuestTopic, questTopics } from './sim/questDialog'
 import { acceptQuest } from './sim/quests'
 import { tryApologize } from './sim/reputation'
 import { Sim } from './sim/sim'
@@ -77,6 +77,17 @@ export async function loadWorld(seed: number, onProgress?: (l: string) => void):
   perf.record('world.generate', w.genMs)
   storeWorldCache(w).catch((e) => console.warn('world cache write failed', e))
   return w
+}
+
+/** Labels and quest icons are drawn for villagers this near (m); the name fades in over the last part (NAME_FADE_*). */
+const OVERLAY_RANGE_M = 30
+export interface NpcOverlay {
+  id: number
+  name: string
+  x: number
+  y: number
+  dist: number
+  icon: NpcQuestIcon | null
 }
 
 export class Game {
@@ -225,6 +236,7 @@ export class Game {
     this.renderer.markerAt = this.panel || sim.state.px.activity ? null : this.target
     this.renderer.ghostAt = this.panel === 'build' && this.buildPreviewId ? this.blueprintSpot(this.buildPreviewId) : null
     this.renderer.render(dt)
+    this.audio.frame(dt, sim)
     if (this.audioEvents.length < 200) this.audioEvents.push(...sim.events)
     sim.events.length = 0
     // Target & UI (5 Hz).
@@ -322,7 +334,15 @@ export class Game {
     this.notify()
   }
 
+  /** Voice line of the NPC behind a panel reference (greeting / farewell). */
+  private npcVoice(ref: TargetRef | null, situation: 'greeting' | 'farewell') {
+    if (ref?.type !== 'npc') return
+    const npc = this.sim.state.npcs.find((n) => n.id === ref.id)
+    if (npc) this.audio.voiceLine(npc, situation, this.sim)
+  }
+
   closePanel() {
+    if (this.panel === 'dialog') this.npcVoice(this.panelRef, 'farewell')
     this.panel = null
     this.panelRef = null
     this.notify()
@@ -348,6 +368,7 @@ export class Game {
     if (o.panel) {
       this.panel = o.panel
       this.panelRef = ref
+      if (o.panel === 'dialog') this.npcVoice(ref, 'greeting')
       document.exitPointerLock?.()
     } else {
       if (o.id === 'build') {
@@ -613,6 +634,21 @@ export class Game {
   /** Journal: authored quests and the active notice-board quests. */
   journal(): { authored: JournalEntry[]; board: GameState['quests'] } {
     return { authored: questJournal(this.sim), board: this.sim.state.quests.filter((q) => q.status === 'active') }
+  }
+
+  /** Name labels and quest icons of the villagers near the player, in canvas pixels (fog: unexplored cells hide them). */
+  npcOverlays(): NpcOverlay[] {
+    const sim = this.sim
+    const p = sim.player
+    const out: NpcOverlay[] = []
+    for (const a of sim.actors.query(p.x, p.z, OVERLAY_RANGE_M)) {
+      if (a.kind !== 'npc' || (a as Human).vitals.dead || a === p || !isExplored(sim, a.x, a.z)) continue
+      const dist = Math.hypot(a.x - p.x, a.z - p.z)
+      const pt = this.renderer.project(a.x, a.y + (a.age === 'child' ? 1.3 : 2.1), a.z)
+      if (!pt.visible) continue
+      out.push({ id: a.id, name: (a as Human).name, x: pt.x, y: pt.y, dist, icon: npcQuestIcon(sim, a.id) })
+    }
+    return out
   }
 
   questMarkers(): QuestMarker[] {

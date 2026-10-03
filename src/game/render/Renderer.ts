@@ -183,6 +183,15 @@ export class Renderer {
     this.scene.clear()
   }
 
+  private projV = new THREE.Vector3()
+
+  /** World point → CSS pixels of the canvas; `visible` is false behind the camera or outside the view. */
+  project(x: number, y: number, z: number): { x: number; y: number; visible: boolean } {
+    const v = this.projV.set(x, y, z).project(this.rig.camera)
+    const c = this.renderer.domElement
+    return { x: (v.x * 0.5 + 0.5) * c.clientWidth, y: (-v.y * 0.5 + 0.5) * c.clientHeight, visible: v.z > -1 && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05 }
+  }
+
   resize(w: number, h: number) {
     this.renderer.setSize(w, h, false)
     this.rig.camera.aspect = w / Math.max(1, h)

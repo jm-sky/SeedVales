@@ -960,6 +960,21 @@ try {
   const listed = !!(await page.$('[data-slot-name="Moja wyprawa"]'))
   await shot(page, 'acc-13-saves')
   check(results, '13. zapis pod nazwą widoczny na liście zapisów', named.name === 'Moja wyprawa' && listed, { named, listed })
+  // 14. D-USER-1: name label + quest icon above an NPC who offers a quest (near the player only).
+  await page.waitForSelector('[data-testid=status-bars]', { timeout: 60000 })
+  const offered = await S(() => {
+    const ok = window.__sv.forceQuest('q03')
+    const g = window.__sv.game
+    const id = g.sim.state.authoredQuests.q03?.cast.miles
+    const npc = g.sim.state.npcs.find((n) => n.id === id)
+    if (!ok || !npc) return null
+    window.__sv.approach(npc.x, npc.z, 5)
+    return { name: npc.name }
+  })
+  await page.waitForTimeout(1200)
+  const lbl = await S(() => [...document.querySelectorAll('[data-testid="npc-labels"] [data-npc-icon]')].map((e) => ({ icon: e.getAttribute('data-npc-icon'), text: e.textContent })))
+  await shot(page, 'acc-14-npc-icon')
+  check(results, '14. ikona zadania i nazwa nad NPC (D-USER-1)', !!offered && lbl.some((l) => l.icon === 'offer' && l.text.includes(offered.name)), { offered, lbl })
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 400))
   await shot(page, 'acc-error')

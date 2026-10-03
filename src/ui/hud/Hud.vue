@@ -5,6 +5,7 @@ import ClockWeather from './ClockWeather.vue'
 import MessageLog from './MessageLog.vue'
 import Minimap from './Minimap.vue'
 import ModeBar from './ModeBar.vue'
+import NpcLabels from './NpcLabels.vue'
 import StatusBars from './StatusBars.vue'
 import TargetPrompt from './TargetPrompt.vue'
 import ToastLine from './ToastLine.vue'
@@ -14,6 +15,7 @@ const { game } = useGameStrict()
 
 <template>
   <div class="pointer-events-none absolute inset-0 select-none text-shadow">
+    <NpcLabels />
     <div class="absolute left-3 top-3 flex flex-col gap-2">
       <StatusBars />
       <ModeBar />
