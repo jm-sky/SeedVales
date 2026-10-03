@@ -94,6 +94,12 @@ try {
   await tap('panel-close')
   await tap('touch-menu-map')
   const map = !!(await page.$('[data-testid^="autopilot-"]'))
+  // Review 016 #13: the map canvas fits inside the viewport; #12: touch targets >= 32 px.
+  const mapBox = await page.locator('[data-testid="map-canvas"]').boundingBox()
+  const vp = page.viewportSize()
+  check(results, 'M4b. mapa mobilna mieści się w ekranie (UI-04)', !!mapBox && mapBox.y + mapBox.height <= vp.height && mapBox.x + mapBox.width <= vp.width, JSON.stringify(mapBox))
+  const closeBox = await page.locator('[data-testid="panel-close"]').boundingBox()
+  check(results, 'M4c. przycisk zamknięcia ma >= 32 px (UI-04)', !!closeBox && closeBox.width >= 32 && closeBox.height >= 32, JSON.stringify(closeBox))
   await shot(page, 'mob-05-map')
   await tap('panel-close')
   const minimap = !!(await page.$('[data-testid="minimap"]'))

@@ -11,6 +11,7 @@ import { perf } from '../diag/perf'
 import { daylight, hourOf, seasonOf } from '../sim/time'
 import { Actors } from './actors'
 import { atmosphere, type Atmosphere, overcastOf } from './atmosphere'
+import { BuildGhost, type GhostSpot } from './buildGhost'
 import { CameraRig } from './cameraRig'
 import { Carts } from './carts'
 import { Caves } from './caves'
@@ -57,9 +58,12 @@ export class Renderer {
   actors: Actors
   dynamics: Dynamics
   marker: TargetMarker
+  ghost: BuildGhost
   carts: Carts
   /** Where to draw the interaction-target ring (set by Game), or null. */
   markerAt: { x: number; z: number } | null = null
+  /** Placement ghost of the building panel (set by Game), or null. */
+  ghostAt: GhostSpot | null = null
   sun = new THREE.DirectionalLight(0xfff2dd, 2)
   hemi = new THREE.HemisphereLight(0xbfd8ff, 0x5a4a30, 1)
   quality: QualityProfile
@@ -114,12 +118,13 @@ export class Renderer {
     this.actors.cull = this.visual.actorCull
     this.dynamics = new Dynamics(sim, quality)
     this.marker = new TargetMarker(sim.terrain)
+    this.ghost = new BuildGhost(sim.terrain)
     this.carts = new Carts(sim)
     if (this.visual.sky === 'dome') {
       this.skyDome = new SkyDome()
       this.scene.add(this.skyDome.mesh)
     }
-    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.caves.group, this.caveLight, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
+    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.caves.group, this.caveLight, this.actors.group, this.dynamics.group, this.marker.mesh, this.ghost.group, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
@@ -324,6 +329,7 @@ export class Renderer {
     perf.measure('render.actors', () => this.actors.update(dt, this.rig.camera))
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)
+    this.ghost.update(dt, this.ghostAt)
     this.carts.update()
     perf.measure('render.landmarks', () => this.landmarks.update(p.x, p.z))
     this.caves.update(p.x, p.z)

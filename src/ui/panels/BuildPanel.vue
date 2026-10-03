@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
@@ -8,6 +8,8 @@ import { countItem } from '@/game/sim/inventory'
 import PanelFrame from './PanelFrame.vue'
 
 const { game, version } = useGameStrict()
+onMounted(() => game.value.previewBlueprint(BLUEPRINTS[0]?.id ?? null))
+onUnmounted(() => game.value.previewBlueprint(null))
 const list = computed(() => {
   void version.value
   const p = game.value.sim.player
@@ -22,10 +24,11 @@ const list = computed(() => {
 <template>
   <PanelFrame
     title="Building"
+    dock
     @close="game.closePanel()"
   >
     <p class="mb-2 text-xs text-muted-foreground">
-      The building site is marked in front of you. Materials in your backpack or lying within 6 m of the site count automatically.
+      A ghost footprint shows where the site will be marked (green = OK, red = blocked). Materials in your backpack or lying within 6 m of the site count automatically.
       Long stages speed up time (Esc cancels, progress is kept).
     </p>
     <div class="grid gap-2">
@@ -33,6 +36,11 @@ const list = computed(() => {
         v-for="e in list"
         :key="e.b.id"
         class="rounded-md border p-2"
+        :class="game.buildPreviewId === e.b.id ? 'border-primary' : ''"
+        :data-testid="`blueprint-${e.b.id}`"
+        @pointerenter="game.previewBlueprint(e.b.id)"
+        @pointerdown="game.previewBlueprint(e.b.id)"
+        @focusin="game.previewBlueprint(e.b.id)"
       >
         <div class="flex items-center justify-between">
           <span class="font-semibold">{{ e.b.name }}</span>

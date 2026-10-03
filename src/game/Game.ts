@@ -17,13 +17,13 @@ import { Renderer } from './render/Renderer'
 import { checkWorldCompat, loadWorldCache, newSlotId, readSave, readSaveMeta, storeWorldCache, writeSave } from './save/db'
 import { snapshot } from './save/snapshot'
 import { consume, dropItem } from './sim/actions'
-import { placeSite, startBuildWork } from './sim/build'
+import { canPlace, placeSite, startBuildWork } from './sim/build'
 import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
 import { canCraft, craftTime } from './sim/craft'
 import { plantTorch } from './sim/fire'
 import { giveGift } from './sim/gifts'
-import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, waterTarget } from './sim/interact'
+import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, warehouseDepositGain, warehouseTakeCost, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
 import { autopilotToSettlement, clearWaypoint, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
@@ -223,6 +223,7 @@ export class Game {
     if (this.panel !== 'menu' && this.panel !== 'settings') sim.step(dt * sim.timeScale)
     if (sim.interruptReason && sim.timeScale > 1) sim.timeScale = 1
     this.renderer.markerAt = this.panel || sim.state.px.activity ? null : this.target
+    this.renderer.ghostAt = this.panel === 'build' && this.buildPreviewId ? this.blueprintSpot(this.buildPreviewId) : null
     this.renderer.render(dt)
     if (this.audioEvents.length < 200) this.audioEvents.push(...sim.events)
     sim.events.length = 0
@@ -510,14 +511,30 @@ export class Game {
     this.notify()
   }
 
-  placeBlueprint(id: string) {
+  /** Blueprint highlighted in the building panel (its placement ghost is drawn), or null. */
+  buildPreviewId: string | null = null
+
+  /** The one place where a blueprint is put: ahead of the player, clear of the body (ghost and placement share it). */
+  blueprintSpot(id: string): { x: number; z: number; rot: number; hw: number; hd: number; ok: boolean } | null {
     const bp = blueprintById(id)
+    if (!bp) return null
     const p = this.sim.player
-    if (!bp) return
-    const d = Math.max(bp.hw, bp.hd) + 1.8
+    const d = Math.max(bp.hw, bp.hd) + 2.4
     const x = p.x + Math.sin(p.rot) * d
     const z = p.z + Math.cos(p.rot) * d
-    const r = placeSite(this.sim, id, x, z, p.rot)
+    return { x, z, rot: p.rot, hw: bp.hw, hd: bp.hd, ok: canPlace(this.sim, bp, x, z).ok }
+  }
+
+  previewBlueprint(id: string | null) {
+    if (this.buildPreviewId === id) return
+    this.buildPreviewId = id
+    this.notify()
+  }
+
+  placeBlueprint(id: string) {
+    const spot = this.blueprintSpot(id)
+    if (!spot) return
+    const r = placeSite(this.sim, id, spot.x, spot.z, spot.rot)
     this.showToast(r.msg)
     if (r.ok) this.sim.rebuildBuildingIndex()
     this.panel = null
@@ -654,8 +671,19 @@ export class Game {
     this.act(tryApologize(this.sim, badgeId))
   }
 
-  moveStorage(b: Building, stackIdx: number, toStorage: boolean) {
-    this.act(transferToStorage(this.sim, b, stackIdx, toStorage))
+  /** Moves `qty` pieces (default the whole stack) between backpack and storage. */
+  moveStorage(b: Building, stackIdx: number, toStorage: boolean, qty?: number) {
+    this.act(transferToStorage(this.sim, b, stackIdx, toStorage, qty))
+  }
+
+  /** Reputation shown before a storage move: warehouse take cost / deposit gain for `qty` pieces (null when none applies). */
+  storageRepPreview(b: Building, stack: ItemStack, qty: number, toStorage: boolean): { helpfulness: number; honesty: number } | null {
+    if (toStorage) {
+      const g = warehouseDepositGain(b, stack, qty)
+      return g > 0 ? { helpfulness: g, honesty: 0 } : null
+    }
+    const c = warehouseTakeCost(this.sim, b, stack, qty)
+    return c && c.helpfulness > 0 ? c : null
   }
 
   /** Hires a companion; closes the panel on success. */

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { formatCoins } from '@/game/data/items'
+import { groupIdentical } from '@/game/sim/inventory'
 import { professionName } from '@/game/sim/newGame'
 import { buyPrice, sellPrice, tradeStock } from '@/game/sim/trade'
 import ItemRow from './ItemRow.vue'
@@ -20,8 +21,8 @@ const d = computed(() => {
     npc,
     title: `Trade: ${npc.name} (${professionName(npc.profession) || 'villager'})`,
     // Shown with the quantity the NPC is willing to sell (TRADE-02: surplus only).
-    theirs: tradeStock(g.sim, npc).map((e) => ({ s: e.stack, shown: { ...e.stack, qty: e.max }, price: buyPrice(g.sim, npc, e.stack) })),
-    mine: g.sim.player.inv.items.map((s) => ({ s, price: sellPrice(g.sim, npc, s) })),
+    theirs: groupIdentical(tradeStock(g.sim, npc).map((e) => ({ s: e.stack, shown: { ...e.stack, qty: e.max }, price: buyPrice(g.sim, npc, e.stack) })), (e) => e.shown).map((g2) => ({ ...g2.row, shown: { ...g2.row.shown, qty: g2.qty } })),
+    mine: groupIdentical(g.sim.player.inv.items.map((s) => ({ s, price: sellPrice(g.sim, npc, s) })), (e) => e.s).map((g2) => ({ ...g2.row, shown: { ...g2.row.s, qty: g2.qty } })),
     money: g.sim.player.money,
     npcMoney: npc.money,
   }
@@ -85,7 +86,7 @@ function sell(s: ItemStack) {
           <ItemRow
             v-for="(e, i) in d.mine"
             :key="i + e.s.id"
-            :stack="e.s"
+            :stack="e.shown"
             :price="e.price"
           >
             <Button

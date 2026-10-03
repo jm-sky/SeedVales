@@ -82,6 +82,24 @@
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 0 8px rgb(0 0 0 / 0.5);
 }
 
+/* Touch-target floor (review 016 #12): every control is at least 32 px in both directions on touch/small screens. */
+@media (pointer: coarse), (max-width: 640px) {
+  button,
+  [role='button'],
+  select,
+  input:not([type='checkbox']):not([type='radio']),
+  [data-testid^='touch-'],
+  [data-testid='minimap'] {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .panel-scroll {
   overflow-y: auto;
   touch-action: pan-y;

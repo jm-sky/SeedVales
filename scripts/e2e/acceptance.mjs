@@ -176,6 +176,13 @@ try {
   await clickTest('put-log')
   const whLogsAfter = await S(() => window.__sv.game.sim.building(window.__wh).inv.items.filter((i) => i.id === 'log').reduce((a, i) => a + i.qty, 0))
   check(results, '4c. przeniesienie zasobów do magazynu osady', !!whT && whLogsAfter > whLogsBefore, `${whLogsBefore} → ${whLogsAfter}`)
+  // Review 016 #3: "Take 1" moves exactly one piece (quantity choice), the cost hint is shown for the stack.
+  const bpLogs = () => S(() => window.__sv.game.sim.player.inv.items.filter((i) => i.id === 'log').reduce((a, i) => a + i.qty, 0))
+  const bp0 = await bpLogs()
+  await clickTest('take-log')
+  const bp1 = await bpLogs()
+  check(results, '4c2. magazyn: "Take 1" przenosi dokładnie 1 sztukę (ECON-04)', bp1 - bp0 === 1, `${bp0} → ${bp1}`)
+  await clickTest('put-log') // restore the state later steps count on
   await clickTest('panel-close')
 
   // 4d. Sell branches to the trader.
@@ -224,7 +231,12 @@ try {
     sv.pause(false)
   })
   await key('KeyB')
+  await page.waitForTimeout(500)
+  // Review 016 #10: the placement ghost is shown and the site lands exactly there.
+  const ghost = await S(() => { const g = window.__sv.game.renderer.ghostAt; return g ? { x: g.x, z: g.z } : null })
   await clickTest('place-campfire')
+  const placedAt = await S(() => { const s = window.__sv.game.sim.state.sites.at(-1); return s ? { x: s.x, z: s.z } : null })
+  check(results, '5a. budowa: duch pokazuje dokładne miejsce plac budowy (UI-04)', !!ghost && !!placedAt && Math.hypot(ghost.x - placedAt.x, ghost.z - placedAt.z) < 0.5, `${JSON.stringify(ghost)} → ${JSON.stringify(placedAt)}`)
   const siteT = await waitTarget((t) => t.opts.includes('build'))
   await key('KeyE')
   if (await page.$('[data-testid="opt-build"]')) await clickTest('opt-build')

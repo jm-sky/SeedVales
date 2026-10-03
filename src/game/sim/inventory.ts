@@ -20,6 +20,23 @@ export function newStack(id: string, qty = 1, extra: Partial<ItemStack> = {}): I
 const canMerge = (a: ItemStack, b: ItemStack) =>
   a.id === b.id && itemDef(a.id).stack && (a.q ?? -1) === (b.q ?? -1) && (a.m ?? -1) === (b.m ?? -1) && a.sp === b.sp && (a.dur === undefined || b.dur === undefined || a.dur === b.dur)
 
+/** Key of stacks that look identical in a list (same id, quality, material, durability, freshness hour, water). */
+export const stackLookKey = (s: ItemStack) =>
+  [s.id, s.q ?? '', s.m ?? '', s.sp ?? '', s.dur === undefined ? '' : Math.round(s.dur), s.fresh === undefined ? '' : Math.round(s.fresh), s.water ?? ''].join('|')
+
+/** Merges rows whose stacks look identical (review 016 #15): the first row stays the actor, `qty` is summed. */
+export function groupIdentical<T>(rows: T[], stackOf: (r: T) => ItemStack): { row: T; qty: number }[] {
+  const out: { row: T; qty: number; key: string }[] = []
+  for (const row of rows) {
+    const s = stackOf(row)
+    const key = stackLookKey(s)
+    const ex = out.find((o) => o.key === key)
+    if (ex) ex.qty += s.qty
+    else out.push({ row, qty: s.qty, key })
+  }
+  return out.map(({ row, qty }) => ({ row, qty }))
+}
+
 export function addItem(inv: Inventory, stack: ItemStack): void {
   if (stack.qty <= 0) return
   const d = itemDef(stack.id)

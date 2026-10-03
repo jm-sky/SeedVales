@@ -5,7 +5,7 @@
  */
 import type { Capability } from '../data/items'
 import type { Sim } from './sim'
-import type { Animal, Building, Human } from './types'
+import type { Animal, Building, Human, ItemStack } from './types'
 import { COMBAT, ROCK } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { itemDef } from '../data/items'
@@ -88,6 +88,10 @@ export function findTarget(sim: Sim, facing: number, maxDist = 3.2): Target | nu
   return waterTarget(sim, facing)
 }
 
+/** Half-angle of the interaction cone (review 016 #11) and the edge distance below which a target counts from any side. */
+const TARGET_CONE_RAD = (80 * Math.PI) / 180
+const TARGET_TOUCH_M = 0.6
+
 /** All interactive objects in range, best first (distance + angle from facing). */
 export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   const p = sim.player
@@ -99,6 +103,8 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
   }
   const push = (ref: TargetRef, label: string, x: number, z: number, extra = 0) => {
     const d = Math.hypot(x - p.x, z - p.z)
+    // Only what is in front of the player (facing cone); something touching the player counts from any side.
+    if (d - extra > TARGET_TOUCH_M && Math.abs(angleDiff(facing, Math.atan2(x - p.x, z - p.z))) > TARGET_CONE_RAD) return
     if (d - extra <= maxDist) cands.push({ ref, label, x, z, dist: score(x, z) - extra })
   }
   for (const a of sim.actors.query(p.x, p.z, maxDist + 1)) {
@@ -490,9 +496,19 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
   }
 }
 
+/** Hours of an evening/night sleep: until the first daylight at or after 06:00 (at most 08:00), never ending in the dark. */
+export function hoursUntilMorning(cal: number): number {
+  const hr = hourOf(cal)
+  for (let off = 0.5; off <= 14; off += 0.25) {
+    const w = (hr + off) % 24
+    if (w >= 6 && w < 12 && !isNight(cal + off * 3600)) return off
+  }
+  return 9
+}
+
 export function startSleep(sim: Sim, comfort: number): string {
   const hr = hourOf(sim.state.time.cal)
-  const hours = isNight(sim.state.time.cal) || hr > 20 ? Math.min(9, ((6 - hr + 24) % 24) || 8) : Math.max(2, (100 - sim.player.vitals.vigor) / 12)
+  const hours = isNight(sim.state.time.cal) || hr > 20 ? hoursUntilMorning(sim.state.time.cal) : Math.max(2, (100 - sim.player.vitals.vigor) / 12)
   startActivity(sim, { kind: 'sleep', label: `Sleeping (comfort ${Math.round(comfort * 100)}%)`, total: hours * 150, accel: 40, data: String(comfort) })
   return 'You fall asleep… (time sped up, Esc to stop)'
 }
@@ -525,32 +541,50 @@ export function warehouseTake(sim: Sim, b: Building): { allowed: boolean; msg?: 
   return { allowed: true, msg: 'You are taking from the common warehouse — the villagers will notice.' }
 }
 
-export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toStorage: boolean): string {
+/** Reputation cost of taking `qty` pieces of a stack out of a settlement warehouse (D-ECON-4); null outside warehouses. */
+export function warehouseTakeCost(sim: Sim, b: Building, s: ItemStack, qty: number): { helpfulness: number; honesty: number } | null {
+  if (b.kind !== 'warehouse') return null
+  const rep = sim.state.settlements[b.settlementId]?.rep
+  const n = Math.min(qty, s.qty)
+  return { helpfulness: takeGoodwill(itemDef(s.id).price * n), honesty: rep && rep.helpfulness < 10 ? 1 : 0 }
+}
+
+/** Helpfulness gained by depositing `qty` pieces of a stack into a warehouse. */
+export function warehouseDepositGain(b: Building, s: ItemStack, qty: number): number {
+  return b.kind === 'warehouse' ? depositGoodwill(itemDef(s.id).price * Math.min(qty, s.qty)) : 0
+}
+
+const fmt1 = (n: number) => (Math.round(n * 10) / 10).toString()
+
+/** Moves `qty` pieces (default the whole stack) between the backpack and a storage building. */
+export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toStorage: boolean, qty = Infinity): string {
   const p = sim.player
   if (!b.inv) return ''
   if (toStorage) {
     const s = p.inv.items[stackIdx]
     if (!s) return ''
-    const moved = removeStack(p.inv, s)!
+    const moved = removeStack(p.inv, s, Math.max(1, qty))!
     addItem(b.inv, moved)
-    const g = b.kind === 'warehouse' ? depositGoodwill(itemDef(moved.id).price * moved.qty) : 0
-    if (g > 0) addRep(sim, b.settlementId, { helpfulness: g })
-    return `Stored: ${itemDef(moved.id).name}`
+    const gain = b.kind === 'warehouse' ? depositGoodwill(itemDef(moved.id).price * moved.qty) : 0
+    if (gain > 0) addRep(sim, b.settlementId, { helpfulness: gain })
+    return `Stored: ${itemDef(moved.id).name}${moved.qty > 1 ? ` ×${moved.qty}` : ''}${gain > 0 ? ` (Helpfulness +${fmt1(gain)})` : ''}`
   }
   const s = b.inv.items[stackIdx]
   if (!s) return ''
-  const n = fitQty(p, s)
+  const n = Math.min(fitQty(p, s), Math.max(1, qty))
   if (n <= 0) return 'You cannot carry any more.'
   if (b.owner.startsWith('household') && checkTheft(sim, b)) return 'You were caught!'
+  let costTxt = ''
   if (b.kind === 'warehouse') {
     // Taking back costs what depositing gave (no deposit/take loop, review 006 #5); without standing it also looks like theft.
-    const rep = sim.state.settlements[b.settlementId]!.rep
-    addRep(sim, b.settlementId, { helpfulness: -takeGoodwill(itemDef(s.id).price * n), ...(rep.helpfulness < 10 ? { honesty: -1 } : {}) })
+    const cost = warehouseTakeCost(sim, b, s, n)!
+    addRep(sim, b.settlementId, { helpfulness: -cost.helpfulness, ...(cost.honesty ? { honesty: -cost.honesty } : {}) })
+    costTxt = ` (Helpfulness −${fmt1(cost.helpfulness)}${cost.honesty ? `, Honesty −${cost.honesty}` : ''})`
   }
-  const partial = n < s.qty
+  const partial = n < Math.min(qty, s.qty)
   const moved = removeStack(b.inv, s, n)!
   addItem(p.inv, moved)
-  return `Taken: ${itemDef(moved.id).name}${partial ? ` ×${n} (the rest is too heavy)` : ''}`
+  return `Taken: ${itemDef(moved.id).name}${moved.qty > 1 ? ` ×${moved.qty}` : ''}${partial ? ' (the rest is too heavy)' : ''}${costTxt}`
 }
 
 export { acceptQuest, COMBAT }

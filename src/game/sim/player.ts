@@ -14,7 +14,11 @@ import { moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
 import { carriedWeight, carryCapacity } from './inventory'
 import { ACTIVITY_DONE } from './playerActivities'
+import { hourOf, isNight } from './time'
 import { type Exertion, hp, penalty, updateVitals } from './vitals'
+
+/** A rested sleeper may wake early only in daylight hours (never in the dark; review 016 #8). */
+const restedAndLight = (cal: number) => !isNight(cal) && hourOf(cal) >= 6 && hourOf(cal) < 20
 
 export interface PlayerInput {
   /** World-space desired direction (not normalised → magnitude 0..1 for analog). */
@@ -117,7 +121,7 @@ export function playerSystem(sim: Sim, dt: number) {
     if (threat === 'attack' || ((a.kind === 'sleep' || a.kind === 'rest' || (a.accel ?? 1) > 1) && threat)) {
       sim.interruptReason = 'threat'
       cancelActivity(sim, 'Danger! You stop what you\'re doing.')
-    } else if (a.kind === 'sleep' && p.vitals.vigor >= 99 && a.elapsed > 150) {
+    } else if (a.kind === 'sleep' && p.vitals.vigor >= 99 && a.elapsed > 150 && restedAndLight(sim.state.time.cal)) {
       a.elapsed = a.total
     }
     if (px.activity && px.activity.elapsed >= px.activity.total) {

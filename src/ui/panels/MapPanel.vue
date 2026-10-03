@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { isExplored, isVisited, knownSettlements, navGoal, questGoal } from '@/game/sim/navigation'
+import { placeLabel } from '@/ui/map/labelPlacement'
 import { drawArrow, fogMask, worldMapImage } from '@/ui/map/worldMapImage'
 import PanelFrame from './PanelFrame.vue'
 
@@ -37,7 +38,9 @@ function draw() {
     ctx.fillStyle = s.visited ? '#f5d88a' : '#b8b0a0'
     ctx.fillRect(s.x * sc - 4, s.z * sc - 4, 8, 8)
     ctx.fillStyle = s.visited ? '#fff' : '#ddd'
-    ctx.fillText(`${s.name}${s.visited ? '' : ' ?'}`, s.x * sc + 6, s.z * sc - 6)
+    const text = `${s.name}${s.visited ? '' : ' ?'}`
+    const at = placeLabel(s.x * sc, s.z * sc, ctx.measureText(text).width, S)
+    ctx.fillText(text, at.x, at.y)
   }
   // Landmarks (WORLD-11) appear once their cell is explored (fog of war, MAP-01).
   ctx.font = '11px sans-serif'
@@ -54,7 +57,8 @@ function draw() {
     ctx.closePath()
     ctx.fill()
     ctx.fillStyle = '#d6e6ee'
-    ctx.fillText(l.name, lx + 8, lz + 4)
+    const at = placeLabel(lx, lz, ctx.measureText(l.name).width, S, 8, 4)
+    ctx.fillText(l.name, at.x, at.y)
   }
   // Caves (WORLD-05): entrance marker, only in explored cells.
   for (const cv of w.caves) {
@@ -125,7 +129,7 @@ function auto(id: number) {
     <div class="flex flex-col gap-3 sm:flex-row">
       <canvas
         ref="canvas"
-        class="aspect-square w-full max-w-[512px] cursor-crosshair rounded border"
+        class="aspect-square w-[min(100%,512px,52dvh)] shrink-0 self-start cursor-crosshair rounded border"
         data-testid="map-canvas"
         @click="pick"
       />
