@@ -32,7 +32,7 @@ The output must plug into the same equipment-driven visual system used by player
 3. `leather_gloves`: cheap leather recipe, so an early player item. The hands belong to the arm mesh, so a glove is a thin shell over the hand and wrist.
 4. `studded_leather`: needs a silhouette that differs from `leather_jerkin`, such as a stud pattern on a stiffer, shorter body.
 5. `padded_jacket`: only if `render--011` S2-D6 rejected the `Knight_Body_Cloth` candidate.
-6. Optional, only if the user picks option (b) in render--011 ❓ 1: a cloth "Guard" base outfit (Knight body cloth + plain legs and shoes) so that guards show their real leather kit.
+6. **Guard base switch (user, 2026-10-03; render--011 S2-D8):** as soon as both `leather_cap` (here) and `leather_jerkin` (render--011 stage 2) have modules, switch the guard base from `Knight` to `Peasant` with the guard shirt tint and remove the `Knight` row from `BASE_PROVIDES`. Guards then show what they really wear (leather now; mail or plate when they own it). Tests: guard bare → no armour modules; guard with its starting kit → jerkin + cap; guard + `chainmail` → mail module. Tour frame of a guard in each state.
 
 ## Input
 
