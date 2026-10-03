@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { loadSettings } from '@/lib/settings'
+import { applyUiPrefs, loadSettings } from '@/lib/settings'
 import GameView from '@/ui/GameView.vue'
 import MainMenu from '@/ui/MainMenu.vue'
 import type { StartRequest } from '@/ui/types'
 
+applyUiPrefs(loadSettings(matchMedia('(pointer: coarse)').matches))
 const start = ref<StartRequest | null>(null)
 /** New game uses the current settings (quality may have been changed in-game). Bumped on "new game" from the in-game menu so GameView remounts (old Game is stopped). */
 const run = ref(0)

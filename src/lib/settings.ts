@@ -13,9 +13,15 @@ export interface Volumes {
   voices: number
 }
 
+/** UI text size (accessibility, P-17): scales the root font size, so every rem-based control grows with it. */
+export type TextScale = 'normal' | 'large' | 'xlarge'
+
+export const TEXT_SCALES: Record<TextScale, number> = { normal: 100, large: 115, xlarge: 130 }
+
 export interface GameSettings {
   quality: QualityProfile
   volume: Volumes
+  textScale: TextScale
 }
 
 const KEY = 'sv-settings'
@@ -36,7 +42,7 @@ function storage(): Store | null {
 const clamp01 = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : d)
 
 export function defaultSettings(touch = false): GameSettings {
-  return { quality: touch ? 'low' : 'medium', volume: { master: 0.8, ambient: 1, effects: 1, voices: 1 } }
+  return { quality: touch ? 'low' : 'medium', volume: { master: 0.8, ambient: 1, effects: 1, voices: 1 }, textScale: 'normal' }
 }
 
 export function loadSettings(touch = false, st: Store | null = storage()): GameSettings {
@@ -57,6 +63,7 @@ export function loadSettings(touch = false, st: Store | null = storage()): GameS
   const v = raw.volume ?? d.volume
   return {
     quality: q ?? d.quality,
+    textScale: raw.textScale && raw.textScale in TEXT_SCALES ? raw.textScale : d.textScale,
     volume: { master: clamp01(v.master, d.volume.master), ambient: clamp01(v.ambient, d.volume.ambient), effects: clamp01(v.effects, d.volume.effects), voices: clamp01(v.voices, d.volume.voices) },
   }
 }
@@ -68,4 +75,9 @@ export function saveSettings(s: GameSettings, st: Store | null = storage()) {
   } catch {
     // storage full or blocked — settings stay for this session only
   }
+}
+
+/** Applies the UI preferences that live in the DOM (currently the text size). */
+export function applyUiPrefs(s: Pick<GameSettings, 'textScale'>) {
+  if (typeof document !== 'undefined') document.documentElement.style.fontSize = `${TEXT_SCALES[s.textScale]}%`
 }

@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { type GameSettings, loadSettings, saveSettings, type Volumes } from '@/lib/settings'
+import { applyUiPrefs, type GameSettings, loadSettings, saveSettings, type TextScale, type Volumes } from '@/lib/settings'
 import PanelFrame from './PanelFrame.vue'
 import type { QualityProfile } from '@/game/render/quality'
 
@@ -13,6 +13,11 @@ const QUALITIES: { id: QualityProfile; label: string; hint: string }[] = [
   { id: 'medium', label: 'Medium', hint: 'shadows, 1 km view distance' },
   { id: 'high', label: 'High', hint: 'more vegetation and detail, 1.4 km view distance' },
 ]
+const TEXT_SIZES: { id: TextScale; label: string }[] = [
+  { id: 'normal', label: 'Normal' },
+  { id: 'large', label: 'Large' },
+  { id: 'xlarge', label: 'Extra large' },
+]
 const VOLUMES: { id: keyof Volumes; label: string }[] = [
   { id: 'master', label: 'Master volume' },
   { id: 'ambient', label: 'Ambient (wind, waves, rain)' },
@@ -22,6 +27,7 @@ const VOLUMES: { id: keyof Volumes; label: string }[] = [
 
 watch(s, (v) => {
   saveSettings(v)
+  applyUiPrefs(v)
   game.value.applySettings(v)
 }, { deep: true })
 </script>
@@ -53,6 +59,23 @@ watch(s, (v) => {
         <p class="mt-1 text-xs text-muted-foreground">
           Changes apply immediately (anti-aliasing — after restarting the game).
         </p>
+      </section>
+      <section>
+        <h3 class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Text size
+        </h3>
+        <div class="flex gap-1">
+          <Button
+            v-for="t in TEXT_SIZES"
+            :key="t.id"
+            size="sm"
+            :variant="s.textScale === t.id ? 'default' : 'outline'"
+            :data-testid="`textsize-${t.id}`"
+            @click="s.textScale = t.id"
+          >
+            {{ t.label }}
+          </Button>
+        </div>
       </section>
       <section class="grid gap-2">
         <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
