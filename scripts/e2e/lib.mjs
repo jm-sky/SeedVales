@@ -71,8 +71,10 @@ export async function newGame(page, seed = '1337', quality = 'low') {
 
 export const sv = (page, fn, arg) => page.evaluate(fn, arg)
 
+/** Screenshots are evidence for humans and reviews; `SV_E2E_SHOTS=0` (e2e:run --fast) skips them during development (a SwiftShader screenshot costs 0.3–2 s). */
 export async function shot(page, name) {
   const p = path.join(OUT, `${name}.png`)
+  if (process.env.SV_E2E_SHOTS === '0') return p
   await page.screenshot({ path: p })
   return p
 }
@@ -82,12 +84,18 @@ export function report(name, results, logs) {
   fs.writeFileSync(file, JSON.stringify({ results, logs }, null, 1))
   const failed = results.filter((r) => !r.ok)
   for (const r of results) console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}${r.info ? ' — ' + r.info : ''}`)
+  // Where the time goes: wall time between consecutive checks (step cost, includes the setup before the check).
+  const slow = [...results].filter((r) => r.ms !== undefined).sort((a, b) => b.ms - a.ms).slice(0, 5)
+  if (slow.length) console.log(`slowest steps: ${slow.map((r) => `${(r.ms / 1000).toFixed(1)}s ${r.name.slice(0, 40)}`).join(' | ')}`)
   const errs = logs.filter((l) => l.startsWith('[pageerror]') || l.startsWith('[error]'))
   console.log(`\n${results.length - failed.length}/${results.length} passed · console errors: ${errs.length} · details: ${file}`)
   if (errs.length) console.log(errs.slice(0, 10).join('\n'))
   return failed.length === 0
 }
 
+let lastCheckAt = Date.now()
 export function check(results, name, ok, info = '') {
-  results.push({ name, ok: !!ok, info: typeof info === 'string' ? info : JSON.stringify(info) })
+  const now = Date.now()
+  results.push({ name, ok: !!ok, info: typeof info === 'string' ? info : JSON.stringify(info), ms: now - lastCheckAt })
+  lastCheckAt = now
 }

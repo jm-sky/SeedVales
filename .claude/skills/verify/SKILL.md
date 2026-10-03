@@ -7,6 +7,16 @@ description: Verify a change in SeedVales — run type-check/lint/layers/vitest,
 
 Rules (layering, no weakening tests/budgets, no HMR e2e): `CLAUDE.md` → "Standing rules" and "Commands". Expected counts: `docs/state/PROGRESS.md` → "Teraz".
 
+## 0. Tiered verification (user, 2026-10-03: do not run the full set on every small step)
+
+| When | Run |
+|---|---|
+| While iterating on a small change | `pnpm type-check` + the tests of the changed area: `pnpm test:changed` (vitest `--changed`: only files whose import graph touches uncommitted changes) or `npx vitest run <file>`; UI/e2e work: one suite with `pnpm e2e:fast acceptance` (no screenshots) |
+| After a bigger step (a plan step, a new system) | `pnpm check:fast` (type-check + lint + layers + changed tests); e2e suite(s) of the touched area with `pnpm e2e:fast` |
+| Before commit of a finished plan item, before merge/review, at session end | **full** `pnpm check`, `pnpm e2e:run` (with screenshots), soak/bench when the sim or economy changed |
+
+Timing aids: `pnpm e2e:run` prints the slowest steps per suite; vitest `--reporter=json --outputFile=<f>` gives per-file durations (world-gen files `contracts`, `landmarks`, `generate.seeds`, `relief` dominate — `test:changed` skips them unless `world/core/config/data` changed). The soak and `bench:*` need a quiet machine and are never run while an agent or e2e is running. Full verification is never weakened — only its frequency during development.
+
 ## 1. Static + unit (always)
 
 ```bash

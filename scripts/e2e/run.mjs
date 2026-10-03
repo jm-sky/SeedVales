@@ -7,7 +7,10 @@ import path from 'node:path'
 import { createServer } from 'vite'
 
 const ALL = ['smoke', 'acceptance', 'mobile']
-const suites = process.argv.slice(2).length ? process.argv.slice(2) : ALL
+const args = process.argv.slice(2)
+/** `--fast`: development mode — no screenshots. Final verification (before merge/review/plan close) runs without it. */
+const fast = args.includes('--fast')
+const suites = args.filter((a) => !a.startsWith('--')).length ? args.filter((a) => !a.startsWith('--')) : ALL
 const unknown = suites.filter((s) => !ALL.includes(s))
 if (unknown.length) {
   console.error(`Unknown suite(s): ${unknown.join(', ')}. Available: ${ALL.join(', ')}`)
@@ -36,7 +39,7 @@ function runSuite(name, url) {
     let out = ''
     const child = spawn(process.execPath, [path.join(import.meta.dirname, `${name}.mjs`)], {
       cwd: root,
-      env: { ...process.env, SV_URL: url },
+      env: { ...process.env, SV_URL: url, ...(fast ? { SV_E2E_SHOTS: '0' } : {}) },
     })
     const onData = (d) => {
       out += d

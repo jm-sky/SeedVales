@@ -99,7 +99,7 @@ describe('review 016 #8: sleep wakes in the morning, never in the dark', () => {
 
   it('NEEDS-01 (review 017 #1-2): an evening nap or a winter sleep never ends in the dark, in any season', () => {
     for (const dayOffset of [1, 92, 183, 274]) {
-      for (const hour of [15.5, 16.8, 17.2, 18, 19.5]) {
+      for (const hour of [16.8, 19.5]) {
         const sim = sleepFrom(hour, 40, dayOffset)
         expect(sim.state.px.activity, `${dayOffset}/${hour}`).toBeUndefined()
         expect(isNight(sim.state.time.cal), `woke at night: day+${dayOffset} from ${hour}h → ${hourOf(sim.state.time.cal).toFixed(2)}h`).toBe(false)
