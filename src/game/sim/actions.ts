@@ -399,7 +399,7 @@ export function repairBuilding(sim: Sim, h: Human, b: Building, store?: Building
   b.durability = Math.min(100, b.durability + 30 + h.skills.construction * 0.2)
   wearTool(tool, 1)
   train(h, 'construction', 0.4, 2)
-  questEvent(sim, { k: 'repair', buildingId: b.id })
+  questEvent(sim, { k: 'repair', buildingId: b.id, byPlayer: h === sim.player })
   if (b.ratNest && b.durability > 60) {
     b.ratNest = undefined
     return ok('You repaired the building — the rat nest is gone.')

@@ -8,7 +8,7 @@ import type { Quest } from './types'
 import { logEvent } from './eventLog'
 import { animalsNear, countByDen, nestTag } from './queries'
 import { questEvent } from './questHooks'
-import { addRep } from './reputation'
+import { addRep, settlementAt } from './reputation'
 import { payFromTreasury } from './treasury'
 import { hp } from './vitals'
 
@@ -21,7 +21,7 @@ export const QUEST_HISTORY_MAX = 20
 export const questKey = (q: Quest) => (q.kind === 'rats' ? `rats:${q.buildingId}` : `wolves:${q.settlementId}`)
 
 export interface QuestObjective {
-  id: 'kills' | 'repair'
+  id: 'kills' | 'repair' | 'left'
   label: string
   done: boolean
   current?: number
@@ -40,8 +40,17 @@ export function questObjectives(sim: Sim, q: Quest): QuestObjective[] {
   if (q.kind !== 'rats') return [kills]
   const b = sim.building(q.buildingId)
   const done = !!b && !b.ratNest
-  return [kills, { id: 'repair', label: `Repair the ${b?.kind === 'warehouse' ? 'warehouse' : 'building'}: ${done ? 'done' : 'pending'}`, done }]
+  const out: QuestObjective[] = [kills, { id: 'repair', label: `Repair the ${b?.kind === 'warehouse' ? 'warehouse' : 'building'}: ${done ? 'done' : 'pending'}`, done }]
+  // Rats of the nest that are still alive (they may have fled): tells the player why the quest is still open (review 016 #1).
+  if (b && q.kills < q.killsNeeded) {
+    const left = nestRatsLeft(sim, b.id)
+    if (left > 0) out.push({ id: 'left', label: `Rats of the nest left: ${left}`, done: false, current: left })
+  }
+  return out
 }
+
+/** Living rats tagged to a nest, wherever they roam. */
+const nestRatsLeft = (sim: Sim, buildingId: string) => countByDen(sim).get(nestTag(buildingId)) ?? 0
 
 /** Reward line: a promise ("up to") until completion, then what the treasury actually paid. */
 export function questRewardText(q: Quest): string {
@@ -118,7 +127,13 @@ export function questSystem(sim: Sim) {
       // Rats of another nest passing by do not keep the quest open.
       const strays = b ? animalsNear(sim, b.x, b.z, 20, 'rat').filter((a) => !a.denId).length : 0
       const ratsLeft = b ? (perNest.get(nestTag(b.id)) ?? 0) + strays : 0
-      if (b && !b.ratNest && ratsLeft === 0) {
+      // Nest gone and the player killed what was asked: done. Rats that fled and are still alive become strays
+      // (they no longer belong to the nest, so they cannot block the quest or its repost; review 016 #1).
+      if (b && !b.ratNest && q.status === 'active' && q.kills >= q.killsNeeded && ratsLeft > 0) {
+        const tag = nestTag(b.id)
+        for (const a of s.animals) if (a.denId === tag) a.denId = undefined
+        completeQuest(sim, q)
+      } else if (b && !b.ratNest && ratsLeft === 0) {
         if (q.status === 'active' && q.kills > 0) completeQuest(sim, q)
         else {
           q.status = 'expired'
@@ -154,9 +169,39 @@ export function pruneQuestHistory(sim: Sim) {
   })
 }
 
+/** A board notice can be accepted only in the settlement that posted it (review 016 #17). */
+const BOARD_MARGIN_M = 400
+
+export interface NoticeGroup {
+  settlementId: number
+  name: string
+  /** The player is in this settlement: its notices can be accepted. */
+  here: boolean
+  distanceM: number
+  quests: Quest[]
+}
+
+/** Board quests grouped by the settlement that posted them: the player's settlement first, then by distance (newest first inside). */
+export function noticeBoard(sim: Sim): NoticeGroup[] {
+  const p = sim.player
+  const here = settlementAt(sim, p.x, p.z, BOARD_MARGIN_M)
+  const groups = new Map<number, NoticeGroup>()
+  for (const q of [...sim.state.quests].reverse()) {
+    let g = groups.get(q.settlementId)
+    if (!g) {
+      const w = sim.world.settlements[q.settlementId]!
+      g = { settlementId: q.settlementId, name: sim.state.settlements[q.settlementId]?.name ?? w.name, here: q.settlementId === here, distanceM: Math.round(Math.hypot(w.x - p.x, w.z - p.z)), quests: [] }
+      groups.set(q.settlementId, g)
+    }
+    g.quests.push(q)
+  }
+  return [...groups.values()].sort((a, b) => Number(b.here) - Number(a.here) || a.distanceM - b.distanceM)
+}
+
 export function acceptQuest(sim: Sim, id: string): string {
   const q = sim.state.quests.find((qq) => qq.id === id)
   if (!q || q.status !== 'available') return 'Quest unavailable.'
+  if (settlementAt(sim, sim.player.x, sim.player.z, BOARD_MARGIN_M) !== q.settlementId) return `This notice was posted in ${sim.state.settlements[q.settlementId]?.name ?? 'another settlement'}: go there to accept it.`
   q.status = 'active'
   logEvent('quest', { id: q.id, kind: q.kind, status: 'active' }, undefined, q.settlementId)
   sim.message(`Quest accepted: ${q.title}`, 'quest')

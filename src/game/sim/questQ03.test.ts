@@ -113,7 +113,10 @@ describe('QUEST-03 Q03 A Roof Before Rain', () => {
   it('QUEST-03 Q03 E1: the coin option pays 10 c from Miles\'s purse (partial when short)', () => {
     const { sim } = offered()
     const { miles, house } = toDecision(sim, 'repair', false)
-    house.durability = 95
+    // The player takes part (D-QUEST-2: NPC work alone ends the quest without a thanks payment).
+    addItem(sim.player.inv, newStack('hammer'))
+    addItem(sim.player.inv, newStack('branch', 6))
+    for (let i = 0; i < 3 && house.durability < 90; i++) expect(repairBuilding(sim, sim.player, house).ok).toBe(true)
     tickQuests(sim)
     miles.money = 4
     const money = totalMoney(sim)

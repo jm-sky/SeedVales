@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
+import { noticeBoard } from '@/game/sim/quests'
 import { BADGES, REP_NAMES } from '@/game/sim/reputation'
 import { REP_DIMS } from '@/game/sim/types'
 import BoardQuestObjectives from './BoardQuestObjectives.vue'
@@ -13,11 +14,12 @@ const d = computed(() => {
   void version.value
   const s = game.value.sim.state
   return {
-    quests: [...s.quests].reverse(),
+    groups: noticeBoard(game.value.sim),
     reps: s.settlements.map((st) => ({ name: st.name, rep: st.rep, pending: st.pendingRep.length })),
     badges: BADGES.filter((b) => s.px.badges[b.id]),
   }
 })
+const away = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`)
 function accept(id: string) {
   game.value.acceptBoardQuest(id)
 }
@@ -36,37 +38,48 @@ function apologize(id: string) {
       Notices and quests
     </h3>
     <p
-      v-if="!d.quests.length"
+      v-if="!d.groups.length"
       class="text-muted-foreground"
     >
       No notices. Settlement troubles (e.g. rats in neglected buildings, wolves) appear over time.
     </p>
-    <div class="grid gap-2">
-      <div
-        v-for="q in d.quests"
-        :key="q.id"
-        class="rounded-md border p-2"
-      >
-        <div class="flex items-center justify-between gap-2">
-          <span class="font-semibold">{{ q.title }}</span>
-          <span class="text-xs text-muted-foreground">{{ STATUS[q.status] }}</span>
-        </div>
-        <p class="mt-1 text-xs">
-          {{ q.desc }}
-        </p>
-        <div class="mt-1 flex items-end justify-between text-xs">
-          <BoardQuestObjectives :quest="q" />
-          <Button
-            v-if="q.status === 'available'"
-            size="xs"
-            :data-testid="`accept-${q.kind}`"
-            @click="accept(q.id)"
-          >
-            Accept
-          </Button>
+    <section
+      v-for="g in d.groups"
+      :key="g.settlementId"
+      class="mb-3"
+      :data-testid="`notice-group-${g.settlementId}`"
+    >
+      <h4 class="mb-1 text-xs font-semibold">
+        {{ g.name }}
+        <span class="font-normal text-muted-foreground">{{ g.here ? '(you are here)' : `(${away(g.distanceM)} away: go there to accept)` }}</span>
+      </h4>
+      <div class="grid gap-2">
+        <div
+          v-for="q in g.quests"
+          :key="q.id"
+          class="rounded-md border p-2"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-semibold">{{ q.title }}</span>
+            <span class="text-xs text-muted-foreground">{{ STATUS[q.status] }}</span>
+          </div>
+          <p class="mt-1 text-xs">
+            {{ q.desc }}
+          </p>
+          <div class="mt-1 flex items-end justify-between text-xs">
+            <BoardQuestObjectives :quest="q" />
+            <Button
+              v-if="q.status === 'available' && g.here"
+              size="xs"
+              :data-testid="`accept-${q.kind}`"
+              @click="accept(q.id)"
+            >
+              Accept
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
     <h3 class="mb-1 mt-4 text-xs font-semibold uppercase text-muted-foreground">
       Reputation
     </h3>

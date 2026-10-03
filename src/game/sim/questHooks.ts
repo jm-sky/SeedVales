@@ -8,7 +8,7 @@ import type { Sim } from './sim'
 
 export type QuestEvent =
   | { k: 'roast'; n: number }
-  | { k: 'repair'; buildingId: string }
+  | { k: 'repair'; buildingId: string; byPlayer: boolean }
   | { k: 'light'; buildingId: string }
   | { k: 'douse'; buildingId: string }
   | { k: 'built'; buildingId: string; kind: StructureKind }

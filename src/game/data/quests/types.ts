@@ -126,12 +126,14 @@ export interface CastSpec {
   spawn?: SpawnSpec
   /** Name used in dialog when the slot is empty but optional. */
   fallbackName?: string
+  /** Sex used for pronoun tokens (`{slot:he}`) while the slot is empty (default: female, also for animals). */
+  fallbackMale?: boolean
 }
 
 export interface DialogLine {
   /** Speaker: a cast slot, 'player' or 'self' (narration). */
   who: SlotId | 'player' | 'self'
-  /** `{slot}` = generated first name of the cast NPC, `{H}` / `{V}` = settlement names. */
+  /** `{slot}` = generated first name of the cast NPC, `{slot:he}`/`{slot:him}`/`{slot:his}` = pronouns (He/Him/His capitalised), `{H}` / `{V}` = settlement names. */
   text: string
   when?: Cond[]
 }
@@ -195,6 +197,8 @@ export interface Counter {
     item?: string
     slot?: SlotId
     species?: string
+    /** `repair` events: only repairs by the player (true) or only by NPCs (false). */
+    byPlayer?: boolean
   }
   when?: Cond[]
 }
@@ -218,6 +222,8 @@ export interface Ending {
 export interface StageDef {
   id: string
   journal: string
+  /** Progress sentences appended to the journal text while the stage is current (review 016 #5): shown when `when` holds. */
+  progress?: { when: Cond[]; text: string }[]
   /** Map marker while this stage is current (only drawn in explored cells). */
   anchor?: Anchor
 }

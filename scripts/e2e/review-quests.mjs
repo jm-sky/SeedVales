@@ -361,8 +361,11 @@ export default async function (rt) {
     await opts(rec, 'q03', '4-agree', 'say_repair', 'agree')
     await journal(rec, 'q03', '4-work')
     // The repair itself is a recorded shortcut (the repair loop is covered by the rats steps above and review-build).
+    // D-QUEST-2: NPC work alone ends the quest, so the shortcut also records the player's own repair.
     await S(() => {
-      window.__sv.game.sim.building(window.__q3house).durability = 95
+      const sim = window.__sv.game.sim
+      sim.state.authoredQuests.q03.counters.myRepairs = 1
+      sim.building(window.__q3house).durability = 95
     })
     await simFor(2)
     await talkTo(rec, 'q03', 'lucy', '5-thanks')

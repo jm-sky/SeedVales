@@ -8,7 +8,7 @@ import type { QuestDef } from '../data/quests/types'
 import type { Sim } from './sim'
 import type { AuthoredQuestState } from './types'
 import { isExplored } from './navigation'
-import { allOf, applyEffects, ctxOf, firstName, homeId, humanOf, type QuestCtx, readCtxOf, resolveAnchor } from './questCore'
+import { allOf, applyEffects, ctxOf, fillQuestText as fill, questPlaceholders as placeholders, type QuestCtx, readCtxOf, resolveAnchor } from './questCore'
 import { questDef, questDefs } from './questEngine'
 
 export interface QuestTopic {
@@ -68,29 +68,10 @@ export function questTopics(sim: Sim, npcId: number): QuestTopic[] {
     if (!st) continue
     const c = readCtxOf(sim, def, st)
     const t = def.topics.find((tp) => st.cast[tp.slot] === npcId && talkable(st, !!tp.done) && allOf(c, tp.when))
-    if (t) out.push({ questId: def.id, label: t.label, node: t.node })
+    if (t) out.push({ questId: def.id, label: fill(t.label, placeholders(c)), node: t.node })
   }
   return out
 }
-
-function placeholders(c: QuestCtx): Record<string, string> {
-  const m: Record<string, string> = { H: c.sim.state.settlements[homeId(c.sim)]?.name ?? 'the village' }
-  const home = c.sim.world.settlements[homeId(c.sim)]!
-  let best: { name: string; d: number } | undefined
-  for (const s of c.sim.world.settlements) {
-    if (s.id === home.id) continue
-    const d = Math.hypot(s.x - home.x, s.z - home.z)
-    if (!best || d < best.d) best = { name: c.sim.state.settlements[s.id]?.name ?? s.name, d }
-  }
-  m.V = best?.name ?? 'the next village'
-  for (const [slot, spec] of Object.entries(c.def.cast)) {
-    const h = humanOf(c, slot)
-    m[slot] = h ? firstName(h) : (spec.fallbackName ?? 'someone')
-  }
-  return m
-}
-
-const fill = (text: string, ph: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, k: string) => ph[k] ?? `{${k}}`)
 
 /** Resolved lines and options of a node. */
 export function questSay(sim: Sim, questId: string, nodeId: string): QuestSay | null {
@@ -107,7 +88,7 @@ export function questSay(sim: Sim, questId: string, nodeId: string): QuestSay | 
   for (const o of node.options) {
     if (!allOf(c, o.when)) continue
     const ok = allOf(c, o.needs)
-    options.push({ id: o.id, text: fill(o.text, ph), enabled: ok, reason: ok ? undefined : o.reason })
+    options.push({ id: o.id, text: fill(o.text, ph), enabled: ok, reason: ok ? undefined : o.reason && fill(o.reason, ph) })
   }
   return { title: def.title, lines, options }
 }
@@ -149,15 +130,18 @@ export function questJournal(sim: Sim): JournalEntry[] {
     if (!st) continue
     if ((st.status === 'done' || st.status === 'lapsed') && st.startedAt === undefined) continue // never accepted: no journal entry
     const ph = placeholders(readCtxOf(sim, def, st))
-    out.push({ id: def.id, title: def.title, status: st.status, text: fill(journalText(def, st), ph), decision: st.choice ? def.choiceLabels?.[st.choice] : undefined })
+    out.push({ id: def.id, title: def.title, status: st.status, text: fill(journalText(def, st, readCtxOf(sim, def, st)), ph), decision: st.choice && def.choiceLabels?.[st.choice] ? fill(def.choiceLabels[st.choice]!, ph) : undefined })
   }
   return out
 }
 
-function journalText(def: QuestDef, st: AuthoredQuestState): string {
+function journalText(def: QuestDef, st: AuthoredQuestState, c: QuestCtx): string {
   if (st.status === 'done') return def.endings.find((e) => e.id === st.ending)?.journal ?? ''
   if (st.status === 'lapsed') return def.lapse?.journal ?? 'The matter was settled without you.'
-  return def.stages[Math.min(st.stage, def.stages.length - 1)]?.journal ?? ''
+  const stage = def.stages[Math.min(st.stage, def.stages.length - 1)]
+  if (!stage) return ''
+  const done = (stage.progress ?? []).filter((p) => allOf(c, p.when)).map((p) => p.text)
+  return done.length ? `${stage.journal} ${done.join(' ')}` : stage.journal
 }
 
 /** Map markers of active quests, only in explored cells (MAP-01). */

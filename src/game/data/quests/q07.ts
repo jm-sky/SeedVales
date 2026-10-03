@@ -34,15 +34,24 @@ export const Q07: QuestDef = {
     lucy: { kind: 'npc', required: true, profession: 'woodcutter', kin: ['spouse'] },
     miles: { kind: 'npc', required: true, profession: 'woodcutter', kin: ['head'] },
     joan: { kind: 'npc', required: false, profession: 'woodcutter', kin: ['elder'], fallbackName: 'the old woman' },
-    matthew: { kind: 'npc', required: false, profession: 'woodcutter', kin: ['son', 'child'], fallbackName: 'the boy' },
+    matthew: { kind: 'npc', required: false, profession: 'woodcutter', kin: ['son', 'child'], fallbackName: 'the boy', fallbackMale: true },
     mark: { kind: 'npc', required: true, profession: 'guard', kin: ['head'] },
-    luke: { kind: 'npc', required: false, profession: 'shepherd', kin: ['son', 'child'], fallbackName: 'a young man' },
+    luke: { kind: 'npc', required: false, profession: 'shepherd', kin: ['son', 'child'], fallbackName: 'a young man', fallbackMale: true },
   },
   start: [{ k: 'any', of: [{ k: 'quest', id: 'q03', in: ['done'], started: true }, { k: 'opinion', slot: 'lucy', gte: 10 }] }],
   flags: { accepted: false, freshnessChecked: false, roundAccepted: false, markCovered: false, cooked: false, guests: 'unset', markTorches: false, torchDay: 0, roundDay: 0 },
   stages: [
-    { id: 'rumour', journal: '{lucy} wants one proper meal for the whole house after a week of felling. Talk to her.', anchor: { k: 'actor', slot: 'lucy' } },
-    { id: 'prepare', journal: 'Get the meal ready: look at the meat in {lucy}\'s food chest, roast at least 4 pieces at a campfire (a pan roasts 2 at a time), and, if you want {mark} at the table, walk his dusk round (after 16:00, he waits by the fire while you do): visit every torch post in the settlement and light the ones that are dark. Then tell {lucy}.', anchor: { k: 'actor', slot: 'lucy' } },
+    { id: 'rumour', journal: '{lucy} wants one proper meal for the whole house after a week of felling. Talk to {lucy:him}.', anchor: { k: 'actor', slot: 'lucy' } },
+    { id: 'prepare', journal: 'Get the meal ready: look at the meat in {lucy}\'s food chest, roast at least 4 pieces at a campfire (a pan roasts 2 at a time), and, if you want {mark} at the table, walk {mark:his} dusk round (after 16:00, {mark:he} waits by the fire while you do): visit every torch post in the settlement and light the ones that are dark. Then tell {lucy}.', anchor: { k: 'actor', slot: 'lucy' },
+      progress: [
+        { when: [flag('freshnessChecked')], text: 'Done: you looked at the meat in {lucy}\'s food chest.' },
+        { when: [flagNot('freshnessChecked', true)], text: 'Still to do: look at the meat in {lucy}\'s food chest (talk to {lucy:him}).' },
+        { when: [{ k: 'counter', id: 'pieces', gte: 4 }], text: 'Done: you have roasted enough meat.' },
+        { when: [{ k: 'not', of: { k: 'counter', id: 'pieces', gte: 4 } }], text: 'Still to do: roast 4 pieces of meat.' },
+        { when: [flag('markCovered')], text: 'Done: every torch post is lit and {mark} is free to come to the table.' },
+        { when: [flag('roundAccepted'), flagNot('markCovered', true)], text: 'Still to do: light the torch posts on {mark:his} round (after 16:00).' },
+        { when: [flagNot('roundAccepted', true)], text: 'Optional: ask {mark} about the dusk round.' },
+      ] },
     { id: 'table', journal: 'The meat is roasted. Tell {lucy} how the meal should be served: one table, two sittings, or on the doorstep.', anchor: { k: 'actor', slot: 'lucy' } },
   ],
   choiceLabels: { together: 'One table, everyone together', shifts: 'Two sittings', doorstep: 'On the doorstep' },
@@ -52,14 +61,15 @@ export const Q07: QuestDef = {
       lines: [
         say('lucy', 'Six bowls and one pan. That\'s enough if nobody expects the pan to do miracles.'),
         say('player', 'Who\'s coming?'),
-        say('lucy', 'Miles, his mother, Matthew, you, me — and Mark, if his rounds let him. He split our kindling all last week when Miles was laid up. I owe him a hot meal.'),
-        sayIf('matthew', 'I asked Luke, too.'),
+        say('lucy', '{miles}, {joan}, {matthew}, you, me — and {mark}, if {mark:his} rounds let {mark:him}. {mark:He} split our kindling all last week when {miles} was laid up. I owe {mark:him} a hot meal.'),
+        sayIf('matthew', 'I asked {luke}, too.'),
         say('lucy', '(turns slowly) You asked.', alive('matthew')),
-        sayIf('matthew', 'He\'s bringing a hare.'),
-        say('lucy', '…Then he\'s welcome. And you\'re washing seven bowls.', alive('matthew')),
+        sayIf('matthew', '{luke:He}\'s bringing a hare.'),
+        say('lucy', '…Then {luke:he}\'s welcome. And you\'re washing seven bowls.', alive('matthew')),
       ],
-      options: [opt('accept', 'I\'ll help with the supper.', [{ k: 'accept' }, set('accepted'), stage(1)])],
+      options: [opt('accept', 'I\'ll help with the supper.', [{ k: 'accept' }, set('accepted'), stage(1)], { next: 'l_accepted' })],
     },
+    l_accepted: { lines: [say('lucy', 'Good. Start with the food chest — I want to know what we have before I count the bowls.')], options: [] },
     // S2 — the stores.
     l_stores: {
       lines: [say('self', '{lucy} lifts the lid of the food chest. Meat of several ages lies inside.')],
@@ -81,8 +91,8 @@ export const Q07: QuestDef = {
       lines: [
         say('lucy', 'Cooked on the board, raw in the bowl — don\'t let them touch.'),
         sayIf('joan', 'I\'m amazed anyone needs telling that.'),
-        say('lucy', 'You\'d be amazed what Miles needs telling.', alive('joan')),
-        sayIf('luke', 'I skinned the hare myself. Jacob only fixed one edge.'),
+        say('lucy', 'You\'d be amazed what {miles} needs telling.', alive('joan')),
+        sayIf('luke', 'I skinned the hare myself. Only one edge needed a second cut.'),
         say('lucy', 'Then you\'ll eat a piece of it yourself first, in case.', alive('luke')),
         say('self', 'You need 4 pieces of roast meat: roast raw meat at a lit campfire (a pan roasts two at a time, a bare fire one).'),
       ],
@@ -92,9 +102,9 @@ export const Q07: QuestDef = {
     l_meal: {
       lines: [say('self', 'The meat is ready. How shall the meal be served?')],
       options: [
-        opt('together', 'Everyone at one table. I\'ve walked Mark\'s round.', [{ k: 'choose', flag: 'guests', value: 'together' }], { needs: [flag('markCovered')], reason: 'Mark is still on duty: walk his dusk round first.', next: 'l_together' }),
+        opt('together', 'Everyone at one table. I\'ve walked {mark}\'s round.', [{ k: 'choose', flag: 'guests', value: 'together' }], { needs: [flag('markCovered')], reason: '{mark} is still on duty: walk {mark:his} dusk round first.', next: 'l_together' }),
         opt('shifts', 'Two sittings. The first lot eats, the second takes over the fire and the gate.', [{ k: 'choose', flag: 'guests', value: 'shifts' }], { needs: [{ k: 'counter', id: 'batches', gte: 2 }], reason: 'Roast the meat in two batches first.', next: 'l_shifts' }),
-        opt('doorstep', 'We eat on the doorstep, so Mark and Miles can come and go.', [{ k: 'choose', flag: 'guests', value: 'doorstep' }], { next: 'l_doorstep' }),
+        opt('doorstep', 'We eat on the doorstep, so {mark} and {miles} can come and go.', [{ k: 'choose', flag: 'guests', value: 'doorstep' }], { next: 'l_doorstep' }),
       ],
     },
     l_together: {
@@ -119,13 +129,13 @@ export const Q07: QuestDef = {
       ],
     },
     // S8 — the meal, and the epilogues.
-    l_end_together: { lines: [...supper, sayIf('joan', 'Seven at one table. The last time was Miles\'s wedding, and half of them were drunk.')], options: [] },
+    l_end_together: { lines: [...supper, sayIf('joan', 'Seven at one table. The last time was {miles}\'s wedding, and half of them were drunk.')], options: [] },
     l_end_shifts: { lines: [...supper, say('miles', 'I ate it sitting down. Warm. Don\'t tell anyone, they\'ll expect it.')], options: [] },
     l_end_doorstep: { lines: [...supper, sayIf('joan', 'We fed half the street and nobody had to pretend the house was bigger than it is. That\'ll do.')], options: [] },
     // S3 — Mark at the gate.
     m_gate: {
       lines: [
-        say('mark', 'A meal? Lucy\'s? (sighs) I\'ve the dusk round and the night round, and nobody to take either.'),
+        say('mark', 'A meal? {lucy}\'s? (sighs) I\'ve the dusk round and the night round, and nobody to take either.'),
         say('player', 'How long could you sit down?'),
         say('mark', 'Long enough to burn my tongue.'),
       ],
@@ -139,7 +149,7 @@ export const Q07: QuestDef = {
     m_gate_b: { lines: [say('mark', 'That I can manage.')], options: [] },
     m_gate_c: { lines: [say('mark', 'On the step? I\'ve eaten in worse places. The gatehouse, for one.')], options: [] },
     m_wait: {
-      lines: [say('self', '{mark} waits by the fire from 16:00 to midnight while you walk his round: stand by every torch post in {H} and light the ones that are dark (a torch post can be lit with flint and steel). Posts that are already burning count when you pass them.')],
+      lines: [say('self', '{mark} waits by the fire from 16:00 to midnight while you walk {mark:his} round: stand by every torch post in {H} and light the ones that are dark (a torch post can be lit with flint and steel). Posts that are already burning count when you pass them.')],
       options: [opt('round_again', 'I\'ll walk your round tonight.', [set('roundDay', 'today')], { when: [flagNot('roundDay', 'today')] })],
     },
     m_torches: {
@@ -158,7 +168,7 @@ export const Q07: QuestDef = {
     },
     j_corner: {
       lines: [
-        say('joan', 'Seven people round one fire. I\'ll be the one with smoke in her eyes.'),
+        say('joan', 'Seven people round one fire. I\'ll be the one with smoke in my eyes.'),
         say('player', 'Where would you like to sit?'),
         say('joan', 'Somewhere I can hear the talk without having to join it. I\'m old, not unfriendly.'),
       ],
@@ -195,19 +205,19 @@ export const Q07: QuestDef = {
     {
       id: 'roundDone',
       when: [flag('roundAccepted'), flagNot('markCovered', true), { k: 'counter', id: 'posts', gte: 'homePosts' }],
-      effects: [set('markCovered'), { k: 'hold', slot: 'mark', at: { k: 'house', slot: 'lucy' }, untilHour: 24 }, message('The posts are lit. Mark goes to the Hewers\' table.')],
+      effects: [set('markCovered'), { k: 'hold', slot: 'mark', at: { k: 'house', slot: 'lucy' }, untilHour: 24 }, message('The posts are lit. {mark} goes to the Hewers\' table.')],
     },
     {
       id: 'cooked',
       when: [{ k: 'counter', id: 'pieces', gte: 4 }, flagNot('cooked', true), stageGte(1)],
-      effects: [set('cooked'), stage(2), message('You have roasted enough meat. Tell Lucy how the meal should be served.')],
+      effects: [set('cooked'), stage(2), message('You have roasted enough meat. Tell {lucy} how the meal should be served.')],
     },
     { id: 'timeout', when: [{ k: 'since', hours: 96, from: 'started' }], effects: [{ k: 'lapse' }] },
   ],
   endings: [
-    { id: 'together', journal: 'One table: Lucy, Miles, Mark and the whole house ate together. Mark now lets you take a torch from the rack by the gate once a day.', effects: [] },
+    { id: 'together', journal: 'One table: {lucy}, {miles}, {mark} and the whole house ate together. {mark} now lets you take a torch from the rack by the gate once a day.', effects: [] },
     { id: 'shifts', journal: 'Two sittings: everyone was fed, with less time together, and the fire and the gate were never left alone.', effects: [] },
-    { id: 'doorstep', journal: 'The meal was eaten on the doorstep. Mark kept his round and the neighbours got a bite.', effects: [] },
+    { id: 'doorstep', journal: 'The meal was eaten on the doorstep. {mark} kept {mark:his} round and the neighbours got a bite.', effects: [] },
   ],
-  lapse: { journal: 'The supper never happened: Lucy cooked for the house herself.', effects: [] },
+  lapse: { journal: 'The supper never happened: {lucy} cooked for the house {lucy:himself}.', effects: [] },
 }

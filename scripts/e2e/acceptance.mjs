@@ -737,7 +737,11 @@ try {
   await questOpts('say_repair', 'agree')
   const q3c = await questState('q03')
   await S(() => {
-    window.__sv.game.sim.building(window.__q3house).durability = 95
+    // The player's own repair (D-QUEST-2: NPC work alone ends the quest without thanks; the repair action itself is
+    // covered in vitest): count it, then the house is mended.
+    const sim = window.__sv.game.sim
+    sim.state.authoredQuests.q03.counters.myRepairs = 1
+    sim.building(window.__q3house).durability = 95
   })
   await simFor(2)
   const q3d = await questState('q03')

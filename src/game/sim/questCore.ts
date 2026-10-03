@@ -36,6 +36,37 @@ export const homeId = (sim: Sim) => sim.world.homeSettlement
 export const gameDay = (sim: Sim) => dayIndex(sim.state.time.cal) - dayIndex(START_CALENDAR_S) + 1
 export const firstName = (h: { name: string }) => h.name.split(' ')[0] ?? h.name
 
+/**
+ * Text placeholders of a quest (review 016 #2): `{slot}` = generated first name of the cast NPC, `{slot:he}` /
+ * `{slot:him}` / `{slot:his}` / `{slot:himself}` (capitalised: `{slot:He}`) = pronouns from the NPC's sex, `{H}` / `{V}` =
+ * home and nearest other settlement. An empty optional slot uses `fallbackName` and `fallbackMale`.
+ */
+export function questPlaceholders(c: QuestCtx): Record<string, string> {
+  const m: Record<string, string> = { H: c.sim.state.settlements[homeId(c.sim)]?.name ?? 'the village' }
+  const home = c.sim.world.settlements[homeId(c.sim)]!
+  let best: { name: string; d: number } | undefined
+  for (const s of c.sim.world.settlements) {
+    if (s.id === home.id) continue
+    const d = Math.hypot(s.x - home.x, s.z - home.z)
+    if (!best || d < best.d) best = { name: c.sim.state.settlements[s.id]?.name ?? s.name, d }
+  }
+  m.V = best?.name ?? 'the next village'
+  for (const [slot, spec] of Object.entries(c.def.cast)) {
+    const h = humanOf(c, slot)
+    m[slot] = h ? firstName(h) : (spec.fallbackName ?? 'someone')
+    const male = h ? h.male : (spec.fallbackMale ?? false)
+    const pr = male ? { he: 'he', him: 'him', his: 'his', himself: 'himself' } : { he: 'she', him: 'her', his: 'her', himself: 'herself' }
+    for (const [k, v] of Object.entries(pr)) {
+      m[`${slot}:${k}`] = v
+      m[`${slot}:${k[0]!.toUpperCase()}${k.slice(1)}`] = v[0]!.toUpperCase() + v.slice(1)
+    }
+  }
+  return m
+}
+
+export const fillQuestText = (text: string, ph: Record<string, string>) =>
+  text.replace(/\{(\w+)(?::(\w+))?\}/g, (all, k: string, p?: string) => ph[p ? `${k}:${p}` : k] ?? all)
+
 export function newQuestState(def: QuestDef, now: number): AuthoredQuestState {
   return { status: 'offered', stage: 0, flags: { ...def.flags }, settled: false, offeredAt: now, cast: {}, anchors: {}, obs: {}, counters: {}, seen: {}, fired: {} }
 }
@@ -546,7 +577,7 @@ function applyEffect(c: QuestCtx, e: Effect) {
       lapseQuest(c)
       break
     case 'message':
-      sim.message(e.text, e.kind ?? 'quest')
+      sim.message(fillQuestText(e.text, questPlaceholders(c)), e.kind ?? 'quest')
       break
     case 'need':
       for (const s of e.slots) {

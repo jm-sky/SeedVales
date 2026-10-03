@@ -8,7 +8,7 @@ import { alive, flag, flagNot, message, opinion, opt, say, sayIf, set, stage, st
 
 const camp = { k: 'road', m: 200 } as const
 const pen = { k: 'building', slot: 'molly', kind: 'pen' } as const
-/** At least two of the three leads (Molly's latch, Mark's witness, the prints at the pen). */
+/** At least two of the three leads ({molly}'s latch, {mark}'s witness, the prints at the pen). */
 const leads2: Cond = {
   k: 'any',
   of: [
@@ -31,8 +31,8 @@ export const G01: QuestDef = {
   giver: 'molly',
   cast: {
     molly: { kind: 'npc', required: true, profession: 'shepherd', kin: ['head', 'spouse'] },
-    tom: { kind: 'npc', required: false, profession: 'shepherd', kin: ['spouse', 'head', 'son'], fallbackName: 'her husband' },
-    mark: { kind: 'npc', required: false, profession: 'guard', kin: ['head'], fallbackName: 'the guard' },
+    tom: { kind: 'npc', required: false, profession: 'shepherd', kin: ['spouse', 'head', 'son'], fallbackName: 'the other shepherd' },
+    mark: { kind: 'npc', required: false, profession: 'guard', kin: ['head'], fallbackName: 'the guard', fallbackMale: true },
     pip: { kind: 'animal', required: true, ofSlot: 'molly', species: 'sheep', preferVariant: 'young' },
     piers: { kind: 'spawn', required: true, spawn: { name: 'Piers Walker', male: true, at: camp, items: [{ item: 'bread', qty: 2 }, { item: 'waterskin_m', qty: 1 }], money: 0 } },
   },
@@ -40,19 +40,19 @@ export const G01: QuestDef = {
   onOffer: [{ k: 'spawn', slot: 'piers' }, { k: 'hold', slot: 'pip', at: camp, snap: true, hours: 50 }],
   flags: { accepted: false, latch: false, witness: false, prints: false, misreadWolf: false, askedMark: false, resolved: 'none', piersWork: false },
   stages: [
-    { id: 'rumour', journal: '{molly} found her pen latch lifted and her lamb Pip gone. Talk to her.', anchor: { k: 'actor', slot: 'molly' } },
+    { id: 'rumour', journal: '{molly} found {molly:his} pen latch lifted and {molly:his} lamb Pip gone. Talk to {molly:him}.', anchor: { k: 'actor', slot: 'molly' } },
     { id: 'open_pen', journal: 'Find out who took Pip: {molly}\'s latch, what {mark} saw before first light, and the tracks at the pen (the pen is the shepherd\'s).', anchor: pen },
     { id: 'ford', journal: 'A wanderer camps by the road with a lamb on a cord. Go and talk to him — or wait for night and take her back quietly.', anchor: camp },
     { id: 'home', journal: 'Bring Pip home to {molly}\'s pen.', anchor: pen },
   ],
-  choiceLabels: { evidence: 'Piers gave her up when you showed him the evidence', paid: 'You paid Piers a finder\'s fee', taken_back: 'You took Pip back while Piers slept', guard: 'Mark sent Piers on his way' },
+  choiceLabels: { evidence: 'Piers gave her up when you showed him the evidence', paid: 'You paid Piers a finder\'s fee', taken_back: 'You took Pip back while Piers slept', guard: '{mark} sent Piers on his way' },
   nodes: {
     mo_open: {
       lines: [
         say('molly', 'Pip\'s gone. My lamb — the little one with the brass bell. The latch is up and the gate\'s shut behind her. Nobody shuts a gate behind themselves by accident.'),
         say('player', 'Could she have got out on her own?'),
         say('molly', 'And closed it after? No. Somebody walked her out.'),
-        sayIf('tom', 'I didn\'t hear a thing. I\'m sorry, Molly.'),
+        sayIf('tom', 'I didn\'t hear a thing. I\'m sorry, {molly}.'),
         say('molly', 'You never hear anything, love. That\'s not your fault, it\'s your ears.', alive('tom')),
       ],
       options: [
@@ -88,18 +88,18 @@ export const G01: QuestDef = {
       options: [],
     },
     mo_home: {
-      lines: [say('molly', '(hears the bell before she sees them) That\'s her. That\'s — come here, you idiot sheep. (to you) Where was she?')],
+      lines: [say('molly', '(hears the bell before {molly:he} sees them) That\'s her. That\'s — come here, you idiot sheep. (to you) Where was she?')],
       options: [
         opt('home_evidence', 'A wanderer had her. Piers. He was going to sell her in {V} — he hadn\'t eaten in days.', [set('piersWork'), { k: 'end', ending: 'evidence' }], { when: [flag('resolved', 'evidence')], next: 'mo_end_evidence' }),
         opt('home_paid', 'I paid him a finder\'s fee to hand her over.', [{ k: 'end', ending: 'paid' }], { when: [flag('resolved', 'paid')], next: 'mo_end_paid' }),
         opt('home_taken', 'I took her back while he slept.', [{ k: 'end', ending: 'taken_back' }], { when: [flag('resolved', 'taken_back')], next: 'mo_end_taken' }),
-        opt('home_guard', 'Mark\'s sent him on his way.', [{ k: 'end', ending: 'guard' }], { when: [flag('resolved', 'guard')], next: 'mo_end_guard' }),
+        opt('home_guard', '{mark}\'s sent him on his way.', [{ k: 'end', ending: 'guard' }], { when: [flag('resolved', 'guard')], next: 'mo_end_guard' }),
       ],
     },
     mo_end_evidence: { lines: [say('molly', 'Hadn\'t eaten. (long pause) …Is he still by the ford? We\'ve a fence wants mending. A day\'s work for a day\'s food. If he steals the hammer, I\'ll know who to blame.')], options: [] },
     mo_end_paid: { lines: [say('molly', 'You paid him for my lamb? …Well. She\'s back. Let me give you the fee back at least.')], options: [] },
     mo_end_taken: { lines: [say('molly', 'Good. I\'d have done the same, only louder.')], options: [] },
-    mo_end_guard: { lines: [say('molly', 'Good riddance. And thank Mark for me — no, I\'ll take him a cheese myself.')], options: [] },
+    mo_end_guard: { lines: [say('molly', 'Good riddance. And thank {mark} for me — no, I\'ll take {mark:him} a cheese myself.')], options: [] },
     ma_witness: {
       lines: [say('mark', 'Before first light, on the cart road, a man went by with a pack and something on a cord. I took it for a dog. He walked quick for someone with nowhere to be.')],
       options: [
@@ -111,14 +111,14 @@ export const G01: QuestDef = {
     pi_ford: {
       lines: [say('piers', 'Morning. You\'ll be from {H}? I found this one wandering on the road at dawn. Thought I\'d keep her safe till someone came asking. Feeding her\'s cost me, mind — a finder\'s fee wouldn\'t be out of place.')],
       options: [
-        opt('evidence', 'Molly\'s latch was lifted, not broken. Mark saw you on the road with her on a cord. And your boot prints are next to her hoof prints all the way from the pen.', takePip('evidence'), { when: [leads2], next: 'pi_evidence' }),
-        opt('guard', 'Mark\'s on his way. You can explain it to him.', [...takePip('guard')], { when: [flag('askedMark'), leads2], next: 'pi_guard' }),
+        opt('evidence', '{molly}\'s latch was lifted, not broken. {mark} saw you on the road with her on a cord. And your boot prints are next to her hoof prints all the way from the pen.', takePip('evidence'), { when: [leads2], next: 'pi_evidence' }),
+        opt('guard', '{mark}\'s on {mark:his} way. You can explain it to {mark:him}.', [...takePip('guard')], { when: [flag('askedMark'), leads2], next: 'pi_guard' }),
         opt('paid', 'Here\'s your fee. Ten coppers.', [{ k: 'pay', from: 'player', to: { purse: 'piers' }, amount: 10 }, ...takePip('paid')], { needs: [{ k: 'money', gte: 10 }], reason: 'You don\'t have 10 c.', next: 'pi_paid' }),
         opt('where', 'Where exactly did you find her?', [], { next: 'pi_where' }),
       ],
     },
     pi_evidence: { lines: [say('piers', '…I was going to sell her in {V}. I haven\'t eaten properly in four days. I\'m not a thief, I just — I am one, this morning. Take her.')], options: [] },
-    pi_guard: { lines: [say('self', 'Mark arrives, walks Piers to the edge of {H} and tells him not to come back.')], options: [] },
+    pi_guard: { lines: [say('self', '{mark} arrives, walks Piers to the edge of {H} and tells him not to come back.')], options: [] },
     pi_paid: { lines: [say('piers', 'Ten\'s fair. She\'s a good lamb.')], options: [] },
     pi_where: { lines: [say('piers', 'Up the road a way.')], options: [] },
   },
@@ -164,22 +164,22 @@ export const G01: QuestDef = {
   endings: [
     {
       id: 'evidence',
-      journal: 'Piers gave Pip up when you laid out the evidence. Molly paid you 15 c and two fleeces, and may give Piers a day\'s work mending her fence.',
-      effects: reward(false, [opinion('molly', 30), { k: 'rep', delta: { helpfulness: 10 }, reason: 'You brought the lamb home' }, message('Piers mends Molly\'s fence for a day, eats with the family and leaves for the next village in the morning.', 'info')]),
+      journal: 'Piers gave Pip up when you laid out the evidence. {molly} paid you 15 c and two fleeces, and may give Piers a day\'s work mending {molly:his} fence.',
+      effects: reward(false, [opinion('molly', 30), { k: 'rep', delta: { helpfulness: 10 }, reason: 'You brought the lamb home' }, message('Piers mends {molly}\'s fence for a day, eats with the family and leaves for the next village in the morning.', 'info')]),
     },
     {
       id: 'paid',
-      journal: 'You paid Piers a finder\'s fee for Pip. Molly paid you back and added her thanks.',
+      journal: 'You paid Piers a finder\'s fee for Pip. {molly} paid you back and added {molly:his} thanks.',
       effects: reward(true, [opinion('molly', 20), { k: 'rep', delta: { helpfulness: 5 }, reason: 'You brought the lamb home' }]),
     },
     {
       id: 'taken_back',
-      journal: 'You took Pip back while Piers slept. Molly paid you 15 c and two fleeces.',
+      journal: 'You took Pip back while Piers slept. {molly} paid you 15 c and two fleeces.',
       effects: reward(false, [opinion('molly', 25), { k: 'rep', delta: { helpfulness: 8, courage: 3 }, reason: 'You brought the lamb home' }]),
     },
     {
       id: 'guard',
-      journal: 'Mark sent Piers on his way and you brought Pip home. Molly paid you 15 c and two fleeces.',
+      journal: '{mark} sent Piers on his way and you brought Pip home. {molly} paid you 15 c and two fleeces.',
       effects: reward(false, [opinion('molly', 20), opinion('mark', 10), { k: 'rep', delta: { helpfulness: 8 }, reason: 'You brought the lamb home' }]),
     },
     {
@@ -188,5 +188,5 @@ export const G01: QuestDef = {
       effects: [{ k: 'despawn', slot: 'pip' }, { k: 'if', when: [flag('accepted')], then: [opinion('molly', -5)] }, message('Pip is gone: the wanderer sold her at the market.', 'bad')],
     },
   ],
-  lapse: { journal: 'Molly is gone; her household sorted the matter of the lamb out without you.', effects: [] },
+  lapse: { journal: '{molly} is gone; {molly:his} household sorted the matter of the lamb out without you.', effects: [] },
 }
