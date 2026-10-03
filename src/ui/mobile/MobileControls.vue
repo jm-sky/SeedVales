@@ -83,7 +83,7 @@ const MENU = [
       data-testid="touch-jump"
       @click="game.jump()"
     >
-      Jump
+      {{ state.combat ? 'Dodge' : 'Jump' }}
     </button>
     <div class="pointer-events-auto absolute bottom-5 right-4 grid grid-cols-3 gap-2">
       <button

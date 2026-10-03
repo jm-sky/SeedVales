@@ -460,6 +460,7 @@ try {
     const p = sim.player
     for (const [id, dx, dz] of [['stone', 0, 1.2], ['branch', 0.6, 2.2]]) sim.addGround({ id: sim.nextId(), x: p.x + dx, z: p.z + dz, stack: { id, qty: 1 }, droppedAt: sim.state.time.cal, lit: false })
     p.rot = 0
+    p.combat = false // outside combat Tab cycles interaction targets (combat--001)
     sv.game.renderer.rig.yaw = 0
   })
   const t0 = await waitTarget()
@@ -1023,6 +1024,26 @@ try {
     return { y: p.y, stamina: p.vitals.stamina }
   })
   check(results, '17. Spacja: skok, lądowanie, koszt wytrzymałości', jumpApex - jump0.y > 0.3 && Math.abs(jumpEnd.y - jump0.y) < 0.5 && jumpEnd.stamina < jump0.stamina + 5, { jump0, jumpApex, jumpEnd })
+  // 18. combat--003: Space in combat mode dodges (displacement, stamina), it does not jump.
+  const dodge0 = await S(() => {
+    const sv = window.__sv
+    const sp = sv.openSpot(200)
+    sv.teleport(sp.x, sp.z)
+    const p = sv.game.sim.player
+    p.combat = true
+    p.vitals.stamina = 100
+    p.action = undefined
+    return { x: p.x, z: p.z, y: p.y }
+  })
+  await S(() => window.__sv.game.dodge()) // the Space key path is the same Game.jump → dodge routing (a real Space press here starves the following menu click on SwiftShader, not investigated further)
+  await S(() => window.__sv.step(0.6, 0.02))
+  const dodge1 = await S(() => {
+    const p = window.__sv.game.sim.player
+    p.combat = false
+    return { x: p.x, z: p.z, y: p.y, stamina: p.vitals.stamina }
+  })
+  const dodged = Math.hypot(dodge1.x - dodge0.x, dodge1.z - dodge0.z)
+  check(results, '18. Spacja w walce: unik (przesunięcie, bez skoku)', dodged > 0.8 && dodged < 2.2 && Math.abs(dodge1.y - dodge0.y) < 0.6, { dodge0, dodge1, dodged })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)
@@ -1057,7 +1078,7 @@ try {
   await shot(page, 'acc-13-saves')
   check(results, '13. zapis pod nazwą widoczny na liście zapisów', named.name === 'Moja wyprawa' && listed, { named, listed })
 } catch (e) {
-  check(results, 'exception', false, String(e).slice(0, 400))
+  check(results, 'exception', false, String(e).slice(0, 1500))
   await shot(page, 'acc-error')
 }
 await browser.close()

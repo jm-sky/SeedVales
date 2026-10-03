@@ -92,6 +92,19 @@ export const JUMP = {
   probeM: 2,
 } as const
 
+/** Combat dodge (combat--003, D-COMBAT-3): real, collision-aware displacement, no i-frames. */
+export const DODGE = {
+  distanceM: 1.5,
+  durationS: 0.22,
+  staminaCost: 18,
+  /** No new dodge for this long after a dodge started (s). */
+  recoveryS: 0.55,
+  /** Right after a swing the player is committed this long (s) and cannot dodge. */
+  strikeCommitS: 0.25,
+  /** Dodge is refused in water deeper than this (m). */
+  maxWaterM: 0.3,
+} as const
+
 /** Block and parry (combat--002, D-COMBAT-2): all tuning in one place. */
 export const DEFENCE = {
   /** Defence by equipment class: front arc (full angle, degrees), share of raw damage a block removes, stamina efficiency (lower = cheaper), parry window (s from guard start). */

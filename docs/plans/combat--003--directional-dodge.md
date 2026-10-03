@@ -1,6 +1,6 @@
 # Directional combat dodge
 
-**Status:** planned  
+**Status:** done  
 **Priority:** low  
 **Model:** sonnet — implementation and tests; opus — decisions in `Decisions for Opus` and final combat/movement feel review  
 **Domain:** combat  
@@ -935,3 +935,7 @@ Risk: makes target-lock combat annoying and contradicts the current target-lock 
 Consequence: potentially avoids camera crowding when diving through a target.
 
 Risk: arbitrary rule and more state-dependent UX without evidence.
+
+## Result (2026-10-03, session 14, Sonnet)
+
+Implemented as D-COMBAT-3: `DODGE` calibration, `sim/dodge.ts` (`requestDodge`, transient state), dodge movement in `playerSystem` (fixed direction, collision-aware, penalty-scaled distance), `Game.dodge()` (camera- or lock-relative, backward by default), Space/mobile button contextual with jump. Tests: `dodge.test.ts` (4), e2e acceptance 18 (via `Game.dodge`). **Open:** no dodge animation (movement pose only), delayed-strike timing (decision 1B) not done, a real Space press in the e2e makes the next menu click time out on SwiftShader (the click waits for a stable box; not root-caused — listed in PROGRESS ❓), grace window not added.

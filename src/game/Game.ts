@@ -24,6 +24,7 @@ import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
 import { combatCandidates, lockedMove, lockInvalid, nextCombatTarget, turnToward } from './sim/combatTarget'
 import { canCraft, craftTime } from './sim/craft'
+import { requestDodge } from './sim/dodge'
 import { plantTorch } from './sim/fire'
 import { giveGift } from './sim/gifts'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, warehouseDepositGain, warehouseTakeCost, waterTarget } from './sim/interact'
@@ -462,10 +463,28 @@ export class Game {
   /** Space / mobile Jump: a small traversal jump (outside panels; combat dodge replaces it in combat once combat--003 exists). */
   jump() {
     if (this.panel) return
+    if (this.sim.player.combat) return this.dodge()
     if (!requestJump(this.sim)) {
       const p = this.sim.player
       if (p.vitals.stamina < JUMP.staminaCost) this.showToast('Too tired to jump.')
     }
+  }
+
+  /** Combat Space / mobile button: dodge along the pressed direction (camera- or target-relative), backward when none. */
+  dodge() {
+    const sim = this.sim
+    const p = sim.player
+    const [ax, ay] = moveAxes()
+    const locked = this.combatTargetId !== null ? sim.actor(this.combatTargetId) : undefined
+    const [fx, fz] = locked ? [Math.sin(Math.atan2(locked.x - p.x, locked.z - p.z)), Math.cos(Math.atan2(locked.x - p.x, locked.z - p.z))] : this.renderer.rig.forward()
+    let dx = fx * ay - fz * ax
+    let dz = fz * ay + fx * ax
+    if (Math.hypot(ax, ay) < 0.1) {
+      dx = -fx // no direction: backward / away from the locked target
+      dz = -fz
+    }
+    const refusal = requestDodge(sim, dx, dz)
+    if (refusal && refusal !== 'Not yet.') this.showToast(refusal)
   }
 
   /** Valid locked actor this frame (drops the lock when it ends), or null. */

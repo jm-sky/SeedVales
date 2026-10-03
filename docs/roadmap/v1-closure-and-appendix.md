@@ -93,8 +93,9 @@ Caves: [world--003--caves](../plans/world--003--caves.md) *(draft)* — later ba
 | [economy--004--food-freshness-batches](../plans/economy--004--food-freshness-batches.md) | separate freshness batches, no averaging, oldest-first use; depends on `items--001` |
 | [combat--005--weapon-sharpness-and-sharpening](../plans/combat--005--weapon-sharpness-and-sharpening.md) | current sharpness, max sharpness by quality/material, dulling and sharpening; depends on `items--001`, compatible with combat 001–004 |
 | [economy--003--inn-meals-and-preserved-food](../plans/economy--003--inn-meals-and-preserved-food.md) | *(draft)* inn meals and preserved food reserves; independent small slice, its freshness-aware parts wait for `economy--004` |
+| [render--010--carrion-and-spoilage-effects](../plans/render--010--carrion-and-spoilage-effects.md) | *(planned, user request 2026-10-03)* carcasses get a rotting carrion phase (green particles/flies, no meat) before bones; spoiled meat in warehouses and the player's inventory gets the same cue; after `economy--004` |
 
-Order: after wave 5c: `items--001` → (`economy--004` ‖ `combat--005`) → `economy--003`. Each plan's "Decisions for Opus" follow the same rule as 5c (plan's recommendation, recorded in DECISIONS).
+Order: after wave 5c: `items--001` → (`economy--004` ‖ `combat--005`) → `economy--003` → `render--010`. Each plan's "Decisions for Opus" follow the same rule as 5c (plan's recommendation, recorded in DECISIONS).
 
 ## Stage 5b — authored quests and Stage V — verification loop (planned 2026-10-02, user)
 

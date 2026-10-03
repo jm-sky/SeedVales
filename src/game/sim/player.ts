@@ -5,13 +5,14 @@
  */
 import type { Sim } from './sim'
 import type { Human, PlayerActivity } from './types'
-import { ACCEL, COMBAT, JUMP, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_M, SWIM_SPEED_MPS, WALK_SPEED_MPS } from '../config/calibration'
+import { ACCEL, COMBAT, DODGE, JUMP, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_M, SWIM_SPEED_MPS, WALK_SPEED_MPS } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { cartBlocked, cartDef } from './cart'
 import { playerGroundY } from './caveSpace'
 import { groundHeight, moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
+import { dodgeOf } from './dodge'
 import { setGuard } from './guard'
 import { carriedWeight, carryCapacity } from './inventory'
 import { motionOf, type PlayerMotion, repairPlacement, stableSupport, supportFor } from './motion'
@@ -92,7 +93,9 @@ export function playerSystem(sim: Sim, dt: number) {
   const now = sim.state.time.play
   const inp = playerInput
   // Guard intent → transient guard state (parry window starts on a real press; never while down or out of combat).
-  setGuard(sim, !!inp.guard && p.combat && !p.vitals.ko && !px.activity)
+  const dodge = dodgeOf(sim)
+  const dodging = now < dodge.activeUntil
+  setGuard(sim, !!inp.guard && p.combat && !p.vitals.ko && !px.activity && !dodging) // a dodge cancels the guard (decision 6A)
 
   // KO: lie still, then stand up with protection window.
   if (p.vitals.ko && now < p.vitals.ko.until) {
@@ -177,7 +180,11 @@ export function playerSystem(sim: Sim, dt: number) {
     }
   } else if (ap && moving) px.autopilot = undefined
 
-  // Movement.
+  // A dodge in progress replaces the input with its fixed direction (decision: direction fixed at start).
+  if (dodging) {
+    mx = dodge.dirX
+    mz = dodge.dirZ
+  }
   const mag = Math.min(1, Math.hypot(mx, mz))
   const depth = sim.terrain.waterDepthAt(p.x, p.z)
   const swimming = depth > SWIM_DEPTH_M
@@ -218,7 +225,8 @@ export function playerSystem(sim: Sim, dt: number) {
     if (sim.terrain.roadAt(p.x, p.z) > 0.4 && mode === 'walk') speed *= 1.1
     if (depth > 0.3 && !swimming) speed *= 0.7
     if (px.cart) speed *= cartDef(px.cart).speed
-    const d = speed * pen * overload * mag * dt
+    const dodgeSpeed = (DODGE.distanceM / DODGE.durationS) * pen
+    const d = (dodging ? dodgeSpeed : speed * pen * overload) * mag * dt
     const blocked = px.cart ? cartBlocked(sim, p.x, p.z, mx, mz) : null
     if (blocked) {
       if (Math.floor(now) !== Math.floor(now - dt)) sim.message(blocked, 'bad')

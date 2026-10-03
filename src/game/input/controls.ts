@@ -64,7 +64,11 @@ export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): (
     }
     input.keys.add(e.code)
   }
-  const ku = (e: KeyboardEvent) => input.keys.delete(e.code)
+  const ku = (e: KeyboardEvent) => {
+    // Space keyup would otherwise "click" whichever button has focus.
+    if (e.code === 'Space' && !typing(e)) e.preventDefault()
+    input.keys.delete(e.code)
+  }
   const md = (e: MouseEvent) => {
     if (h.isUiOpen()) return
     if (e.button === 0) {
