@@ -5,15 +5,16 @@
  */
 import type { Sim } from './sim'
 import type { Human, PlayerActivity } from './types'
-import { ACCEL, COMBAT, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_M, SWIM_SPEED_MPS, WALK_SPEED_MPS } from '../config/calibration'
+import { ACCEL, COMBAT, JUMP, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_M, SWIM_SPEED_MPS, WALK_SPEED_MPS } from '../config/calibration'
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { cartBlocked, cartDef } from './cart'
 import { playerGroundY } from './caveSpace'
-import { moveWithCollision } from './collision'
+import { groundHeight, moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
 import { setGuard } from './guard'
 import { carriedWeight, carryCapacity } from './inventory'
+import { motionOf, type PlayerMotion, repairPlacement, stableSupport, supportFor } from './motion'
 import { ACTIVITY_DONE } from './playerActivities'
 import { hourOf, isNight } from './time'
 import { type Exertion, hp, penalty, updateVitals } from './vitals'
@@ -101,10 +102,7 @@ export function playerSystem(sim: Sim, dt: number) {
     if (sim.terrain.waterDepthAt(p.x, p.z) > SWIM_DEPTH_M) {
       const shore = nearestLand(sim, p.x, p.z, 400)
       if (shore) {
-        p.x = shore.x
-        p.z = shore.z
-        p.y = sim.terrain.heightAt(p.x, p.z)
-        sim.actors.update(p)
+        repairPlacement(sim, shore.x, shore.z)
         sim.message('The waves wash you ashore.', 'info')
       }
     }
@@ -183,6 +181,25 @@ export function playerSystem(sim: Sim, dt: number) {
   const mag = Math.min(1, Math.hypot(mx, mz))
   const depth = sim.terrain.waterDepthAt(p.x, p.z)
   const swimming = depth > SWIM_DEPTH_M
+  // Vertical controller (combat--004): consume the jump request, integrate the arc.
+  const mo = motionOf(sim)
+  if (mo.jumpRequested) {
+    mo.jumpRequested = false
+    if (mo.grounded && !swimming && !px.activity && !px.cart && p.vitals.stamina >= JUMP.staminaCost) {
+      mo.grounded = false
+      mo.vy = JUMP.vy
+      p.vitals.stamina -= JUMP.staminaCost
+    }
+  }
+  if (swimming && !mo.grounded) landPlayer(sim, p, mo, p.x, p.z) // deep water ends the arc
+  const prevX = p.x
+  const prevZ = p.z
+  const prevY = p.y
+  let yNext = p.y
+  if (!mo.grounded) {
+    mo.vy -= JUMP.gravity * dt
+    yNext = p.y + mo.vy * dt
+  }
   if (mag > 0.05 && !px.activity) {
     const pen = penalty(p.vitals) * (1 - armorSpeedPenalty(p))
     const overload = carriedWeight(p) > carryCapacity(p) ? 0.5 : 1
@@ -205,7 +222,7 @@ export function playerSystem(sim: Sim, dt: number) {
     const blocked = px.cart ? cartBlocked(sim, p.x, p.z, mx, mz) : null
     if (blocked) {
       if (Math.floor(now) !== Math.floor(now - dt)) sim.message(blocked, 'bad')
-    } else moveWithCollision(sim, p, (mx / mag) * d, (mz / mag) * d, 0.35, true)
+    } else moveWithCollision(sim, p, (mx / mag) * d, (mz / mag) * d, 0.35, true, false, mo.grounded ? undefined : { y: yNext })
     // Explicit facing (combat lock: face the target while strafing) wins over the movement direction.
     p.rot = inp.facing ?? Math.atan2(mx, mz)
     p.moving = mode
@@ -214,7 +231,17 @@ export function playerSystem(sim: Sim, dt: number) {
   } else {
     p.moving = swimming ? 'swim' : 'idle'
     if (swimming) ex = 'swim'
-    p.y = playerGroundY(sim)
+    if (mo.grounded) p.y = (px.cave ?? 0) > 0 ? playerGroundY(sim) : groundHeight(sim, p.x, p.z) // cave floor inside caves, bridge-aware surface otherwise
+  }
+  if (!mo.grounded) {
+    const sup = supportFor(sim, p.x, p.z, prevY)
+    if (sim.terrain.waterDepthAt(p.x, p.z) > SWIM_DEPTH_M) landPlayer(sim, p, mo, p.x, p.z)
+    else if (mo.vy <= 0 && yNext <= sup) {
+      // Landing on a too-steep face is refused: the step is undone and the player lands where the arc was still legal.
+      if (stableSupport(sim, p.x, p.z)) landPlayer(sim, p, mo, p.x, p.z)
+      else landPlayer(sim, p, mo, prevX, prevZ)
+    } else p.y = yNext
+    sim.actors.update(p)
   }
   if (swimming && p.vitals.stamina <= 0) {
     p.vitals.parts.gut += 4 * dt
@@ -237,6 +264,15 @@ export function playerSystem(sim: Sim, dt: number) {
   }
   // Time acceleration request from activity.
   sim.timeScale = px.activity?.accel ?? (px.autopilot ? ACCEL.roadAutopilot : 1)
+}
+
+/** Ends an arc: back on the ground at the walk surface of (x, z), no stale vertical speed. */
+function landPlayer(sim: Sim, p: Human, mo: PlayerMotion, x: number, z: number) {
+  p.x = x
+  p.z = z
+  p.y = groundHeight(sim, x, z)
+  mo.grounded = true
+  mo.vy = 0
 }
 
 /** Nearest dry land point (ring search, 4 m steps). */

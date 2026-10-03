@@ -78,6 +78,13 @@ const MENU = [
     <div class="absolute bottom-5 left-5">
       <Joystick />
     </div>
+    <button
+      class="pointer-events-auto absolute bottom-5 right-[13rem] h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"
+      data-testid="touch-jump"
+      @click="game.jump()"
+    >
+      Jump
+    </button>
     <div class="pointer-events-auto absolute bottom-5 right-4 grid grid-cols-3 gap-2">
       <button
         class="h-14 w-14 rounded-full bg-black/40 text-xs font-semibold text-white"

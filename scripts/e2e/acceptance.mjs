@@ -999,6 +999,30 @@ try {
   const gFree = await S(() => window.__sv.guard())
   await S(() => { window.__sv.game.sim.player.combat = false })
   check(results, '16. PPM trzyma gardę, puszczenie ją zwalnia', gHeld.held && !gFree.held, { gHeld, gFree })
+  // 17. combat--004: Space jumps (feet leave the ground, then land); stamina is spent.
+  const jump0 = await S(() => {
+    const sv = window.__sv
+    const sp = sv.openSpot(200)
+    sv.teleport(sp.x, sp.z)
+    sv.game.sim.player.combat = false
+    sv.game.sim.player.vitals.stamina = 100
+    return { y: sv.game.sim.player.y, stamina: sv.game.sim.player.vitals.stamina }
+  })
+  await page.keyboard.press('Space')
+  const jumpApex = await S(() => {
+    let apex = window.__sv.game.sim.player.y
+    for (let i = 0; i < 12; i++) {
+      window.__sv.step(0.05)
+      apex = Math.max(apex, window.__sv.game.sim.player.y)
+    }
+    return apex
+  })
+  const jumpEnd = await S(() => {
+    window.__sv.step(1.5)
+    const p = window.__sv.game.sim.player
+    return { y: p.y, stamina: p.vitals.stamina }
+  })
+  check(results, '17. Spacja: skok, lądowanie, koszt wytrzymałości', jumpApex - jump0.y > 0.3 && Math.abs(jumpEnd.y - jump0.y) < 0.5 && jumpEnd.stamina < jump0.stamina + 5, { jump0, jumpApex, jumpEnd })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)

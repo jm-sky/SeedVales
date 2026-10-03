@@ -9,7 +9,7 @@ import type { SimEvent } from './sim/sim'
 import type { Actor, Building, CompanionRisk, CompanionTask, GameState, Human, ItemStack, WeaponKind } from './sim/types'
 import type { WorldData } from './world/types'
 import { Ambience } from './audio/ambience'
-import { COMBAT_LOCK } from './config/calibration'
+import { COMBAT_LOCK, JUMP } from './config/calibration'
 import { angleDiff } from './core/math'
 import { itemDef } from './data/items'
 import { blueprintById, recipeById } from './data/recipes'
@@ -29,6 +29,7 @@ import { giveGift } from './sim/gifts'
 import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOptions, transferToStorage, warehouseDepositGain, warehouseTakeCost, waterTarget } from './sim/interact'
 import { addItem, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
+import { repairPlacement, requestJump } from './sim/motion'
 import { autopilotToSettlement, clearWaypoint, isExplored, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
 import { hireCompanion } from './sim/npc/companions'
@@ -325,6 +326,9 @@ export class Game {
       case 'journal':
         this.togglePanel('journal')
         break
+      case 'jump':
+        this.jump()
+        break
       case 'map':
         this.togglePanel('map')
         break
@@ -453,6 +457,15 @@ export class Game {
       this.target = pinned ?? list[0] ?? waterTarget(sim, sim.player.rot)
     }
     this.options = this.target ? targetOptions(sim, this.target.ref) : []
+  }
+
+  /** Space / mobile Jump: a small traversal jump (outside panels; combat dodge replaces it in combat once combat--003 exists). */
+  jump() {
+    if (this.panel) return
+    if (!requestJump(this.sim)) {
+      const p = this.sim.player
+      if (p.vitals.stamina < JUMP.staminaCost) this.showToast('Too tired to jump.')
+    }
   }
 
   /** Valid locked actor this frame (drops the lock when it ends), or null. */
@@ -888,11 +901,7 @@ export class Game {
   }
 
   debugTeleport(x: number, z: number) {
-    const p = this.sim.player
-    p.x = x
-    p.z = z
-    p.y = this.sim.terrain.heightAt(x, z)
+    repairPlacement(this.sim, x, z)
     this.sim.state.px.cave = 0
-    this.sim.actors.update(p)
   }
 }

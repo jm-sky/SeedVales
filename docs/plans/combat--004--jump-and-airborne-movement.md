@@ -1,6 +1,6 @@
 # Jump and airborne player movement
 
-**Status:** planned  
+**Status:** done  
 **Model:** opus — step 1 architecture/keep-scope decision; sonnet — implementation after the movement contract is fixed; opus — final review  
 **Domain:** combat  
 **Sub domains:** player-movement, collision, terrain, input, camera, animation, water, traversal  
@@ -620,3 +620,7 @@ Overall: ~4–8 days depending mainly on the water/bridge edge cases and whether
 - `combat--003--directional-dodge.md` — shares contextual Space input and horizontal movement collision.
 - `world--002--terrain-relief.md` — generated relief is the main source of slope/traversability cases.
 - `world--003--caves.md` — depends on the same separation of horizontal collision, support query and vertical-state ownership; caves must extend this contract rather than replace it.
+
+## Result (2026-10-03, session 14, Sonnet)
+
+Steps 1–7 implemented with the recommended options (D-MOVE-1): `TRAVERSE`/`JUMP` calibration, airborne lip rule + sustained-face probe in `moveWithCollision`, `sim/motion.ts` (transient motion, `requestJump`, `supportFor`, `stableSupport`, `repairPlacement`), airborne step in `playerSystem` (gravity, landing, deep water, refused steep landing), idle support now bridge-aware, Space + mobile Jump button, `Game.debugTeleport` / KO wash-ashore use `repairPlacement`. Tests: `motion.test.ts` (7: arc, no double jump/stamina/water, running jump, repair, transient state, steep-face jump spam, bridge crossing-from-above), e2e acceptance 17 (Space). **Not done:** jump/fall/land animation (no suitable clip; safe fallback = unchanged pose), optional obstacle slice (step 8, dropped for now), camera smoothing at landing, final Opus review (step 9), mobile e2e for the Jump button.

@@ -17,7 +17,7 @@ You continue SeedVales (Vue 3 + TS + Three.js, pnpm). You are **Sonnet**: you im
 
 Review round 1 + 2, D-USER-1, audio steps 1–5, render--009, LOOT-01, SET-05 slice, combat--001/002 are **done**. The user's `git pull` brought new plans (wave 5d in the roadmap).
 
-1. **`combat--004` jump** (in progress): groundwork is committed (`TRAVERSE`/`JUMP` calibration, `moveWithCollision` airborne lip rule). Implement the rest as listed in PROGRESS "In progress"; record D-MOVE-1 (the plan's recommended options) in DECISIONS; failing-first tests (arc, no double jump, steep face not climbable by jump spam, bridge crossing from above, deep-water landing, teleport/KO resets motion); Space = jump (dodge in combat after `combat--003`), mobile Jump button; e2e jump step.
+1. (done) `combat--004` jump — see PROGRESS; leftover: jump animation clip, mobile Jump e2e, Opus review.
 2. `combat--003` directional dodge (low priority; depends on melee timing — read its plan first).
 3. **Wave 5d** (`docs/roadmap/v1-closure-and-appendix.md`): `items--001` → `economy--004` ‖ `combat--005` → `economy--003` (each plan's "Decisions for Opus": take the recommended option, record in DECISIONS).
 4. Audio leftovers (`audio--001` step 6 e2e "no `/sounds/` fetch before first input", fire loop, door/UI one-shots); `world--001` chests; wave 6; `proposals--001`; later backlog L1–L7.
