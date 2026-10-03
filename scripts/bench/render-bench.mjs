@@ -89,6 +89,21 @@ const scenes = [
   }],
   // WORLD-11: the largest landmark (estate ruin, ~28k tris merged) in view; no baseline until measured on the user's machine.
   ['landmark-estate', (sv) => { const l = sv.game.sim.world.landmarks.find((x) => x.kind === 'estate_ruin'); sv.setHour(12); sv.approach(l.x, l.z, 30); return !!l }],
+  // WORLD-05: a cave mouth (cutting, banks, rim rocks) and the inside of a tunnel (shell + fill light); no baseline until measured on the user's machine.
+  ['cave-mouth', (sv) => { sv.setHour(12); sv.teleportToCave(0, 7); return sv.game.sim.world.caves.length > 0 }],
+  ['cave-inside', (sv) => {
+    const sim = sv.game.sim
+    const c = sim.world.caves[0]
+    if (!c) return false
+    sv.setHour(12)
+    sv.teleportToCave(0, 7)
+    const x = c.spine[9]; const z = c.spine[10]
+    sim.player.x = x
+    sim.player.z = z
+    sim.player.y = sim.terrain.caves.grid(0).floorAt(x, z)
+    sim.state.px.cave = 1
+    return true
+  }],
   ['rain', (sv) => {
     const s = sv.game.sim
     const st = s.world.settlements[0]
