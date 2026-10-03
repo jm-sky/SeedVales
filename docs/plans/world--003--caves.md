@@ -749,3 +749,7 @@ These do **not** block writing the plan; step 1 should resolve them against the 
 
 - `docs/research/refs/2026-10-02--seedvale-v1-ref-screenshot-as-baseline-3-cave-enterance.png`
 - `docs/research/refs/2026-10-02--seedvale-v1-ref-screenshot-as-baseline-4-cave-inside.jpg`
+
+## Result (caves v1, 2026-10-03, Windows session)
+
+Done: step 1 (decision recorded as D-CAVE-1) and step 2 (one deterministic cave, generalised to small + medium in the generator, so step 6 is partly done: no large class), plus a map marker and `__sv.teleportToCave`. Implemented as a **player-only layer** (`px.cave`): the cave is a derived grid under the mountain, entered through a cutting where the terrain mesh is cut out; no new terrain allocation. Verified by vitest only (generator invariants over 8 seeds, walk-in/walk-out without jumps, NPC refused at the cutting, save/reload inside a cave, mesh builder). Not verified: anything visual or e2e. Open items: steps 3 (full spatial context for actors/items/perception), 4 (cave-specific saved state), 5 (NPC/animal navigation), 7 (contents), 8 (look/audio/perf), large caves, `combat--004` grounding reconciliation, grass/vegetation inside the cutting, minimap marker.

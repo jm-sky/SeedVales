@@ -72,3 +72,4 @@ Den / Lair, Rat nest. Settlement sizes: SM/MD/LG/XL shown as-is.
 | Gifts / contracts (npc--001) | Gift / Give / End the contract / Part ways |
 | Fire and torches (survival--001) | Campfire / Stone hearth (Hearth) / Fuel (Add fuel) / Ash / Light / Extinguish / Plant torch / Pick up the torch / Feeding the fire / Fetching firewood / Dismantle the hearth |
 | Authored quests (quests--001) | Journal (key J) / Quest started / Quest completed / Quest lapsed / a rumour (offered quest) / in progress / put off (refused) / Decision / Finished; dialog: "Leave it"; NPC kinds: Visitor (quest-owned wanderer) |
+| Caves (world--003) | Cave / Cave mouth (entrance) / Tunnel / Chamber; map marker label = the cave name (e.g. "Wolfmaw Cave") |
