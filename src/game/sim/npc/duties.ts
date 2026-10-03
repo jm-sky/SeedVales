@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { AiStep, Animal, Human } from '../types'
-import { CARAVAN_MIN_NUTRITION, CARAVAN_PROVISIONS, FIRE } from '../../config/calibration'
+import { BAKE, CARAVAN_MIN_NUTRITION, CARAVAN_PROVISIONS, FIRE } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { SPECIES, type SpeciesId } from '../../data/species'
 import { isTree } from '../../world/nodes'
@@ -29,11 +29,21 @@ function homeReturn(sim: Sim, h: Human): AiStep[] {
   return [go(d.x, d.z, 1.5), work('deposit_carry', 3, 'Storing the harvest', undefined, 'interact')]
 }
 
+/** Grain is not edible: a household with enough of it in the store bakes bread (`bake` act, BAKE). */
+function bakePlan(sim: Sim, h: Human): DutyPlan {
+  const house = houseOf(sim, h)
+  if (!house?.inv || countItem(house.inv, 'grain') < BAKE.grainPerBread) return null
+  const d = doorOf(house)
+  return { label: 'Baking bread', steps: [go(d.x, d.z, 1.5), work('bake', BAKE.durS, 'Baking bread', undefined, 'interact')] }
+}
+
 function farmer(sim: Sim, h: Human, eff: number): DutyPlan {
   const field = householdBuilding(sim, h, 'field')
-  if (!field?.field) return null
+  if (!field?.field) return bakePlan(sim, h)
   const f = field.field
   if (f.growth >= 1) return { label: 'Harvesting', steps: [go(field.x, field.z, 4), work('harvest_field', 30 / eff, 'Harvesting', field.id, 'kneel'), ...homeReturn(sim, h)] }
+  const bake = bakePlan(sim, h)
+  if (bake) return bake
   if (seasonOf(sim.state.time.cal) === 'winter') return null
   if (f.moisture < 0.3 && sim.weather.wetness < 0.3 && countItem(h.inv, 'bucket') > 0) {
     const well = householdBuilding(sim, h, 'well') ?? settlementBuildings(sim, h.settlementId, 'well')[0]

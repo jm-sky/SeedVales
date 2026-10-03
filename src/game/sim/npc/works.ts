@@ -6,7 +6,7 @@
  */
 import type { Sim } from '../sim'
 import type { Animal, Human, Inventory } from '../types'
-import { CARAVAN_FEE, CARAVAN_PROVISIONS, DECISION, FIRE, WOOL_REGROW_DAYS } from '../../config/calibration'
+import { BAKE, CARAVAN_FEE, CARAVAN_PROVISIONS, DECISION, FIRE, WOOL_REGROW_DAYS } from '../../config/calibration'
 import { itemDef } from '../../data/items'
 import { perf } from '../../diag/perf'
 import { butcher, consume, drinkFromContainer, drinkFromWater, fellTree, fillContainers, fillTrough, gatherNode, giveOrDrop, repairBuilding, train } from '../actions'
@@ -162,6 +162,16 @@ export const WORK_ACTS: Record<string, Act> = {
         logMove(h, s.id, s.qty, 'carried', `warehouse:${b.settlementId}`)
       }
     }
+    return true
+  },
+  /** Household baking: grain from the household store -> bread into it (recipe `bread`; grain is the ledger sink, bread the source). */
+  bake: (sim, h) => {
+    const inv = storeOf(sim, h)
+    if (!inv || countItem(inv, 'grain') < BAKE.grainPerBread) return false
+    consumeItem(inv, 'grain', BAKE.grainPerBread, 'bake', h)
+    addItem(inv, newStack('bread', 1))
+    logProduce('bread', 1, 'bake', h)
+    logWork(h, 'bake')
     return true
   },
   tend_field: (sim, h, ref, eff) => {

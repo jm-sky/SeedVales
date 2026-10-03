@@ -92,6 +92,12 @@ export const CARAVAN_PROVISIONS = 200
 export const CARAVAN_RETURN_NUTRITION = 100
 export const CARAVAN_MIN_NUTRITION = 100
 
+/**
+ * Household baking (review 015 row 1d): farmers' grain is not edible; a household member turns it into bread at home
+ * (recipe `bread`: `grainPerBread` grain -> 1 bread), `durS` gameplay seconds per loaf.
+ */
+export const BAKE = { grainPerBread: 3, durS: 12 }
+
 /** Days for a sheep's wool to regrow after shearing. */
 export const WOOL_REGROW_DAYS = 10
 
