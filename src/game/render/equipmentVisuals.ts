@@ -9,7 +9,7 @@ import type { CharOutfit } from '../data/professions'
 import type { Equipment } from '../sim/types'
 
 /** Modules built by `scripts/assets/build-equipment-modules.mjs` (node names are `EQ_<module>` or `EQ_<module>_<n>`). */
-export type EquipmentModule = 'IronHelm' | 'PlateCuirass' | 'Pauldrons' | 'LeatherBoots'
+export type EquipmentModule = 'IronHelm' | 'PlateCuirass' | 'Pauldrons' | 'LeatherBoots' | 'PeasantSkirt'
 
 export interface EquipmentVisualDef {
   module: EquipmentModule
@@ -23,6 +23,14 @@ export const EQUIPMENT_VISUALS: Readonly<Record<string, EquipmentVisualDef>> = {
   plate_cuirass: { module: 'PlateCuirass' },
   pauldrons: { module: 'Pauldrons' },
   leather_boots: { module: 'LeatherBoots' },
+}
+
+/**
+ * Garments every actor of a kind wears regardless of items (not equipment): women of the farm outfits get the calf-length
+ * wool skirt (the Quaternius female outfits have trousers only). Keyed by the final outfit and sex, so it needs no model key.
+ */
+export function baseGarments(outfit: CharOutfit, male: boolean): EquipmentModule[] {
+  return !male && (outfit === 'Peasant' || outfit === 'Peasant_Boots' || outfit === 'Herbalist') ? ['PeasantSkirt'] : []
 }
 
 /** Fixed attach order: under layer first, outer second; slots in a stable order. */

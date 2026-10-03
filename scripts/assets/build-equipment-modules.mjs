@@ -20,18 +20,22 @@ import sharp from 'sharp'
 const ROOT = path.resolve(import.meta.dirname, '../..')
 const PARTS = path.join(ROOT, '_temp/extracted/Modular Character Outfits - Fantasy[Source]/Exports/glTF (Godot-Unreal)/Outfits')
 const OUT = path.join(ROOT, 'public/assets/characters/eq')
+/** Blender-authored modules (scripts/assets/blender-dress-modules.py, blender-equipment-modules.py): `<Module>_<Sex>.raw.glb`. */
+const RAW = path.join(ROOT, 'assets-src/characters/eq')
 
 /** Simplify ratio per module (defaults 0.35): equipment is added on top of a ~10 k-triangle outfit, so keep it small. */
-const RATIO = { IronHelm: 0.35, PlateCuirass: 0.2, Pauldrons: 0.3, LeatherBoots: 0.09 }
+const RATIO = { IronHelm: 0.35, PlateCuirass: 0.2, Pauldrons: 0.3, LeatherBoots: 0.09, PeasantSkirt: 1 }
 
 /**
  * Metres each module is pushed out along its vertex normals: the pieces were authored to sit on the matching Knight/Ranger
  * body, but here they go over another outfit's clothes (a farmer's tunic is thicker), where they would sink in and vanish.
  */
-const INFLATE = { IronHelm: 0.012, PlateCuirass: 0.05, Pauldrons: 0.025, LeatherBoots: 0.015 }
+const INFLATE = { IronHelm: 0.012, PlateCuirass: 0.05, Pauldrons: 0.025, LeatherBoots: 0.015, PeasantSkirt: 0.012 }
 
 /**
- * Module → per sex: the source *outfit* file and the mesh nodes to keep. The parts come out of the full outfit files (as in
+ * Module → per sex: the source *outfit* file and the mesh nodes to keep, or `['raw']` for a Blender-authored
+ * `assets-src/characters/eq/<Module>_<Sex>.raw.glb` that is kept whole (a sex without an entry has no such module).
+ * The parts come out of the full outfit files (as in
  * build-characters.mjs), whose rest pose matches the outfits we rebind to; the separate "Modular Parts" exports do not.
  */
 const MODULES = {
@@ -39,6 +43,7 @@ const MODULES = {
   PlateCuirass: { Male: ['Male_Knight', ['Male_Knight_Body_Armor']], Female: ['Female_Knight', ['Female_Knight_Body_Armor']] },
   Pauldrons: { Male: ['Male_Knight', ['Male_Knight_Acc_Pauldron_Round']], Female: ['Female_Knight', ['Female_Knight_Acc_Pauldrons_Round']] },
   LeatherBoots: { Male: ['Male_Ranger', ['Male_Ranger_Feet_Boots']], Female: ['Female_Ranger', ['Female_Ranger_Feet']] },
+  PeasantSkirt: { Female: ['raw'] },
 }
 
 await MeshoptSimplifier.ready
@@ -98,11 +103,13 @@ for (const sex of ['Male', 'Female']) {
   const pack = new Document()
   for (const [name, bySex] of Object.entries(MODULES)) {
     if (only.length && !only.includes(name)) continue
+    if (!bySex[sex]) continue
     const [outfit, keep] = bySex[sex]
-    const doc = await io.read(path.join(PARTS, `${outfit}.gltf`))
+    const isRaw = outfit === 'raw'
+    const doc = await io.read(isRaw ? path.join(RAW, `${name}_${sex}.raw.glb`) : path.join(PARTS, `${outfit}.gltf`))
     await doc.transform(
-      keepParts(keep), dropAnimations(), prune(), dedup(), resample(), baseColorOnly(),
-      weld(), simplify({ simplifier: MeshoptSimplifier, ratio: RATIO[name] ?? 0.35, error: 0.03 }),
+      isRaw ? () => undefined : keepParts(keep), dropAnimations(), prune(), dedup(), resample(), baseColorOnly(),
+      weld(), ...(RATIO[name] === 1 ? [] : [simplify({ simplifier: MeshoptSimplifier, ratio: RATIO[name] ?? 0.35, error: 0.03 })]),
       textureCompress({ encoder: sharp, targetFormat: 'png', resize: [512, 512] }),
       flatten(), join({ keepNamed: false }), prune(), inflate(INFLATE[name] ?? 0), nameNodes(name),
     )

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { newStack } from '../sim/inventory'
-import { equipmentModules, equipmentVisualKey, outfitWithEquipment } from './equipmentVisuals'
+import { baseGarments, equipmentModules, equipmentVisualKey, outfitWithEquipment } from './equipmentVisuals'
 
 const eq = (armor: Record<string, string>) => ({ armor: Object.fromEntries(Object.entries(armor).map(([k, id]) => [k, newStack(id)])) })
 
@@ -18,6 +18,15 @@ describe('equipment visuals (render--011)', () => {
     a.armor.head_outer!.dur = 5
     expect(equipmentVisualKey(a)).toBe(equipmentVisualKey(eq({ head_outer: 'iron_helm' })))
     expect(equipmentVisualKey(a)).not.toBe(equipmentVisualKey(eq({})))
+  })
+
+  it('women of the farm outfits wear the calf-length skirt, nobody else does', () => {
+    for (const o of ['Peasant', 'Peasant_Boots', 'Herbalist'] as const) {
+      expect(baseGarments(o, false)).toEqual(['PeasantSkirt'])
+      expect(baseGarments(o, true)).toEqual([])
+    }
+    for (const o of ['Ranger', 'Ranger_NoHood', 'Knight', 'Wizard', 'Blacksmith'] as const) expect(baseGarments(o, false)).toEqual([])
+    expect(baseGarments(outfitWithEquipment('Herbalist', eq({ head_outer: 'iron_helm' })), false)).toEqual(['PeasantSkirt'])
   })
 
   it('a helmet removes the hood of the Ranger and Herbalist outfits only', () => {

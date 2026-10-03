@@ -19,7 +19,7 @@ import { isDown } from '../sim/combat'
 import { guardOf } from '../sim/guard'
 import { loadGltf } from './assets'
 import { applyLook, characterLook, darkenPrime } from './characterLook'
-import { equipmentModules, equipmentVisualKey, outfitWithEquipment } from './equipmentVisuals'
+import { baseGarments, equipmentModules, equipmentVisualKey, outfitWithEquipment } from './equipmentVisuals'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 /** Scratch vector for the per-frame interpolation (no allocation per actor, review 009 F-04). */
@@ -157,9 +157,12 @@ export class Actors {
       .catch(() => undefined)
   }
 
+  private baseOutfit(h: Human): CharOutfit {
+    return h.kind === 'player' ? 'Ranger' : (h.profession && PROFESSIONS[h.profession].outfit) || 'Peasant'
+  }
+
   private charKey(h: Human): CharKey {
-    const base: CharOutfit = h.kind === 'player' ? 'Ranger' : (h.profession && PROFESSIONS[h.profession].outfit) || 'Peasant'
-    return `${h.male ? 'Male' : 'Female'}_${outfitWithEquipment(base, h.eq)}`
+    return `${h.male ? 'Male' : 'Female'}_${outfitWithEquipment(this.baseOutfit(h), h.eq)}`
   }
 
   /** Visual identity of a human model: outfit, age and the visible worn armour (a change rebuilds the model). */
@@ -170,7 +173,7 @@ export class Actors {
   /** Rebinds the armour modules the human wears onto the outfit skeleton (same UBC bone names); after the look tint. */
   private attachEquipment(root: THREE.Object3D, bones: Map<string, THREE.Bone>, h: Human) {
     const pack = this.eqPacks.get(h.male ? 'Male' : 'Female')
-    const wanted = equipmentModules(h.eq)
+    const wanted = [...equipmentModules(h.eq).map((m) => m.def.module), ...baseGarments(outfitWithEquipment(this.baseOutfit(h), h.eq), h.male)]
     if (!pack || !wanted.length) return
     const clone = SkeletonUtils.clone(pack.scene)
     const meshes: THREE.SkinnedMesh[] = []
@@ -178,7 +181,7 @@ export class Actors {
       if ((o as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(o as THREE.SkinnedMesh)
     })
     for (const m of meshes) {
-      const mod = wanted.find((w) => m.name === `EQ_${w.def.module}` || m.name.startsWith(`EQ_${w.def.module}_`))
+      const mod = wanted.find((w) => m.name === `EQ_${w}` || m.name.startsWith(`EQ_${w}_`))
       if (!mod) continue
       const sk = m.skeleton
       // The pack holds one armature per module, so the loader names the later ones `pelvis_1`, `spine_01_1`…
