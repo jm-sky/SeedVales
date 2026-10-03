@@ -36,11 +36,11 @@ export const RARE_STOCK = {
 export const TREASURE_COINS = { weight: 40, min: 15, max: 90, richnessMul: [1, 1.8, 3] as const }
 
 /** Richness by landmark kind (more elaborate ruins hide more). */
-export const LANDMARK_RICHNESS: Record<string, number> = { stone_circle: 1, house_ruin: 0, estate_ruin: 2, shipwreck: 2, boat_wreck: 0 }
+export const LANDMARK_RICHNESS: Record<string, number> = { stone_circle: 1, house_ruin: 0, estate_ruin: 2, shipwreck: 2, boat_wreck: 0, chapel_ruin: 1, watch_tower_ruin: 1 }
 
 /** Chance that a butchered large predator carries a gem or ring in its belly. */
 export const BELLY_LOOT_CHANCE = 0.04
 export const BELLY_SPECIES: readonly string[] = ['wolf', 'bear', 'boar']
 
 /** Spots per landmark kind (position and contents derive from the seed). */
-export const TREASURE_SPOTS_PER_LANDMARK: Record<string, number> = { stone_circle: 1, house_ruin: 1, estate_ruin: 2, shipwreck: 1, boat_wreck: 1 }
+export const TREASURE_SPOTS_PER_LANDMARK: Record<string, number> = { stone_circle: 1, house_ruin: 1, estate_ruin: 2, shipwreck: 1, boat_wreck: 1, chapel_ruin: 1, watch_tower_ruin: 1 }

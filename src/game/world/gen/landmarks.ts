@@ -28,6 +28,9 @@ interface Rule {
   /** Largest height difference allowed on the footprint ring (m). */
   maxSlope: number
   biomes: BiomeId[]
+  /** Quest bias: must lie within this many metres of some road / of a large settlement. */
+  withinRoadM?: number
+  withinTownM?: number
 }
 
 export const LANDMARK_RULES: Rule[] = [
@@ -35,6 +38,9 @@ export const LANDMARK_RULES: Rule[] = [
   { kind: 'house_ruin', count: 8, radius: 8, minSettlement: 250, minRoad: 30, maxSlope: 3, biomes: [Biome.Meadow, Biome.Steppe, Biome.ForestDeciduous, Biome.ForestMixed] },
   { kind: 'estate_ruin', count: 3, radius: 22, minSettlement: 600, minRoad: 50, maxSlope: 3.5, biomes: [Biome.Meadow, Biome.Steppe, Biome.ForestDeciduous] },
   { kind: 'shipwreck', count: 4, radius: 12, minSettlement: 300, minRoad: 0, maxSlope: 99, biomes: [Biome.Beach] },
+  // Quest landmarks (quests--003 W3.0): the drowned chapel in the marsh (Q11) and the watch tower in the mountains (Q12).
+  { kind: 'chapel_ruin', count: 1, radius: 14, minSettlement: 250, minRoad: 40, maxSlope: 3, biomes: [Biome.Swamp], withinRoadM: 1100 },
+  { kind: 'watch_tower_ruin', count: 1, radius: 12, minSettlement: 600, minRoad: 0, maxSlope: 5, biomes: [Biome.Mountain], withinTownM: 7000 },
   { kind: 'boat_wreck', count: 5, radius: 5, minSettlement: 200, minRoad: 20, maxSlope: 99, biomes: [Biome.Meadow, Biome.Steppe, Biome.Beach, Biome.Swamp, Biome.ForestDeciduous, Biome.ForestMixed] },
 ]
 
@@ -47,6 +53,8 @@ export const LANDMARK_NAMES: Record<LandmarkKind, string[]> = {
   house_ruin: ['Old Harrow\'s Cottage', 'The Burnt Farmstead', 'Miller\'s Rest', 'The Hollow Hearth', 'Thatcher\'s Folly', 'The Empty Croft', 'Widow Marl\'s House', 'The Fallen Barn'],
   estate_ruin: ['Blackwater Manor', 'Highcastle Ruins', 'The Forsaken Hall', 'Ravensgate Estate'],
   shipwreck: ['The Drowned Gull', 'Saltmaiden\'s Grave', 'The Broken Cog', 'Wreck of the Kestrel', 'The Beached Merchant'],
+  chapel_ruin: ['Blackwater Chapel', 'The Drowned Chapel', 'Reedbell Chapel'],
+  watch_tower_ruin: ['Pinewatch', 'The Broken Watch', 'Greytop Tower'],
   boat_wreck: ['The Sunken Skiff', 'Ferryman\'s Ruin', 'The Rotted Punt', 'Old Tam\'s Boat', 'The Stranded Dory', 'The Silted Barge'],
 }
 
@@ -126,6 +134,8 @@ export function placeLandmarks(seed: number, g: LandmarkGrid, settlements: GenSe
       if (rule.maxSlope < 99 && ringSlope(g.height, x, z, rule.radius) > rule.maxSlope) continue
       if (settlements.some((s) => Math.hypot(s.x - x, s.z - z) < rule.minSettlement)) continue
       if (rule.minRoad > 0 && nearRoad(roads, x, z, rule.minRoad)) continue
+      if (rule.withinRoadM && !nearRoad(roads, x, z, rule.withinRoadM)) continue
+      if (rule.withinTownM && !settlements.some((s) => s.size === 'LG' && Math.hypot(s.x - x, s.z - z) < rule.withinTownM!)) continue
       if (out.some((l) => Math.hypot(l.x - x, l.z - z) < (l.kind === rule.kind ? MIN_SAME_KIND_M : MIN_ANY_M))) continue
       const i = nameCursor.get(rule.kind) ?? 0
       nameCursor.set(rule.kind, i + 1)

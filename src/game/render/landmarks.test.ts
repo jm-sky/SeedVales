@@ -7,7 +7,7 @@ import type { GenLandmark, LandmarkKind } from '../world/types'
 import { layout } from '../world/landmarkLayout'
 import { LANDMARK_NODES } from './assetNames'
 
-const KINDS: LandmarkKind[] = ['stone_circle', 'house_ruin', 'estate_ruin', 'shipwreck', 'boat_wreck']
+const KINDS: LandmarkKind[] = ['stone_circle', 'house_ruin', 'estate_ruin', 'shipwreck', 'boat_wreck', 'chapel_ruin', 'watch_tower_ruin']
 const known = new Set<string>(Object.values(LANDMARK_NODES).flat())
 const mk = (kind: LandmarkKind, i: number): GenLandmark => ({ id: `lm-${kind}-${i}`, kind, name: 'x', x: 0, z: 0, rot: 0, radius: 9 })
 

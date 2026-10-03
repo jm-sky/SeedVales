@@ -4,7 +4,7 @@
  * @subdomain world-gen
  */
 
-export const GEN_VERSION = 11
+export const GEN_VERSION = 12
 export const WORLD_SIZE_M = 8192
 export const CELL_M = 8
 export const GRID_N = WORLD_SIZE_M / CELL_M + 1 // vertices per side
@@ -125,7 +125,7 @@ export interface GenDeposit {
   richness: number
 }
 
-export type LandmarkKind = 'stone_circle' | 'house_ruin' | 'estate_ruin' | 'shipwreck' | 'boat_wreck'
+export type LandmarkKind = 'stone_circle' | 'house_ruin' | 'estate_ruin' | 'shipwreck' | 'boat_wreck' | 'chapel_ruin' | 'watch_tower_ruin'
 
 /** Static point of interest (WORLD-11); rendered from `landmarks.glb`, discovered through the map. */
 export interface GenLandmark {

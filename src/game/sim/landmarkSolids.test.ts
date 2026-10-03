@@ -12,7 +12,7 @@ const mk = (kind: GenLandmark['kind'], i = 0, rot = 0): GenLandmark => ({ id: `l
 
 describe('WORLD-11: landmark collision', () => {
   it('every kind except the pure rubble ones has solids, and they are deterministic', () => {
-    for (const kind of ['stone_circle', 'house_ruin', 'estate_ruin', 'shipwreck', 'boat_wreck'] as const) {
+    for (const kind of ['stone_circle', 'house_ruin', 'estate_ruin', 'shipwreck', 'boat_wreck', 'chapel_ruin', 'watch_tower_ruin'] as const) {
       const a = landmarkSolids(mk(kind))
       expect(a.boxes.length + a.circles.length, kind).toBeGreaterThan(0)
       expect(JSON.stringify(landmarkSolids(mk(kind)))).toBe(JSON.stringify(a))

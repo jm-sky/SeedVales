@@ -45,4 +45,19 @@ describe('WORLD-11 landmarks', () => {
       expect(new Set(w.landmarks.map((l) => l.name)).size).toBe(w.landmarks.length)
     }, 30_000)
   }
+
+  it('quest landmarks: a chapel ruin on every seed near a road, a watch tower beside the town on most seeds', () => {
+    let towers = 0
+    for (const seed of SEEDS) {
+      const w = generateWorld(seed)
+      expect(w.landmarks.filter((l) => l.kind === 'chapel_ruin').length, `seed ${seed} chapel`).toBe(1)
+      const tower = w.landmarks.find((l) => l.kind === 'watch_tower_ruin')
+      const town = w.settlements.find((s) => s.size === 'LG')
+      if (tower && town) {
+        towers++
+        expect(Math.hypot(tower.x - town.x, tower.z - town.z)).toBeLessThan(7000)
+      }
+    }
+    expect(towers).toBeGreaterThanOrEqual(5)
+  })
 })
