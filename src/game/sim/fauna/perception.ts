@@ -8,6 +8,7 @@ import type { Sim } from '../sim'
 import type { Actor, Animal, Human } from '../types'
 import { DECISION, FEAR } from '../../config/calibration'
 import { SPECIES } from '../../data/species'
+import { layersApart } from '../caveSpace'
 import { isDown, isProtected } from '../combat'
 import { isNight } from '../time'
 import { hp } from '../vitals'
@@ -95,7 +96,7 @@ export function decideAnimal(sim: Sim, a: Animal): boolean {
   }
   const guard = guardRange(sim, a)
   for (const o of sim.actors.query(a.x, a.z, sp.perception)) {
-    if (o === a) continue
+    if (o === a || layersApart(sim, a, o)) continue
     const d = Math.hypot(o.x - a.x, o.z - a.z)
     if (o.kind === 'animal') {
       // Prey flees from predators that eat it.

@@ -13,7 +13,7 @@ import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { train } from './actions'
 import { alertAround } from './alerts'
-import { projectileGround } from './caveSpace'
+import { layersApart, pointInCave, projectileGround } from './caveSpace'
 import { dullEdge, edgeFactor } from './edge'
 import { logEvent, logging, logProduce } from './eventLog'
 import { fleeHome } from './fauna/perception'
@@ -217,7 +217,7 @@ export function meleeAttack(sim: Sim, a: Actor, coneDeg = 70, preferId?: number)
   let best: Actor | null = null
   let bestScore = Infinity
   for (const t of sim.actors.query(a.x, a.z, reach + 1.5)) {
-    if (t === a || t.vitals.dead) continue
+    if (t === a || t.vitals.dead || layersApart(sim, a, t)) continue
     if (a.kind === 'animal' && t.kind === 'animal' && (t as Animal).species === a.species) continue
     const d = Math.hypot(t.x - a.x, t.z - a.z)
     const tr = t.kind === 'animal' ? SPECIES[(t as Animal).species].length * 0.4 : 0.4
@@ -337,6 +337,8 @@ export function projectileSystem(sim: Sim, dt: number) {
       p.z += p.vz * d
       for (const t of sim.actors.query(p.x, p.z, 2.5)) {
         if (t.id === p.ownerId || t.vitals.dead) continue
+        // While the player is in a cave, a shot meets only that layer: inside the volume the player, outside everyone else.
+        if ((sim.state.px.cave ?? 0) > 0 && (t.kind === 'player') !== pointInCave(sim, p.x, p.y, p.z)) continue
         const hgt = t.kind === 'animal' ? SPECIES[(t as Animal).species].height * VARIANT_MULT[(t as Animal).variant].size : 1.8
         const rad = t.kind === 'animal' ? Math.max(0.35, SPECIES[(t as Animal).species].length * 0.35) : 0.4
         if (Math.hypot(t.x - p.x, t.z - p.z) < rad && p.y > t.y - 0.2 && p.y < t.y + hgt + 0.2) {

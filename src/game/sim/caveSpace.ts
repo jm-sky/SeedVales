@@ -8,6 +8,7 @@
  */
 import type { Sim } from './sim'
 import { CAVE } from '../config/calibration'
+import { CELL_SKY } from '../world/caveShape'
 
 /** Probe offset around the player centre: all four corners must be open inside a cave. */
 const PROBE_M = 0.3
@@ -22,6 +23,22 @@ export interface CaveStep {
 /** Current cave context of an actor (only the player can be in a cave in v1). */
 export function caveOf(sim: Sim, a: object): number {
   return a === sim.state.player ? (sim.state.px.cave ?? 0) : 0
+}
+
+/** True when two actors are on different layers (player in a cave, other on the surface): no sight, aggro or melee between them. */
+export function layersApart(sim: Sim, a: object, b: object): boolean {
+  if ((sim.state.px.cave ?? 0) === 0) return false
+  return caveOf(sim, a) !== caveOf(sim, b)
+}
+
+/** True when a point lies inside a cave volume (between floor and ceiling), not in the open or a cutting. */
+export function pointInCave(sim: Sim, x: number, y: number, z: number): boolean {
+  const caves = sim.terrain.caves
+  if (!caves.count) return false
+  const i = caves.indexAt(x, z)
+  if (i < 0) return false
+  const g = caves.grid(i)
+  return g.flagAt(x, z) !== CELL_SKY && y >= g.floorAt(x, z) - 0.5 && y <= g.ceilAt(x, z)
 }
 
 /** Whether moving `a` (at height `y`, context `ctx`) to (x, z) is allowed, and the resulting context/height. */

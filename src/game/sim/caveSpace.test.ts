@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { CAVE } from '../config/calibration'
 import { spinePoints } from '../world/caveShape'
+import { layersApart, pointInCave } from './caveSpace'
 import { moveWithCollision } from './collision'
 import { Sim } from './sim'
 import { testSim } from './testWorld'
@@ -92,4 +93,29 @@ describe('WORLD-05 cave traversal', () => {
     expect(loaded.player.y).toBeCloseTo(g.floorAt(loaded.player.x, loaded.player.z), 3)
     expect(loaded.state.px.cave).toBe(1)
   })
+})
+
+describe('WORLD-05 layer isolation', () => {
+  for (const seed of SEEDS) {
+    it(`seed ${seed}: a surface actor above the player in a cave is on another layer`, () => {
+      const sim = testSim(seed)
+      const cave = sim.world.caves[0]
+      if (!cave) return
+      const pts = spinePoints(cave)
+      const p = sim.player
+      const above = sim.state.animals[0] ?? sim.state.npcs[0]
+      p.x = cave.x - Math.sin(cave.yaw) * 4
+      p.z = cave.z - Math.cos(cave.yaw) * 4
+      p.y = sim.terrain.heightAt(p.x, p.z)
+      expect(layersApart(sim, p, above!), 'both on the surface').toBe(false)
+      const log = { maxDy: 0 }
+      for (const q of pts) walk(sim, q.x, q.z, log)
+      expect(sim.state.px.cave).toBe(1)
+      expect(layersApart(sim, p, above!), 'player below, other above').toBe(true)
+      expect(layersApart(sim, above!, above!)).toBe(false)
+      const last = pts[pts.length - 1]!
+      expect(pointInCave(sim, last.x, p.y + 1, last.z), 'inside the chamber volume').toBe(true)
+      expect(pointInCave(sim, last.x, sim.terrain.heightAt(last.x, last.z) + 1, last.z), 'above the roof').toBe(false)
+    }, 60_000)
+  }
 })

@@ -9,6 +9,7 @@ import type { Actor, Animal } from './types'
 import { COMBAT_LOCK } from '../config/calibration'
 import { angleDiff } from '../core/math'
 import { SPECIES } from '../data/species'
+import { layersApart } from './caveSpace'
 import { isDown, isProtected } from './combat'
 
 export type CombatClass = 'threat' | 'dangerous' | 'neutral'
@@ -42,7 +43,7 @@ export function combatCandidates(sim: Sim, player: Actor, camYaw: number): Comba
   const out: CombatCandidate[] = []
   const halfCone = (COMBAT_LOCK.coneDeg * Math.PI) / 360
   for (const a of sim.actors.query(player.x, player.z, COMBAT_LOCK.rangeM)) {
-    if (!lockable(sim, player, a)) continue
+    if (!lockable(sim, player, a) || layersApart(sim, player, a)) continue
     const dist = Math.hypot(a.x - player.x, a.z - player.z)
     if (dist > COMBAT_LOCK.rangeM) continue
     const angle = Math.abs(angleDiff(camYaw, Math.atan2(a.x - player.x, a.z - player.z)))
