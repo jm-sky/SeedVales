@@ -114,6 +114,8 @@ export function createNewGame(world: WorldData): GameState {
   const npcs: Human[] = []
   const households: Household[] = []
   const animals: Animal[] = []
+  /** D-USER-1: the home settlement's first guard is always Mark Hornblower (a man, so the name and the sex agree). */
+  let markPending = true
   for (const s of world.settlements) {
     for (const gh of s.households) {
       const house = byId.get(gh.houseId)!
@@ -131,7 +133,10 @@ export function createNewGame(world: WorldData): GameState {
       households.push(hh)
       // Family name from the head's trade; picked by hash so the sim RNG stream is unchanged.
       const surname = familyName(world.seed, hid, gh.profession)
-      const roles: { male: boolean; age: AgeGroup; main: boolean; kin: Kin }[] = [{ male: rng.chance(0.75), age: 'adult', main: true, kin: 'head' }]
+      const isMark = markPending && s.id === world.homeSettlement && gh.profession === 'guard'
+      if (isMark) markPending = false
+      const headMale = rng.chance(0.75) || isMark
+      const roles: { male: boolean; age: AgeGroup; main: boolean; kin: Kin }[] = [{ male: headMale, age: 'adult', main: true, kin: 'head' }]
       if (gh.members >= 2) roles.push({ male: !roles[0]!.male, age: 'adult', main: false, kin: 'spouse' })
       if (gh.members >= 3) roles.push({ male: rng.chance(0.5), age: 'child', main: false, kin: 'child' })
       if (gh.members >= 4) roles.push({ male: rng.chance(0.5), age: 'elder', main: false, kin: 'elder' })
@@ -143,6 +148,7 @@ export function createNewGame(world: WorldData): GameState {
         npc.settlementId = s.id
         npc.householdId = hid
         npc.kin = r.kin
+        if (isMark && r.main) npc.name = 'Mark Hornblower'
         if (r.main) {
           npc.profession = gh.profession
           for (const [k, v] of Object.entries(prof.skills)) npc.skills[k as keyof typeof npc.skills] = v! + rng.range(-8, 8)
