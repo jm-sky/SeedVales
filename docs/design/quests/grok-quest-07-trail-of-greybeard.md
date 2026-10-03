@@ -131,3 +131,12 @@ If quest 03 ended `show`, Hazel asks the player about Greybeard's prints after a
 | Required | Unique wolf entity with distinctive print; den; four methods; poison gate |
 | Stub | Pursuit after fire as a timed scene |
 | Out of scope | Full companion AI for Jacob |
+
+## Implementation notes
+
+Implemented by `quests--003` W1 as `src/game/data/quests/g07.ts` (test `questG07.test.ts`), with the E4 creature cast and new effects `hurt`, `slay`, `scare`. The quest is titled "Trail of the Grey Wolf". A cast creature's death never lapses a quest.
+
+- **Greybeard** is a unique alpha wolf (`tag: greybeard`, no den, never respawned) spawned on offer ~900 m north of {H}. The print is an observation 350 m north (4 s), the den is the wolf's spawn point (needs the print first). Two of {mark}'s hair, the print and the den open stage 2.
+- **Methods:** *kill* (bow or trap — the same ending, the quest only sees the wolf dead): 30 c from the treasury, courage +10; *assist* = once the player is within 40 m of the wolf, Jacob's arrow does 25 damage; *drive*: 20 s with a lit torch at the den scares the wolf for 20 min, and on a later day a lit torch within 400 m of him ends it (20 c, the wolf lives); *poison*: needs the herbalist quest done (G04) and Dora's opinion ≥ 10, two hemlock at the den, a day later the wolf dies without loot (20 c, Jacob −15).
+- **Neglect:** an unaccepted offer ends on day 22 with Jacob killing the wolf himself; an accepted quest not finished within 15 days ends with Jacob −5.
+- **Not implemented:** den relocation after a failed fight, the pursuit scene, Hazel's flavour line, the treasury-short fallback to Jacob's purse.

@@ -134,7 +134,7 @@ function tickRules(c: QuestCtx) {
 /** Lapse: a required cast member that is dead (or gone) ends the quest without reward. */
 function requiredDead(c: QuestCtx): boolean {
   for (const [slot, spec] of Object.entries(c.def.cast)) {
-    if (!spec.required || spec.kind === 'spawn') continue
+    if (!spec.required || spec.kind === 'spawn' || spec.kind === 'creature') continue // a creature's death is part of the story (G07 kill, Q01 pelt)
     const id = c.st.cast[slot]
     if (id === undefined || id < 0) continue
     const a = c.sim.actor(id)

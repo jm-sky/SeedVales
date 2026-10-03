@@ -15,6 +15,7 @@ import { AUTHORED_QUESTS } from '../data/quests'
 import { SPECIES } from '../data/species'
 import { Biome } from '../world/types'
 import { giveOrDrop } from './actions'
+import { killAnimal } from './combat'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { addItem, consumeItem, countItem, findFood, newStack, removeItem } from './inventory'
 import { makeAnimal, makeHuman } from './newGame'
@@ -22,6 +23,7 @@ import { addPriceMod } from './priceMods'
 import { holdUntil } from './questHold'
 import { addRep } from './reputation'
 import { dayIndex, hourOf, isNight } from './time'
+import { applyPartDamage } from './vitals'
 
 export interface QuestCtx {
   sim: Sim
@@ -670,6 +672,11 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'hold':
       setHold(c, e.slot, e)
       break
+    case 'hurt': {
+      const a = actorOf(c, e.slot)
+      if (a?.kind === 'animal' && !a.vitals.dead) applyPartDamage(a.vitals, 'torso', e.amount, true)
+      break
+    }
     case 'if':
       applyEffects(c, allOf(c, e.when) ? e.then : (e.else ?? []))
       break
@@ -727,9 +734,22 @@ function applyEffect(c: QuestCtx, e: Effect) {
         if (id >= 0) addRep(sim, id, e.delta, pl === (e.places ?? ['H'])[0] ? e.reason : undefined)
       }
       break
+    case 'scare': {
+      const a = actorOf(c, e.slot)
+      if (a?.kind === 'animal' && !a.vitals.dead) {
+        ;(a as Animal).fleeFrom = { x: sim.player.x, z: sim.player.z, until: sim.state.time.play + e.minutes * 60 }
+        resetAi(a)
+      }
+      break
+    }
     case 'set':
       st.flags[e.flag] = flagVal(c, e.value)
       break
+    case 'slay': {
+      const a = actorOf(c, e.slot)
+      if (a?.kind === 'animal' && !a.vitals.dead) killAnimal(sim, a as Animal)
+      break
+    }
     case 'spawn':
       if (def.cast[e.slot]?.kind === 'creature') spawnCreature(c, e.slot)
       else spawnVisitor(c, e.slot)

@@ -125,6 +125,12 @@ export type Effect =
   | { k: 'follow'; slot: SlotId; target: 'player' | SlotId }
   | { k: 'unfollow'; slot: SlotId }
   | { k: 'spawn'; slot: SlotId }
+  /** Wounds a cast animal (an NPC's arrow), `amount` damage to the torso. */
+  | { k: 'hurt'; slot: SlotId; amount: number }
+  /** Kills a cast animal without loot or a player kill (poison, another hunter): it leaves an ordinary corpse. */
+  | { k: 'slay'; slot: SlotId }
+  /** Makes a cast animal flee from the player for `minutes` of gameplay time. */
+  | { k: 'scare'; slot: SlotId; minutes: number }
   | { k: 'despawn'; slot: SlotId }
   | { k: 'owner'; anchor: Anchor; to: SlotId }
   /** Posts a warning listing the other timed quests that are active (parallel-timer notice, quests--003 E7). */
