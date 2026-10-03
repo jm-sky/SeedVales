@@ -35,7 +35,10 @@ export const ACTIVITY_DONE: Record<string, Done> = {
     const p = sim.player
     const stone = findTool(p, 'sharpen')
     // `data` names the blade: 'main', 'off' or 'inv:<index>' (an activity must not hold a stack reference — it is saved).
-    const blade = a.data === 'main' ? p.eq.main : a.data === 'off' ? p.eq.off : p.inv.items[Number((a.data ?? '').split(':')[1])]
+    const [, idx, bladeId] = (a.data ?? '').split(':')
+    const byIndex = p.inv.items[Number(idx)]
+    // The pack may have changed during the 6 s: trust the index only while it still holds that weapon, else the first blade of that id that needs an edge.
+    const blade = a.data === 'main' ? p.eq.main : a.data === 'off' ? p.eq.off : byIndex?.id === bladeId ? byIndex : p.inv.items.find((s) => s.id === bladeId && needsSharpening(s))
     if (!stone || !blade || !needsSharpening(blade)) return { ok: false, msg: 'Nothing to sharpen.' }
     const edge = sharpenEdge(blade)
     wearTool(stone, 1)

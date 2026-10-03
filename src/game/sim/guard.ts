@@ -14,6 +14,8 @@ import { isDown } from './combat'
 import { wearTool } from './inventory'
 
 export interface GuardState {
+  /** The raw button state last tick (a parry window opens only on a real release → press, never when a suppressed guard resumes). */
+  raw: boolean
   held: boolean
   /** Gameplay time the current guard press began (parry window origin). */
   startedAt: number
@@ -24,14 +26,15 @@ const states = new WeakMap<Sim, GuardState>()
 
 export function guardOf(sim: Sim): GuardState {
   let g = states.get(sim)
-  if (!g) states.set(sim, (g = { held: false, startedAt: -1e9, brokenUntil: 0 }))
+  if (!g) states.set(sim, (g = { raw: false, held: false, startedAt: -1e9, brokenUntil: 0 }))
   return g
 }
 
 /** Applies the held intent; only a released → pressed transition starts a parry window. */
-export function setGuard(sim: Sim, want: boolean) {
+export function setGuard(sim: Sim, want: boolean, raw = want) {
   const g = guardOf(sim)
-  if (want && !g.held) g.startedAt = sim.state.time.play
+  if (raw && !g.raw) g.startedAt = sim.state.time.play
+  g.raw = raw
   g.held = want
 }
 
@@ -45,7 +48,9 @@ export interface ResolvedDefence extends DefenceStats {
 export function defenceOf(h: Human): ResolvedDefence | null {
   const off = h.eq.off
   const shield = off ? itemDef(off.id).defence : undefined
-  if (off && shield && (off.dur === undefined || off.dur > 0)) return { ...shield, item: off, source: 'shield' }
+  const mainDef = h.eq.main ? itemDef(h.eq.main.id).weapon : undefined
+  const bothHands = !!mainDef && (mainDef.twoHanded || mainDef.kind === 'ranged') // a shield cannot be used with them
+  if (off && shield && !bothHands && (off.dur === undefined || off.dur > 0)) return { ...shield, item: off, source: 'shield' }
   const main = h.eq.main
   if (!main) return { ...DEFENCE.unarmed, source: 'unarmed' }
   const w = itemDef(main.id).weapon

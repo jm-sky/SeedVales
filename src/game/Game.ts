@@ -468,7 +468,7 @@ export class Game {
     if (this.sim.state.px.activity) return this.showToast('You are busy.')
     if (!findTool(p, 'sharpen')) return this.showToast('You need a whetstone.')
     if (!needsSharpening(s)) return this.showToast('The edge is already as sharp as this blade gets.')
-    const data = p.eq.main === s ? 'main' : p.eq.off === s ? 'off' : `inv:${p.inv.items.indexOf(s)}`
+    const data = p.eq.main === s ? 'main' : p.eq.off === s ? 'off' : `inv:${p.inv.items.indexOf(s)}:${s.id}`
     startActivity(this.sim, { kind: 'sharpen', label: `Sharpening ${itemDef(s.id).name}`, total: EDGE.sharpenTimeS, data })
     this.closePanel()
   }
@@ -618,6 +618,11 @@ export class Game {
       const moved = removeStack(p.inv, s)!
       if (p.eq.main) addItem(p.inv, p.eq.main)
       p.eq.main = moved
+      // A two-handed weapon or a bow needs both hands: a held shield/torch goes back to the pack (as `equipToMain` does).
+      if (p.eq.off && (d.weapon?.twoHanded || d.weapon?.kind === 'ranged')) {
+        addItem(p.inv, p.eq.off)
+        p.eq.off = undefined
+      }
       this.showToast(`In hand: ${d.name}`)
     } else if (d.armor) {
       const key = `${d.armor.slot}_${d.armor.layer}` as const

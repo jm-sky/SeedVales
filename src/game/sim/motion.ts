@@ -56,7 +56,15 @@ export function supportFor(sim: Sim, x: number, z: number, feetY: number): numbe
   return ground > terrain && feetY < ground - 0.3 ? terrain : ground
 }
 
-/** True when the terrain at (x, z) is stable enough to stand on (not a too-steep face). */
+/** Local probe distance (m) of the landing check: short enough that a thin wall is not averaged away (review 019 #1). */
+const LANDING_PROBE_M = 0.25
+
+/** True when the ground at (x, z) is stable to stand on: no cardinal neighbour within the probe rises faster than the walk limit. */
 export function stableSupport(sim: Sim, x: number, z: number): boolean {
-  return sim.terrain.slopeAt(x, z) <= TRAVERSE.maxUphillRise
+  const t = sim.terrain
+  const h = t.heightAt(x, z)
+  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+    if (Math.abs(t.heightAt(x + dx * LANDING_PROBE_M, z + dz * LANDING_PROBE_M) - h) / LANDING_PROBE_M > TRAVERSE.maxUphillRise) return false
+  }
+  return true
 }

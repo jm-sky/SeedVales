@@ -96,3 +96,25 @@ describe('SET-05 mayor (minimal slice)', () => {
     expect(cycleTaxRate(sim, sid)).toMatch(/Only the mayor/)
   })
 })
+
+describe('review 019 #9 office holders are replaced', () => {
+  it('SET-05: a dead headman is replaced (also for saves without one); the player mayor gets a new deputy when the deputy dies', () => {
+    const { sim, sid, st } = ready()
+    const head = headmanOf(sim, sid)!
+    head.vitals.dead = true
+    mayorDaily(sim, st)
+    expect(headmanOf(sim, sid)).toBeDefined()
+    expect(headmanOf(sim, sid)!.id).not.toBe(head.id)
+    st.headmanId = undefined
+    mayorDaily(sim, st)
+    expect(headmanOf(sim, sid)).toBeDefined()
+    makeWorthy(sim, sid)
+    acceptOffice(sim, sid)
+    const deputy = sim.human(st.deputyId!)!
+    deputy.vitals.dead = true
+    mayorDaily(sim, st)
+    expect(st.playerMayor).toBe(true)
+    expect(st.deputyId).toBeDefined()
+    expect(st.deputyId).not.toBe(deputy.id)
+  })
+})

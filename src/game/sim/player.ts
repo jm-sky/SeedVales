@@ -95,10 +95,11 @@ export function playerSystem(sim: Sim, dt: number) {
   // Guard intent → transient guard state (parry window starts on a real press; never while down or out of combat).
   const dodge = dodgeOf(sim)
   const dodging = now < dodge.activeUntil
-  setGuard(sim, !!inp.guard && p.combat && !p.vitals.ko && !px.activity && !dodging) // a dodge cancels the guard (decision 6A)
+  setGuard(sim, !!inp.guard && p.combat && !p.vitals.ko && !px.activity && !dodging, !!inp.guard) // a dodge cancels the guard (decision 6A)
 
   // KO: lie still, then stand up with protection window.
   if (p.vitals.ko && now < p.vitals.ko.until) {
+    if (!motionOf(sim).grounded) repairPlacement(sim, p.x, p.z) // a knock-out ends a jump: no hovering, no resumed arc
     updateVitals(p.vitals, dt, 'rest', 0.2)
     p.moving = 'idle'
     // Washed ashore if unconscious in deep water.

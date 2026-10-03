@@ -23,10 +23,14 @@ export interface TreasureSpot {
   richness: number
 }
 
+/** Deepest water (m) a buried treasure may lie in (dig refuses deeper water). */
+const TREASURE_MAX_WATER_M = 0.3
+
 const cache = new WeakMap<WorldData, TreasureSpot[]>()
 
 /** All treasure spots of a world (deterministic, immutable). */
-export function treasureSpots(world: WorldData): TreasureSpot[] {
+export function treasureSpots(sim: Sim): TreasureSpot[] {
+  const world = sim.world
   const hit = cache.get(world)
   if (hit) return hit
   const out: TreasureSpot[] = []
@@ -36,8 +40,17 @@ export function treasureSpots(world: WorldData): TreasureSpot[] {
       const id = `${l.id}#${i}`
       const rng = new Rng(hashString(`${world.seed}:loot:${id}`))
       const ang = rng.range(0, Math.PI * 2)
-      const r = l.radius * rng.range(0.3, 0.85)
-      out.push({ id, x: l.x + Math.cos(ang) * r, z: l.z + Math.sin(ang) * r, richness: LANDMARK_RICHNESS[l.kind] ?? 0 })
+      let r = l.radius * rng.range(0.3, 0.85)
+      // A spot under water could never be dug (review 019 #8): move it toward the landmark centre until dry, else drop it.
+      let x = l.x + Math.cos(ang) * r
+      let z = l.z + Math.sin(ang) * r
+      while (sim.terrain.waterDepthAt(x, z) > TREASURE_MAX_WATER_M && r > 0.5) {
+        r *= 0.8
+        x = l.x + Math.cos(ang) * r
+        z = l.z + Math.sin(ang) * r
+      }
+      if (sim.terrain.waterDepthAt(x, z) > TREASURE_MAX_WATER_M) continue
+      out.push({ id, x, z, richness: LANDMARK_RICHNESS[l.kind] ?? 0 })
     }
   }
   cache.set(world, out)
@@ -85,7 +98,7 @@ function awardStack(sim: Sim, h: Human, s: ItemStack, source: string): string {
 export function digTreasure(sim: Sim, h: Human, x: number, z: number): string | null {
   if (h.kind !== 'player') return null
   const taken = (sim.state.px.lootTaken ??= [])
-  for (const s of treasureSpots(sim.world)) {
+  for (const s of treasureSpots(sim)) {
     if (taken.includes(s.id) || Math.hypot(s.x - x, s.z - z) > TREASURE_DIG_R) continue
     taken.push(s.id)
     const what = award(sim, h, rollTreasure(new Rng(hashString(`${sim.world.seed}:content:${s.id}`)), s.richness), 'treasure')

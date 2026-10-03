@@ -6,10 +6,18 @@
 import type { InnMeal } from '../data/innMeals'
 import type { Sim } from './sim'
 import type { Building } from './types'
+import { SPOILED_FRAC } from '../config/calibration'
 import { INN_BED_PRICE, INN_MEALS } from '../data/innMeals'
 import { itemDef } from '../data/items'
-import { consumeItem, countItem } from './inventory'
+import { logConsume } from './eventLog'
+import { removeStack } from './inventory'
 import { payToTreasury } from './treasury'
+
+/** Units of an item the inn can serve: spoiled stacks are never served (no illness from the inn, review 019 #7). */
+export function servable(inn: Building, id: string): number {
+  const spoilH = itemDef(id).food?.spoilH ?? Infinity
+  return (inn.inv?.items ?? []).reduce((n, s) => (s.id === id && (s.fresh === undefined || s.fresh > spoilH * SPOILED_FRAC) ? n + s.qty : n), 0)
+}
 
 /** Item ids the inn would use for a meal (first available alternative per slot, counting repeats), or null when a slot is missing. */
 export function mealIngredients(inn: Building, meal: InnMeal): string[] | null {
@@ -17,7 +25,7 @@ export function mealIngredients(inn: Building, meal: InnMeal): string[] | null {
   const used = new Map<string, number>()
   const out: string[] = []
   for (const alts of meal.slots) {
-    const pick = alts.find((id) => countItem(inn.inv!, id) - (used.get(id) ?? 0) > 0)
+    const pick = alts.find((id) => servable(inn, id) - (used.get(id) ?? 0) > 0)
     if (!pick) return null
     used.set(pick, (used.get(pick) ?? 0) + 1)
     out.push(pick)
@@ -43,7 +51,13 @@ export function completeMeal(sim: Sim, innId: string, mealId: string): { ok: boo
   const refusal = mealRefusal(sim, inn, meal)
   if (refusal) return { ok: false, msg: refusal }
   const ids = mealIngredients(inn, meal)!
-  for (const id of ids) consumeItem(inn.inv!, id, 1, 'inn_meal')
+  for (const id of ids) {
+    // The least fresh servable batch first (D-ITEM-1), never a spoiled one.
+    const spoilH = itemDef(id).food?.spoilH ?? Infinity
+    const batch = inn.inv!.items.filter((s) => s.id === id && (s.fresh === undefined || s.fresh > spoilH * SPOILED_FRAC)).sort((a, b) => (a.fresh ?? Infinity) - (b.fresh ?? Infinity))[0]!
+    const taken = removeStack(inn.inv!, batch, 1)!
+    logConsume(taken.id, taken.qty, 'inn_meal')
+  }
   payToTreasury(sim, inn.settlementId, sim.player, meal.price)
   const v = sim.player.vitals
   const gain = mealNutrition(ids)

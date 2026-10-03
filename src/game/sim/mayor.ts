@@ -58,6 +58,25 @@ export function assignHeadmen(sim: { state: { settlements: SettlementState[]; np
   }
 }
 
+/** Keeps the posts filled (review 019 #9): a dead/missing headman or deputy is replaced by an adult resident; old saves get a headman. */
+export function ensureOfficeHolders(sim: Sim, st: SettlementState) {
+  const alive = (id: number | undefined) => {
+    const h = id === undefined ? undefined : sim.human(id)
+    return !!h && !h.vitals.dead
+  }
+  const pick = (exclude?: number) => {
+    const res = sim.npcsOf(st.id).filter((n) => !n.vitals.dead && n.age !== 'child' && n.id !== exclude)
+    return res.find((n) => n.kin === 'elder') ?? res.find((n) => n.kin === 'head') ?? res[0]
+  }
+  if (!alive(st.headmanId)) {
+    if (st.playerMayor && alive(st.deputyId)) {
+      st.headmanId = st.deputyId
+      st.deputyId = pick(st.headmanId)?.id
+    } else st.headmanId = pick(st.deputyId)?.id
+  }
+  if (st.playerMayor && !alive(st.deputyId)) st.deputyId = pick(st.headmanId)?.id
+}
+
 /** The headman hands over the office; they stay on as the deputy. */
 export function acceptOffice(sim: Sim, sid: number): string {
   const st = sim.state.settlements[sid]
@@ -89,6 +108,7 @@ export const taxMultiplier = (st: SettlementState) => (st.playerMayor ? MAYOR.ta
 
 /** Daily upkeep of the office: high taxes sour opinions; falling standing ends the term. */
 export function mayorDaily(sim: Sim, st: SettlementState) {
+  ensureOfficeHolders(sim, st)
   if (!st.playerMayor) return
   if (st.taxRate === 'high') for (const n of sim.npcsOf(st.id)) if (!n.vitals.dead) n.opinion = Math.max(-100, n.opinion - MAYOR.highTaxOpinion)
   if (st.rep.honesty < MAYOR.loseBelow || st.rep.helpfulness < MAYOR.loseBelow || residentOpinion(sim, st.id) < 0) {

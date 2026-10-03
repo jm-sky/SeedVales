@@ -8,6 +8,7 @@ import type { Sim } from './sim'
 import { DODGE } from '../config/calibration'
 import { isDown } from './combat'
 import { carriedWeight, carryCapacity } from './inventory'
+import { motionOf } from './motion'
 
 export interface DodgeState {
   dirX: number
@@ -37,6 +38,7 @@ export function requestDodge(sim: Sim, dirX: number, dirZ: number): string | nul
   if (isDown(sim, p)) return 'You cannot dodge now.'
   if (px.activity) return 'You are busy.'
   if (px.cart) return 'Both hands are on the cart.'
+  if (!motionOf(sim).grounded) return 'You are in the air.'
   if (sim.terrain.waterDepthAt(p.x, p.z) > DODGE.maxWaterM) return 'Too deep to dodge.'
   if (carriedWeight(p) > carryCapacity(p)) return 'You are carrying too much to dodge.'
   if (now < d.recoveryUntil) return 'Not yet.'

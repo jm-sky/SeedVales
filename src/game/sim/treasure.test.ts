@@ -12,7 +12,7 @@ const VALUABLES = ['gold_ring', 'ruby', 'emerald', 'diamond', 'obsidian_dagger',
 const valuables = (sim: ReturnType<typeof testSim>) => VALUABLES.reduce((a, id) => a + countItem(sim.player.inv, id), 0)
 
 function atSpot(sim: ReturnType<typeof testSim>, i = 0) {
-  const s = treasureSpots(sim.world)[i]!
+  const s = treasureSpots(sim)[i]!
   sim.player.x = s.x
   sim.player.z = s.z
   addItem(sim.player.inv, newStack('shovel'))
@@ -21,10 +21,10 @@ function atSpot(sim: ReturnType<typeof testSim>, i = 0) {
 
 describe('LOOT-01 treasure', () => {
   it('LOOT-01: spots are deterministic, inside their landmark and exist for every landmark', () => {
-    const a = treasureSpots(testSim(1337).world)
-    const b = treasureSpots(testSim(1337).world)
+    const a = treasureSpots(testSim(1337))
+    const b = treasureSpots(testSim(1337))
     expect(a).toEqual(b)
-    expect(a.length).toBeGreaterThanOrEqual(testSim().world.landmarks.length)
+    expect(a.length).toBeGreaterThanOrEqual(testSim().world.landmarks.length - 2) // spots under water are dropped
     for (const s of a) {
       const l = testSim().world.landmarks.find((x) => s.id.startsWith(`${x.id}#`))!
       expect(Math.hypot(s.x - l.x, s.z - l.z)).toBeLessThanOrEqual(l.radius)
@@ -47,7 +47,7 @@ describe('LOOT-01 treasure', () => {
 
   it('LOOT-01: NPC digging never touches treasure', () => {
     const sim = testSim()
-    const s = treasureSpots(sim.world)[0]!
+    const s = treasureSpots(sim)[0]!
     const npc = sim.state.npcs[0]!
     addItem(npc.inv, newStack('shovel'))
     dig(sim, npc, s.x, s.z)
@@ -101,5 +101,14 @@ describe('LOOT-01 treasure', () => {
     expect(sellToNpc(sim, trader, stack).ok).toBe(true)
     expect(totalMoney(sim)).toBe(total)
     expect(countItem(sim.player.inv, 'diamond')).toBe(0)
+  })
+})
+
+describe('review 019 #8 treasure spots are diggable', () => {
+  it('LOOT-01: no treasure spot lies in water deeper than the dig limit, on several seeds', () => {
+    for (const seed of [1337, 42, 7]) {
+      const sim = testSim(seed)
+      for (const s of treasureSpots(sim)) expect(sim.terrain.waterDepthAt(s.x, s.z), `${seed}:${s.id}`).toBeLessThanOrEqual(0.3)
+    }
   })
 })

@@ -228,19 +228,17 @@ export class Dynamics {
         this.group.add(o)
         this.corpses.set(c.id, o)
       }
-      o.scale.setScalar(c.butchered ? 0.6 : 1)
       // Phase look (render--010): a green haze over carrion, flies via CarrionFx, a flattened pale pile for bones.
       const phase = corpsePhase(c, sim.state.time.cal)
-      if (o.userData.phase !== phase) {
-        o.userData.phase = phase
-        o.getObjectByName('haze')?.removeFromParent()
-        if (phase === 'carrion' && this.profile !== 'low') {
-          const h = new THREE.Mesh(Dynamics.hazeGeo, Dynamics.hazeMat)
-          h.name = 'haze'
-          h.position.y = 0.1
-          o.add(h)
-        }
-        if (phase === 'bones') o.scale.setScalar(0.45)
+      o.scale.setScalar(phase === 'bones' ? 0.45 : c.butchered ? 0.6 : 1)
+      const haze = o.getObjectByName('haze')
+      const wantHaze = phase === 'carrion' && this.profile !== 'low'
+      if (haze && !wantHaze) haze.removeFromParent()
+      else if (!haze && wantHaze) {
+        const h = new THREE.Mesh(Dynamics.hazeGeo, Dynamics.hazeMat)
+        h.name = 'haze'
+        h.position.y = 0.1
+        o.add(h)
       }
       if (phase === 'carrion') this.carrionSpots.push({ x: c.x, y: o.position.y, z: c.z, id: c.id })
     }

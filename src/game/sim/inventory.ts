@@ -32,7 +32,7 @@ export const canMerge = (a: ItemStack, b: ItemStack) =>
 
 /** Key of stacks that look identical in a list (same id, quality, material, durability, freshness hour, water). */
 export const stackLookKey = (s: ItemStack) =>
-  [s.id, s.q ?? '', s.m ?? '', s.sp ?? '', s.dur === undefined ? '' : Math.round(s.dur), s.fresh === undefined ? '' : Math.round(s.fresh), s.water ?? ''].join('|')
+  [s.id, s.q ?? '', s.m ?? '', s.sp ?? '', s.dur === undefined ? '' : Math.round(s.dur), s.fresh === undefined ? '' : Math.round(s.fresh), s.water ?? '', s.edge === undefined ? '' : Math.round(s.edge * 20)].join('|')
 
 /** Merges rows whose stacks look identical (review 016 #15): the first row stays the actor, `qty` is summed. */
 export function groupIdentical<T>(rows: T[], stackOf: (r: T) => ItemStack): { row: T; qty: number }[] {
@@ -248,7 +248,7 @@ export function spoilInventory(inv: Inventory, hours: number, factor = 1) {
 
 export function findFood(inv: Inventory): ItemStack | undefined {
   let best: ItemStack | undefined
-  let bestScore = -1
+  let bestScore = -Infinity
   for (const s of inv.items) {
     const d = itemDef(s.id)
     if (!d.food || d.category === 'herb' || d.food.raw) continue

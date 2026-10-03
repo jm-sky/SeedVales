@@ -84,11 +84,13 @@ export function buyProvisions(sim: Sim, h: Human, want: number, settlementId = h
   }
 }
 
-/** Departure: household store first, then the home warehouse, up to `CARAVAN_PROVISIONS`. */
+/** Departure: household store first, then the home warehouse, then households (bought), up to `CARAVAN_PROVISIONS`. */
 export function packCaravanProvisions(sim: Sim, h: Human) {
   let want = CARAVAN_PROVISIONS - mealValue(h.inv)
   want = takeFood(h, storeOf(sim, h), want)
-  takeFood(h, warehouseOf(sim, h.settlementId), want)
+  want = takeFood(h, warehouseOf(sim, h.settlementId), want)
+  // Still short (nothing at home or in the warehouse): buy from the settlement's households, as at the destination.
+  if (want > 0) buyProvisions(sim, h, want)
 }
 
 /** At the destination: the pack is topped up to `CARAVAN_RETURN_NUTRITION` from the visited warehouse, then from a household there. */

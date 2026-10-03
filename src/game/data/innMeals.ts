@@ -14,9 +14,9 @@ export interface InnMeal {
 }
 
 export const INN_MEALS: readonly InnMeal[] = [
-  { id: 'meal_simple', name: 'Simple meal', slots: [['bread'], ['cabbage', 'carrot', 'fermented_cabbage']], price: 6, eatS: 5 },
-  { id: 'meal_hearty', name: 'Hearty meal', slots: [['bread'], ['dried_meat', 'salted_meat']], price: 12, eatS: 6 },
-  { id: 'meal_good', name: 'Good meal', slots: [['bread'], ['dried_meat', 'salted_meat', 'cooked_meat'], ['fermented_cabbage', 'cabbage', 'carrot']], price: 20, eatS: 8 },
+  { id: 'meal_simple', name: 'Simple meal', slots: [['bread', 'salted_meat'], ['cabbage', 'carrot', 'fermented_cabbage']], price: 6, eatS: 5 },
+  { id: 'meal_hearty', name: 'Hearty meal', slots: [['bread', 'fermented_cabbage'], ['dried_meat', 'salted_meat']], price: 12, eatS: 6 },
+  { id: 'meal_good', name: 'Good meal', slots: [['bread', 'fermented_cabbage'], ['dried_meat', 'salted_meat', 'cooked_meat'], ['cabbage', 'carrot', 'fermented_cabbage']], price: 20, eatS: 8 },
 ]
 
 /** Lodging price (copper) — paid to the settlement treasury like meals. */
