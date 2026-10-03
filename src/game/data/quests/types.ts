@@ -16,7 +16,7 @@ export type QuestRepDim = 'honesty' | 'helpfulness' | 'renown' | 'courage'
 export type QuestStatusId = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
 /** Settlement a cast NPC or an effect refers to: the home settlement or the nearest other one (quests--003 E1). */
 export type QuestPlace = 'H' | 'V'
-export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell' | 'fill' | 'dig'
+export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell' | 'fill' | 'dig' | 'fell'
 
 /** A place named without coordinates; resolved once and cached in the quest state (`anchors`). */
 export type Anchor =
@@ -39,6 +39,13 @@ export type Anchor =
   | { k: 'wild'; bearing: 'north' | 'south' | 'east' | 'west' | 'forestEdge'; m: number }
   /** An anchor stored earlier by a counter (`match.save`), e.g. a building the player built. */
   | { k: 'saved'; id: string }
+  /**
+   * The boundary tree between the home settlement and {V} (quests--003 G05): the largest broadleaf tree near the middle of the
+   * road between them (`id` = its node id), resolved once.
+   */
+  | { k: 'boundary' }
+  /** A point `dx`, `dz` metres from another anchor (resolved once). */
+  | { k: 'offset'; of: Anchor; dx: number; dz: number }
 
 export type Source =
   | 'player'
@@ -138,6 +145,8 @@ export type Effect =
   /** Makes a cast animal flee from the player for `minutes` of gameplay time. */
   | { k: 'scare'; slot: SlotId; minutes: number }
   | { k: 'despawn'; slot: SlotId }
+  /** A tree anchor is felled by an NPC (no player action): the node is gone; `logs` come from the tree's yield into a cast store. */
+  | { k: 'fell'; anchor: Anchor; logs?: { to: SlotId; qty: number } }
   | { k: 'owner'; anchor: Anchor; to: SlotId }
   /** Posts a warning listing the other timed quests that are active (parallel-timer notice, quests--003 E7). */
   | { k: 'timedWarn' }

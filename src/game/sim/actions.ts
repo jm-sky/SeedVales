@@ -93,6 +93,7 @@ export function fellTree(sim: Sim, h: Human, n: ResNode, efficiency = 1): Action
   train(h, 'woodcutting', 0.5, 3)
   sim.markNodeChunk(n.id)
   sim.emit({ type: 'sound', kind: 'treefall', x: n.x, z: n.z })
+  if (h === sim.player) questEvent(sim, { k: 'fell', nodeId: n.id, x: n.x, z: n.z })
   return ok(`You felled the tree: +${logs} ${logs === 1 ? 'log' : 'logs'} and some branches.`)
 }
 

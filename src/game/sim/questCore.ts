@@ -6,6 +6,7 @@
  * @domain quests
  */
 import type { Anchor, CastSpec, Cond, Effect, FlagValue, QuestDef, QuestPlace, SlotId, Source } from '../data/quests/types'
+import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
 import type { Actor, Animal, AuthoredQuestState, Building, Human, Inventory } from './types'
 import { START_CALENDAR_S } from '../config/calibration'
@@ -192,6 +193,51 @@ function roadPoint(sim: Sim, m: number): { x: number; z: number } | null {
   return null
 }
 
+/**
+ * The boundary tree (G05): the largest broadleaf tree within reach of the middle of the road between the home settlement and
+ * {V} (else the middle of the straight line, without a node). Deterministic for the world, resolved once per quest.
+ */
+function boundaryTree(sim: Sim): { x: number; z: number; id?: string } | null {
+  const home = homeId(sim)
+  const v = neighbourId(sim)
+  const hs = sim.world.settlements[home]
+  const vs = sim.world.settlements[v]
+  if (!hs || !vs || v < 0) return null
+  let mx = (hs.x + vs.x) / 2
+  let mz = (hs.z + vs.z) / 2
+  const road = sim.world.roads.find((r) => (r.from === home && r.to === v) || (r.from === v && r.to === home))
+  if (road && road.points.length > 1) {
+    let total = 0
+    for (let i = 1; i < road.points.length; i++) total += Math.hypot(road.points[i]!.x - road.points[i - 1]!.x, road.points[i]!.z - road.points[i - 1]!.z)
+    let acc = 0
+    for (let i = 1; i < road.points.length; i++) {
+      const p = road.points[i - 1]!
+      const q = road.points[i]!
+      const len = Math.hypot(q.x - p.x, q.z - p.z)
+      if (acc + len >= total / 2) {
+        const t = (total / 2 - acc) / (len || 1)
+        mx = p.x + (q.x - p.x) * t
+        mz = p.z + (q.z - p.z) * t
+        break
+      }
+      acc += len
+    }
+  }
+  const found: ResNode[] = []
+  for (const radius of [90, 200, 400]) {
+    found.length = 0
+    sim.nodes.query(mx, mz, radius, found)
+    const trees = found.filter((n) => n.kind === 'tree_broad' && sim.terrain.waterDepthAt(n.x, n.z) < 0.3 && sim.terrain.roadAt(n.x, n.z) === 0)
+    if (trees.length) {
+      // Largest first, nearest to the middle on ties; the id breaks any remaining tie.
+      trees.sort((a, b) => b.scale - a.scale || Math.hypot(a.x - mx, a.z - mz) - Math.hypot(b.x - mx, b.z - mz) || (a.id < b.id ? -1 : 1))
+      const n = trees[0]!
+      return { x: n.x, z: n.z, id: n.id }
+    }
+  }
+  return { x: mx, z: mz }
+}
+
 const isForest = (b: number) => b >= Biome.ForestDeciduous && b <= Biome.ForestConifer
 const BEARING_ANGLE = { north: -Math.PI / 2, south: Math.PI / 2, east: 0, west: Math.PI } as const
 
@@ -265,7 +311,11 @@ export function resolveAnchor(c: QuestCtx, a: Anchor): Resolved | null {
     const b = hs ? nearest(sim.settlementBuildings(sid, a.kind), hs.x, hs.z) : undefined
     if (b) r = { x: b.x, z: b.z, id: b.id }
   } else if (a.k === 'wild') r = wildPoint(sim, a.bearing, a.m)
-  else r = roadPoint(sim, a.m)
+  else if (a.k === 'boundary') r = boundaryTree(sim)
+  else if (a.k === 'offset') {
+    const base = resolveAnchor(c, a.of)
+    if (base) r = { x: base.x + a.dx, z: base.z + a.dz }
+  } else r = roadPoint(sim, a.m)
   if (r) {
     if (c.readOnly) {
       let t = transientAnchors.get(c.st)
@@ -648,6 +698,21 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'end':
       endQuest(c, e.ending)
       break
+    case 'fell': {
+      const pos = resolveAnchor(c, e.anchor)
+      const n = pos?.id ? sim.nodes.byId(pos.id) : undefined
+      if (n && sim.state.nodes[n.id]?.kind !== 'felled') {
+        sim.state.nodes[n.id] = { kind: 'felled', at: sim.state.time.cal }
+        sim.markNodeChunk(n.id)
+        sim.emit({ type: 'sound', kind: 'treefall', x: n.x, z: n.z })
+        const inv = e.logs ? invOf(c, { store: e.logs.to }) : undefined
+        if (inv && e.logs) {
+          addItem(inv, newStack('log', e.logs.qty))
+          logProduce('log', e.logs.qty, `quest:${def.id}:felled_tree`)
+        }
+      }
+      break
+    }
     case 'follow': {
       const a = actorOf(c, e.slot)
       const target = e.target === 'player' ? sim.player : actorOf(c, e.target)
