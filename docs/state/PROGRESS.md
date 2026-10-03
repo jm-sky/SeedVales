@@ -4,19 +4,20 @@
 
 ## Teraz
 
-*Single snapshot of the current state (updated 2026-10-03, session 16, Sonnet). History per session is below; older archive in [progress-log.md](progress-log.md).*
+*Single snapshot of the current state (updated 2026-10-03, session 17, Sonnet → Opus close-out after Sonnet's limit). History per session is below; older archive in [progress-log.md](progress-log.md).*
 
-- **Authority:** the user allowed Sonnet to take decisions the plans assign to Opus (2026-10-03); they are recorded in DECISIONS as "Sonnet default (user-authorised)" (D-CAVE-2 this session).
+- **Authority:** the user allowed Sonnet to take decisions the plans assign to Opus (2026-10-03); they are recorded in DECISIONS as "Sonnet default (user-authorised)".
 - **Rules:** D-LANG-1 — English everywhere; never weaken tests or budgets; commit and push per feature (user, session 16); small targeted vitest runs, the full `pnpm check` / `pnpm e2e:run` only at checkpoints.
-- **Verification (checkpoint 2026-10-03, WSL):** `pnpm check` 616/616 (106 files); `pnpm e2e:run --fast` smoke 5/5 · acceptance 49/49 (new step 20: cave entry/exit with real keys) · mobile 16/16, 0 console errors. `bench:render` cave scenes: prep p95 1.5 / 2.7 ms (PERF.md). Soak not re-run this session.
-- **Formats:** `SAVE_VERSION` 9 (unreleased; optional fields `ActorBase.cave`, `Animal.leash`, `Animal.denId` for quest dens need no bump), `GEN_VERSION` 11 (large caves).
-- **Done this session:** caves — mouth look pass, actor cave layer + spine navigation + cave dwellers + companions underground, large caves, layer-aware torch light budget, bench scenes, e2e step (`world--003` Update); quests — `quests--003` W2 complete: G05 (boundary tree, `fell` event/effect), Q02 (den group with young, leash, burnable quest den, drive-off), Q06 (companion contract from dialog, prepaid order, mark gate). Engine additions: anchors `boundary`/`offset`/`roadSide`, conds `far`/`companion`/`canTravel`, effects `fell`/`drive`/`companion`/`dismiss`, events `fell`/`burn`.
+- **Verification (2026-10-03, WSL):** `pnpm check` 661/661 (111 files) after Q12. e2e not re-run since the session-16 checkpoint (smoke 5/5 · acceptance 49/49 · mobile 16/16); soak not re-run.
+- **Formats:** `SAVE_VERSION` 9 (unreleased), `GEN_VERSION` 12 (`chapel_ruin`, `watch_tower_ruin` landmarks).
+- **Done this session:** `quests--003` **W3 complete** — Q05 (place `T`, landmark anchor, `anchorExists`, `mint` effect, D-QUEST-4), Q13 (nearestTown landmark pick, `harm`, shoring gate, minted vault), Q11 (aftermath rules: phase done, `everyDays`, `max`), Q12 (Pinewatch tower, leashed bear, locker finds, guard/sale/carry endings with the unique Pinewatch Longsword; `{warehouse:'V'|'T'}` source; fix: Willa's armoury pick reachable via its own topic). New landmarks (GEN 12). Review 021 (wave review W1/W2 + armour) triaged and fixed with regression tests (`a3d47f3`); review 022 cave visual review → `world--003` step 9 plan. Render: Quaternius outfit research, women's dress modules (NobleBodice, LongSkirt, Dress, PeasantSkirt) and calf-length skirt for Peasant/Peasant_Boots/Herbalist women.
 - **Active work / next:**
-  - `quests--003` W3 treasure quests (Q05, Q13, Q11, Q12) need the place `T`, landmark anchors, a `mint` (money from outside) effect and, for Q11/Q12, two new landmark kinds (GEN bump); W4 Q10 stays blocked.
-  - Opus `wave-review` + `app-review` of the nine W1/W2 quests and the equipment modules (review IDs: next free in `docs/reviews`).
-  - `render--011` stage 2 items (`padded_jacket`, `leather_jerkin`, `studded_leather`, `chainmail`, `leather_cap`, `leather_trousers`, `bracers`) and the PERF A/B; `render--012` only on the user's art decision.
+  - Re-run the Opus `app-review` of quests + caves (the session-17 run died on the API session limit; no report written).
+  - `quests--003` handoff for W3 (FEATURES QUEST-03 evidence, plan result, acceptance steps for Q05/Q13/Q11/Q12) and a W3 `wave-review`; W4 Q10 stays blocked.
+  - `world--003` step 9 cave visual polish (review 022).
+  - `render--011` stage 2 items and the PERF A/B; `render--012` only on the user's art decision.
   - Other `in_progress` plans unchanged: `review--001`, `proposals--001`, `audio--001`, `world--001`, `settlement--001`, `render--003/004/005`, `diag--002`.
-- **Open issues:** the mouth of a cave on a very steep slope is still angular; tunnels are very dark without a torch (fill light is the knob); terrain/vegetation keep rendering underground; ❓ user items as before (sound licences, phone/device checks, balance of the new cave fauna, smith/mayor prices); e2e Space-key oddity not seen again.
+- **Open issues:** cave mouth on very steep slopes still angular; tunnels very dark without a torch; terrain/vegetation keep rendering underground; ❓ user items as before (sound licences, phone/device checks, balance of the new cave fauna, smith/mayor prices).
 - **Next step:** see `NEXT-SESSION-KICK-OFF-PROMPT.md` §1b.
 
 
