@@ -195,7 +195,7 @@ function bumpCounters(c: QuestCtx, ev: QuestEvent) {
     if (ct.on !== ev.k) continue
     const m = ct.match
     let bid: string | undefined
-    if (ev.k === 'repair' || ev.k === 'light' || ev.k === 'douse' || ev.k === 'built') bid = ev.buildingId
+    if (ev.k === 'repair' || ev.k === 'light' || ev.k === 'douse' || ev.k === 'built' || ev.k === 'fill') bid = ev.buildingId
     const b = sim.building(bid)
     if (m) {
       if (m.kind && (ev.k === 'built' ? ev.kind : b?.kind) !== m.kind) continue
@@ -206,7 +206,8 @@ function bumpCounters(c: QuestCtx, ev: QuestEvent) {
       if (m.byPlayer !== undefined && ev.k === 'repair' && ev.byPlayer !== m.byPlayer) continue
       if (m.near) {
         const at = resolveAnchor(c, m.near.anchor)
-        if (!at || !b || Math.hypot(b.x - at.x, b.z - at.z) > m.near.r) continue
+        const pos = ev.k === 'dig' ? ev : b // a dig is placed by its coordinates, building events by the building
+        if (!at || !pos || Math.hypot(pos.x - at.x, pos.z - at.z) > m.near.r) continue
       }
       if (m.distinct && bid) {
         const seen = (st.seen[ct.id] ??= [])

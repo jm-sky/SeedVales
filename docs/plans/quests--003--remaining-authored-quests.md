@@ -663,3 +663,4 @@ Cast-id conflicts across quests are fine (cast is per quest); the `used` set onl
 - **W2 G02 Rusty Debt done** (`g02.ts`, `questG02.test.ts`; E2 item tags, `tag`/`repairHeld`, `treasuryGte`). Next in W2: Q04, G06, G05, Q08, Q02, Q06.
 - **W2 Q04 The Handle Remembers done** (`q04.ts`, `questQ04.test.ts`; `settlement` anchor `place`). Next in W2: G06, G05, Q08, Q02, Q06.
 - **W2 G06 The Trader's Letter done** (`g06.ts`, `questG06.test.ts`; letter item tags, `Game.breakSeal`, `{treasury:'V'}`). Next in W2: G05, Q08, Q02, Q06.
+- **W2 Q08 The Long Way to Water done in part** (`q08.ts`, `questQ08.test.ts`; events `fill`/`dig`): trough and rota endings; the well plan is open (needs D-QUEST-3). Remaining in W2: G05, Q02, Q06.

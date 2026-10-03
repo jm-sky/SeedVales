@@ -102,3 +102,11 @@ Effect: no building; if the rota breaks, the problem can return (the quest reope
 ## Mechanics
 
 I: well, trough, bucket, building, digging. N: rota, village consent for shared building, livestock route. **Author decision:** are new wells outside the square v1 or `SET-04`.
+
+## Implementation notes
+
+Implemented by `quests--003` W2 as `src/game/data/quests/q08.ts` (test `questQ08.test.ts`) with the `fill` and `dig` quest events (hooks in `fillTrough` and `dig`, player only; `dig` counters match by the dig's coordinates).
+
+- **Cast:** Elspeth (V shepherd), Margaret (V farmer head), Bridget (V guard head); start = {V} visited. `routeWalked` = 3 s at the pasture pen; the trial dig (counter `digs` within 14 m of Margaret's field) is recorded and shown in the journal but does not gate anything because the well option is not offered.
+- **Plans:** *trough* — a `trough` built within 40 m of the pen and three `fill` events (any amount) → wool ×3 from Elspeth's store, 15 c from {V}'s treasury; *rota* — three days after the choice → 10 c. A trough built elsewhere does not count.
+- **Not implemented (decision D-QUEST-3 pending):** the well in the low field (needs a `well` blueprint outside the square and the village consent scene), the road check (Bridget taking down a trough on the road), the livestock route change, drought pause, rota enforcement. Both rewards are paid without those checks.

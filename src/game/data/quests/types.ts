@@ -16,7 +16,7 @@ export type QuestRepDim = 'honesty' | 'helpfulness' | 'renown' | 'courage'
 export type QuestStatusId = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
 /** Settlement a cast NPC or an effect refers to: the home settlement or the nearest other one (quests--003 E1). */
 export type QuestPlace = 'H' | 'V'
-export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell'
+export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell' | 'fill' | 'dig'
 
 /** A place named without coordinates; resolved once and cached in the quest state (`anchors`). */
 export type Anchor =

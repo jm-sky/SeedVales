@@ -55,11 +55,14 @@ export function fillTrough(sim: Sim, h: Human, trough: Building): ActionResult {
   const well = sim.buildingsNear(trough.x, trough.z, 12).find((w) => w.kind === 'well')
   if (well) {
     trough.water = TROUGH_CAPACITY
+    if (h === sim.player) questEvent(sim, { k: 'fill', buildingId: trough.id, amount: TROUGH_CAPACITY })
     return ok('You filled the trough straight from the well.')
   }
   if ((bucket.water ?? 0) <= 0) return fail('The bucket is empty — fetch some water.')
-  trough.water = Math.min(TROUGH_CAPACITY, (trough.water ?? 0) + (bucket.water ?? 0))
+  const poured = bucket.water ?? 0
+  trough.water = Math.min(TROUGH_CAPACITY, (trough.water ?? 0) + poured)
   bucket.water = 0
+  if (h === sim.player) questEvent(sim, { k: 'fill', buildingId: trough.id, amount: poured })
   return ok('You poured water into the trough.')
 }
 
@@ -248,6 +251,7 @@ export function dig(sim: Sim, h: Human, x: number, z: number): ActionResult {
   sim.markTerrain(x, z, 2)
   wearTool(tool, 1)
   train(h, 'construction', 0.2)
+  if (h === sim.player) questEvent(sim, { k: 'dig', x, z })
   const buried = digTreasure(sim, h, x, z)
   if (buried) return ok(buried)
   // Loot rolls.
