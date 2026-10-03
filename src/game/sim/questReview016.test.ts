@@ -154,8 +154,10 @@ describe('review 016 D-QUEST-2: the family ending never overrides an agreed plan
     const branches = countItem(sim.player.inv, 'branch')
     house.durability = 95 // NPC work, the player did nothing
     tickQuests(sim, 3)
-    expect(st).toMatchObject({ status: 'done', ending: 'repair' })
+    expect(st).toMatchObject({ status: 'done', ending: 'repair_npc' })
     expect(totalMoney(sim)).toBe(money)
+    const q = AUTHORED_QUESTS.find((d) => d.id === 'q03')!
+    expect(q.endings.find((e) => e.id === 'repair_npc')!.journal).not.toMatch(/owes you/) // NPC work: no debt to the player
     expect(sim.player.money).toBe(p0)
     expect(countItem(sim.player.inv, 'branch')).toBe(branches)
   })

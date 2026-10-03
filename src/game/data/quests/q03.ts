@@ -250,7 +250,7 @@ export const Q03: QuestDef = {
     { id: 'leanDone', when: [stageGte(3), flag('plan', 'lean_to'), { k: 'counter', id: 'leanTo', gte: 1 }, flagNot('workComplete', true)], effects: [set('workComplete'), message('The small dry room is up. Tell {lucy}.')] },
     // D-QUEST-2: with the plan "replace the beam" the house mended by NPC work alone ends the quest with E1
     // (no thanks payment: the player took no part).
-    { id: 'npcRepair', when: [flag('plan', 'repair'), repaired, flagNot('workComplete', true), { k: 'not', of: contributed }], effects: [{ k: 'end', ending: 'repair' }] },
+    { id: 'npcRepair', when: [flag('plan', 'repair'), repaired, flagNot('workComplete', true), { k: 'not', of: contributed }], effects: [{ k: 'end', ending: 'repair_npc' }] },
     // "The family finished it" applies only while no plan was agreed (D-QUEST-2).
     {
       id: 'family',
@@ -270,6 +270,15 @@ export const Q03: QuestDef = {
         { k: 'if', when: [flag('storeDebt')], then: [{ k: 'give', from: milesStore, to: { warehouse: 'home' }, item: 'log', qty: 2 }] },
         { k: 'if', when: [contributed], then: [{ k: 'give', from: milesStore, to: 'player', item: 'branch', qty: 6 }] },
         { k: 'if', when: [contributed], then: [{ k: 'rep', delta: { helpfulness: 4 }, reason: 'You helped mend a roof' }] },
+      ],
+    },
+    {
+      id: 'repair_npc',
+      journal: 'The old house holds. The beam was replaced without you and {joan} sleeps in {joan:his} own room again; {miles} repaid the common store its two beams from {miles:his} own woodpile.',
+      effects: [
+        opinion('miles', 3),
+        { k: 'consume', from: milesStore, item: 'log', qty: 2 },
+        { k: 'if', when: [flag('storeDebt')], then: [{ k: 'give', from: milesStore, to: { warehouse: 'home' }, item: 'log', qty: 2 }] },
       ],
     },
     {
