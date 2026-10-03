@@ -16,8 +16,9 @@ Add the first useful animal-transport slice without coupling it to wagons:
 
 1. the player can mount and ride a horse;
 2. a donkey or horse can carry cargo in a pack saddle;
-3. owned transport animals persist in saves and can follow/stay;
-4. reuse existing fauna, movement, inventory and follow systems instead of creating a second transport simulation.
+3. owned transport animals persist in saves and can **Follow me / Stay**;
+4. horses keep their normal needs: they may need to leave briefly to drink or eat, then resume following when appropriate;
+5. reuse existing fauna, movement, inventory and follow systems instead of creating a second transport simulation.
 
 Animal-drawn carts are explicitly out of scope and remain a later TRANS-02 plan.
 
@@ -38,6 +39,7 @@ Verified on current main before writing this plan:
 - Pack cargo is real saved inventory. No virtual capacity counters.
 - Pack inventory is accessible only near the animal.
 - Riding v1 is travel only: no mounted melee, archery, block/parry, dodge or jump.
+- **Follow/Stay does not disable needs.** A transport animal still gets hungry/thirsty and may temporarily break follow to satisfy a critical need, then resume following.
 - Riding uses existing collision/slope/water rules; it must not bypass world physics.
 - No wagon dependency and no cart refactor in this plan.
 
@@ -145,17 +147,22 @@ Reuse existing animal-follow steering where possible, but do not reuse questFoll
 
 Behavior:
 
-- owned pack animal exposes Follow me / Stay;
+- owned horse/donkey exposes **Follow me / Stay**;
 - desired trailing distance about 3–5 m;
-- immediate danger/flee behavior has higher priority;
-- ordinary grazing/water can resume while staying;
-- impossible routes must end in a bounded wait/failure state, not endless replanning.
+- immediate danger/flee behavior has highest priority;
+- **critical thirst/hunger has higher priority than follow**: the animal may leave the player to reach nearby water/grazing, then return to Follow mode after the need is satisfied;
+- Stay means "do not travel with the player", not "freeze physiology": the animal may still make short local need trips and return near its stay/home point;
+- do not let a following animal walk away for non-critical idle wandering;
+- impossible routes must end in a bounded wait/failure state, not endless replanning;
+- expose a short status/reason when the animal is not following because it is drinking, grazing, fleeing or blocked.
 
 Tests:
 
 - follows over normal terrain;
-- Stay cancels following;
+- Stay cancels long-distance following;
 - danger interrupts following;
+- critical thirst/hunger temporarily interrupts follow, the animal satisfies the need and resumes;
+- Stay still allows bounded local drinking/grazing and returns near the stay point;
 - blocked terrain does not create an infinite movement loop.
 
 ## Step 4 — mounted locomotion
@@ -304,6 +311,13 @@ Perf:
 - compare actor update cost with one ridden horse and one following pack animal;
 - no full-world scans;
 - transport logic must remain on existing actor/spatial paths.
+
+## Future extensions explicitly left out of v1
+
+- **Lead on rope / halter:** player walks while the horse follows at a short constrained distance;
+- **Tie to a post/tree/ring:** horse stays within a small radius until untied; needs behavior needs a separate decision (water/feed access while tied).
+
+These should build on the same ownership/follow state later; do not pre-build a generic tether system now.
 
 ## Explicit non-goals
 
