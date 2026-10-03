@@ -496,6 +496,16 @@ export interface PlayerExtra {
   knownToxic?: string[]
 }
 
+export interface PriceMod {
+  place: number
+  /** Item id or '*' for every item. */
+  item: string
+  mult: number
+  /** Calendar seconds when the modifier expires. */
+  until: number
+  why: string
+}
+
 export interface MapPin {
   id: number
   x: number
@@ -550,6 +560,8 @@ export interface GameState {
   quests: Quest[]
   /** Authored quests (quests--001), by quest id. */
   authoredQuests: Record<QuestId, AuthoredQuestState>
+  /** Temporary price modifiers per settlement (quests--003 E6). */
+  priceMods?: PriceMod[]
   terrainEdits: Record<string, number[]>
   messages: GameMessage[]
   nextId: number

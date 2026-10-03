@@ -20,6 +20,7 @@ import { makeAnimal, rollVariant } from './newGame'
 import { npcSystem } from './npc/ai'
 import { companionSystem, companionTalk } from './npc/companions'
 import { playerSystem } from './player'
+import { prunePriceMods } from './priceMods'
 import { countByDen, nestTag } from './queries'
 import { authoredQuestSystem } from './questEngine'
 import { questSystem } from './quests'
@@ -158,6 +159,7 @@ export function installSystems(sim: Sim) {
     { name: 'ecology', interval: 5, run: ecology },
     { name: 'dens', interval: 30, run: (s) => dens(s) },
     { name: 'households', interval: 20, run: households },
+    { name: 'priceMods', interval: 600, run: prunePriceMods },
     { name: 'regrow', interval: 60, run: (s) => regrowNodes(s) },
     { name: 'reputation', interval: 5, run: (s) => reputationSystem(s) },
     { name: 'quests', interval: 10, run: (s) => questSystem(s) },
