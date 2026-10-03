@@ -1,47 +1,42 @@
-# Kick-off: next WSL session — tree assets round 2, finish the nature pass, then fire
+# Kick-off: Sonnet session — finish review round 1, user decisions D-USER-1, then the roadmap
 
-*Written 2026-10-02 by session 11 (Opus, WSL, real GPU). The session-11 kick-off is in git history (`7e4578b`).*
+*Written 2026-10-03 by session 13 (Opus, WSL). Previous kick-off: git history.*
 
-You continue work on SeedVales (Vue 3 + TypeScript + Three.js, pnpm). State: v1 complete; waves 1–3, 4s, 4a done; **4n nature pass in progress** (`render--007`): wind, grass (16 thin blades/clump, seasonal height, flower/dark/soil patches shared with the ground, height classes), trees (offline LOD0/LOD1 from `trees.glb` + offline impostor atlas, dithered bands), water shader first pass. `GEN_VERSION` 9, `SAVE_VERSION` 8. A parallel Windows/Blender session works on **tree assets round 2** (tight-cut LOD1 leaf cards, lighter pine LOD1, optional normal atlas — `docs/design/render-tree-assets-contract.md` "Round 2 requests").
+You continue SeedVales (Vue 3 + TS + Three.js, pnpm). You are **Sonnet**: you implement; decisions that are Opus work (architecture, keep/drop, reviews) are either already made in `docs/design/DECISIONS.md` or you record a short proposal and continue with the safe default. Work autonomously, no questions to the user; disputed points go to DECISIONS. **English everywhere (D-LANG-1).** `SAVE_VERSION` 9 (unreleased — new saved fields this cycle need no extra bump), `GEN_VERSION` 9.
 
-**Language: English everywhere (D-LANG-1).** No save migrations before the first release (D-SAVE-7).
+## 0. Rules (from CLAUDE.md, non-negotiable)
 
-## 0. Environment notes (WSL)
+- Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz"), `git log --oneline | head -30` first.
+- Never weaken tests, criteria, thresholds, budgets or baselines; "flaky" is not a diagnosis (find the cause — acceptance 8b had one unexplained failure in an agent run on 2026-10-03; if it recurs, trace it).
+- After every step: skill `verify` (`pnpm check`, `pnpm e2e:run > log; echo $?` — check the exit code). Before every commit: skill `handoff` (FEATURES, plan result, PROGRESS, DECISIONS). Commits with the attribution lines from the system reminder. **No push without the user's consent.**
+- Subagents only with `isolation: "worktree"`, and forbid `git checkout/switch/reset/stash`; commit what they need first. **The user sometimes runs `git pull --rebase` on main** — after that, merge agent work by cherry-picking the agent's own commits (merging an old-hash branch conflicts everywhere). Worktree vitest: the default config excludes `.claude/**` — agents must use a temp config and never commit it.
+- `pnpm soak` judges timing only on a quiet machine (D-VERIFY-1): don't run soak/bench in parallel with e2e or other agents.
+- GPU benchmarks (`SV_GPU=1`) only one per command, result straight to a file under `test-results/` (WSL crashes).
 
-- Real GPU: `SV_GPU=1` for `bench:render`, `ab.mjs`, `tour.mjs` (Arc 140V via Mesa d3d12). Committed baselines are SwiftShader (D-PERF-5) — do not mix.
-- **WSL GPU stability investigation:** see `docs/state/PERF.md` "WSL GPU path stability" (repro protocol, monitors, recommended `.wslconfig`). GPU mode is now frame-capped by default (`SV_GPU_UNCAPPED=1` = old behaviour). Do not start GPU loops without the monitors and the user's go-ahead.
-- **The `SV_GPU=1` path crashed WSL three times in session 11, each during a long GPU bench loop.** Run GPU benches one per command (`timeout 600 node scripts/bench/render-bench.mjs …`), append each result to a file under `test-results/` immediately, and never chain several GPU runs in one command or in the background. Software-rendering runs (default) never crashed.
-- **GPU numbers on this laptop vary ±50 % run to run** (and another workload on the machine makes them meaningless — check `uptime` first). Quote only **alternating pairs** (A, B, A, B, A, B → medians), never single runs. Bench helpers: `SV_SCENES=dense-forest` (march/teleport always run), `SV_VISUAL='{"treeAssets":false}' SV_VISUAL_TAG=kit` for the kit-tree A/B. Visual flags: `grass`, `impostors`, `treeAssets` (`render/visualFlags.ts`).
-- World cache (new): tests and e2e reuse generated worlds from `node_modules/.cache/seedvales/` (CLAUDE.md "Commands"); `SV_WORLD_CACHE=0` disables it.
-- Check exit codes: never chain `grep` after a test run with `&&` to decide a commit (a failing e2e was pushed once that way) — use `pnpm e2e:run > log; echo $?`.
+## 1. Finish review--001 round 1
 
-## 1. Start
+1. **UI batch of app review 016 (interrupted by a rate limit):** branch `worktree-agent-a50398712de203e8d` (worktree `.claude/worktrees/agent-a50398712de203e8d`), WIP commit `8b4c067`, **unverified**. Findings #3, #7, #8, #10, #11, #12, #13, #14, #15, #16 — read `docs/reviews/2026-10-03--016--app-review-round-1.md` (findings + Triage table, binding). Review the WIP diff (`git show 8b4c067`), finish what is missing (failing-first tests named with FEATURES IDs; `node scripts/e2e/review-run.mjs ui` small-button hits on mobile → 0, report before/after), verify, then cherry-pick onto main (or redo cleanly on main if the WIP is poor), fill the Fix-commit column, remove the worktree + branch.
+2. Small leftover: Q03 E1 journal still says Miles "owes you a load of firewood" when NPCs did the repair — make the text depend on `myRepairs`/beams (adjust the pinned test to the new rule, don't delete it).
+3. On main, quiet machine: `pnpm check`, `pnpm e2e:run`, **`pnpm soak --days=10 --seeds=1337,7,42,3,11,99`** (all 0 violations), `pnpm bench:sim` (no baseline update; earlier runs were under load — record numbers in PERF.md).
+4. **Round 2** (review--001 §5): app review + code review only of the fix range since round 1 (`git log` from `2b52d64`), via skills `wave-review` (code) and `app-review` (Opus reviewers in worktrees). Triage, fix, at most round 3; what remains → ❓ user in PROGRESS. Then mark `quests--001`, `verify--001` and `review--001` step 4 done (handoff).
 
-1. Read `CLAUDE.md`, `docs/state/PROGRESS.md` ("Teraz", "Session 11"), `docs/plans/render--007--nature-pass.md` ("Result": Session 11, Session 12, Session 11 continued, and Session 14 if the Blender session wrote it), `docs/design/DECISIONS.md` (D-REN-14/15/16, D-TOOLS-1), `docs/state/PERF.md` (WSL session 11 sections), `docs/research/2026-10-02--003--threejs-graphics-techniques-and-optimization.md` (execution order §16).
-2. `git pull`; a new review on main is triaged first (skill `wave-review` §3) — **the session-11 ultrareview (`docs/reviews/2026-10-02--011--session-11-ultrareview.md`, if committed) is task one.**
-3. `pnpm install --frozen-lockfile`; `pnpm check` (237), `pnpm e2e:run` (3/3 · 32/32 · 11/11, 0 console errors). Red = task one.
+## 2. User decisions D-USER-1 (2026-10-03) — implement
 
-## 2. Work order
+1. **Names:** NPC surnames suggest the profession (check `SURNAMES` in `data/professions.ts` covers every profession with fitting names); **the home settlement's first guard is always "Mark Hornblower"** (`createNewGame`, new games only, no GEN bump). Test.
+2. **Quest icons above NPC heads:** `!` offered, `?` NPC has the next step/hand-in, ✔ stage completed with this NPC — authored and board quests, near the player only, hidden in unexplored cells (MAP-01). Read state via `Game` (e.g. `game.questMarkersFor(npcId)`), render as a sprite/HTML overlay consistent with the name labels. e2e assertion.
+3. **NPC name labels:** check what our version shows now; target: name + surname only when close (fades with distance), like the previous app; keep fog (D-USER-1 d).
+4. **Sounds:** start `audio--001` (`docs/plans/audio--001--recorded-sounds-and-voices.md`) — use `public/sounds/`; add the release gate item "complete credits/licence list" to the plan and PROGRESS ❓.
 
-1. ~~Tree assets round 2~~ **done in session 11** (high ring 200 m, normal atlas used; PERF.md). Remaining tree item: leaf back-light term; a third high GPU pair if the machine allows (two pairs agreed).
-2. **Water:** judge the first pass on the GPU at noon and dusk (`lake-shore`, `river-bank`, `settlement-dusk`); planar reflection on **high only** per plan step 4.2 — implement only if a same-scene A/B shows a clear win and `water-shore` high stays within budget; otherwise record the drop.
-3. **Opus exit review of 4n** (skill `wave-review`) → triage → plan `render--007` done (exit gate in the plan; FEATURES RENDER-05/06/07 stay `implemented_unverified` until the user's look/device check).
-4. **`render--003`:** attribution tool exists (`scripts/bench/draw-attribution.mjs`), actor culling done (high crowded 934 → 363 draws) — **GPU A/B pending** (`SV_VISUAL='{"actorCull":false}'` vs default, crowded/small settlement, one run per command); next by the table: character part/material merge (asset work, Blender session) and the structures shadow pass. Original item: (research 003 §10: per-subsystem draw calls terrain / vegetation / grass / structures / actors / shadow pass) — before any high-only effect. High settlements are 16–29 ms on the laptop.
-5. **`render--001`:** 1a, 1b, 8, 3 and the clouds of 2 done in session 11 (plan "Result"); next: step 2 precipitation (stateless GPU streaks/flakes, shelter test), then 4 CHAR-01 and 5 FAUNA-09; GPU cost of fire/particles (`night-campfires`, `crowded-settlement`) once the WSL GPU path is stable.
-6. If time remains: `world--001` steps 2–3; `diag--002` step 5 (real-input travel); harness: `tour-01-npcs-close` camera inside a house wall.
+## 3. Then the roadmap (`docs/roadmap/v1-closure-and-appendix.md`, "Order update 2026-10-03")
 
-After each item: skill `verify`, skill `handoff` (FEATURES evidence, plan "Result", PROGRESS), commit + push to `main` (pull first — the Blender session pushes to main too; resolve doc conflicts by keeping both sections).
-
-## 3. Rules
-
-Standing rules: `CLAUDE.md` (layering; save/`GEN_VERSION`; fog of war; no weakened tests/budgets/baselines; "flaky" is not a diagnosis — e.g. acceptance 8b/18b were harness bugs found with a trace; subagents only with `isolation: "worktree"`; `pnpm e2e:run`). Do not end a turn with a plan or a "shall I continue?" question. Background commands: set `timeout` explicitly; never run benches in parallel with each other or with e2e.
+`render--009` step 3 (stockpiles WSL verification — CLAUDE.md handoff note; Opus decision on the 4 k tri budget: keep if `crowded-settlement` A/B is within noise, else reduce detail in the generator) → wave 5 (`world--001` steps 2–3 LOOT-01, `settlement--001`) with wave 5a `audio--001` alongside → wave 5c combat (`combat--001` → `002` → `004` → `003`; each plan's "Decisions for Opus": take the plan's recommended option, record it in DECISIONS, continue) → wave 6 → `proposals--001` → `docs/roadmap/later-vision-backlog.md` L1–L7 (D-PLAN-9).
 
 ## 4. End of session
 
-Skill `verify`, skill `handoff`; PROGRESS up to date (numbers, tuned values, Opus keep/drop notes, ❓ user items); commit + push to `main`; short report. Write the next kick-off here.
+Skill `verify`, skill `handoff`; PROGRESS "Teraz" with numbers and the next step; rewrite this kick-off; short report to the user (done / verified with numbers / open).
 
 ---
 
-**Start message (paste):**
+**Start message (paste into the Sonnet session):**
 
-> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it. Start by verifying the state (pull main; a new review on main is triaged first), then work through §2 in order. Don't stop at a plan or a question about continuing. Finish with the next kick-off, then commit and push to `main`.
+> Read `NEXT-SESSION-KICK-OFF-PROMPT.md` in the repo root and execute it autonomously: §1 (finish review round 1: the interrupted UI batch of review 016, full soak, round 2), §2 (user decisions D-USER-1: profession surnames + Mark Hornblower, quest icons above NPCs, close-range name labels, start audio--001), then §3 in order. Verify after every step, handoff before every commit, no push without my consent. Don't stop at a plan or a question; finish with the next kick-off and a short report.

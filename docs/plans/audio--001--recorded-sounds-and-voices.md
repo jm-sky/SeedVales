@@ -14,6 +14,9 @@ Source (user, 2026-10-02): sounds and voices from the previous SeedVale app were
 
 ## Licence gate (blocking for release, not for development)
 
+**User, 2026-10-03 (D-USER-1 c):** use the sounds now; they were free, but no official release without a complete credits/licence list.
+
+
 The commit says "temp without credits". Every file needs a source + licence line in `docs/assets/README.md` / `public/assets/CREDITS-CC-BY.txt` before a release build; files without a known licence are replaced or removed then. ❓ user: sources/licences of the old app's sounds (the `alt-mayra` footsteps and Fish Audio voices especially). Until then the plan proceeds; the release checklist gets an item.
 
 ## Design
