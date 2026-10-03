@@ -11,6 +11,7 @@ import type { Actor, Animal, AuthoredQuestState, Building, Human, Inventory } fr
 import { START_CALENDAR_S } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { itemDef } from '../data/items'
+import { AUTHORED_QUESTS } from '../data/quests'
 import { giveOrDrop } from './actions'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { addItem, consumeItem, countItem, findFood, newStack, removeItem } from './inventory'
@@ -668,6 +669,11 @@ function applyEffect(c: QuestCtx, e: Effect) {
         st.stageAt = sim.state.time.cal
       }
       break
+    case 'timedWarn': {
+      const others = AUTHORED_QUESTS.filter((d) => d.id !== def.id && d.deadlineHours !== undefined && sim.state.authoredQuests[d.id]?.status === 'active')
+      if (others.length) sim.message(`You already have a deadline running: ${others.map((d) => d.title).join(', ')}.`, 'bad')
+      break
+    }
     case 'torch': {
       const pos = resolveAnchor(c, e.anchor)
       const b = sim.building(pos?.id)

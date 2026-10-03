@@ -112,6 +112,8 @@ export type Effect =
   | { k: 'spawn'; slot: SlotId }
   | { k: 'despawn'; slot: SlotId }
   | { k: 'owner'; anchor: Anchor; to: SlotId }
+  /** Posts a warning listing the other timed quests that are active (parallel-timer notice, quests--003 E7). */
+  | { k: 'timedWarn' }
   | { k: 'if'; when: Cond[]; then: Effect[]; else?: Effect[] }
 
 export interface SpawnSpec {
@@ -257,6 +259,8 @@ export interface QuestDef {
   counters: Counter[]
   rules: Rule[]
   endings: Ending[]
+  /** Hours after acceptance shown in the journal as "Time left" (the rules decide what happens when it runs out). */
+  deadlineHours?: number
   lapse?: { journal: string; effects: Effect[] }
   /** Journal text of the `choice` outcome ("Decision: …"), per choice value. */
   choiceLabels?: Record<string, string>

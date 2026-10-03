@@ -141,7 +141,19 @@ function journalText(def: QuestDef, st: AuthoredQuestState, c: QuestCtx): string
   const stage = def.stages[Math.min(st.stage, def.stages.length - 1)]
   if (!stage) return ''
   const done = (stage.progress ?? []).filter((p) => allOf(c, p.when)).map((p) => p.text)
+  const left = timeLeftText(def, st, c)
+  if (left) done.push(left)
   return done.length ? `${stage.journal} ${done.join(' ')}` : stage.journal
+}
+
+/** E7: "Time left: 1 day 6 h." for an accepted, timed quest (read-only, from the calendar). */
+export function timeLeftText(def: QuestDef, st: AuthoredQuestState, c: QuestCtx): string {
+  if (def.deadlineHours === undefined || st.startedAt === undefined || st.status !== 'active') return ''
+  const hours = def.deadlineHours - (c.sim.state.time.cal - st.startedAt) / 3600
+  if (hours <= 0) return 'The time is up.'
+  const d = Math.floor(hours / 24)
+  const h = Math.ceil(hours - d * 24)
+  return `Time left: ${d > 0 ? `${d} ${d === 1 ? 'day' : 'days'} ` : ''}${h} h.`
 }
 
 /** Map markers of active quests, only in explored cells (MAP-01). */

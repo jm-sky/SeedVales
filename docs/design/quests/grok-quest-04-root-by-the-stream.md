@@ -132,3 +132,13 @@ On `done`: `q04.status=done`, `q04.active=false`. On fail: `q04.active=false`.
 | Required | Calendar timer; checklist of handed-over items; hemlock look-alike in gathering |
 | Stub | Toby's sickness as a presentation state |
 | Out of scope | Full disease simulation for this child |
+
+## Implementation notes
+
+Implemented by `quests--003` W1 as `src/game/data/quests/g04.ts` (test `questG04.test.ts`). New engine pieces: `QuestDef.deadlineHours` (journal "Time left: …", E7) and the `timedWarn` effect (lists other running timed quests).
+
+- **Herbs:** hand-over needs yarrow ×2, mint ×2 and chamomile ×1 in the pack (consumed at delivery; logged sink `quest:g04`). Sources are the existing world herb nodes and trade — **no quest-minted herbs**.
+- **Look-alike (stub):** herb nodes are already labelled in the world ("Herb: Hemlock"), so no hemlock is rolled at gather time and the "hemlock caught" branch is not implemented; Dora's briefing only warns. With P-02 a poisonous herb becomes "known toxic" after one mistake.
+- **Timer:** 48 h from acceptance. On time pays 30 c (20 after the 10 c advance) from Dora's purse (partial if short); late 15 c (5 after the advance). After the deadline "I couldn't get it all" ends `failed` (opinion −10); five days after acceptance it ends `failed` by itself. An unaccepted offer lapses after 72 h. The salve/bandage alternative rewards are not implemented.
+- **Molly's mint / Stephen's chamomile:** not implemented (their stores do not hold those herbs); the herbs come from nodes or the herbalist trade.
+- **Toby:** optional cast (only when Dora's household has a child); his story topic appears after a successful delivery.
