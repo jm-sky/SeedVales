@@ -1,6 +1,6 @@
 # Carrion phase and spoiled-food effects
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** opus — phase timings and what spoiled meat looks like in the UI; sonnet — implementation and tests  
 **Domain:** render  
 **Sub domains:** effects, fauna, food, stockpiles, ui  
@@ -41,3 +41,7 @@ User, 2026-10-03: animal corpses that lie for a long time should go through a **
 ## Rules
 
 Render-only; no new saved state; layering as `render--009`; performance budget as the stockpile yards (≤ a few draw calls, `render.prep` within noise); never weaken a baseline.
+
+## Result so far (2026-10-03, session 14, Sonnet)
+
+Steps 1–3 done with Sonnet defaults (phase timings: fresh < 6 h, **carrion 6–30 h**, bones 30–48 h, removed at 48 h; `FOOD.corpseCarrionEndH`): `sim/corpses.ts` `corpsePhase` (derived, not saved), `render/carrionFx.ts` (≤ 6 carcasses within 45 m medium / 70 m high, 8 green motes + 3 flies each, none on `low`), green haze overlay on carrion corpses, bones = the carcass shrunk to 0.45; `ab.mjs` frame `carrion` (frames.mjs) viewed — motes read clearly; tests `corpses.test.ts`, `carrionFx.test.ts`; `ItemRow` shows **rotten** for spoiled food. **Not done:** step 4 spoiled food over warehouse stockpiles and the following fly wisp near the player, a dedicated bone-pile model (placeholder shrink), flies audio loop, `bench:render` A/B for the effect (≤ 66 points, expected negligible), the dark haze is subtle on the box placeholders (look ❓ user).

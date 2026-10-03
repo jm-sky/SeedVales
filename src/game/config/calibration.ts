@@ -313,6 +313,8 @@ export const FOOD = {
   /** Container storage slows spoilage by this factor. */
   chestSpoilFactor: 0.5,
   corpseRotH: 6,
+  /** Carrion (rotting, flies) lasts until this age (h); then only bones remain until `corpseBonesAfterH`. */
+  corpseCarrionEndH: 30,
   corpseBonesAfterH: 48,
 }
 

@@ -54,6 +54,17 @@ export const FRAMES = [
     sv.game.renderer.rig.distance = 9
     sv.game.renderer.rig.pitch = 0.3
   }],
+  ['carrion', (sv) => {
+    const sim = sv.game.sim
+    const p = sim.player
+    sv.setHour(12)
+    Object.assign(sim.state.weather, { kind: 'clear', fog: 0.05, until: sim.state.time.cal + 86400 })
+    for (const [i, hours] of [[0, 2], [1, 12], [2, 36]]) {
+      sim.addCorpse({ id: sim.nextId(), species: 'deer', variant: 'adult', x: p.x + 3 + i * 2.5, z: p.z + 5, rot: i, diedAt: sim.state.time.cal - hours * 3600, butchered: false, meat: 3 })
+    }
+    sv.face(p.x + 6, p.z + 5)
+    sv.game.renderer.rig.distance = 7
+  }],
   ['overcast', (sv) => { sv.setHour(13); Object.assign(sv.game.sim.state.weather, { kind: 'overcast', fog: 0.15, until: sv.game.sim.state.time.cal + 86400 }) }],
   ['meadow-hills', (sv) => {
     const sim = sv.game.sim

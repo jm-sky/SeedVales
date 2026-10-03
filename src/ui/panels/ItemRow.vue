@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { SPOILED_FRAC } from '@/game/config/calibration'
 import { itemDef } from '@/game/data/items'
 import { stackLabel } from '@/game/sim/inventory'
 import type { ItemStack } from '@/game/sim/types'
@@ -9,7 +10,7 @@ const info = computed(() => {
   const d = itemDef(props.stack.id)
   const parts: string[] = [`${(d.weight * props.stack.qty).toFixed(1)} kg`, d.size]
   if (props.stack.dur !== undefined && d.durability) parts.push(`${Math.round((props.stack.dur / d.durability) * 100)}%`)
-  if (props.stack.fresh !== undefined && d.food) parts.push(props.stack.fresh < d.food.spoilH * 0.2 ? 'spoiling' : `fresh ${Math.round(props.stack.fresh)}h`)
+  if (props.stack.fresh !== undefined && d.food) parts.push(props.stack.fresh < d.food.spoilH * SPOILED_FRAC ? 'rotten' : props.stack.fresh < d.food.spoilH * 0.2 ? 'spoiling' : `fresh ${Math.round(props.stack.fresh)}h`)
   if (props.stack.water !== undefined) parts.push(`water ${props.stack.water}/${d.waterCapacity}`)
   return parts.join(' · ')
 })

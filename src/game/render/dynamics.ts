@@ -10,9 +10,11 @@ import type { Sim } from '../sim/sim'
 import { itemDef } from '../data/items'
 import { perf } from '../diag/perf'
 import { groundHeight } from '../sim/collision'
+import { corpsePhase } from '../sim/corpses'
 import { daylight } from '../sim/time'
 import { Actors } from './actors'
 import { sharedColorMat } from './assets'
+import { CarrionFx, type CarrionSpot } from './carrionFx'
 import { TraceDecals } from './decals'
 import { FireParticles } from './fireParticles'
 import { collectFires, FIRE_LOOK, type FireEmitter, type FireKind, flicker, LIGHT_POOL, PLANTED_TORCH_H, selectLights } from './fireSources'
@@ -49,6 +51,11 @@ export class Dynamics {
   private particles: FireParticles
   private decals: TraceDecals
   private corpses = new Map<number, THREE.Object3D>()
+  private carrion = new CarrionFx()
+  private carrionSpots: CarrionSpot[] = []
+  /** Shared haze (carrion) and bone-pile materials/geometry for corpse overlays. */
+  private static hazeMat = new THREE.MeshBasicMaterial({ color: 0x3f5a1f, transparent: true, opacity: 0.35, depthWrite: false })
+  private static hazeGeo = new THREE.SphereGeometry(0.7, 8, 6).scale(1.2, 0.45, 0.8)
   private precip: Precipitation
   private profile: QualityProfile
   private sim: Sim
@@ -82,6 +89,7 @@ export class Dynamics {
     this.group.add(this.particles.group)
     this.decals = new TraceDecals(sim)
     this.group.add(this.decals.group)
+    this.group.add(this.carrion.group)
     this.setQuality(profile)
     this.precip = new Precipitation()
     this.group.add(this.precip.group)
@@ -207,6 +215,7 @@ export class Dynamics {
     // Corpses in range.
     const seen = this.seen
     seen.clear()
+    this.carrionSpots.length = 0
     for (const c of sim.corpsesNear(p.x, p.z, 200)) {
       seen.add(c.id)
       let o = this.corpses.get(c.id)
@@ -218,7 +227,22 @@ export class Dynamics {
         this.corpses.set(c.id, o)
       }
       o.scale.setScalar(c.butchered ? 0.6 : 1)
+      // Phase look (render--010): a green haze over carrion, flies via CarrionFx, a flattened pale pile for bones.
+      const phase = corpsePhase(c, sim.state.time.cal)
+      if (o.userData.phase !== phase) {
+        o.userData.phase = phase
+        o.getObjectByName('haze')?.removeFromParent()
+        if (phase === 'carrion' && this.profile !== 'low') {
+          const h = new THREE.Mesh(Dynamics.hazeGeo, Dynamics.hazeMat)
+          h.name = 'haze'
+          h.position.y = 0.1
+          o.add(h)
+        }
+        if (phase === 'bones') o.scale.setScalar(0.45)
+      }
+      if (phase === 'carrion') this.carrionSpots.push({ x: c.x, y: o.position.y, z: c.z, id: c.id })
     }
+    this.carrion.update(this.t, this.carrionSpots, p.x, p.z, this.profile)
     for (const [id, o] of this.corpses) {
       if (!seen.has(id)) {
         this.group.remove(o)
