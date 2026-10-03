@@ -19,6 +19,6 @@ Sources: [recon 013](../reviews/2026-10-02--013--full-repository-recon.md) G-03 
 | 1 | Rumours: NPC dialog reveals an approximate map region (settlement direction/distance, dangerous animal area, ore, landmark, merchant, shortage); stored as "known by rumour" (saved), confirmed by visiting; map shows a region, autopilot only to visited places (feeds `ui--002` step 5) | opus design → sonnet |
 | 2 | Reward bundles for authored and board quests: items from a named store, recipe/knowledge unlocks, map reveal (rumour), service/discount — every item from a named source (D-ECON-1) | sonnet |
 | 3 | Wolf trouble resolved without kills: the pack stays outside the threat radius for N hours after being scared/baited away (G-07); bonus for non-lethal | sonnet |
-| 4 | Quest batch 2 in H/V: G05, G07, G08, Q02, Q06, then Q01 (needs FAUNA-09 white hare) — one test per ending, one acceptance step each | sonnet, acceptance read by opus |
-| 5 | Treasure quests Q05, Q11–Q13 after `world--001` LOOT-01; Q10 gold mine after the miner (NPC-06 slice, `economy--002`) | later |
+| 4 | Quest batch 2 in H/V: G05, G07, G08, Q02, Q06, then Q01 (needs FAUNA-09 white hare) — **moved to [quests--003](quests--003--remaining-authored-quests.md)** (all 17 remaining quests, waves W1–W2) | sonnet, acceptance read by opus |
+| 5 | Treasure quests Q05, Q11–Q13; Q10 gold mine — **moved to [quests--003](quests--003--remaining-authored-quests.md)** (W3, W4) | later |
 | 6 | Soak with all quests offered and their hold paths accepted (bounded holds, review 014 #1) — NPC-life invariants hold | — |
