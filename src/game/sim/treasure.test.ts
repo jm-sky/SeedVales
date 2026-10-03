@@ -112,3 +112,35 @@ describe('review 019 #8 treasure spots are diggable', () => {
     }
   })
 })
+
+describe('QUAL-02a rare Damascus / obsidian items', () => {
+  it('QUAL-02a: they exist as ready weapons, are expensive, appear as high-richness treasure and in a few merchants\' stock', async () => {
+    const { itemDef } = await import('../data/items')
+    for (const id of ['obsidian_dagger', 'obsidian_knife', 'damascus_dagger', 'damascus_sword']) {
+      expect(itemDef(id).weapon, id).toBeDefined()
+      expect(itemDef(id).price, id).toBeGreaterThanOrEqual(250)
+    }
+    const rich = new Set<string>()
+    for (let i = 0; i < 3000; i++) {
+      const c = rollTreasure(new Rng(i), 2, true)
+      if ('stack' in c) rich.add(c.stack.id)
+    }
+    for (const id of ['obsidian_dagger', 'obsidian_knife', 'damascus_dagger', 'damascus_sword']) expect(rich.has(id), id).toBe(true)
+    const RARE = ['obsidian_dagger', 'obsidian_knife', 'damascus_dagger', 'damascus_sword']
+    let holders = 0
+    let smiths = 0
+    for (const seed of [1337, 7, 42]) {
+      const sim = testSim(seed)
+      for (const b of sim.state.buildings) {
+        if (b.kind !== 'house' || b.householdId === undefined) continue
+        const prof = sim.state.households[b.householdId]?.profession
+        if (prof === 'blacksmith' || prof === 'trader') {
+          smiths++
+          if (b.inv!.items.some((s) => RARE.includes(s.id))) holders++
+        }
+      }
+    }
+    expect(smiths).toBeGreaterThan(0)
+    expect(holders).toBeLessThan(smiths) // only some merchants
+  })
+})

@@ -10,6 +10,7 @@ import { FIRE, START_CALENDAR_S, TREASURY_START } from '../config/calibration'
 import { hashString, Rng } from '../core/rng'
 import { HOUSEHOLD_RESERVE_SHARE, HOUSEHOLD_RESERVES, INN_PANTRY } from '../data/innMeals'
 import { HOUSEHOLD_PANTRY, PLAYER_START_ITEMS, PLAYER_START_WEAPON, WAREHOUSE_START } from '../data/itemSources'
+import { RARE_STOCK } from '../data/loot'
 import { NAMES, PROFESSIONS, SURNAMES } from '../data/professions'
 import { emptySkills } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
@@ -136,6 +137,11 @@ export function createNewGame(world: WorldData): GameState {
       }
       for (const st of prof.store) addItem(house.inv!, newStack(st.item, st.qty))
       for (const [it, q] of HOUSEHOLD_PANTRY) addItem(house.inv!, newStack(it, q))
+      // Rare special weapon (QUAL-02a): only some blacksmiths/traders, one piece, high quality; deterministic by own hash.
+      const rareShare = RARE_STOCK.share[gh.profession]
+      if (rareShare && hashString(`${world.seed}:rare:${hid}`) % 1000 < rareShare * 1000) {
+        addItem(house.inv!, newStack(RARE_STOCK.items[hashString(`${world.seed}:rare-item:${hid}`) % RARE_STOCK.items.length]!, 1, { q: 3 }))
+      }
       // Emergency preserves: only some households, deterministic from seed + household id (own hash, the sim RNG stream is untouched).
       if (hashString(`${world.seed}:reserve:${hid}`) % 100 < HOUSEHOLD_RESERVE_SHARE * 100) {
         for (const [it, q] of HOUSEHOLD_RESERVES[gh.profession] ?? []) addItem(house.inv!, newStack(it, q))

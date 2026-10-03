@@ -4,14 +4,14 @@
 **Model:** opus — architecture/recon and keep/drop decisions; sonnet — generator, terrain/render, sim integration, tests  
 **Domain:** world  
 **Sub domains:** world-gen, terrain, navigation, collision, perception, combat, save, render, loot, fauna  
-**Roadmap:** later / WORLD-05; feeds cave loot in [world--001](world--001--landmarks-and-treasure.md); movement/grounding dependency: [combat--004](combat--004--jump-and-airborne-movement.md)  
+**Roadmap:** wave 5e (moved earlier 2026-10-03, D-PLAN-10) / WORLD-05; feeds cave loot in [world--001](world--001--landmarks-and-treasure.md); movement/grounding dependency: [combat--004](combat--004--jump-and-airborne-movement.md)  
 **Created:** 2026-10-02  
 **Finished:** —
 
 ---
 
 Source: [VISION.md](../VISION.md) §6.1 and user design clarification 2026-10-02.  
-FEATURES: `WORLD-05` (currently `later/deferred`).
+FEATURES: `WORLD-05` (now `v2/planned`, wave 5e). Dependencies satisfied: `combat--004` (grounding/jump), `world--001` (landmarks + treasure, cave loot builds on it).
 
 ## Goal
 

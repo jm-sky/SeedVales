@@ -21,7 +21,16 @@ export const TREASURE_TABLE: readonly TreasureEntry[] = [
   { item: 'diamond', qty: [1, 1], weight: 5, minRichness: 1 },
   { item: 'obsidian_dagger', qty: [1, 1], weight: 6, minRichness: 1, q: 3 },
   { item: 'damascus_dagger', qty: [1, 1], weight: 3, minRichness: 2, q: 3 },
+  { item: 'obsidian_knife', qty: [1, 1], weight: 4, minRichness: 1, q: 3 },
+  { item: 'damascus_sword', qty: [1, 1], weight: 1.5, minRichness: 2, q: 3 },
 ]
+
+/** Rare special weapons also appear, very rarely, in the stock of selected blacksmiths and traders (QUAL-02a; expensive, one piece, deterministic by seed + household id). */
+export const RARE_STOCK = {
+  /** Share of blacksmith / trader households that carry one rare piece. */
+  share: { blacksmith: 0.3, trader: 0.12 } as Record<string, number>,
+  items: ['obsidian_dagger', 'obsidian_knife', 'damascus_dagger', 'damascus_sword'] as readonly string[],
+}
 
 /** Copper coins in a purse: the other half of the loot weight. */
 export const TREASURE_COINS = { weight: 40, min: 15, max: 90, richnessMul: [1, 1.8, 3] as const }

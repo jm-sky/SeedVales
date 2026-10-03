@@ -20,7 +20,7 @@ Review round 1 + 2, D-USER-1, audio steps 1–5, render--009, LOOT-01, SET-05 sl
 1. (done) `combat--004` jump — see PROGRESS; leftover: jump animation clip, mobile Jump e2e, Opus review.
 2. (done) `combat--003` dodge. Open: root-cause the acceptance-18 real-Space/menu-click oddity (see PROGRESS ❓).
 3. **Wave 5d** (`docs/roadmap/v1-closure-and-appendix.md`): `items--001` + `economy--004` are done; `combat--005` and `economy--003` are done too; next `render--010` (each plan's "Decisions for Opus": take the recommended option, record in DECISIONS).
-4. Audio leftovers (`audio--001` step 6 e2e "no `/sounds/` fetch before first input", fire loop, door/UI one-shots); `world--001` chests; wave 6; `proposals--001`; later backlog L1–L7.
+4. **Wave 5e caves** (`docs/plans/world--003--caves.md`, now before the L3–L5 economy/transport/society work — D-PLAN-10): start with the design round (generator, interior camera, save/perf) and record decisions; dependencies are met. Audio leftovers (`audio--001` step 6 e2e "no `/sounds/` fetch before first input", fire loop, door/UI one-shots); `world--001` chests; wave 6; `proposals--001`; later backlog L1–L7.
 5. Code review round 3 (019) is done and fixed. Still to do: an **app review** round (skill `app-review`, Opus, worktree) of block/Block button, Jump/Dodge button, sharpening UI, inn meals, carrion visuals, quest icons/labels; triage; then soak on a quiet machine. After that: the user's pick from `docs/proposals/2026-10-03--proposals.md` (shortlist P-01, P-05, P-09, P-12, P-16), wave 6 only with device data.
 
 ## 2. Hygiene

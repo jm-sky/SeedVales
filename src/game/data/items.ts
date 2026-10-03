@@ -227,6 +227,8 @@ const LIST: ItemDef[] = [
   { id: 'wooden_shield', name: 'Wooden shield', category: 'misc', weight: 3.2, size: 'LG', price: 35, durability: 160, defence: { arcDeg: 140, reduction: 0.8, efficiency: 0.6, parryWindowS: 0.25, canParry: true } },
   melee('obsidian_dagger', 'Obsidian dagger', 0.35, 340, { reach: 0.6, damage: 11, dmgType: 'cut', cooldown: 0.5, sharpness: 0.95, stamina: 6 }, ['cut']),
   melee('damascus_dagger', 'Damascus dagger', 0.4, 480, { reach: 0.65, damage: 12, dmgType: 'cut', cooldown: 0.5, sharpness: 1, stamina: 6 }, ['cut']),
+  melee('obsidian_knife', 'Obsidian knife', 0.25, 260, { reach: 0.55, damage: 9, dmgType: 'cut', cooldown: 0.5, sharpness: 0.97, stamina: 5 }, ['cut']),
+  melee('damascus_sword', 'Damascus sword', 1.3, 900, { reach: 1.15, damage: 24, dmgType: 'cut', cooldown: 0.85, sharpness: 1, stamina: 11 }, ['cut']),
   melee('knife', 'Knife', 0.3, 8, { reach: 0.6, damage: 7, dmgType: 'cut', cooldown: 0.6, sharpness: 0.7, stamina: 6 }, ['cut']),
   melee('dagger', 'Dagger', 0.4, 25, { reach: 0.7, damage: 10, dmgType: 'pierce', cooldown: 0.6, sharpness: 0.8, stamina: 7 }, ['cut']),
   melee('short_sword', 'Short sword', 1.1, 70, { reach: 0.9, damage: 15, dmgType: 'cut', cooldown: 0.8, sharpness: 0.8, stamina: 10 }, ['cut']),

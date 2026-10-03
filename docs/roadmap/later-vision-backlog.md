@@ -26,7 +26,7 @@ Legend: ✅ tracked (FEATURES id / decision exists) · 🆕 not tracked until th
 | Item (vision §) | Tracking | Depends on | Size |
 |---|---|---|---|
 | Caves small/medium/large, loot in caves (§6.1, APPX loot) | ✅ WORLD-05 | generator (`GEN_VERSION`), interior rendering/camera, LOOT-01 | L |
-| More continents, tundra/desert/jungle, sea transport (§6) | ✅ WORLD-06 | world scale/streaming, boats | XL |
+| More continents, sea transport (§6) | ✅ WORLD-06 (deferred beyond the roadmap); new biomes on the existing continent, desert first = **WORLD-06a** (opportunistic) | world scale/streaming, boats | XL |
 | Horse riding, pack saddles, wagons (§4.3, §28 Transport) | ✅ WORLD-09 | animal following/hold (quest engine primitives exist), rider animation, roads | L |
 | Donkey/horse carts (APPX transport) | 🆕 **TRANS-02** (TRANS-01 notes it) | WORLD-09; cart wear (D-TRANS-2) | M |
 | Wandering trader tiers (poor: donkey + packs; middle: horse + guard; rich: horse + wagon + 2 guards + crossbow), carter NPC, how goods move between settlements (§28) | 🆕 **TRADE-03** (⚠ ECON-01 has one caravan trader per MD/LG) | WORLD-09/TRANS-02 for the richer tiers; the caravan stall fix (review 015) first | M–L |
@@ -35,10 +35,10 @@ Legend: ✅ tracked (FEATURES id / decision exists) · 🆕 not tracked until th
 | Settlement growth/decline/destruction, new buildings/roads/farms, outposts, cemeteries (§7, §28) | ✅ SET-04 | NPC-08 (population), building AI (sites exist), road generation at runtime | XL |
 | Skill books (§12) | ✅ SKILL-02 | item + reading activity; small | S |
 | Fishing (§16) | ✅ RES-06 | water queries exist; fish species data; rod/net items | M |
-| Item technologies (damascus, obsidian) (§22.3) | ✅ QUAL-02 | crafting tiers, LOOT-01 (damascus dagger as treasure) | M |
+| Item technologies (damascus, obsidian) (§22.3) | ✅ QUAL-02 (full chain); rare-item slice = QUAL-02a ✅ done | crafting tiers, LOOT-01 (damascus dagger as treasure) | M |
 | NPC voices (Fish Audio phrase sets per profession/age) (§Assets) | ✅ VOICE-01 | audio pipeline, asset budget | M (asset-heavy) |
 | Ambient sounds listened to by a person (§Assets) | ✅ WORLD-10 `implemented_unverified` | ❓ user listen | — |
-| Code map generated from `@domain`/`@subdomain` JSDoc tags (§Docs) | 🆕 **DEV-01** | none (tooling) | S |
+| ~~Code map generated from `@domain`/`@subdomain` JSDoc tags~~ | ~~DEV-01~~ **dropped** (2026-10-03) | — | — |
 | Cart wear + repair (D-TRANS-2) | ✅ decision only | — | S |
 | Hearth as a better base for a grill; hearth shields the fire from rain (APPX survival, "loose idea") | ⚠ FIRE-02 done without these | FOOD-03 spit exists | S |
 
@@ -57,12 +57,12 @@ Each stage = one or more plans with the usual `**Model:**` split (D-PLAN-7), a w
 
 | Stage | Content | Why this order |
 |---|---|---|
-| **L1 — small closers** | DEV-01 code map; SKILL-02 books; FIRE-04 torch fuel; hearth grill/rain shelter; MAP-02 sensory visibility + panels at scale — plan [`ui--002`](../plans/ui--002--panels-at-scale-and-sensory-map.md) (recon 013 UI-01…07) | cheap, no new systems; MAP-02 is a stated v2 product requirement and should not wait for big features |
+| **L1 — small closers** | ~~DEV-01 code map~~ (dropped 2026-10-03); SKILL-02 books; FIRE-04 torch fuel; hearth grill/rain shelter; MAP-02 sensory visibility + panels at scale — plan [`ui--002`](../plans/ui--002--panels-at-scale-and-sensory-map.md) (recon 013 UI-01…07) | cheap, no new systems; MAP-02 is a stated v2 product requirement and should not wait for big features |
 | **L2 — content on the existing engine** | plan [`quests--002`](../plans/quests--002--batch-2-rumours-and-rewards.md): rumours (recon G-04), item/knowledge rewards (G-03), non-lethal wolf resolution (G-07); QUEST-04: second batch of authored quests in H/V (G05, G07, G08, Q01 after FAUNA-09, Q02, Q06) → then treasure quests (Q05, Q11–Q13 after LOOT-01) → Q10 gold mine (needs a miner, NPC-06 slice) | the quest engine and the review loop exist; content raises the game's value most per session; Q10 is the vision's own example (§26.2) |
 | **L3 — economy between settlements** | plan [`economy--002`](../plans/economy--002--production-chain-and-calibration.md): forge chain, availability tiers, maintenance + cart wear, price/skill-gain calibration (recon M-08, M-10, C-05, C-06, G-01, G-02, G-06); TRADE-03 trader tiers + goods moving between settlements (demand for tools, ore, cloth) + NPC-06 slice (miner, carpenter, carter); RES-06 fishing + fisher | closes the blacksmith-demand gap and makes ECON-01 ("settlements trade raw materials and goods") real; uses existing caravan code |
 | **L4 — animals as transport** | WORLD-09 riding/pack saddles, TRANS-02 donkey/horse carts, richer trader tiers on wagons | needs L3's trade flows to matter; reuses the quest-engine follow/hold primitives |
 | **L5 — living society** (design round first, Opus; prerequisite: due-time NPC/fauna scheduler, recon 013 P-01, if the population grows) | NPC-08 relations/demography/funerals → SET-04 settlement growth/decline, outposts, cemeteries; physician/reeve/mayor professions with SET-05 | the largest change to the sim and the save; must be designed against soak invariants (population, conservation) before code |
-| **L6 — caves** (D-PLAN-9) | plan [`world--003`](../plans/world--003--caves.md) (WORLD-05 + cave loot), after `combat--004` (shared grounding model); WORLD-06 and QUAL-02 not planned | generator + streaming work; caves also need an interior camera |
+| **L6 — caves** (D-PLAN-9, **moved to wave 5e on 2026-10-03, D-PLAN-10: now before L3–L5**) | plan [`world--003`](../plans/world--003--caves.md) (WORLD-05 + cave loot); `combat--004` grounding model is done; WORLD-06 continents/sea transport not planned; QUAL-02 full technology later (rare items = QUAL-02a, done); desert = WORLD-06a, opportunistic | generator + streaming work; caves also need an interior camera |
 | **L7 — voice and sound** | first slice pulled forward as wave 5a [`audio--001`](../plans/audio--001--recorded-sounds-and-voices.md) (recorded sounds + 60 voice lines from the previous app); rest: more phrase sets by the user (Fish Audio), WORLD-10 listen pass | asset-heavy, best when the content is stable |
 
 `proposals--001` (Claude's own proposals, last stage of the current roadmap) should take this file as one of its inputs so its proposals do not duplicate these items.
@@ -77,3 +77,7 @@ Each stage = one or more plans with the usual `**Model:**` split (D-PLAN-7), a w
 ## 4. Update 2026-10-03 — L2 quest content plan
 
 The remaining 17 designed quests (Q01 Q02 Q04 Q05 Q06 Q08 Q09 Q10, G02 G04–G08, Q11–Q13) are planned in [`quests--003`](../plans/quests--003--remaining-authored-quests.md): an engine-extension wave (places V/T, grants registry, creatures/dens, price mods, new events, companions), then H-only, H↔V and treasure waves; Q10 stays blocked on L6 caves and the L3 miner slice. It replaces steps 4–5 of `quests--002`.
+
+## 5. Update 2026-10-03 — priority adjustments (D-PLAN-10)
+
+See `docs/ROADMAP-PRIORITY-ADJUSTMENTS.md`: caves (L6) move to wave 5e of the main roadmap, before L3 (economy between settlements), L4 (riding/carts) and L5 (living society, which stays late with its own design round); rare Damascus/obsidian items are an earlier slice (QUAL-02a, done); desert is split off as WORLD-06a (opportunistic); continents and sea transport (WORLD-06) are deferred beyond this backlog; DEV-01 is dropped. Order of the remaining stages: L1 → L2 → L3 → L4 → L5 → L7.

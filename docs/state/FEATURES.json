@@ -1,5 +1,5 @@
 {
- "$comment": "Wymagania z docs/VISION.md i docs/VISION-APPENDIX.md (vision: \"APPX: <sekcja>\"). status: planned|in_progress|implemented_unverified|verified|blocked|deferred. scope: v1 | v2 (dodatek do wizji, po domknięciu v1; kolejność: docs/roadmap/v1-closure-and-appendix.md) | later. Nie osłabiać kryteriów bez wpisu w docs/design/DECISIONS.md.",
+ "$comment": "Wymagania z docs/VISION.md i docs/VISION-APPENDIX.md (vision: \"APPX: <sekcja>\"). status: planned|in_progress|implemented_unverified|verified|blocked|deferred (DEV-01 is deferred = dropped, see its behavior). scope: v1 | v2 (dodatek do wizji, po domknięciu v1; kolejność: docs/roadmap/v1-closure-and-appendix.md) | later. Nie osłabiać kryteriów bez wpisu w docs/design/DECISIONS.md.",
  "features": [
   {
    "id": "ARCH-01",
@@ -85,20 +85,32 @@
   {
    "id": "WORLD-05",
    "vision": "§6.1",
-   "scope": "later",
+   "scope": "v2",
    "behavior": "Jaskinie (małe/średnie/duże)",
    "verify": "src/game/world/gen/caves.test.ts, src/game/sim/caveSpace.test.ts, src/game/render/caves.test.ts (vitest); visual/e2e pending on WSL",
    "status": "implemented_unverified",
    "evidence": "Caves v1 (world--003 steps 1-2 + small/medium classes): generator, walkable cave, terrain cutting, map marker; see D-CAVE-1 and the plan Result"
+   "verify": "—",
+   "status": "planned",
+   "evidence": "ROADMAP-PRIORITY-ADJUSTMENTS #3: caves moved substantially earlier — wave 5e after landmarks/treasure (LOOT-01) and the combat/jump grounding (combat--004); plan docs/plans/world--003--caves.md"
   },
   {
    "id": "WORLD-06",
    "vision": "§6",
    "scope": "later",
-   "behavior": "2–3 kontynenty, tundra/pustynia/dżungla, transport między kontynentami",
+   "behavior": "Additional continents and intercontinental / sea transport (new biomes on the existing continent are WORLD-06a)",
    "verify": "—",
    "status": "deferred",
-   "evidence": "prompt §4: kolonizacja/kontynenty później; v1 = jeden kontynent z gradientem klimatu"
+   "evidence": "ROADMAP-PRIORITY-ADJUSTMENTS #2/#5: split; continents and sea transport are deferred beyond the near roadmap, not coupled to biomes"
+  },
+  {
+   "id": "WORLD-06a",
+   "vision": "§6",
+   "scope": "later",
+   "behavior": "Additional biome(s) on the existing continent — desert first (no new continents, no sea transport)",
+   "verify": "vitest",
+   "status": "planned",
+   "evidence": "ROADMAP-PRIORITY-ADJUSTMENTS #2: opportunistic, medium-low priority; schedule when world-generation work makes it convenient (GEN_VERSION bump); must not displace exploration/content work"
   },
   {
    "id": "WORLD-07",
@@ -581,10 +593,19 @@
    "id": "QUAL-02",
    "vision": "§22.3",
    "scope": "later",
-   "behavior": "Technologie (damascus)",
+   "behavior": "Technologie (full production chain for Damascus steel / obsidian working) — the item slice is QUAL-02a",
    "verify": "—",
    "status": "deferred",
-   "evidence": ""
+   "evidence": "ROADMAP-PRIORITY-ADJUSTMENTS #1: only the rare-item slice moved earlier (QUAL-02a); the production technology stays later"
+  },
+  {
+   "id": "QUAL-02a",
+   "vision": "§22.3",
+   "scope": "v2",
+   "behavior": "Rare Damascus and obsidian weapons/tools as treasure/rare loot and in the rare stock of selected blacksmiths/traders (expensive, uncommon); no production technology",
+   "verify": "vitest",
+   "status": "implemented_unverified",
+   "evidence": "session 14: items obsidian_dagger/knife, damascus_dagger/sword (data/items.ts), loot table (data/loot.ts), RARE_STOCK in createNewGame; treasure.test.ts"
   },
   {
    "id": "CRAFT-01",
@@ -1175,10 +1196,10 @@
    "id": "DEV-01",
    "vision": "§Docs",
    "scope": "later",
-   "behavior": "Code map generated from @domain/@subdomain JSDoc tags",
+   "behavior": "DROPPED (not planned): code map generated from @domain/@subdomain JSDoc tags",
    "verify": "—",
    "status": "deferred",
-   "evidence": "docs/roadmap/later-vision-backlog.md"
+   "evidence": "ROADMAP-PRIORITY-ADJUSTMENTS #6: removed from L1 and the active roadmap"
   }
  ]
 }
