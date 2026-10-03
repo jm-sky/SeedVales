@@ -173,11 +173,14 @@ export class Ambience {
     for (const [dx, dz] of [[60, 0], [-60, 0], [0, 60], [0, -60]]) if (t.isSeaAt(p.x + dx!, p.z + dz!)) coast = 1
     const set = (g: GainNode, v: number) => g.gain.setTargetAtTime(v * this.vol.ambient, this.ctx!.currentTime, 0.8)
     const day = daylight(cal)
+    // Underground the weather, wind and birds are gone: only the cave bed and the drip remain (world--003 step 8).
+    this.inCave = (sim.state.px.cave ?? 0) > 0
+    const out = this.inCave ? 0 : 1
     const beds = this.bedSamples(biome, mountain, coast, day)
-    set(this.wind, beds.wind ? 0 : (mountain ? 0.35 : 0.06) + (w.kind === 'storm' ? 0.35 : 0) * 1)
-    set(this.waves, beds.waves ? 0 : coast * 0.25)
-    set(this.rain, beds.rain ? 0 : w.kind === 'rain' || w.kind === 'storm' ? 0.12 + w.intensity * 0.15 : 0)
-    const r = Math.random()
+    set(this.wind, beds.wind ? 0 : out * ((mountain ? 0.35 : 0.06) + (w.kind === 'storm' ? 0.35 : 0) * 1))
+    set(this.waves, beds.waves ? 0 : out * coast * 0.25)
+    set(this.rain, beds.rain ? 0 : out * (w.kind === 'rain' || w.kind === 'storm' ? 0.12 + w.intensity * 0.15 : 0))
+    const r = this.inCave ? 1 : Math.random()
     if (day > 0.5 && w.kind !== 'rain' && w.kind !== 'storm' && (biome === Biome.Meadow || biome >= Biome.ForestDeciduous && biome <= Biome.ForestConifer) && r < 0.25) this.play('bird')
     if (isNight(cal) && r < 0.02) this.play('owl')
     if (coast && r < 0.05) this.play('gull')
@@ -212,10 +215,12 @@ export class Ambience {
     const wet = storm || w.kind === 'rain'
     const forest = biome >= Biome.ForestDeciduous && biome <= Biome.ForestConifer
     const bed = (id: string, level: number) => sp.setLoop(id, level, this.busAmb)
-    bed('ambient-forest-loop', forest && day > 0.4 ? 0.5 : 0)
-    bed('ambient-meadow-loop', (biome === Biome.Meadow || biome === Biome.Steppe) && day > 0.4 ? 0.5 : 0)
-    bed('ambient-night-crickets-loop', day <= 0.4 && !mountain && !wet ? 0.4 : 0)
-    bed('ambient-lake-frogs-loop', biome === Biome.Swamp || biome === Biome.Water ? 0.4 : 0)
+    const out = this.inCave ? 0 : 1
+    bed('ambient-cave', this.inCave ? 0.6 : 0)
+    bed('ambient-forest-loop', out * (forest && day > 0.4 ? 0.5 : 0))
+    bed('ambient-meadow-loop', out * ((biome === Biome.Meadow || biome === Biome.Steppe) && day > 0.4 ? 0.5 : 0))
+    bed('ambient-night-crickets-loop', out * (day <= 0.4 && !mountain && !wet ? 0.4 : 0))
+    bed('ambient-lake-frogs-loop', out * (biome === Biome.Swamp || biome === Biome.Water ? 0.4 : 0))
     // Fire loop: the nearest lit fire within earshot (spatial query, 5 Hz).
     const p = this.simRef!.player
     let fire = 0
@@ -224,17 +229,19 @@ export class Ambience {
       fire = Math.max(fire, 1 - Math.hypot(b.x - p.x, b.z - p.z) / 14)
     }
     bed('ambient-fire-loop', fire * 0.5)
-    const level = wet ? 0.3 + w.intensity * 0.3 : 0
+    const level = out * (wet ? 0.3 + w.intensity * 0.3 : 0)
     const stormBed = bed('ambient-rain-storm', storm ? level : 0)
     const rainBed = bed('ambient-rain-loop', storm ? 0 : level) || stormBed
     return {
-      wind: bed('ambient-wind-loop', (mountain ? 0.5 : 0.08) + (storm ? 0.3 : 0)),
-      waves: bed('ambient-coast-seagulls-waves', coast ? 0.45 : 0),
+      wind: bed('ambient-wind-loop', out * ((mountain ? 0.5 : 0.08) + (storm ? 0.3 : 0))),
+      waves: bed('ambient-coast-seagulls-waves', out * (coast ? 0.45 : 0)),
       rain: rainBed,
     }
   }
 
   private simRef: Sim | null = null
+  /** The player is inside a cave (set by `update`). */
+  private inCave = false
 
   /** Per-frame cues: footsteps by surface and gait, player activity sounds. */
   frame(dt: number, sim: Sim) {

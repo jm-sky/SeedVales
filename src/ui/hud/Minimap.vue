@@ -48,6 +48,16 @@ function draw() {
     const s = Math.max(2, Math.max(b.hw, b.hd) * 2 * k)
     ctx.fillRect(bx - s / 2, by - s / 2, s, s)
   }
+  // Cave mouths (WORLD-05): only in explored cells (fog of war, MAP-01).
+  ctx.fillStyle = '#e6d9bf'
+  for (const cv of sim.world.caves) {
+    if (Math.hypot(cv.x - x, cv.z - z) > R * 1.42 || !isExplored(sim, cv.x, cv.z)) continue
+    const [cx, cy] = toC(cv.x, cv.z)
+    ctx.beginPath()
+    ctx.arc(cx, cy, 3, Math.PI, 0)
+    ctx.closePath()
+    ctx.fill()
+  }
   if (goal) {
     const [gx, gy] = toC(goal.x, goal.z)
     const r = N / 2 - 9
