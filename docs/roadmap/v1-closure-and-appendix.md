@@ -85,6 +85,17 @@ Order: target lock → block/parry → jump (Opus step 1 fixes the movement cont
 
 Caves: [world--003--caves](../plans/world--003--caves.md) *(draft)* — later backlog **L6** (D-PLAN-9: caves only), after `combat--004`; visual references `docs/research/refs/2026-10-02--seedvale-v1-ref-screenshot-as-baseline-3/4-*`.
 
+## Wave 5d — item condition, food and sharpness (user plans, added 2026-10-03)
+
+| Plan | Scope |
+|---|---|
+| [items--001--per-instance-item-condition](../plans/items--001--per-instance-item-condition.md) | **foundation:** per-instance / per-batch item condition and safe stacking (transfer, trade, save, UI); first in this wave |
+| [economy--004--food-freshness-batches](../plans/economy--004--food-freshness-batches.md) | separate freshness batches, no averaging, oldest-first use; depends on `items--001` |
+| [combat--005--weapon-sharpness-and-sharpening](../plans/combat--005--weapon-sharpness-and-sharpening.md) | current sharpness, max sharpness by quality/material, dulling and sharpening; depends on `items--001`, compatible with combat 001–004 |
+| [economy--003--inn-meals-and-preserved-food](../plans/economy--003--inn-meals-and-preserved-food.md) | *(draft)* inn meals and preserved food reserves; independent small slice, its freshness-aware parts wait for `economy--004` |
+
+Order: after wave 5c: `items--001` → (`economy--004` ‖ `combat--005`) → `economy--003`. Each plan's "Decisions for Opus" follow the same rule as 5c (plan's recommendation, recorded in DECISIONS).
+
 ## Stage 5b — authored quests and Stage V — verification loop (planned 2026-10-02, user)
 
 | Plan | Scope |
@@ -99,7 +110,7 @@ Caves: [world--003--caves](../plans/world--003--caves.md) *(draft)* — later ba
 
 After this roadmap: [later-vision-backlog.md](later-vision-backlog.md) (stages L1–L7, accepted D-PLAN-9).
 
-Order update (2026-10-03): … → review loop round 1 → `render--009` step 3 (WSL verification) → wave 5 (`world--001`, `settlement--001`) with wave 5a audio alongside → wave 5c combat → wave 6 → `proposals--001` → later backlog.
+Order update (2026-10-03): … → review loop round 1 → `render--009` step 3 (WSL verification) → wave 5 (`world--001`, `settlement--001`) with wave 5a audio alongside → wave 5c combat → wave 5d item condition / food / sharpness → wave 6 → `proposals--001` → later backlog.
 
 Order: finish `render--001` (4b) → `render--008` (4c, user additions — only when it fits; it must not delay the main order) → `verify--001` steps 1–3 (cheap, protects everything after) → `quests--001` → first full `review--001` round → wave 5 continues. The loop repeats after every wave and before each release candidate.
 
