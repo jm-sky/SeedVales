@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { addItem, countItem, newStack } from './inventory'
 import { makeAnimal } from './newGame'
-import { castAnimal, castHuman, choose, setDayHour, stateOf, tickQuests, topicNode } from './questTestKit'
+import { castAnimal, castHuman, choose, setDayHour, stateOf, tickQuests } from './questTestKit'
 import { playerFarAway, testSim } from './testWorld'
 import { sellToNpc } from './trade'
 
