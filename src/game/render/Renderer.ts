@@ -268,7 +268,8 @@ export class Renderer {
     this.caveK += (inCave - this.caveK) * Math.min(1, dt * 4)
     this.sun.intensity *= 1 - this.caveK * 0.95
     this.hemi.intensity *= 1 - this.caveK * 0.8
-    this.caveLight.intensity = this.caveK * 3.2
+    // The torch is the real light underground; the fill light only keeps a torch-less player from walking blind.
+    this.caveLight.intensity = this.caveK * (this.dynamics.playerTorchLit ? 1.2 : 3.2)
     if (this.caveK > 0.01) this.caveLight.position.set(p.x, p.y + 2.4, p.z)
     // Shadow camera centre snapped to whole shadow texels in light space (no shimmer while walking).
     const sc = this.sun.shadow.camera

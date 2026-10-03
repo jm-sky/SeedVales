@@ -2,8 +2,10 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import type { Building } from '../sim/types'
+import { dropItem } from '../sim/actions'
 import { newStack } from '../sim/inventory'
 import { testSim } from '../sim/testWorld'
+import { spinePoints } from '../world/caveShape'
 import { Dynamics } from './dynamics'
 import { collectFires, type FireEmitter, flicker, LIGHT_POOL, PLANTED_TORCH_H, selectLights } from './fireSources'
 
@@ -75,5 +77,32 @@ describe('render: fire sources (RENDER-03)', () => {
     }
     const fires: FireEmitter[] = []
     expect(collectFires(sim, p.x, p.z, 50, fires)).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe('render: fires per layer (world--003)', () => {
+  it('a lit torch on a cave floor lights only the cave, at floor height; surface fires do not light the cave', () => {
+    const sim = testSim(1337)
+    const cave = sim.world.caves[0]!
+    const q = spinePoints(cave)[3]!
+    const g = sim.terrain.caves.grid(0)
+    dropItem(sim, q.x, q.z, newStack('torch'), false, 1)
+    const torch = sim.groundNear(q.x, q.z, 3).find((x) => x.cave === 1)!
+    torch.lit = true
+    torch.planted = true
+    const p = sim.player
+    p.x = q.x
+    p.z = q.z
+    fireAt(sim, 'f-surface', 0, 40)
+    const fires: FireEmitter[] = []
+    // On the surface: only the campfire.
+    let n = collectFires(sim, p.x, p.z, 50, fires)
+    expect(fires.slice(0, n).map((e) => e.key)).toEqual(['b:f-surface'])
+    // In the cave: only the planted torch, on the cave floor.
+    sim.state.px.cave = 1
+    p.y = g.floorAt(q.x, q.z)
+    n = collectFires(sim, p.x, p.z, 50, fires)
+    expect(fires.slice(0, n).map((e) => e.key)).toEqual([`g:${torch.id}`])
+    expect(fires[0]!.y).toBeCloseTo(g.floorAt(q.x, q.z) + PLANTED_TORCH_H, 2)
   })
 })

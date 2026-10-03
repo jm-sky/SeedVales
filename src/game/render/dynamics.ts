@@ -114,6 +114,9 @@ export class Dynamics {
     }
   }
 
+  /** True while the player's own torch holds a light slot this frame (the cave fill light dims then). */
+  playerTorchLit = false
+
   get lightPool() {
     return this.lights.length
   }
@@ -165,7 +168,10 @@ export class Dynamics {
     this.flames.count = nFlames
     this.flames.instanceMatrix.needsUpdate = true
     // Night factor: fires light the world mostly after dusk (daylight 1 → 0.25).
-    const nightK = 1 - daylight(sim.state.time.cal) * 0.75
+    // Underground there is no daylight to compete with: torches shine at full strength.
+    const nightK = (sim.state.px.cave ?? 0) > 0 ? 1 : 1 - daylight(sim.state.time.cal) * 0.75
+    this.playerTorchLit = false
+    for (let i = 0; i < nf; i++) if (fires[i]!.player) this.playerTorchLit = true
     const picked = selectLights(fires, nf, this.lights.length, camPos.x, camPos.z, this.picked)
     let active = 0
     this.lights.forEach((l, i) => {
