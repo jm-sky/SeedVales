@@ -94,3 +94,16 @@ export function detourPoint(sim: Sim, ax: number, az: number, tx: number, tz: nu
   })
   return best
 }
+
+/** A walled building (footprint at least 2.4 m across, solid) lies on the segment a→b; used to hide labels of NPCs behind or inside walls. */
+export function wallBlocksSight(sim: Sim, ax: number, az: number, bx: number, bz: number): boolean {
+  const mx = (ax + bx) / 2
+  const mz = (az + bz) / 2
+  const r = Math.hypot(bx - ax, bz - az) / 2 + 12
+  for (const b of sim.buildingsNear(mx, mz, r)) {
+    if (NO_COLLIDE.has(b.kind) || Math.min(b.hw, b.hd) < 1.2) continue
+    if (segmentHitsBox(b, ax, az, ax, az, -0.1) !== null) continue // the viewer stands inside
+    if (segmentHitsBox(b, ax, az, bx, bz, -0.1) !== null) return true
+  }
+  return false
+}

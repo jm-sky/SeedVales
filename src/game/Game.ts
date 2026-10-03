@@ -24,6 +24,7 @@ import { loadHeavy, parkCart, pushFromPack } from './sim/cart'
 import { meleeAttack } from './sim/combat'
 import { combatCandidates, lockedMove, lockInvalid, nextCombatTarget, turnToward } from './sim/combatTarget'
 import { canCraft, craftTime } from './sim/craft'
+import { wallBlocksSight } from './sim/detour'
 import { requestDodge } from './sim/dodge'
 import { needsSharpening } from './sim/edge'
 import { plantTorch } from './sim/fire'
@@ -821,7 +822,7 @@ export class Game {
       if (a.kind !== 'npc' || (a as Human).vitals.dead || a === p || !isExplored(sim, a.x, a.z)) continue
       const dist = Math.hypot(a.x - p.x, a.z - p.z)
       const pt = this.renderer.project(a.x, a.y + (a.age === 'child' ? 1.3 : 2.1), a.z)
-      if (!pt.visible) continue
+      if (!pt.visible || wallBlocksSight(sim, p.x, p.z, a.x, a.z)) continue
       out.push({ id: a.id, name: (a as Human).name, x: pt.x, y: pt.y, dist, icon: npcQuestIcon(sim, a.id) })
     }
     return out
