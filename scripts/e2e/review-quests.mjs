@@ -25,6 +25,7 @@ export default async function (rt) {
       const wh = rv.bld('warehouse')
       if (!wh) return { ok: false, reason: 'no warehouse in settlement 0' }
       const { nestTag } = await rv.mod('sim/queries')
+      window.__ratWh = wh.id
       wh.durability = 20
       wh.ratNest = { strength: 2, since: sim.state.time.cal }
       rv.stand(wh.x, wh.z, 8)
@@ -63,9 +64,22 @@ export default async function (rt) {
   })
 
   await rt.step('accept-quest', async () => {
-    const btn = s.page.locator('[data-testid="accept-rats"]')
-    if (!(await btn.count())) return { ok: false, reason: 'no accept-rats button in the quests panel' }
-    await btn.first().click()
+    // Several boards' rats notices can be listed (other settlements too): accept the one for this warehouse's quest.
+    const title = rt.notes.ratQuest?.quest?.title ?? ''
+    const all = s.page.locator('[data-testid="accept-rats"]')
+    if (!(await all.count())) return { ok: false, reason: 'no accept-rats button in the quests panel' }
+    const idx = await s.page.evaluate((t) => {
+      const btns = [...document.querySelectorAll('[data-testid="accept-rats"]')]
+      return Math.max(0, btns.findIndex((b) => {
+        let el = b.parentElement
+        while (el && el.querySelectorAll('[data-testid="accept-rats"]').length === 1) {
+          if (el.textContent.includes(t)) return true
+          el = el.parentElement
+        }
+        return false
+      }))
+    }, title)
+    await all.nth(idx).click()
     await s.page.waitForTimeout(500)
     const r = await S(() => ({ toast: window.__sv.game.toast, status: window.__sv.game.sim.state.quests.map((q) => `${q.kind}:${q.status}`), log: window.__rv.msgs(3) }))
     const text = await panelText(s)
@@ -80,7 +94,7 @@ export default async function (rt) {
     const r = await S(async () => {
       const rv = window.__rv
       const sim = window.__sv.game.sim
-      const q = sim.state.quests.find((x) => x.kind === 'rats')
+      const q = sim.state.quests.find((x) => x.kind === 'rats' && x.buildingId === window.__ratWh)
       const g = sim.human(q.giverId)
       if (!g) return null
       rv.stand(g.x, g.z, 1.6)
@@ -108,7 +122,7 @@ export default async function (rt) {
       const sv = window.__sv
       const sim = sv.game.sim
       const wh = sim.building(id)
-      const q = sim.state.quests.find((x) => x.kind === 'rats')
+      const q = sim.state.quests.find((x) => x.kind === 'rats' && x.buildingId === window.__ratWh)
       sv.game.setPrimaryWeapon('melee', 'club')
       sv.game.switchWeapon('melee')
       rv.heal()
@@ -150,7 +164,7 @@ export default async function (rt) {
     if (!info?.quest) return { ok: false, reason: 'no quest posted' }
     const before = await S(() => {
       const sim = window.__sv.game.sim
-      const g = sim.human(sim.state.quests.find((x) => x.kind === 'rats').giverId)
+      const g = sim.human(sim.state.quests.find((x) => x.kind === 'rats' && x.buildingId === window.__ratWh).giverId)
       return { treasury: window.__rv.treasury()[0], money: window.__rv.coins(), rep: { ...sim.state.settlements[0].rep }, giverOpinion: g?.opinion }
     })
     const rep = await S(async (id) => {
@@ -177,9 +191,12 @@ export default async function (rt) {
       const rv = window.__rv
       const sim = window.__sv.game.sim
       rv.advance(60)
-      const q = sim.state.quests.find((x) => x.kind === 'rats')
+      const q = sim.state.quests.find((x) => x.kind === 'rats' && x.buildingId === window.__ratWh)
       const g = sim.human(q.giverId)
-      return { status: q.status, reward: q.reward, treasury: rv.treasury()[0], money: rv.coins(), rep: { ...sim.state.settlements[0].rep }, giverOpinion: g?.opinion, log: rv.msgs(4) }
+      // Rats of this nest still alive anywhere (the quest resolves only when none are left, sim/quests.ts).
+      const b = sim.building(q.buildingId)
+      const nestRatsAlive = sim.state.animals.filter((a) => a.species === 'rat' && !a.vitals.dead && a.denId === `nest:${q.buildingId}`).map((a) => ({ id: a.id, distFromBuilding: Math.round(Math.hypot(a.x - b.x, a.z - b.z)) }))
+      return { status: q.status, kills: q.kills, reward: q.reward, nestRatsAlive, treasury: rv.treasury()[0], money: rv.coins(), rep: { ...sim.state.settlements[0].rep }, giverOpinion: g?.opinion, log: rv.msgs(4) }
     })
     await s.page.waitForTimeout(500)
     await S(() => window.__sv.game.togglePanel('quests'))

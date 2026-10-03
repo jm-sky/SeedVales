@@ -94,8 +94,9 @@ async function prepare(s, what) {
         p.vitals.hunger = 22
         p.vitals.thirst = 15
         p.vitals.vigor = 18
-        p.vitals.illness = { kind: 'fever', severity: 0.4, hoursLeft: 30 }
-        return 'injuries, bleeding, low needs and an illness (fever)'
+        // IllnessKind is stomach | poison | rabies; severity is 0..100 (sim/vitals.ts).
+        p.vitals.illness = { kind: 'stomach', severity: 40, hoursLeft: 30 }
+        return 'injuries, bleeding, low needs and an illness (food poisoning)'
       case 'many-quests': {
         const base = { settlementId: 0, giverId: sim.npcsOf(0)[0].id, reward: 40, createdAt: sim.state.time.cal, killsNeeded: 3, kills: 1 }
         sim.state.quests.length = 0
