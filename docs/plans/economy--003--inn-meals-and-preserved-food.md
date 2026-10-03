@@ -90,7 +90,7 @@ Initial menu target:
 
 Meal nutrition should normally equal the sum of the consumed food items' existing `FoodStats.nutrition` values rather than introducing a hidden service multiplier. Ingredient sets are chosen so the tiers naturally land in the target bands. Exact prices and combinations are calibration.
 
-Do not add FIFO-by-freshness semantics in this plan. The current inventory merges compatible food stacks and keeps weighted-average freshness, so a same-item "oldest stack first" rule would require a broader inventory redesign. Meal consumption should use the existing stack semantics.
+This plan depends on `items--001` + `economy--004` for condition-safe food stacks. Once those are implemented, inn meal ingredient selection must consume the oldest suitable food batch first. Do not reintroduce weighted-average freshness locally in the inn service.
 
 ### 3. Ordering is a short player activity
 
