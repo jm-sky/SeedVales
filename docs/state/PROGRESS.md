@@ -4,24 +4,20 @@
 
 ## Teraz
 
-*Single snapshot of the current state (updated 2026-10-03, end of session 15, main at `85bd45d`). History per session is below; older archive in [progress-log.md](progress-log.md).*
+*Single snapshot of the current state (updated 2026-10-03, session 16, Sonnet). History per session is below; older archive in [progress-log.md](progress-log.md).*
 
-- **Authority:** the user allowed Sonnet to take decisions the plans assign to Opus (2026-10-03); record them in DECISIONS as user-authorised Sonnet defaults.
-- **Rules:** D-LANG-1 — English everywhere (UI, names, docs, comments); Polish docs are legacy. Never weaken tests or budgets; commit per feature, push only as the user asks.
-- **Verification (2026-10-03, WSL):** `pnpm check` 580/580 (102 files, type-check + lint + layers); `pnpm e2e:run` smoke 5/5 · acceptance 47/47 · mobile 16/16, 0 console errors; `pnpm soak --days=10 --seeds=1337,7,42` 0 violations (session 14: 6 seeds, 0). Benchmarks (`bench:sim`, render A/B) were not re-run this session — numbers in `PERF.md` predate quests W1/W2, market day and equipment modules.
-- **Formats:** `SAVE_VERSION` 9 (unreleased: new optional fields need no bump, D-SAVE-7), `GEN_VERSION` 10 (caves, D-CAVE-1).
-- **Done and verified (details in the session sections below):** v1 + addendum waves 1–5d (combat feel, jump/dodge, items condition, freshness, sharpness, inn meals, carrion, LOOT-01, mayor slice, audio steps 1–5); review loop `review--001` rounds 1–3 closed (reviews 013–020); proposal slices P-01, P-02, P-05, P-06, P-08, P-09, P-11, P-12, P-17, P-20; `quests--003` wave W1 (G08, G04, Q09, Q01, G07) and W2 part (G02, Q04, G06, Q08 incl. the well, D-QUEST-3); `render--011` stage 1 (helm, cuirass, pauldrons, boots).
-- **Active work:**
-  - `quests--003` (in progress; plan header corrected): W2 open — G05 (boundary oak: `boundary` anchor + `fell` event), Q02 (creature group + den), Q06 (companion contract from dialog, E8); then W3 treasure quests; W4 Q10 blocked on deferred systems.
-  - `render--011` (in progress): stage 2 items (`padded_jacket`, `leather_jerkin`, `studded_leather`, `chainmail`, `leather_cap`, `leather_trousers`, `bracers`), other professions' look, PERF A/B. `render--012` (Blender modules) later, on the user's art decision.
-  - **Caves (`world--003`, wave 5e): released to this line by the user on 2026-10-03 (the second agent no longer owns them); done this session: floor items, chamber loot, ambience, minimap marker, jump in caves, mouth skirt (see the plan's last Update); open: NPC/animal navigation, large caves, look pass of the entrance;** v1 and layer isolation (step 3 partial) are on main; expect conflicts in world gen / collision / camera / save and `git pull --rebase` first.
-  - Other `in_progress` plans: `review--001` (loop closed for this wave), `proposals--001`, `audio--001` (steps 6+: fire loop exists; door/UI one-shots wait for a door mechanic), `world--001` (chests need a model), `settlement--001` (mayor slice), `render--003/004/005`, `diag--002`.
-- **Open issues:**
-  - Opus wave review (`wave-review`) and app review (`app-review`) of the nine new quests and the equipment look are still to do.
-  - e2e oddity ❓: a real Space key press in acceptance step 18 once made the next menu click time out on SwiftShader (twice early in session 15, not in the last four full runs); root cause not found.
-  - ❓ user: sound licence list for all 136 files in `public/sounds/` (release gate); WORLD-10/audio listen; phone measurement and look checks (render--001/007 frames, stockpiles, equipment); combat balance (wolf 9 club hits) and feel of lock/block (no guard/stagger clips); smith order price (D-ECON-7), mayor thresholds (D-SET-1); open app-review 018/020 minors (#10 treasure hint → P-06 slice done, build panel over status bars, mobile map label size); `bench:sim` on a quiet machine.
-  - Proposals document `docs/proposals/2026-10-03--proposals.md` is waiting for the user's pick of further items (shortlist P-01/P-05/P-09/P-12/P-16 is implemented as slices).
-- **Next step:** see `NEXT-SESSION-KICK-OFF-PROMPT.md` (§1b): (1) Opus wave + app review of the new quests and equipment; (2) W2 remainder; (3) W3 treasure quests; (4) `render--011` stage 2 / PERF A/B. Dev loop: `pnpm check:fast`, `pnpm test:changed`, `pnpm e2e:fast`; full check + e2e only at checkpoints.
+- **Authority:** the user allowed Sonnet to take decisions the plans assign to Opus (2026-10-03); they are recorded in DECISIONS as "Sonnet default (user-authorised)" (D-CAVE-2 this session).
+- **Rules:** D-LANG-1 — English everywhere; never weaken tests or budgets; commit and push per feature (user, session 16); small targeted vitest runs, the full `pnpm check` / `pnpm e2e:run` only at checkpoints.
+- **Verification (checkpoint 2026-10-03, WSL):** `pnpm check` 616/616 (106 files); `pnpm e2e:run --fast` smoke 5/5 · acceptance 49/49 (new step 20: cave entry/exit with real keys) · mobile 16/16, 0 console errors. `bench:render` cave scenes: prep p95 1.5 / 2.7 ms (PERF.md). Soak not re-run this session.
+- **Formats:** `SAVE_VERSION` 9 (unreleased; optional fields `ActorBase.cave`, `Animal.leash`, `Animal.denId` for quest dens need no bump), `GEN_VERSION` 11 (large caves).
+- **Done this session:** caves — mouth look pass, actor cave layer + spine navigation + cave dwellers + companions underground, large caves, layer-aware torch light budget, bench scenes, e2e step (`world--003` Update); quests — `quests--003` W2 complete: G05 (boundary tree, `fell` event/effect), Q02 (den group with young, leash, burnable quest den, drive-off), Q06 (companion contract from dialog, prepaid order, mark gate). Engine additions: anchors `boundary`/`offset`/`roadSide`, conds `far`/`companion`/`canTravel`, effects `fell`/`drive`/`companion`/`dismiss`, events `fell`/`burn`.
+- **Active work / next:**
+  - `quests--003` W3 treasure quests (Q05, Q13, Q11, Q12) need the place `T`, landmark anchors, a `mint` (money from outside) effect and, for Q11/Q12, two new landmark kinds (GEN bump); W4 Q10 stays blocked.
+  - Opus `wave-review` + `app-review` of the nine W1/W2 quests and the equipment modules (review IDs: next free in `docs/reviews`).
+  - `render--011` stage 2 items (`padded_jacket`, `leather_jerkin`, `studded_leather`, `chainmail`, `leather_cap`, `leather_trousers`, `bracers`) and the PERF A/B; `render--012` only on the user's art decision.
+  - Other `in_progress` plans unchanged: `review--001`, `proposals--001`, `audio--001`, `world--001`, `settlement--001`, `render--003/004/005`, `diag--002`.
+- **Open issues:** the mouth of a cave on a very steep slope is still angular; tunnels are very dark without a torch (fill light is the knob); terrain/vegetation keep rendering underground; ❓ user items as before (sound licences, phone/device checks, balance of the new cave fauna, smith/mayor prices); e2e Space-key oddity not seen again.
+- **Next step:** see `NEXT-SESSION-KICK-OFF-PROMPT.md` §1b.
 
 
 ## Sesja 2
