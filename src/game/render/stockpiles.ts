@@ -9,7 +9,10 @@
 import * as THREE from 'three'
 import type { Sim } from '../sim/sim'
 import type { Building } from '../sim/types'
+import type { CarrionSpot } from './carrionFx'
+import { SPOILED_FRAC } from '../config/calibration'
 import { hash01, hashString } from '../core/rng'
+import { itemDef } from '../data/items'
 import { perf } from '../diag/perf'
 import { groundHeight } from '../sim/collision'
 import { loadGltf, mat4, mergeTemplate, packNode, part, type TemplatePart } from './assets'
@@ -50,11 +53,18 @@ function placeholder(kind: PileKind, tier: number): Item[] {
   return out
 }
 
+/** Any food stack at or below the spoiled share of its shelf life (the same threshold as butchering/eating rules). */
+export function hasSpoiledFood(inv: Building['inv']): boolean {
+  return !!inv?.items.some((s) => s.fresh !== undefined && itemDef(s.id).food !== undefined && s.fresh <= itemDef(s.id).food!.spoilH * SPOILED_FRAC)
+}
+
 export class Stockpiles {
   group = new THREE.Group()
   enabled = true
   loaded = false
   drawCalls = 0
+  /** Food slots holding spoiled food (render--010): the carrion effect plays over them. Rebuilt at the 2 s cadence, near buildings only. */
+  spoiledSpots: CarrionSpot[] = []
   private templates = new Map<string, TemplatePart[]>()
   private meshes: THREE.InstancedMesh[] = []
   /** Last known tier per `buildingId:slotIndex`. */
@@ -117,6 +127,7 @@ export class Stockpiles {
     const t0 = performance.now()
     const byKey = new Map<string, THREE.Matrix4[]>()
     const live = new Set<string>()
+    const spoiled: CarrionSpot[] = []
     let sig = ''
     for (const b of this.sim.state.buildings) {
       const d = Math.hypot(b.x - px, b.z - pz)
@@ -135,6 +146,7 @@ export class Stockpiles {
         const wx = b.x + slot.lx * c + slot.lz * sn
         const wz = b.z - slot.lx * sn + slot.lz * c
         const yaw = b.rot + (hash01(hashString(b.id), i, 7) - 0.5) * (slot.kind === 'firewood' ? 0.2 : 0.5)
+        if (slot.kind === 'food' && d <= PILE_NEAR_M && hasSpoiledFood(s.inv)) spoiled.push({ x: wx, y: groundHeight(this.sim, wx, wz), z: wz, id: hashString(id) % 100000 })
         const key = pileNode(slot.kind, tier)
         const arr = byKey.get(key) ?? []
         arr.push(mat4(wx, groundHeight(this.sim, wx, wz), wz, yaw))
@@ -142,6 +154,7 @@ export class Stockpiles {
         sig += `${id}=${tier};`
       })
     }
+    this.spoiledSpots = spoiled
     for (const id of this.tiers.keys()) if (!live.has(id)) this.tiers.delete(id)
     if (sig !== this.signature) {
       this.signature = sig

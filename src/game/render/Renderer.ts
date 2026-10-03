@@ -340,6 +340,7 @@ export class Renderer {
     perf.measure('render.vegetation', () => this.vegetation.update(p.x, p.z))
     this.grass?.update(p.x, p.z)
     perf.measure('render.actors', () => this.actors.update(dt, this.rig.camera))
+    this.dynamics.extraCarrion = this.stockpiles.spoiledSpots
     perf.measure('render.dynamics', () => this.dynamics.update(dt, this.rig.camera.position))
     this.marker.update(dt, this.markerAt)
     this.combatMarker.update(dt, this.combatMarkerAt)

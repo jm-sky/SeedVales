@@ -53,6 +53,8 @@ export class Dynamics {
   private corpses = new Map<number, THREE.Object3D>()
   private carrion = new CarrionFx()
   private carrionSpots: CarrionSpot[] = []
+  /** Spoiled-food spots from the stockpile yards (set by the renderer each frame). */
+  extraCarrion: readonly CarrionSpot[] = []
   /** Shared haze (carrion) and bone-pile materials/geometry for corpse overlays. */
   private static hazeMat = new THREE.MeshBasicMaterial({ color: 0x3f5a1f, transparent: true, opacity: 0.35, depthWrite: false })
   private static hazeGeo = new THREE.SphereGeometry(0.7, 8, 6).scale(1.2, 0.45, 0.8)
@@ -242,6 +244,7 @@ export class Dynamics {
       }
       if (phase === 'carrion') this.carrionSpots.push({ x: c.x, y: o.position.y, z: c.z, id: c.id })
     }
+    for (const s of this.extraCarrion) this.carrionSpots.push(s)
     this.carrion.update(this.t, this.carrionSpots, p.x, p.z, this.profile)
     for (const [id, o] of this.corpses) {
       if (!seen.has(id)) {

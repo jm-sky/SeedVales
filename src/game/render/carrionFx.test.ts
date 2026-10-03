@@ -16,3 +16,13 @@ describe('render--010 carrion effect', () => {
     expect(fx.active).toBe(0)
   })
 })
+
+describe('render--010 spoiled food over stockpile yards', () => {
+  it('FOOD-05: only food at or below the spoiled share counts, and only in inventories that hold some', async () => {
+    const { hasSpoiledFood } = await import('./stockpiles')
+    expect(hasSpoiledFood(undefined)).toBe(false)
+    expect(hasSpoiledFood({ items: [{ id: 'bread', qty: 3, fresh: 90 }] })).toBe(false)
+    expect(hasSpoiledFood({ items: [{ id: 'bread', qty: 3, fresh: 90 }, { id: 'raw_meat', qty: 1, fresh: 1 }] })).toBe(true)
+    expect(hasSpoiledFood({ items: [{ id: 'stone', qty: 3 }] })).toBe(false)
+  })
+})

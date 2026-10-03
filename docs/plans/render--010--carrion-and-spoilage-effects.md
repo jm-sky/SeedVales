@@ -1,6 +1,6 @@
 # Carrion phase and spoiled-food effects
 
-**Status:** in_progress  
+**Status:** done  
 **Model:** opus — phase timings and what spoiled meat looks like in the UI; sonnet — implementation and tests  
 **Domain:** render  
 **Sub domains:** effects, fauna, food, stockpiles, ui  
@@ -45,3 +45,5 @@ Render-only; no new saved state; layering as `render--009`; performance budget a
 ## Result so far (2026-10-03, session 14, Sonnet)
 
 Steps 1–3 done with Sonnet defaults (phase timings: fresh < 6 h, **carrion 6–30 h**, bones 30–48 h, removed at 48 h; `FOOD.corpseCarrionEndH`): `sim/corpses.ts` `corpsePhase` (derived, not saved), `render/carrionFx.ts` (≤ 6 carcasses within 45 m medium / 70 m high, 8 green motes + 3 flies each, none on `low`), green haze overlay on carrion corpses, bones = the carcass shrunk to 0.45; `ab.mjs` frame `carrion` (frames.mjs) viewed — motes read clearly; tests `corpses.test.ts`, `carrionFx.test.ts`; `ItemRow` shows **rotten** for spoiled food. **Not done:** step 4 spoiled food over warehouse stockpiles and the following fly wisp near the player, a dedicated bone-pile model (placeholder shrink), flies audio loop, `bench:render` A/B for the effect (≤ 66 points, expected negligible), the dark haze is subtle on the box placeholders (look ❓ user).
+
+**Step 4 done (2026-10-03):** `Stockpiles.spoiledSpots` (food slots whose inventory holds food at or below `SPOILED_FRAC` of its shelf life, near yards only, 2 s cadence) feed `Dynamics.extraCarrion`, so the same green motes/flies play over a warehouse food pile; `hasSpoiledFood` tested. Plan `done`; still open as ❓ user/later: the fly wisp that follows the player while carrying spoiled meat, a dedicated bone-pile model, the flies audio loop, a `bench:render` A/B (≤ 66 points).
