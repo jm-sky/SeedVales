@@ -1,12 +1,12 @@
 # Authored quests: stage-machine engine + four starter quests
 
-**Status:** in_progress  
+**Status:** done  
 **Model:** opus — step 1 (engine design, save format), quest-by-quest acceptance review; sonnet — implementation of steps 2–6  
 **Domain:** quests  
 **Sub domains:** sim, dialog, ui, save  
 **Roadmap:** [wave 5b](../roadmap/v1-closure-and-appendix.md) (after `world--001` landmark/treasure hooks; the starters below do not need them)  
 **Created:** 2026-10-02  
-**Finished:** —
+**Finished:** 2026-10-03
 
 ---
 

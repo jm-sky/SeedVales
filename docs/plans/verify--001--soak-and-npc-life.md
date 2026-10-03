@@ -1,12 +1,12 @@
 # Verification stage: multi-day soak run, NPC-life invariants, event log
 
-**Status:** in_progress  
+**Status:** done  
 **Model:** sonnet — tooling and checks; opus — reading the results, deciding what is a defect  
 **Domain:** verify  
 **Sub domains:** sim, diag  
 **Roadmap:** [stage V](../roadmap/v1-closure-and-appendix.md) (after each wave that changes sim, and before every release candidate)  
 **Created:** 2026-10-02  
-**Finished:** —
+**Finished:** 2026-10-03
 
 ---
 

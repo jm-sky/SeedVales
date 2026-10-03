@@ -35,4 +35,8 @@ Goal (user, 2026-10-02): an automatic verification pass by Sonnet/Opus that revi
 | 1 | Skill `app-review` (`.claude/skills/`): prompt template, scenarios list, frame list, report format — **done 2026-10-02** (`.claude/skills/app-review/SKILL.md`) | opus |
 | 2 | Scenario scripts for gameplay review (`scripts/e2e/review-*.mjs`, reuse `lib.mjs`) | sonnet |
 | 3 | Pending: session 11 ultrareview (PR #1, 4 findings) — first input of the loop; triage, close PR, delete `review/base-s11` — **done 2026-10-02**: 2 fixed, 1 deferred, 1 rejected (review 011 triage table) | opus + sonnet |
-| 4 | First full round after `quests--001` and the first soak | opus |
+| 4 | First full round after `quests--001` and the first soak — **done 2026-10-03** (round 1: reviews 013–016 all fixed; round 2: reviews 017–018, no open major; soak 6 seeds × 10 d clean) | opus |
+
+## Loop state (2026-10-03, session 14)
+
+Round 1 closed (013 recon, 014 code, 015 soak, 016 app). Round 2 closed (017 code review: 8 minor fixed; 018 app review: no open blocker/major; open minors and ❓ user in `docs/reviews/2026-10-03--018--app-review-round-2.md` triage). The plan stays `in_progress` as the standing process: rerun a round after each wave (next: after wave 5c combat) and before a release candidate.
