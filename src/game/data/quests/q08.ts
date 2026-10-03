@@ -1,7 +1,7 @@
 /**
  * Q08 — The Long Way to Water (docs/design/quests/q08-the-long-way-to-water.md). Giver: Elspeth, the shepherd of {V}.
  * The sheep queue at the square's well. Walk the route, test the ground, then build a trough by the pasture and fill it,
- * or keep a rota at the square well (a new well outside the square is not buildable yet).
+ * a village well in the low field (needs the trial dig and the reeve's consent), or keep a rota at the square well.
  * @domain quests
  */
 import type { QuestDef } from './types'
@@ -20,11 +20,11 @@ export const Q08: QuestDef = {
     bridget: { kind: 'npc', required: true, place: 'V', profession: 'guard', kin: ['head'] },
   },
   start: [{ k: 'visited', place: 'V' }],
-  flags: { result: 'none', accepted: false, routeWalked: false, bridgeTold: false, plan: 'none' },
+  flags: { result: 'none', accepted: false, routeWalked: false, bridgeTold: false, plan: 'none', consent: false, consentAsked: false },
   stages: [
     { id: 'queue', journal: 'The sheep of {V} reach the square\'s well before {elspeth} does. Walk the way to the pasture and see what makes sense; ask {margaret} about her low field, and mind {bridget}\'s road.', anchor: pen, progress: [{ when: [flag('routeWalked')], text: 'You have walked the route.' }, { when: [{ k: 'counter', id: 'digs', gte: 1 }], text: 'You have dug a trial hole in the low field.' }] },
-    { id: 'plan', journal: 'Choose with {elspeth}: a trough by the pasture fence (you build it and fill it three times), or a rota at the square well.', anchor: { k: 'actor', slot: 'elspeth' } },
-    { id: 'build', journal: 'Build a trough near the pasture pen — not on the road — and carry water into it: one bucket fills a third.', anchor: pen },
+    { id: 'plan', journal: 'Choose with {elspeth}: a trough by the pasture fence (you build it and fill it three times), a small well in {margaret}\'s low field (you dig the trial hole first; {margaret} puts it to the village), or a rota at the square well.', anchor: { k: 'actor', slot: 'elspeth' } },
+    { id: 'build', journal: 'Build what you chose near the pasture or the low field — not on the road. A trough takes three bucket trips (one fills a third); a well needs {margaret}\'s word from the square, half a day after you ask.', anchor: pen },
   ],
   choiceLabels: { trough: 'A trough by the pasture fence', rota: 'A rota at the square well' },
   nodes: {
@@ -55,16 +55,24 @@ export const Q08: QuestDef = {
       lines: [say('elspeth', 'So. What do we do?')],
       options: [
         opt('trough', 'A trough by the pasture fence. Your household fills it.', [set('plan', 'trough'), { k: 'choose', flag: 'result', value: 'trough' }, stage(2)], { next: 'el_trough' }),
+        opt('well', 'A small well in the low field. Shared, with turns at keeping it.', [set('plan', 'well'), { k: 'choose', flag: 'result', value: 'well' }, stage(2)], { needs: [{ k: 'counter', id: 'digs', gte: 1 }], reason: 'Dig a trial hole in {margaret}\'s low field first.', next: 'el_well' }),
         opt('rota', 'No building. Set times at the square well — animals at dawn and dusk, people the rest of the day.', [set('plan', 'rota'), { k: 'choose', flag: 'result', value: 'rota' }, stage(2)], { next: 'el_rota' }),
       ],
     },
     el_trough: { lines: [say('elspeth', 'Twice a day. (pause) Fine. It\'s still less than walking the flock through the square. Write my name on it, so nobody else thinks it\'s theirs to empty. One bucket fills a third, mind.')], options: [] },
+    el_well: { lines: [say('elspeth', 'Everyone\'s water, then. I\'ll take the first week, for the sheep — they\'ve been the most trouble.')], options: [] },
+    ma_consent: {
+      lines: [say('margaret', 'I\'ll put it to the village. If they agree, I\'ll take the first month myself. Come back tomorrow.')],
+      options: [opt('ask', 'Please do.', [set('consentAsked'), message('{margaret} will put the well to the village.', 'info')])],
+    },
+    ma_agreed: { lines: [say('margaret', 'The village agrees. Dig it where the rushes grow — and not on {bridget}\'s road.')], options: [] },
     el_rota: { lines: [say('elspeth', 'Costs no timber. Costs everyone\'s patience, every single day. Give it three days.')], options: [] },
   },
   topics: [
     { slot: 'elspeth', node: 'el_open', label: 'The queue at the well', when: [flagNot('accepted', true)] },
     { slot: 'margaret', node: 'ma_field', label: 'The low field', when: [flag('accepted')] },
     { slot: 'bridget', node: 'br_road', label: 'The road', when: [flag('accepted'), flagNot('bridgeTold', true)] },
+    { slot: 'margaret', node: 'ma_consent', label: 'A well in the low field', when: [flag('plan', 'well'), flagNot('consentAsked', true)] },
     { slot: 'elspeth', node: 'el_plan', label: 'What to do', when: [flag('accepted'), flag('routeWalked'), stageIs(0)] },
   ],
   observations: [
@@ -72,10 +80,13 @@ export const Q08: QuestDef = {
   ],
   counters: [
     { id: 'digs', on: 'dig', match: { near: { anchor: lowField, r: 14 } } },
+    { id: 'wells', on: 'built', match: { kind: 'well', near: { anchor: lowField, r: 25 } } },
     { id: 'troughs', on: 'built', match: { kind: 'trough', near: { anchor: pen, r: 40 } } },
     { id: 'fills', on: 'fill', match: { kind: 'trough', near: { anchor: pen, r: 40 } } },
   ],
   rules: [
+    { id: 'consent', when: [flag('plan', 'well'), flag('consentAsked'), flag('consent', false), { k: 'since', hours: 12, from: 'stage' }], effects: [set('consent'), message('{margaret}: "The village agrees." You may dig the well in the low field.', 'info')] },
+    { id: 'wellDone', when: [flag('plan', 'well'), flag('consent'), { k: 'counter', id: 'wells', gte: 1 }], effects: [{ k: 'end', ending: 'well' }] },
     { id: 'troughDone', when: [flag('plan', 'trough'), { k: 'counter', id: 'troughs', gte: 1 }, { k: 'counter', id: 'fills', gte: 3 }], effects: [{ k: 'end', ending: 'trough' }] },
     { id: 'rotaDone', when: [flag('plan', 'rota'), { k: 'since', hours: 72, from: 'stage' }], effects: [{ k: 'end', ending: 'rota' }] },
     { id: 'dropped', when: [{ k: 'since', hours: 336, from: 'started' }], effects: [{ k: 'end', ending: 'dropped' }] },
@@ -91,6 +102,16 @@ export const Q08: QuestDef = {
         { k: 'rep', delta: { helpfulness: 6 }, reason: 'A trough for {V}\'s sheep', places: ['V'] },
         opinion('elspeth', 15), opinion('margaret', 10), opinion('bridget', 5),
         message('"Tomorrow I fill it," says {elspeth}. "The day after, you remind me."', 'info'),
+      ],
+    },
+    {
+      id: 'well',
+      journal: 'The well stands in the low field and the village agreed to keep it. {margaret} paid 40 c from the village treasury.',
+      effects: [
+        { k: 'pay', from: { treasury: 'V' }, to: 'player', amount: 40 },
+        { k: 'rep', delta: { helpfulness: 10 }, reason: 'A well for {V}', places: ['V'] },
+        opinion('elspeth', 15), opinion('margaret', 20), opinion('bridget', 5),
+        message('"It\'s everyone\'s now," says {margaret}. "Which means everyone keeps it clean," says {bridget}.', 'info'),
       ],
     },
     {

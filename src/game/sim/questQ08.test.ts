@@ -58,6 +58,26 @@ describe('QUEST-03 Q08 The Long Way to Water', () => {
     expect(totalMoney(sim)).toBe(money0)
   })
 
+  it('Q08 well: needs the trial dig and the reeve\'s consent (12 h after asking); a well in the low field pays 40 c (conserved)', () => {
+    const sim = offered()
+    walked(sim)
+    expect(() => choose(sim, 'q08', 'el_plan', 'well')).toThrow(/disabled/)
+    const field = anchor(sim, { k: 'building', slot: 'margaret', kind: 'field' })
+    questEvent(sim, { k: 'dig', x: field.x, z: field.z })
+    choose(sim, 'q08', 'el_plan', 'well')
+    sim.state.buildings.push({ id: 'q08-well', kind: 'well', x: field.x + 5, z: field.z, rot: 0, hw: 1, hd: 1, settlementId: -1, durability: 100, owner: 'player' } as never)
+    sim.rebuildBuildingIndex()
+    questEvent(sim, { k: 'built', buildingId: 'q08-well', kind: 'well' })
+    tickQuests(sim, 2)
+    expect(stateOf(sim, 'q08')?.status).toBe('active') // no consent yet
+    choose(sim, 'q08', 'ma_consent', 'ask')
+    hoursLater(sim, 13)
+    const money0 = totalMoney(sim)
+    tickQuests(sim, 2)
+    expect(stateOf(sim, 'q08')).toMatchObject({ status: 'done', ending: 'well' })
+    expect(totalMoney(sim)).toBe(money0)
+  })
+
   it('Q08 rota: three days after the choice it pays 10 c; a far-away trough does not count', () => {
     const sim = offered()
     walked(sim)
