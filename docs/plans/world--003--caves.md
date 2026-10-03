@@ -1,6 +1,6 @@
 # World: caves
 
-**Status:** draft  
+**Status:** in_progress  
 **Model:** opus — architecture/recon and keep/drop decisions; sonnet — generator, terrain/render, sim integration, tests  
 **Domain:** world  
 **Sub domains:** world-gen, terrain, navigation, collision, perception, combat, save, render, loot, fauna  
