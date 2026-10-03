@@ -73,3 +73,7 @@ Each stage = one or more plans with the usual `**Model:**` split (D-PLAN-7), a w
 2. MAP-02 stays in L1.
 3. **L5 — partly:** design round decides which slice (candidates: family/friend relations affecting AI and reputation, funerals and graves, settlement repair/extension by NPCs; full multi-generation demography and settlement destruction are not committed). **L6 — caves only** (WORLD-05 + cave loot); WORLD-06 continents/new biomes/sea transport and QUAL-02 stay deferred, not planned.
 4. **Voices:** Fish Audio free tier; the user generates the clips (Cursor + browser). Our side: phrase-set list per profession/age/situation (`greeting`, `farewell`, `thanks`, `warning_danger`, `call_for_help`, `tired`, `hungry`, …) and the playback/selection code (VOICE-01).
+
+## 4. Update 2026-10-03 — L2 quest content plan
+
+The remaining 17 designed quests (Q01 Q02 Q04 Q05 Q06 Q08 Q09 Q10, G02 G04–G08, Q11–Q13) are planned in [`quests--003`](../plans/quests--003--remaining-authored-quests.md): an engine-extension wave (places V/T, grants registry, creatures/dens, price mods, new events, companions), then H-only, H↔V and treasure waves; Q10 stays blocked on L6 caves and the L3 miner slice. It replaces steps 4–5 of `quests--002`.

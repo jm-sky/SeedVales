@@ -140,3 +140,7 @@ Critical assessment, in short: the cheap, high-value parts go early and are tied
 - New or replaced `.glb` assets: credits/licence in `public/assets/CREDITS-CC-BY.txt` or the CC0 licence file, row in `docs/assets/README.md`, node names required by render code preserved (guard test from `render--004` step 2).
 - Low has no composer/postprocessing; one shadow-casting directional light; no point-light shadows (D-REN-7).
 - The appendix does not invalidate VISION.md; on conflict the appendix is newer — record the resolution in DECISIONS.
+
+## Addendum 2026-10-03 — remaining authored quests
+
+All 17 not-yet-implemented quest designs are planned in [`quests--003`](../plans/quests--003--remaining-authored-quests.md) (stage L2 of [later-vision-backlog](later-vision-backlog.md)); treasure quests depend on `world--001` landmarks/LOOT-01, Q10 on caves and the miner role.
