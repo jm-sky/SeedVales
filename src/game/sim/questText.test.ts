@@ -23,7 +23,7 @@ describe('QUEST-03 quest text', () => {
   it('QUEST-03 text: no design-doc name outside a {placeholder}, and every token names a cast slot', () => {
     const name = new RegExp(`\\b(${DESIGN_NAMES.join('|')})\\b`)
     for (const def of AUTHORED_QUESTS) {
-      const slots = new Set(['H', 'V', ...Object.keys(def.cast)])
+      const slots = new Set(['H', 'V', 'T', ...Object.keys(def.cast)])
       for (const s of strings({ ...def, cast: undefined })) {
         const bare = s.replace(/\{[^}]*\}/g, '')
         expect(bare.match(name)?.[0], `${def.id}: "${s}"`).toBeUndefined()

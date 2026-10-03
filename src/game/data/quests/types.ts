@@ -1,4 +1,4 @@
-import type { ProfessionId, StructureKind } from '../../world/types'
+import type { LandmarkKind, ProfessionId, StructureKind } from '../../world/types'
 /**
  * Authored quest definitions: plain data (no functions, no closures). Conditions and effects are tagged unions
  * evaluated by `sim/questEngine.ts`. This layer must not import `sim/*` (docs/design/quests-engine.md §1).
@@ -15,7 +15,7 @@ export type QuestAge = 'child' | 'adult' | 'elder'
 export type QuestRepDim = 'honesty' | 'helpfulness' | 'renown' | 'courage'
 export type QuestStatusId = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
 /** Settlement a cast NPC or an effect refers to: the home settlement or the nearest other one (quests--003 E1). */
-export type QuestPlace = 'H' | 'V'
+export type QuestPlace = 'H' | 'V' | 'T'
 export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell' | 'fill' | 'dig' | 'fell' | 'burn'
 
 /** A place named without coordinates; resolved once and cached in the quest state (`anchors`). */
@@ -49,6 +49,12 @@ export type Anchor =
    * (the drier, gentler side). Resolved once (quests--003 Q02).
    */
   | { k: 'roadSide'; frac: number; off: number }
+  /**
+   * A landmark of `kind` (quests--003 W3): `nearestRoad` = the one closest to the road between the two places (within 1.2 km of
+   * it; no such landmark → the anchor does not exist and a quest that needs it is never offered), `nearestHome` = closest to
+   * the home settlement.
+   */
+  | { k: 'landmark'; kind: LandmarkKind; pick: 'nearestRoad' | 'nearestHome'; road?: readonly [QuestPlace, QuestPlace] }
   /** A point `dx`, `dz` metres from another anchor (resolved once). */
   | { k: 'offset'; of: Anchor; dx: number; dz: number }
 
@@ -56,7 +62,7 @@ export type Source =
   | 'player'
   | { purse: SlotId }
   | { store: SlotId }
-  | { treasury: 'home' | 'V' }
+  | { treasury: 'home' | 'V' | 'T' }
   | { warehouse: 'home' }
 
 /** Conditions: pure reads of the sim and the quest state. */
@@ -89,6 +95,8 @@ export type Cond =
   | { k: 'quest'; id: QuestId; in: QuestStatusId[]; started?: boolean }
   /** The cast animal is dead (or gone). */
   | { k: 'dead'; slot: SlotId }
+  /** The anchor can be resolved in this world (a landmark of that kind exists where the quest needs it). */
+  | { k: 'anchorExists'; anchor: Anchor }
   /** The cast NPC travels with the player under a contract (`active` false: does not). */
   | { k: 'companion'; slot: SlotId; active?: boolean }
   /** The cast NPC could agree to travel with the player now (alive, up, free, no other business). */
@@ -123,6 +131,8 @@ export type Effect =
   | { k: 'pay'; from: Source; to: Source; amount: number }
   | { k: 'give'; from: Source; to: Source; item: string; qty: number }
   | { k: 'consume'; from: Source; item: string; qty: number }
+  /** Money that enters the world from outside (a buried strongbox, a find): an explicit, ledger-logged source (D-ECON-1). */
+  | { k: 'mint'; to: Source; amount: number; why: string }
   /** Goods that enter the world from outside (a trader's trip, a find) — an explicit, ledger-logged source (D-ECON-1). */
   | { k: 'grant'; to: Source; item: string; qty: number; why: string; tag?: string }
   /** Re-tags the first stack of `item` in `from` (a plowshare `flawed` → `mended`). */

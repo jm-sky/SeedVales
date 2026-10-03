@@ -57,14 +57,17 @@ export function neighbourId(sim: Sim): number {
   return best
 }
 
-export const placeId = (sim: Sim, place: QuestPlace | undefined): number => (place === 'V' ? neighbourId(sim) : homeId(sim))
+/** The town {T}: the first large settlement (-1 when the world has none). */
+export const townId = (sim: Sim): number => sim.world.settlements.find((s) => s.size === 'LG' && s.id !== homeId(sim))?.id ?? -1
+
+export const placeId = (sim: Sim, place: QuestPlace | undefined): number => (place === 'V' ? neighbourId(sim) : place === 'T' ? townId(sim) : homeId(sim))
 /** Game day since the start (1 = the first day). */
 export const gameDay = (sim: Sim) => dayIndex(sim.state.time.cal) - dayIndex(START_CALENDAR_S) + 1
 export const firstName = (h: { name: string }) => h.name.split(' ')[0] ?? h.name
 
 /**
  * Text placeholders of a quest (review 016 #2): `{slot}` = generated first name of the cast NPC, `{slot:he}` /
- * `{slot:him}` / `{slot:his}` / `{slot:himself}` (capitalised: `{slot:He}`) = pronouns from the NPC's sex, `{H}` / `{V}` =
+ * `{slot:him}` / `{slot:his}` / `{slot:himself}` (capitalised: `{slot:He}`) = pronouns from the NPC's sex, `{H}` / `{V}` / `{T}` =
  * home and nearest other settlement. An empty optional slot uses `fallbackName` and `fallbackMale`.
  */
 export function questPlaceholders(c: QuestCtx): Record<string, string> {
@@ -77,6 +80,7 @@ export function questPlaceholders(c: QuestCtx): Record<string, string> {
     if (!best || d < best.d) best = { name: c.sim.state.settlements[s.id]?.name ?? s.name, d }
   }
   m.V = best?.name ?? 'the next village'
+  m.T = c.sim.state.settlements[townId(c.sim)]?.name ?? 'the town'
   for (const [slot, spec] of Object.entries(c.def.cast)) {
     const h = humanOf(c, slot)
     m[slot] = h ? firstName(h) : (spec.fallbackName ?? 'someone')
@@ -192,6 +196,33 @@ function roadPoint(sim: Sim, m: number): { x: number; z: number } | null {
     return sim.terrain.waterDepthAt(ox, oz) < 0.3 ? { x: ox, z: oz } : { x: p.x, z: p.z }
   }
   return null
+}
+
+/** Nearest landmark of a kind to a road between two places (≤ 1.2 km from it) or to the home settlement; null when none qualifies. */
+function landmarkPoint(sim: Sim, kind: string, pick: 'nearestRoad' | 'nearestHome', road?: readonly [QuestPlace, QuestPlace]): { x: number; z: number } | null {
+  const list = sim.world.landmarks.filter((l) => l.kind === kind)
+  if (!list.length) return null
+  if (pick === 'nearestHome') {
+    const hs = sim.world.settlements[homeId(sim)]!
+    const l = [...list].sort((a, b) => Math.hypot(a.x - hs.x, a.z - hs.z) - Math.hypot(b.x - hs.x, b.z - hs.z))[0]!
+    return { x: l.x, z: l.z }
+  }
+  const a = placeId(sim, road?.[0] ?? 'V')
+  const b = placeId(sim, road?.[1] ?? 'T')
+  const r = sim.world.roads.find((x) => (x.from === a && x.to === b) || (x.from === b && x.to === a))
+  if (!r) return null
+  let best: { x: number; z: number } | null = null
+  let bd = 1200
+  for (const l of list) {
+    for (const p of r.points) {
+      const d = Math.hypot(p.x - l.x, p.z - l.z)
+      if (d < bd) {
+        bd = d
+        best = { x: l.x, z: l.z }
+      }
+    }
+  }
+  return best
 }
 
 /** The point `frac` of the way along the road between the home settlement and {V}, with its direction (null without a road). */
@@ -337,6 +368,7 @@ export function resolveAnchor(c: QuestCtx, a: Anchor): Resolved | null {
     if (b) r = { x: b.x, z: b.z, id: b.id }
   } else if (a.k === 'wild') r = wildPoint(sim, a.bearing, a.m)
   else if (a.k === 'boundary') r = boundaryTree(sim)
+  else if (a.k === 'landmark') r = landmarkPoint(sim, a.kind, a.pick, a.road)
   else if (a.k === 'roadSide') r = roadSidePoint(sim, a.frac, a.off)
   else if (a.k === 'offset') {
     const base = resolveAnchor(c, a.of)
@@ -374,6 +406,8 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
       return alive(actorOf(c, k.slot))
     case 'all':
       return k.of.every((x) => evalCond(c, x))
+    case 'anchorExists':
+      return !!resolveAnchor({ ...c, readOnly: true }, k.anchor)
     case 'any':
       return k.of.some((x) => evalCond(c, x))
     case 'calm': {
@@ -507,7 +541,7 @@ function moneyHolder(c: QuestCtx, s: Source): { get: () => number; add: (n: numb
     return h ? { get: () => h.money, add: (n) => (h.money += n) } : undefined
   }
   if ('treasury' in s) {
-    const t = c.sim.state.settlements[s.treasury === 'V' ? neighbourId(c.sim) : homeId(c.sim)]
+    const t = c.sim.state.settlements[s.treasury === 'V' ? neighbourId(c.sim) : s.treasury === 'T' ? townId(c.sim) : homeId(c.sim)]
     return t ? { get: () => t.treasury, add: (n) => (t.treasury += n) } : undefined
   }
   return undefined
@@ -855,6 +889,14 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'message':
       sim.message(fillQuestText(e.text, questPlaceholders(c)), e.kind ?? 'quest')
       break
+    case 'mint': {
+      const holder = moneyHolder(c, e.to)
+      if (holder && e.amount > 0) {
+        holder.add(e.amount)
+        logMint(e.amount, `quest:${def.id}:${e.why}`, e.to !== 'player' && 'purse' in e.to ? humanOf(c, e.to.purse) : undefined)
+      }
+      break
+    }
     case 'need':
       for (const s of e.slots) {
         const h = humanOf(c, s)
