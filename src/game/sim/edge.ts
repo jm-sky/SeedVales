@@ -42,3 +42,9 @@ export function sharpenEdge(s: ItemStack): number {
 }
 
 export const needsSharpening = (s: ItemStack) => maxEdge(s) > 0 && edgeOf(s) < maxEdge(s) - 1e-6
+
+/** Blacksmith sharpening service price (copper): scales with the edge that is missing; 0 when nothing to do (proposal P-12). */
+export const sharpenServicePrice = (s: ItemStack) => (needsSharpening(s) ? Math.max(2, Math.ceil((maxEdge(s) - edgeOf(s)) * 30)) : 0)
+
+/** The blade the service works on: the wielded melee weapon. */
+export const serviceBlade = (main: ItemStack | undefined) => (main && maxEdge(main) > 0 ? main : undefined)

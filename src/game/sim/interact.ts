@@ -16,6 +16,7 @@ import { consume, dropItem, fillTrough, nodeAvailable } from './actions'
 import { cartDef, cartLoad, isHeavy, loadHeavy, parkCart, pushParked, stowCart, unloadInto, unloadToBuilding } from './cart'
 import { isDown } from './combat'
 import { roastBatch, roastCapacity, roastSeconds } from './cooking'
+import { maxEdge, serviceBlade, sharpenServicePrice } from './edge'
 import { logMoney, logProduce } from './eventLog'
 import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
 import { mealIngredients, mealNutrition, mealRefusal, payLodging } from './inns'
@@ -278,6 +279,11 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
       }
       if (st?.playerMayor && st.deputyId === n.id) o.push(opt('set_tax', `Tax rate: ${st.taxRate ?? 'normal'} (change)`))
       if (n.profession === 'blacksmith') o.push(opt('orders', 'Order from the blacksmith', true, undefined, 'orders'))
+      if (n.profession === 'blacksmith') {
+        const blade = serviceBlade(p.eq.main)
+        const price = blade ? sharpenServicePrice(blade) : 0
+        o.push(opt('sharpen_service', price ? `Sharpen your ${itemDef(blade!.id).name.toLowerCase()} (${price}c)` : 'Sharpen your weapon (nothing to do)', price > 0 && p.money >= price, price ? 'Not enough money' : 'The edge is already as sharp as it gets'))
+      }
       if (n.profession === 'herbalist') o.push(opt('heal_service', 'Ask for healing (15c)', p.money >= 15, 'Not enough money'))
       if (n.profession === 'guard' || n.profession === 'hunter') o.push(opt('quests', 'Quests', true, undefined, 'quests'))
       return o
@@ -502,6 +508,17 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'set_tax': {
       const n = sim.human((t as { id: number }).id)
       return n ? cycleTaxRate(sim, n.settlementId) : ''
+    }
+    case 'sharpen_service': {
+      const n = sim.human((t as { id: number }).id)
+      const blade = serviceBlade(p.eq.main)
+      const price = blade ? sharpenServicePrice(blade) : 0
+      if (!n || !blade || price <= 0 || p.money < price) return ''
+      p.money -= price
+      n.money += price
+      logMoney('player', `npc:${n.id}`, price, 'sharpen_service')
+      blade.edge = maxEdge(blade) // the smith's edge is the best this blade can hold; durability is not repaired
+      return `${n.name} puts a fine edge on your ${itemDef(blade.id).name.toLowerCase()} (${price} c).`
     }
     case 'stow_cart':
       return stowCart(sim, p, (t as { id: number }).id)

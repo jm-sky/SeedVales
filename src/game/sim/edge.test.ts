@@ -91,3 +91,26 @@ describe('combat--005 sharpness', () => {
     expect(all.some((s) => s.id === 'sword' && s.edge === 0.2)).toBe(true)
   })
 })
+
+describe('P-12 blacksmith sharpening service', () => {
+  it('COMBAT-05: the smith restores the edge for a price that scales with what is missing, pays him, keeps durability, and refuses a sharp blade', async () => {
+    const { runOption, targetOptions } = await import('./interact')
+    const sim = testSim()
+    const smith = sim.state.npcs.find((n) => n.profession === 'blacksmith')!
+    const p = sim.player
+    p.money = 100
+    p.eq.main = sword({ edge: 0.2, dur: 77 })
+    const o = targetOptions(sim, { type: 'npc', id: smith.id }).find((x) => x.id === 'sharpen_service')!
+    expect(o.enabled).toBe(true)
+    const smith0 = smith.money
+    const price = 100 - p.money
+    expect(price).toBe(0)
+    runOption(sim, { type: 'npc', id: smith.id }, 'sharpen_service')
+    expect(edgeOf(p.eq.main)).toBeCloseTo(maxEdge(p.eq.main))
+    expect(p.eq.main.dur).toBe(77)
+    expect(100 - p.money).toBeGreaterThan(0)
+    expect(smith.money - smith0).toBe(100 - p.money)
+    const again = targetOptions(sim, { type: 'npc', id: smith.id }).find((x) => x.id === 'sharpen_service')!
+    expect(again.enabled).toBe(false)
+  })
+})

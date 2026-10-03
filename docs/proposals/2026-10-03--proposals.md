@@ -32,7 +32,7 @@
 
 ## Economy and crafting
 
-- **P-12 Maintenance loop** (S–M) — blacksmith offers a sharpening service (price from edge deficit), guards/hunters use a whetstone at home (a `maintain` duty); closes D-COMBAT-4's open point.
+- **P-12 Maintenance loop** (S–M) — ✅ *blacksmith sharpening service implemented 2026-10-03 (price from the missing edge, pays the smith, durability untouched; `edge.test.ts`); NPC upkeep (`maintain` duty) still open.* — blacksmith offers a sharpening service (price from edge deficit), guards/hunters use a whetstone at home (a `maintain` duty); closes D-COMBAT-4's open point.
 - **P-13 Salt trade route** (M) — salt is a finite import (D-INN-1); a caravan good with a price curve gives the first real inter-settlement scarcity (feeds `economy--002`/TRADE-03). *Risk:* conservation — covered by the soak ledger.
 - **P-14 Mayor projects (SET-04-lite)** (M) — the player-mayor's tax income funds a project queue (repair the warehouse, new well); NPC builders execute from the warehouse stock. *Fits:* D-SET-1 "not done". *Risk:* build AI.
 
