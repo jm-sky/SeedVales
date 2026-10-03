@@ -144,17 +144,20 @@ Budgets: torso ≤ 1.5 k and small pieces ≤ 600 are met by every module after 
 2. S2-4 contact sheet on WSL: look at the candidates in the game camera; Opus keeps or drops `PaddedJacket` and decides on `Ranger_Plain` for hunters.
 3. render--012 keeps: cap, chainmail, studded leather. The recolour and cut methods of the script (`brown_uv`, `remap_faces`, `hand_shell`) are reusable there.
 
-## 10. Follow-up: modest women's dress modules (Noble)
+## 10. Follow-up: women's dress and skirt modules (Noble)
 
-The female outfits had no skirts and showed strong bust/waist shaping. [`scripts/assets/blender-dress-modules.py`](../../scripts/assets/blender-dress-modules.py) (female only, re-uses the helpers of `blender-equipment-modules.py`) builds three candidates from `Female_Noble_Body` into `assets-src/characters/eq/`:
+The female outfits had no skirts or dresses. [`scripts/assets/blender-dress-modules.py`](../../scripts/assets/blender-dress-modules.py) (female only, re-uses the helpers of `blender-equipment-modules.py`) builds four candidates into `assets-src/characters/eq/`:
 
 | Module | Content | Tris | Notes |
 |---|---|---|---|
 | `NobleBodice_Female` | Noble bodice (puffed shoulders, corset), short split skirt cut away | 2824 | arms stay with the base outfit |
-| `LongSkirt_Female` | generated ankle-length flared skirt, gold hem band | 392 | wear with any top |
-| `Dress_Female` | bodice + long skirt | 3216 | complete dress |
+| `LongSkirt_Female` | generated ankle-length flared skirt, gold hem band | 448 | wear with any top |
+| `Dress_Female` | bodice + long skirt | 3272 | complete dress (noble) |
+| `PeasantSkirt_Female` | plain calf-length wool skirt, Peasant atlas, no hem band | 392 | layered over the Peasant base (waist at its bodice) |
 
-- **Modesty:** the bust relief is flattened (`BUST_FLATTEN` 0.65) and the corset waist loosened (`WAIST_LOOSEN` 1.10); tunable constants at the top of the script.
-- **Rig:** same 65-bone UBC skeleton and vertex-group names as the other modules. Skirt weights: pelvis plus thighs (left/right split by x), calves below the knee (`THIGH_MAX` 0.9). Checked posed with `anims.glb` (rest, Idle, Walk, Crouch_Idle, Sword_Attack): [`blend-fit-Dress-female.png`](../state/frames/render--011/blend-fit-Dress-female.png). Known limitation: at the far back swing of Walk the rear foot can poke out below the hem; the skirt is one rigid tube, no cloth sim.
-- **Integration:** the Noble bodice is a complete torso, so `Dress` / `NobleBodice` should **replace** the base Body (and Legs for `Dress`) instead of layering over them (the Peasant bodice pokes through by up to 7 cm otherwise). The sheet shows the base Arms and Feet kept. The Noble arms are not used (bare skin, second material).
-- **Not done:** no glTF post-processing (`build-equipment-modules.mjs` `raw` source), no game wiring, no male variant, no recolour variants (the red/gold atlas swatches are fixed; a tint at runtime is the cheap option).
+- **Skirts** are generated lofted ring meshes (28 segments). The top ring follows the real hem line of the reference mesh (per-angle radius) and tucks 1.2 cm inside it, so there is no gap at the waist (an earlier version built the top ring from the extreme points and left a hole).
+- **Modesty:** the corset waist is loosened (`WAIST_LOOSEN` 1.10) and the skirts are long. Flattening the bust (`BUST_FLATTEN`) was tried and **dropped** (0.65 sank the gold trim into the body and opened a hole at the sternum); it is 0 and the original bust shape is kept. The Peasant base bodice still has its own bust shaping.
+- **Rig:** same 65-bone UBC skeleton and vertex-group names as the other modules. Skirt weights: pelvis plus thighs (left/right split by x), calves below the knee (`THIGH_MAX` 0.9, peasant 0.8). Checked posed with `anims.glb` (rest, Idle, Walk, Crouch_Idle, Sword_Attack): [`blend-fit-Dress-female.png`](../state/frames/render--011/blend-fit-Dress-female.png), [`blend-fit-PeasantSkirt-female.png`](../state/frames/render--011/blend-fit-PeasantSkirt-female.png). Known limitation: at the far back swing of Walk the rear foot can poke out below the hem of the long skirt; each skirt is one rigid tube (no cloth sim, no slit).
+- **Integration:** the Noble bodice is a complete torso, so `Dress` / `NobleBodice` should **replace** the base Body (and Legs for `Dress`) instead of layering over them (the Peasant bodice pokes through by up to 7 cm otherwise). The Noble arms are not used (bare skin, second material). `PeasantSkirt` layers over the base (p95 penetration 1.1 cm).
+- **The `.blend`:** `All_Female_v2.blend` next to `All_Female.blend` in the pack folder (`_temp/extracted/Modular Character Outfits - Fantasy[Source]/`, git-ignored, 16 MB). It is the original file plus a `Dresses` collection with the four modules bound to the original `Armature`. Recreate with `build_dresses()` then `save_v2_blend()` from the script (it saves a copy, the open file and the original are untouched).
+- **Not done:** no glTF post-processing (`build-equipment-modules.mjs` `raw` source), no game wiring, no male variant, no colour variants (the swatches are fixed; a runtime tint is the cheap option).

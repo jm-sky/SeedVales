@@ -10,6 +10,7 @@ blender-equipment-modules.py, whose helpers are re-used):
   NobleBodice_Female  bodice with puffed shoulders, no skirt (arms come from the base outfit)
   LongSkirt_Female    ankle-length skirt only           (wear it with any top)
   Dress_Female        bodice + long skirt                   (complete dress)
+  PeasantSkirt_Female plain calf-length wool skirt, layered over the Peasant base (waist at the base bodice, no hem band)
 
 Run: Blender MCP `execute_blender_code`: exec(open(r'<repo>/scripts/assets/blender-dress-modules.py').read()). Env SV_ROOT / SV_OUT as in the other script.
 """
@@ -27,8 +28,11 @@ HEM_BAND = 0.07        # height of the gold hem band
 SEGMENTS = 28
 HEM_RX, HEM_RY = 0.38, 0.40   # hem half-axes (x = sideways, y = front/back)
 THIGH_MAX = 0.9        # share of the skirt weight that follows the thighs (calves below the knee) at hem level
-# modesty: how much of the bust relief and the corset waist is flattened (0 = untouched, 1 = flat)
-BUST_FLATTEN = 0.65
+# modesty: how much the bust relief is flattened (0 = untouched) and how much the corset waist is loosened
+DETAIL['Dress'] = ((0, 0, 1.10), 0.9)   # waist close-up of the fit sheet
+PEASANT_CUT_Z, PEASANT_HEM_Z = 1.02, 0.42   # PeasantSkirt: waist line over the base bodice, hem at mid-calf
+PEASANT_WOOL = (0.20, 0.14, 0.09)             # dark undyed wool brown (nearest flat block of the Peasant atlas)
+BUST_FLATTEN = 0.0     # 0.65 made a hole at the sternum (the gold trim sank into the body): left off, original bust shape
 WAIST_LOOSEN = 1.10    # scale of the waist cross-section (the corset is loosened)
 
 
@@ -124,32 +128,61 @@ def is_gold(r, g, b):
     return r > 0.5 and g > 0.3 and b < 0.25 and r > 1.3 * b + 0.2
 
 
-def build_skirt(arm, bodice, red_uv, gold_uv, name='LongSkirt'):
-    """Ankle-length skirt: lofted rings from the waist (the bodice's bottom edge) to the hem, flared, weights pelvis / thighs."""
+def build_skirt(arm, bodice, red_uv, gold_uv, name='LongSkirt', cut_z=None, hem_z=None, band=None, hem_rx=None, hem_ry=None, grow=0.006, thigh_max=None):
+    """Skirt: lofted rings from the waist (the reference mesh `bodice`, at cut_z) to the hem, flared, weights pelvis / thighs / calves.
+    Defaults = the long dress skirt; band = height of the hem band (0 = none)."""
+    cut_z = CUT_Z if cut_z is None else cut_z
+    hem_z = HEM_Z if hem_z is None else hem_z
+    band = HEM_BAND if band is None else band
+    hem_rx = HEM_RX if hem_rx is None else hem_rx
+    hem_ry = HEM_RY if hem_ry is None else hem_ry
+    thigh_max = THIGH_MAX if thigh_max is None else thigh_max
     mw = bodice.matrix_world
-    ring = [mw @ v.co for v in bodice.data.vertices if CUT_Z - 0.01 <= (mw @ v.co).z <= CUT_Z + 0.03]
-    rx0 = max(abs(p.x) for p in ring) + 0.012
+    pts = [mw @ v.co for v in bodice.data.vertices]
+    ring = [p for p in pts if cut_z - 0.01 <= p.z <= cut_z + 0.03]
     cy = float(np.mean([p.y for p in ring]))
-    ry0 = max(abs(p.y - cy) for p in ring) + 0.012
-    prof = [CUT_Z + 0.02, CUT_Z - 0.06, 0.92, 0.72, 0.52, 0.34, HEM_Z + HEM_BAND, HEM_Z]
+
+    def radii(zlo, zhi, grow):
+        """Per segment: radius (from the centre line) of the bodice in the z band, so the skirt top follows its real hem line."""
+        out = []
+        for k in range(SEGMENTS):
+            ang = 2 * math.pi * k / SEGMENTS
+            best = 0.0
+            for p in pts:
+                if not zlo <= p.z <= zhi:
+                    continue
+                a = math.atan2(p.x, p.y - cy)
+                d = abs((a - ang + math.pi) % (2 * math.pi) - math.pi)
+                if d <= 1.6 * math.pi / SEGMENTS:
+                    best = max(best, math.hypot(p.x, p.y - cy))
+            out.append(best + grow)
+        for k in range(SEGMENTS):   # fill angular gaps from the neighbours
+            if out[k] <= grow:
+                out[k] = max(out[(k - 1) % SEGMENTS], out[(k + 1) % SEGMENTS])
+        return out
+
+    hem_r = lambda k: 1 / math.hypot(math.sin(2 * math.pi * k / SEGMENTS) / hem_rx, math.cos(2 * math.pi * k / SEGMENTS) / hem_ry)
+    r_hem = radii(cut_z - 0.01, cut_z + 0.02, grow)    # the bodice's cut edge: the skirt starts just outside it
+    r_in = radii(cut_z + 0.03, cut_z + 0.07, -0.012)    # hidden inside the bodice (overlap, no gap)
+    prof = [(cut_z + 0.06, r_in), (cut_z, r_hem)]
+    zs = [cut_z - 0.08 - (cut_z - 0.08 - hem_z - band) * i / 5 for i in range(6)] + ([hem_z] if band else [])
+    for z in zs:
+        t = float(np.clip((cut_z - z) / (cut_z - hem_z), 0, 1)) ** 0.85
+        prof.append((z, [r + (hem_r(k) - r) * t for k, r in enumerate(r_hem)]))
     me = bpy.data.meshes.new(name)
     bm = bmesh.new()
     uvl = bm.loops.layers.uv.new('UVMap')
     rows = []
-    for z in prof:
-        t = np.clip((CUT_Z - z) / (CUT_Z - HEM_Z), 0, 1)
-        flare = t ** 0.85
-        rx = rx0 + (HEM_RX - rx0) * flare
-        ry = ry0 + (HEM_RY - ry0) * flare
-        rows.append([bm.verts.new((rx * math.sin(2 * math.pi * k / SEGMENTS), cy + ry * math.cos(2 * math.pi * k / SEGMENTS), z)) for k in range(SEGMENTS)])
+    for z, rad in prof:
+        rows.append([bm.verts.new((rad[k] * math.sin(2 * math.pi * k / SEGMENTS), cy + rad[k] * math.cos(2 * math.pi * k / SEGMENTS), z)) for k in range(SEGMENTS)])
     for r in range(len(rows) - 1):
-        band = r == len(rows) - 2
+        is_band = bool(band) and r == len(rows) - 2
         for k in range(SEGMENTS):
             a, b = rows[r][k], rows[r][(k + 1) % SEGMENTS]
             c, d = rows[r + 1][(k + 1) % SEGMENTS], rows[r + 1][k]
             f = bm.faces.new((a, d, c, b))   # normals outwards
             for lp in f.loops:
-                lp[uvl].uv = gold_uv if band else red_uv
+                lp[uvl].uv = gold_uv if is_band else red_uv
     bm.normal_update()
     # make sure the normals point outwards
     bm.faces.ensure_lookup_table()
@@ -165,7 +198,7 @@ def build_skirt(arm, bodice, red_uv, gold_uv, name='LongSkirt'):
     g = {n: ob.vertex_groups[n] for n in ('pelvis', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r')}
     for v in me.vertices:
         s = float(np.clip(v.co.x / 0.12, -1, 1))
-        wt = THIGH_MAX * float(np.clip((CUT_Z - 0.05 - v.co.z) / 0.6, 0, 1))
+        wt = thigh_max * float(np.clip((cut_z - 0.05 - v.co.z) / 0.6, 0, 1))
         wc = 0.5 * wt * float(np.clip((0.55 - v.co.z) / 0.3, 0, 1))   # below the knee part of the swing comes from the calves
         wth = wt - wc
         g['thigh_l'].add([v.index], wth * (0.5 + 0.5 * s), 'REPLACE')
@@ -192,7 +225,8 @@ def make_modules(o):
         b = evaluated_copy(noble, name)
         cut_skirt(b, CUT_Z)
         loosen_waist(b, WAIST_LOOSEN)
-        print('  bust flattened verts:', flatten_bust(b, BUST_FLATTEN))
+        if BUST_FLATTEN > 0:
+            print('  bust flattened verts:', flatten_bust(b, BUST_FLATTEN))
         return b
 
     mods = {}
@@ -201,6 +235,10 @@ def make_modules(o):
     mods['LongSkirt'] = [build_skirt(arm, b, red_uv, gold_uv)]
     b2 = bodice('DressBodice')
     mods['Dress'] = [b2, build_skirt(arm, b2, red_uv, gold_uv, 'DressSkirt')]
+    pb = evaluated_copy(o['Female_Peasant_Body'], 'sv_tmp_pb')   # reference for the waist of the peasant skirt (layered over the base)
+    mods['PeasantSkirt'] = [build_skirt(arm, pb, red_uv, gold_uv, 'PeasantSkirt', cut_z=PEASANT_CUT_Z, hem_z=PEASANT_HEM_Z, band=0,
+                                        hem_rx=0.30, hem_ry=0.29, grow=0.012, thigh_max=0.8)]
+    bpy.data.objects.remove(pb)
     return mods, mat
 
 
@@ -210,13 +248,17 @@ def build_dresses(only=None):
     arm = o['Armature']
     bvh = base_bvh(o, 'Female')
     mods, noble_mat = make_modules(o)
+    bpy.app.driver_namespace['sv_dress_mods'] = mods   # save_v2_blend() keeps these objects
     small = small_material(noble_mat, 'SV_MI_Noble')
+    peasant = small_material(o['Female_Peasant_Body'].material_slots[0].material, 'SV_MI_Peasant')
     for key, objs in mods.items():
         if only and key not in only:
             continue
         for ob in objs:
             ob.data.materials.clear()
-            ob.data.materials.append(small)  # bodice and skirt use the Noble atlas only (no skin parts)
+            ob.data.materials.append(peasant if key == 'PeasantSkirt' else small)  # Noble atlas only (no skin parts)
+        if key == 'PeasantSkirt':
+            collapse_uv(objs[0], swatch_for(objs[0], 0, PEASANT_WOOL))
         fit = fit_report(objs, bvh)
         path = os.path.join(OUT, f'{key}_Female.raw.glb')
         with contextlib.redirect_stdout(io.StringIO()):
@@ -226,3 +268,30 @@ def build_dresses(only=None):
                                        bbox=[[round(x, 3) for x in mn], [round(x, 3) for x in mx]])
         print(f'{key}_Female: {tris} tris, {report[f"{key}_Female"]["size_kb"]} KB, fit {fit}')
     return report
+
+
+def save_v2_blend(path=None):
+    """Save a copy of the open pack file with the dress modules added (collection "Dresses", bound to the original
+    Armature) as All_Female_v2.blend next to it. Call after build_dresses() and instead of end(): the open file keeps its
+    path and the pack file itself is never overwritten. Run it in a session where All_Female.blend is open."""
+    ns = bpy.app.driver_namespace
+    snap, mods = ns['sv_snap'], ns['sv_dress_mods']
+    keep = {ob for objs in mods.values() for ob in objs}
+    orig_arm = next(ob for ob in snap['objects'] if ob.type == 'ARMATURE')
+    coll = bpy.data.collections.new('Dresses')
+    bpy.context.scene.collection.children.link(coll)
+    for ob in keep:
+        for c in list(ob.users_collection):
+            c.objects.unlink(ob)
+        coll.objects.link(ob)
+        ob.parent = orig_arm
+        for m in ob.modifiers:
+            if m.type == 'ARMATURE':
+                m.object = orig_arm
+    for ob in [o for o in bpy.data.objects if o not in snap['objects'] and o not in keep]:
+        bpy.data.objects.remove(ob)
+    for me in [m for m in bpy.data.meshes if m.users == 0]:
+        bpy.data.meshes.remove(me)
+    path = path or os.path.join(PACK, 'All_Female_v2.blend')
+    bpy.ops.wm.save_as_mainfile(filepath=path, copy=True)
+    return path
