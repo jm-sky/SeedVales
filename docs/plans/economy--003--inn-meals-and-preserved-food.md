@@ -56,7 +56,7 @@ Recon against `main` commit **3af63f4533be528455d795127a9e25fa104e6e5b**.
 - Every household currently starts with `HOUSEHOLD_PANTRY = bread ×2 + branches ×4`.
 - Household background production already exists; winter production can create `dried_meat`.
 - This background production is intentionally scheduled for a more explicit profession/structure budget model in `economy--002` step 5. This plan must not introduce a second competing household-production system.
-- There is currently no `salt`, `cucumber`, salted meat, sauerkraut or pickled-food item.
+- There is currently no `salt`, `cucumber`, salted meat, fermented cabbage or pickled-food item.
 
 ## Design decisions
 
@@ -136,7 +136,7 @@ Keep the first set small and useful.
 
 - **Salt** — resource/commodity, required by salting and fermentation.
 - **Salted meat** — long-lived meat reserve.
-- **Fermented/pickled cabbage** — long-lived cabbage reserve. Use an English setting-appropriate name such as **Fermented cabbage** rather than assuming the later regional term "sauerkraut".
+- **Fermented/pickled cabbage** — long-lived cabbage reserve. Use an English setting-appropriate name such as **Fermented cabbage** rather than assuming the later regional term "fermented cabbage".
 
 These choices fit the historical direction: salting/drying meat and pickling vegetables, including cabbage, are documented medieval preservation methods. Keep the game recipe deliberately simpler than a historical cooking simulation.
 
@@ -197,7 +197,7 @@ At new-game creation, deterministically give **some** households extra preserved
 Biases may include:
 
 - hunter / woodcutter / guard: more dried or salted meat;
-- farmer: more sauerkraut / preserved vegetables;
+- farmer: more fermented cabbage / preserved vegetables;
 - trader: broader mixed reserve;
 - other households: small chance of either.
 
@@ -233,7 +233,7 @@ If a preservation station is later justified by multiple recipes, add it as a se
 
 | # | Step | Model |
 |---|---|---|
-| 0 | Reconfirm current meal/hunger calibration and select first-pass tier prices/effects; decide the exact salt starting channel and inn-resupply scope without conflicting with `economy--002` | opus |
+| 0 | Reconfirm current meal/hunger calibration and select first-pass tier prices/effects; decide the exact salt starting channel and confirm the boundary with `economy--002` | opus |
 | 1 | Add preserved-food items and recipes; update item-source audit/reachability; keep `dried_meat` as the existing baseline | sonnet |
 | 2 | Add deterministic initial preserved reserves for inns and a subset of households; settlement-size/profession variation; no new save schema fields | sonnet |
 | 3 | Add `InnMeal` data and meal availability/ingredient-selection helpers over `inn.inv` | sonnet |
