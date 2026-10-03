@@ -7,6 +7,7 @@ import type { Sim } from './sim'
 import type { Human } from './types'
 import { TAX } from '../config/calibration'
 import { logMoney } from './eventLog'
+import { mayorDaily, taxMultiplier } from './mayor'
 
 export function payToTreasury(sim: Sim, sid: number, from: Human, amount: number): number {
   const st = sim.state.settlements[sid]
@@ -36,10 +37,11 @@ export function collectTaxes(sim: Sim) {
     if (st.taxDay === day) continue
     const first = st.taxDay === undefined
     st.taxDay = day
+    mayorDaily(sim, st)
     if (first) continue // no retroactive tax at game start / after load of an old save
     for (const n of sim.npcsOf(st.id)) {
       if (n.vitals.dead || n.questOwner) continue
-      payToTreasury(sim, st.id, n, Math.floor(Math.max(0, n.money - TAX.exempt) * TAX.rate))
+      payToTreasury(sim, st.id, n, Math.floor(Math.max(0, n.money - TAX.exempt) * TAX.rate * taxMultiplier(st)))
     }
   }
 }

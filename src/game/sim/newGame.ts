@@ -14,6 +14,7 @@ import { emptySkills } from '../data/skills'
 import { SPECIES, VARIANT_MULT } from '../data/species'
 import { sampleGrid } from '../world/grid'
 import { addItem, newStack } from './inventory'
+import { assignHeadmen } from './mayor'
 import { SAVE_VERSION } from './types'
 import { newVitals } from './vitals'
 import { initialWeather } from './weather'
@@ -251,6 +252,8 @@ export function createNewGame(world: WorldData): GameState {
     addItem(player.inv, newStack(it, q))
   }
   player.eq.main = newStack(PLAYER_START_WEAPON)
+
+  assignHeadmen({ state: { settlements, npcs } })
 
   const state: GameState = {
     saveVersion: SAVE_VERSION,

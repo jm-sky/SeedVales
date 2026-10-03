@@ -18,11 +18,12 @@ import { roastBatch, roastCapacity, roastSeconds } from './cooking'
 import { logMoney, logProduce } from './eventLog'
 import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
+import { acceptOffice, cycleTaxRate, mayorStatus } from './mayor'
 import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
 import { questEvent } from './questHooks'
 import { acceptQuest } from './quests'
-import { addRep, addStat, depositGoodwill, takeGoodwill } from './reputation'
+import { addRep, addStat, depositGoodwill, settlementAt, takeGoodwill } from './reputation'
 import { hourOf, isNight } from './time'
 import { payToTreasury } from './treasury'
 import { heal } from './vitals'
@@ -264,6 +265,12 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
       const o = [opt('talk', 'Talk', true, undefined, 'dialog'), opt('trade', 'Trade', true, undefined, 'trade'), opt('gift', 'Give a gift', p.inv.items.length > 0, 'You have nothing to give', 'gift')]
       if (n.companion) o.push(opt('dismiss', n.companion.kind === 'hired' ? 'End the contract' : 'Part ways'))
       else if (n.age === 'adult') o.push(opt('hire', 'Hire as a companion', true, undefined, 'hire'), opt('ask_join', 'Ask to come along'))
+      const st = sim.state.settlements[n.settlementId]
+      if (st && st.headmanId === n.id && !st.playerMayor && n.settlementId === settlementAt(sim, p.x, p.z, 400)) {
+        const ms = mayorStatus(sim, st.id)
+        o.push(opt('ask_office', 'Ask about leading the settlement', ms.eligible, `Not yet: ${ms.missing.join(', ')}`))
+      }
+      if (st?.playerMayor && st.deputyId === n.id) o.push(opt('set_tax', `Tax rate: ${st.taxRate ?? 'normal'} (change)`))
       if (n.profession === 'blacksmith') o.push(opt('orders', 'Order from the blacksmith', true, undefined, 'orders'))
       if (n.profession === 'herbalist') o.push(opt('heal_service', 'Ask for healing (15c)', p.money >= 15, 'Not enough money'))
       if (n.profession === 'guard' || n.profession === 'hunter') o.push(opt('quests', 'Quests', true, undefined, 'quests'))
@@ -297,6 +304,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
     case 'ask_join': {
       const n = sim.human((t as { id: number }).id)
       return n ? askToJoin(sim, n).msg : ''
+    }
+    case 'ask_office': {
+      const n = sim.human((t as { id: number }).id)
+      return n ? acceptOffice(sim, n.settlementId) : ''
     }
     case 'bed_sleep':
     case 'camp_sleep':
@@ -477,6 +488,10 @@ export function runOption(sim: Sim, t: TargetRef, optionId: string): string {
       if (!n) return 'You have no raw meat.'
       startActivity(sim, { kind: 'roast', label: `Roasting meat (${n} pcs)`, total: roastSeconds(), accel: ROAST_ACCEL, data: String(n) })
       return ''
+    }
+    case 'set_tax': {
+      const n = sim.human((t as { id: number }).id)
+      return n ? cycleTaxRate(sim, n.settlementId) : ''
     }
     case 'stow_cart':
       return stowCart(sim, p, (t as { id: number }).id)

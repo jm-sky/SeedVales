@@ -244,7 +244,15 @@ export interface SettlementState {
   taxDay?: number
   /** Pending reputation spread from other settlements (gameplay seconds). */
   pendingRep: { at: number; delta: Partial<Record<RepDim, number>>; from: number }[]
+  /** Headman NPC id (SET-05); becomes the deputy when the player takes the office. */
+  headmanId?: number
+  deputyId?: number
+  /** The player holds the office of mayor here. */
+  playerMayor?: boolean
+  taxRate?: TaxRateChoice
 }
+
+export type TaxRateChoice = 'low' | 'normal' | 'high'
 
 export type FieldCrop = 'carrot' | 'cabbage' | 'tomato' | 'grain'
 

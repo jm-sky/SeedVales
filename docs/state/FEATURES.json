@@ -1069,8 +1069,8 @@
    "scope": "v2",
    "behavior": "Przy wysokiej reputacji i relacjach gracz może zostać burmistrzem; dotychczasowy zostaje zastępcą; wpływ na rozbudowę (zależy od SET-04)",
    "verify": "vitest",
-   "status": "planned",
-   "evidence": "plan: docs/plans/settlement--001--mayor.md"
+   "status": "implemented_unverified",
+   "evidence": "session 14 minimal slice: headman per settlement, office offer by standing, deputy, tax-rate power, term loss; sim/mayor.ts, mayor.test.ts. Project queue waits for SET-04"
   },
   {
    "id": "MAP-01",
