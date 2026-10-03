@@ -1,6 +1,6 @@
 # Authored quests batch 3: all remaining designed quests (17)
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** opus — engine extension design review, wave reviews, ❓ decisions; sonnet — engine slices, quest data, tests, e2e  
 **Domain:** quests  
 **Sub domains:** dialog, npc, fauna, economy, world-gen, items, save  
