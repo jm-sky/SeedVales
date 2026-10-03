@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
 import { wantedItem, withArticle } from '@/game/sim/gifts'
+import { npcRemarks } from '@/game/sim/memory'
 import { professionName } from '@/game/sim/newGame'
 import PanelFrame from './PanelFrame.vue'
 import QuestTopics from './QuestTopics.vue'
@@ -23,7 +24,8 @@ const d = computed(() => {
   // SOC-01: preferences are revealed in conversation (friendlier people say more).
   const wish = want && n.opinion > -30 ? `I've been hoping to get ${withArticle(want, itemDef(want).name)}.` : ''
   const comp = n.companion ? (n.companion.kind === 'hired' ? 'Travelling with you (hired).' : 'Travelling with you.') : ''
-  return { wish, comp, n, title: `${n.name} — ${professionName(n.profession) || (n.age === 'child' ? 'child' : n.age === 'elder' ? 'elder' : 'villager')}`, traits, mood, activity: n.ai.label, quests }
+  const memory = npcRemarks(g.sim, n)
+  return { memory, wish, comp, n, title: `${n.name} — ${professionName(n.profession) || (n.age === 'child' ? 'child' : n.age === 'elder' ? 'elder' : 'villager')}`, traits, mood, activity: n.ai.label, quests }
 })
 // The NPC can vanish while the dialog is open (a quest despawns it): close the empty panel (review 014 #7).
 watch(d, (v) => {
@@ -39,6 +41,14 @@ watch(d, (v) => {
   >
     <p class="italic">
       “{{ d.mood }}{{ d.quests.length ? ' We have a problem — check the notice board or ask about quests.' : '' }}”
+    </p>
+    <p
+      v-for="m in d.memory"
+      :key="m"
+      class="mt-1 italic"
+      data-testid="dialog-memory"
+    >
+      “{{ m }}”
     </p>
     <p
       v-if="d.wish"
