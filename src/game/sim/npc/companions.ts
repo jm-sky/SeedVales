@@ -1,11 +1,3 @@
-/**
- * Companions (COMP-01/02/03): hiring for days at a wage with a task and risk level, free joining
- * (chance from reputation, opinion, personality and situation), following the player, contract expiry,
- * slowly growing opinion from travelling and fighting together, using gear received from the player.
- * Money moves 1:1 player → NPC (no mint, D-ECON-1).
- * @domain npc
- * @subdomain companions
- */
 import type { ActionResult } from '../actions'
 import type { Sim } from '../sim'
 import type { CompanionRisk, CompanionTask, Human, ItemStack } from '../types'
@@ -18,6 +10,15 @@ import { steerTo } from '../movement'
 import { activeHold } from '../questHold'
 import { dayIndex } from '../time'
 import { penalty } from '../vitals'
+/**
+ * Companions (COMP-01/02/03): hiring for days at a wage with a task and risk level, free joining
+ * (chance from reputation, opinion, personality and situation), following the player, contract expiry,
+ * slowly growing opinion from travelling and fighting together, using gear received from the player.
+ * Money moves 1:1 player → NPC (no mint, D-ECON-1).
+ * @domain npc
+ * @subdomain companions
+ */
+import { companionBanter } from './companionBanter'
 import { houseOf } from './queries'
 
 const DAY_S = 86400
@@ -206,6 +207,11 @@ export function companionSystem(sim: Sim) {
       }
     }
   }
+}
+
+/** Banter runs after the contract checks, on the surviving companions. */
+export function companionTalk(sim: Sim) {
+  companionBanter(sim, companionsOf(sim))
 }
 
 /** A fight won together (player or companion killed a dangerous animal nearby) strengthens the bond. */

@@ -161,6 +161,8 @@ export interface CompanionContract {
   paid: number
   /** Calendar s of the last opinion gain from travelling together. */
   bondAt: number
+  /** Calendar s of the last banter remark (P-11). */
+  chatAt?: number
 }
 
 export interface Human extends ActorBase {

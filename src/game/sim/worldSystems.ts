@@ -18,7 +18,7 @@ import { addItem, newStack, spoilInventory } from './inventory'
 import { navigationSystem } from './navigation'
 import { makeAnimal, rollVariant } from './newGame'
 import { npcSystem } from './npc/ai'
-import { companionSystem } from './npc/companions'
+import { companionSystem, companionTalk } from './npc/companions'
 import { playerSystem } from './player'
 import { countByDen, nestTag } from './queries'
 import { authoredQuestSystem } from './questEngine'
@@ -166,6 +166,7 @@ export function installSystems(sim: Sim) {
     { name: 'traces', interval: 10, run: traceSystem },
     { name: 'navigation', interval: 2, run: navigationSystem },
     { name: 'companions', interval: 2, run: companionSystem },
+    { name: 'companionTalk', interval: 10, run: companionTalk },
   ]
   sim.systems = sys
   perf.gauge('sim.systems', sys.length)

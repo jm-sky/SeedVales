@@ -28,7 +28,7 @@
 
 - **P-09 NPC memory of deeds** (M) — ✅ *first slice implemented 2026-10-03: dialogue remarks from badges (thief, beast slayer, rat catcher), finished quests the NPC took part in, the mayor's office, petted animals (`sim/memory.ts`, shown in the dialog panel; `memory.test.ts`). Price/greeting effects and reply options are open.* — dialogue greetings and prices reference what the player did here (helped with the roof, stole from the warehouse, killed the wolves); data = existing `stats`/badges/`opinion`.
 - **P-10 Visitors and festivals** (M) — a seasonal festival (harvest) with an authored quest hook; reuses the visitor mechanism (SAVE 9 'visitor').
-- **P-11 Companion banter** (S) — hired companions comment on weather, danger and treasure using the voice catalogue fallback to text lines. *Needs:* VOICE-01 clips later; text first.
+- **P-11 Companion banter** (S) — ✅ *text slice 2026-10-03 (`npc/companionBanter.ts`): weather, dark, hunger, wounds, predators, nearby treasure; voice clips still open.* — hired companions comment on weather, danger and treasure using the voice catalogue fallback to text lines. *Needs:* VOICE-01 clips later; text first.
 
 ## Economy and crafting
 
