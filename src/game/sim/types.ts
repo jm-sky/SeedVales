@@ -228,6 +228,8 @@ export interface Animal extends ActorBase {
   questFollow?: number
   /** A unique quest creature's tag, e.g. `white_hare` (quests--003 E4). */
   tag?: string
+  /** Wander radius around home (m): a den group kept near its den (quests--003 Q02). */
+  leash?: number
 }
 
 export type Actor = Human | Animal

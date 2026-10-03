@@ -434,5 +434,6 @@ export function burnDen(sim: Sim, h: Human, den: DenState): ActionResult {
   consumeItem(h.inv, 'branch', 5, 'burn_den', h)
   den.alive = false
   sim.emit({ type: 'sound', kind: 'fire', x: den.x, z: den.z })
+  if (h === sim.player) questEvent(sim, { k: 'burn', denId: den.id })
   return ok('The den burned down.')
 }

@@ -16,7 +16,7 @@ export type QuestRepDim = 'honesty' | 'helpfulness' | 'renown' | 'courage'
 export type QuestStatusId = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
 /** Settlement a cast NPC or an effect refers to: the home settlement or the nearest other one (quests--003 E1). */
 export type QuestPlace = 'H' | 'V'
-export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell' | 'fill' | 'dig' | 'fell'
+export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell' | 'fill' | 'dig' | 'fell' | 'burn'
 
 /** A place named without coordinates; resolved once and cached in the quest state (`anchors`). */
 export type Anchor =
@@ -44,6 +44,11 @@ export type Anchor =
    * road between them (`id` = its node id), resolved once.
    */
   | { k: 'boundary' }
+  /**
+   * A point beside the road between the home settlement and {V}: `frac` (0..1) of the way along it, `off` metres to the side
+   * (the drier, gentler side). Resolved once (quests--003 Q02).
+   */
+  | { k: 'roadSide'; frac: number; off: number }
   /** A point `dx`, `dz` metres from another anchor (resolved once). */
   | { k: 'offset'; of: Anchor; dx: number; dz: number }
 
@@ -84,6 +89,8 @@ export type Cond =
   | { k: 'quest'; id: QuestId; in: QuestStatusId[]; started?: boolean }
   /** The cast animal is dead (or gone). */
   | { k: 'dead'; slot: SlotId }
+  /** The cast actor is dead (or gone) or farther than `r` m from the anchor. */
+  | { k: 'far'; slot: SlotId; anchor: Anchor; r: number }
   /** The cast animal is within `r` m of the player and neither fleeing nor aggressive ("watch it without spooking it"). */
   | { k: 'calm'; slot: SlotId; r: number }
   /** No predator or aggressive animal within `r` m of the home settlement centre. */
@@ -145,6 +152,11 @@ export type Effect =
   /** Makes a cast animal flee from the player for `minutes` of gameplay time. */
   | { k: 'scare'; slot: SlotId; minutes: number }
   | { k: 'despawn'; slot: SlotId }
+  /**
+   * Drives a cast animal and its den mates away: their home moves `m` metres away from the player, they flee for a while and
+   * their leash is lifted (the den is abandoned).
+   */
+  | { k: 'drive'; slot: SlotId; m: number }
   /** A tree anchor is felled by an NPC (no player action): the node is gone; `logs` come from the tree's yield into a cast store. */
   | { k: 'fell'; anchor: Anchor; logs?: { to: SlotId; qty: number } }
   | { k: 'owner'; anchor: Anchor; to: SlotId }
@@ -174,8 +186,12 @@ export interface CastSpec {
   species?: SpeciesId
   preferVariant?: AnimalVariant
   spawn?: SpawnSpec
-  /** creature: a unique wild animal created by the `spawn` effect; it has no den, so the world never respawns it. */
-  creature?: { species: SpeciesId; variant?: AnimalVariant; at: Anchor; tag?: string }
+  /**
+   * creature: a unique wild animal created by the `spawn` effect; the world never respawns it. `young` adds that many young of
+   * the species and a den the player can burn (`qden:<quest id>`, never restocked); `leash` keeps the group within that many
+   * metres of where it was spawned.
+   */
+  creature?: { species: SpeciesId; variant?: AnimalVariant; at: Anchor; tag?: string; young?: number; leash?: number }
   /** Name used in dialog when the slot is empty but optional. */
   fallbackName?: string
   /** Sex used for pronoun tokens (`{slot:he}`) while the slot is empty (default: female, also for animals). */
@@ -249,6 +265,8 @@ export interface Counter {
     item?: string
     slot?: SlotId
     species?: string
+    /** `burn` events: the den of this creature slot's quest (`qden:<quest id>`). */
+    den?: boolean
     /** `repair` events: only repairs by the player (true) or only by NPCs (false). */
     byPlayer?: boolean
   }

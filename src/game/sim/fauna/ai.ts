@@ -24,7 +24,8 @@ import { decideAnimal, decisionInterval } from './perception'
 
 type Target = { x: number; z: number }
 
-function pickWander(sim: Sim, a: Animal, r: number): Target {
+function pickWander(sim: Sim, a: Animal, range: number): Target {
+  const r = a.leash ? Math.min(range, a.leash) : range
   if (a.cave) return caveSnap(sim, a.cave, a.homeX + sim.rng.range(-r, r), a.homeZ + sim.rng.range(-r, r), 6)
   for (let t = 0; t < 6; t++) {
     const ang = sim.rng.range(0, Math.PI * 2)

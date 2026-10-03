@@ -8,7 +8,7 @@
 import type { Anchor, CastSpec, Cond, Effect, FlagValue, QuestDef, QuestPlace, SlotId, Source } from '../data/quests/types'
 import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
-import type { Actor, Animal, AuthoredQuestState, Building, Human, Inventory } from './types'
+import type { Actor, Animal, AuthoredQuestState, Building, DenState, Human, Inventory } from './types'
 import { START_CALENDAR_S } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { itemDef } from '../data/items'
@@ -193,6 +193,43 @@ function roadPoint(sim: Sim, m: number): { x: number; z: number } | null {
   return null
 }
 
+/** The point `frac` of the way along the road between the home settlement and {V}, with its direction (null without a road). */
+function roadFraction(sim: Sim, frac: number): { x: number; z: number; dx: number; dz: number } | null {
+  const home = homeId(sim)
+  const v = neighbourId(sim)
+  const road = sim.world.roads.find((r) => (r.from === home && r.to === v) || (r.from === v && r.to === home))
+  if (!road || road.points.length < 2) return null
+  const pts = road.from === home ? road.points : [...road.points].reverse()
+  let total = 0
+  for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.z - pts[i - 1]!.z)
+  let acc = 0
+  for (let i = 1; i < pts.length; i++) {
+    const p = pts[i - 1]!
+    const q = pts[i]!
+    const len = Math.hypot(q.x - p.x, q.z - p.z) || 1
+    if (acc + len >= total * frac) {
+      const t = (total * frac - acc) / len
+      return { x: p.x + (q.x - p.x) * t, z: p.z + (q.z - p.z) * t, dx: (q.x - p.x) / len, dz: (q.z - p.z) / len }
+    }
+    acc += len
+  }
+  const e = pts[pts.length - 1]!
+  return { x: e.x, z: e.z, dx: 1, dz: 0 }
+}
+
+/** A dry, gentle spot `off` metres to the side of the H–V road at `frac`; the other side, then the road itself, when blocked. */
+function roadSidePoint(sim: Sim, frac: number, off: number): { x: number; z: number } | null {
+  const p = roadFraction(sim, frac)
+  if (!p) return null
+  const t = sim.terrain
+  for (const side of [1, -1]) {
+    const x = p.x + -p.dz * off * side
+    const z = p.z + p.dx * off * side
+    if (t.inBounds(x, z) && t.waterDepthAt(x, z) < 0.3 && t.slopeAt(x, z) < 0.45) return { x, z }
+  }
+  return { x: p.x, z: p.z }
+}
+
 /**
  * The boundary tree (G05): the largest broadleaf tree within reach of the middle of the road between the home settlement and
  * {V} (else the middle of the straight line, without a node). Deterministic for the world, resolved once per quest.
@@ -205,23 +242,10 @@ function boundaryTree(sim: Sim): { x: number; z: number; id?: string } | null {
   if (!hs || !vs || v < 0) return null
   let mx = (hs.x + vs.x) / 2
   let mz = (hs.z + vs.z) / 2
-  const road = sim.world.roads.find((r) => (r.from === home && r.to === v) || (r.from === v && r.to === home))
-  if (road && road.points.length > 1) {
-    let total = 0
-    for (let i = 1; i < road.points.length; i++) total += Math.hypot(road.points[i]!.x - road.points[i - 1]!.x, road.points[i]!.z - road.points[i - 1]!.z)
-    let acc = 0
-    for (let i = 1; i < road.points.length; i++) {
-      const p = road.points[i - 1]!
-      const q = road.points[i]!
-      const len = Math.hypot(q.x - p.x, q.z - p.z)
-      if (acc + len >= total / 2) {
-        const t = (total / 2 - acc) / (len || 1)
-        mx = p.x + (q.x - p.x) * t
-        mz = p.z + (q.z - p.z) * t
-        break
-      }
-      acc += len
-    }
+  const mid = roadFraction(sim, 0.5)
+  if (mid) {
+    mx = mid.x
+    mz = mid.z
   }
   const found: ResNode[] = []
   for (const radius of [90, 200, 400]) {
@@ -312,6 +336,7 @@ export function resolveAnchor(c: QuestCtx, a: Anchor): Resolved | null {
     if (b) r = { x: b.x, z: b.z, id: b.id }
   } else if (a.k === 'wild') r = wildPoint(sim, a.bearing, a.m)
   else if (a.k === 'boundary') r = boundaryTree(sim)
+  else if (a.k === 'roadSide') r = roadSidePoint(sim, a.frac, a.off)
   else if (a.k === 'offset') {
     const base = resolveAnchor(c, a.of)
     if (base) r = { x: base.x + a.dx, z: base.z + a.dz }
@@ -376,6 +401,11 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
     case 'durability': {
       const b = houseOfSlot(c, k.slot)
       return !!b && (k.lt === undefined || b.durability < k.lt) && (k.gte === undefined || b.durability >= k.gte)
+    }
+    case 'far': {
+      const a = actorOf(c, k.slot)
+      const at = resolveAnchor(c, k.anchor)
+      return !a || a.vitals.dead || !at || Math.hypot(a.x - at.x, a.z - at.z) > k.r
     }
     case 'flag': {
       const v = st.flags[k.flag]
@@ -588,6 +618,21 @@ function spawnCreature(c: QuestCtx, slot: SlotId) {
   const rng = new Rng(sim.state.seed ^ (c.def.id.charCodeAt(0) * 7919) ^ 0xc4ea7)
   const a = makeAnimal(sim.nextId(), spec.species, spec.variant ?? 'adult', at.x, at.z, sim.terrain.heightAt(at.x, at.z), rng)
   a.tag = spec.tag
+  if (spec.young) {
+    // A den group: the parent, its young and a burnable den that is never restocked.
+    const denId = `qden:${c.def.id}`
+    a.denId = denId
+    if (spec.leash) a.leash = spec.leash
+    if (!sim.state.dens.some((d) => d.id === denId)) sim.state.dens.push({ id: denId, species: spec.species as DenState['species'], x: at.x, z: at.z, alive: true, maxCount: 0, nextSpawn: Number.POSITIVE_INFINITY })
+    for (let i = 0; i < spec.young; i++) {
+      const x = at.x + rng.range(-2, 2)
+      const z = at.z + rng.range(-2, 2)
+      const y = makeAnimal(sim.nextId(), spec.species, 'young', x, z, sim.terrain.heightAt(x, z), rng)
+      y.denId = denId
+      if (spec.leash) y.leash = spec.leash
+      sim.addAnimal(y)
+    }
+  } else if (spec.leash) a.leash = spec.leash
   sim.addAnimal(a)
   c.st.cast[slot] = a.id
 }
@@ -695,6 +740,34 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'despawn':
       despawn(c, e.slot)
       break
+    case 'drive': {
+      const a = actorOf(c, e.slot) as Animal | undefined
+      if (a?.kind === 'animal' && !a.vitals.dead) {
+        const p = sim.player
+        const d = Math.hypot(a.x - p.x, a.z - p.z) || 1
+        const t = sim.terrain
+        let hx = a.x + ((a.x - p.x) / d) * e.m
+        let hz = a.z + ((a.z - p.z) / d) * e.m
+        // Land on dry ground: turn around the compass until a spot is dry and in bounds.
+        for (let k = 0; k < 12 && !(t.inBounds(hx, hz) && t.waterDepthAt(hx, hz) < 0.3); k++) {
+          const ang = Math.atan2(a.z - p.z, a.x - p.x) + (k + 1) * (Math.PI / 6) * (k % 2 ? 1 : -1)
+          hx = a.x + Math.cos(ang) * e.m
+          hz = a.z + Math.sin(ang) * e.m
+        }
+        for (const o of sim.state.animals) {
+          if (o.vitals.dead || (o !== a && !(a.denId && o.denId === a.denId))) continue
+          o.homeX = hx + (o.x - a.x)
+          o.homeZ = hz + (o.z - a.z)
+          o.leash = undefined
+          o.denId = undefined
+          o.fleeFrom = { x: p.x, z: p.z, until: sim.state.time.play + 20 * 60 }
+          o.aggroId = undefined
+          o.aggroUntil = undefined
+          resetAi(o)
+        }
+      }
+      break
+    }
     case 'end':
       endQuest(c, e.ending)
       break

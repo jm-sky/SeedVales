@@ -41,7 +41,7 @@ describe('QUEST-03 G05 Disputed Oak', () => {
     accepted(sim)
     const a = oakAnchor(sim)
     expect(a.id).toBeTruthy()
-    const n = sim.nodes.byId(a.id)!
+    const n = sim.nodes.byId(a.id!)!
     expect(n.kind).toBe('tree_broad')
     expect(Math.hypot(n.x - a.x, n.z - a.z)).toBeLessThan(1)
     expect(oakAnchor(sim).id).toBe(a.id)
@@ -122,7 +122,7 @@ describe('QUEST-03 G05 Disputed Oak', () => {
       accepted(sim)
       setHour(sim, hour)
       const a = oakAnchor(sim)
-      const n = sim.nodes.byId(a.id)!
+      const n = sim.nodes.byId(a.id!)!
       addItem(sim.player.inv, newStack('axe'))
       sim.player.x = n.x + 2
       sim.player.z = n.z

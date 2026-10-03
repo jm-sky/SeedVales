@@ -18,6 +18,7 @@ export type QuestEvent =
   | { k: 'fill'; buildingId: string; amount: number }
   | { k: 'dig'; x: number; z: number }
   | { k: 'fell'; nodeId: string; x: number; z: number }
+  | { k: 'burn'; denId: string }
 
 type Handler = (sim: Sim, ev: QuestEvent) => void
 let handler: Handler | undefined

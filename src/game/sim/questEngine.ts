@@ -203,6 +203,7 @@ function bumpCounters(c: QuestCtx, ev: QuestEvent) {
       if (m.item && 'item' in ev && ev.item !== m.item) continue
       if (m.slot && (ev.k === 'give' || ev.k === 'sell') && st.cast[m.slot] !== ev.npcId) continue
       if (m.species && ev.k === 'kill' && ev.species !== m.species) continue
+      if (m.den && !(ev.k === 'burn' && ev.denId === `qden:${def.id}`)) continue
       if (m.byPlayer !== undefined && ev.k === 'repair' && ev.byPlayer !== m.byPlayer) continue
       if (m.near) {
         const at = resolveAnchor(c, m.near.anchor)
