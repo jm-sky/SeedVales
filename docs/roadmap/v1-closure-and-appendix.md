@@ -111,6 +111,15 @@ Stays late, unchanged: living society (`NPC-08`, `SET-04`; L5, design round firs
 
 Order (updated): … → wave 5c → wave 5d → **wave 5e (caves)** → wave 6 → `proposals--001` → later backlog (L1 → L2 → L3 → L4 → L5 → L7, caves no longer in it).
 
+## Wave 5f — equipment-driven character visuals (added 2026-10-03, user)
+
+| Plan | Scope |
+|---|---|
+| [render--011](../plans/render--011--equipment-armour-visuals-existing-parts.md) | **next render slice:** worn armour (`Human.eq.armor`) changes player and NPC models using only existing Quaternius modular parts; reuse-only, no Blender; follows `render--005` (variants), independent of caves and quests |
+| [render--012](../plans/render--012--missing-equipment-modules-blender.md) | *(later, not crucial)* author missing armour modules in Blender; only after `render--011` shows which pieces are really missing; before or inside wave 6 polish, never blocking gameplay waves |
+
+Order: after the quest wave W1 review and the app-review round, `render--011` goes first among visual work (its asset-pipeline step needs the Quaternius source pack and a WSL look check, so it is scheduled as its own session, not squeezed between quest slices); `render--012` waits for the user's art decision.
+
 ## Stage 5b — authored quests and Stage V — verification loop (planned 2026-10-02, user)
 
 | Plan | Scope |
