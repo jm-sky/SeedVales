@@ -291,4 +291,119 @@ Do not start Blender modelling during this plan.
 - **Modules:** `scripts/assets/build-equipment-modules.mjs` → `public/assets/characters/eq/<Sex>.glb` (≈1.2 MB each, ≈5.4 k triangles for all four): `EQ_IronHelm` (Knight armet), `EQ_PlateCuirass` (Knight body armour), `EQ_Pauldrons` (Knight round pauldrons), `EQ_LeatherBoots` (Ranger boots). Parts are cut from the **Outfits** exports (the "Modular Parts" exports use a different rest pose and fly away when rebound). Each module is inflated along its normals (cuirass 5 cm, pauldrons 2.5 cm) so the plate sits over the base outfit instead of sinking into it. Boots are heavy for their size (≈2.7 k tris): reduce if the budget needs it.
 - **Runtime:** `render/equipmentVisuals.ts` (item → module, hood rule, signature; test `equipmentVisuals.test.ts`) and `Actors` (`attachEquipment`, `humanKindKey`): the visual is rebuilt when the worn set changes, the base look is applied before the modules, a helmet swaps `Ranger` → `Ranger_NoHood` and `Herbalist` → `Peasant`. The loader names the armature of later modules `pelvis_1`…, so bones are looked up with that suffix stripped.
 - **Checked:** `scripts/e2e/tour-equipment.mjs` (player and a farmer in none/plate/helm/full, close-ups in `test-results/e2e/eq-*.png`): modules sit on the Ranger player and the Peasant NPC, no hood clipping, no tint on the metal. vitest render 59/59, smoke 5/5.
-- **Open:** (female farmer checked: same fit) the other professions, boots over the Peasant_Boots base add nothing visible (the base already wears them), performance with many armoured NPCs (A/B in PERF.md), the stage-2 items (`padded_jacket`, `leather_jerkin`, `studded_leather`, `chainmail`, `leather_cap`, `leather_trousers`, `bracers`) and the Opus look review.
+- **Open:** (female farmer checked: same fit) the other professions, boots over the Peasant_Boots base add nothing visible (the base already wears them), performance with many armoured NPCs (A/B in PERF.md), the stage-2 items (`padded_jacket`, `leather_jerkin`, `studded_leather`, `chainmail`, `leather_cap`, `leather_trousers`, `bracers`) and the Opus look review. → Planned in "Stage 2" below (it also covers `leather_gloves`, which this list left out).
+
+## Stage 2 — reuse completion (plan review 2026-10-03, Opus)
+
+*PROGRESS and the kick-off call this "render--011 stage 2". It is the rest of **this** plan: the same reuse-only rule, no Blender. Blender authoring is [render--012](render--012--missing-equipment-modules-blender.md), the stage after this one. The decisions below are made, so Sonnet can run stage 2 without asking. Copy them into `docs/design/DECISIONS.md` at the stage-2 handoff as one new `D-REN-*` entry (not earlier: the quest line is editing DECISIONS at the moment).*
+
+### Preconditions and environment split
+
+- **Start after:** `quests--003` W3 is done, and the review 021 triage is done (its quest findings belong to `quests--003`). Stage 2 takes the render findings of review 021 (#15, #16, #17) as its own steps (S2-1 to S2-3 below). The triage marks them "→ render--011 stage 2".
+- **Two environments, two sessions:**
+  - **Windows (asset half).** The source pack `_temp/extracted/Modular Character Outfits - Fantasy[Source]/` exists only on the user's Windows machine (`_temp` is gitignored). Building `eq/<Sex>.glb` needs that pack. Allowed there: the build script, the audit script, `pnpm check`. **No e2e and no bench on Windows** (user rule).
+  - **WSL (look and performance half).** Run `tour-equipment.mjs`, the bench A/B and `pnpm e2e:run`.
+
+  Commit the packs on Windows; WSL only consumes them. A cloud session can do the pure code steps (S2-1, S2-2, S2-6, the tests) but neither half's asset or bench work.
+- **Formats:** render-only. Worn armour (`Human.eq.armor`) is already saved. **No `SAVE_VERSION` and no `GEN_VERSION` bump.** S2-1 keeps its cache on the render side, so the saved shape does not change.
+- **FEATURES:** no requirement ID covers equipment visuals, and this plan does not add one. Record the result in the plan's Result only (`CHAR-01` is the hair/beard requirement and stays separate).
+
+### Source facts (verified 2026-10-03 against the source pack's `Outfits/*.gltf`)
+
+Triangle counts are before simplification. Female names differ: `Female_Ranger_Feet`, `Female_Ranger_Acc_Pauldrons`, `Female_Knight_Acc_Pauldrons_Round`.
+
+| Part (male name) | Tris | Material | Notes |
+|---|---|---|---|
+| `Ranger_Body` | 2998 | MI_Ranger | leather tunic, hips to collar |
+| `Ranger_Body_Belt_1` / `_2` | 804 each | MI_Ranger | belts |
+| `Ranger_Arms_Bracer` | 3636 | MI_Ranger | both forearms (x ±0.75 in T-pose; the bare arm ends at ±0.83, so the hands stay outside) |
+| `Ranger_Legs` | 1128 | MI_Ranger | leather trousers |
+| `Ranger_Acc_Pauldron` | 1376 | MI_Ranger | **one** leather shoulder piece |
+| `Knight_Body_Cloth` | 2536 | MI_Knight | cloth body of the `Knight_Cloth` outfit (surcoat / quilted look) |
+| `Noble_Arms_Guards` | 676 | MI_Noble | **male only**, no female counterpart, so it cannot be a both-sex module |
+| `Noble_Acc_Gorget` | 888 | MI_Noble | no matching game item |
+| `Knight_Head_Horns`, `Noble_Head_Crown` | — | — | fantasy or noble look; never used for a game item (vision: no fantasy) |
+
+- **No part** in the pack is a cap, a glove, a mail shirt or a studded surface. The bare hands are part of the `Arms` meshes (skin material), so there is no separate glove region.
+- **Each base outfit already shows armour-like parts. This is the main stage-2 trap:**
+  - `Ranger` / `Ranger_NoHood` (player, hunter) already wear the Ranger body, belts, **bracers**, one **leather pauldron**, **boots** and **leather legs**;
+  - `Peasant_Boots` (farmer) already wears Ranger boots;
+  - `Knight` (guard) wears plate body armour, round pauldrons, armoured legs and armoured feet;
+  - `Wizard` (trader) has **no head part**, so a helmet over it is safe (this resolves review 021 #16 for the trader). Its robe body covers the upper legs.
+- **Every guard starts with `leather_jerkin` + `leather_cap`** (`sim/newGame.ts`). These are the two most common stage-2 items in normal play, ahead of anything the player buys.
+
+### Decisions (made; Sonnet follows them)
+
+- **S2-D1 Base provides (resolves review 021 #16).** Add a pure table `BASE_PROVIDES: Partial<Record<CharOutfit, EquipmentModule[]>>` in `equipmentVisuals.ts`. A module the base already shows is not attached, and it does not enter the visual key. Initial table:
+
+  | Base | Provides |
+  |---|---|
+  | `Knight` | `PlateCuirass`, `Pauldrons`, `LeatherBoots`, `LeatherJerkin`, `LeatherTrousers` |
+  | `Ranger`, `Ranger_NoHood` | `LeatherBoots`, `Bracers`, `LeatherJerkin`, `LeatherTrousers` |
+  | `Peasant_Boots` | `LeatherBoots` |
+  | `Wizard` | `LeatherTrousers` (the robe covers the upper legs) |
+
+  The base identity stays as stage 1 decided. The guard keeps the Knight look, and its leather cap does show (the Knight base has no helmet). That guards look plate-armoured while they wear leather is recorded as ❓ user below; it is not changed here.
+- **S2-D2 Outer hides under in the same slot.** If a slot has an outer module, its under module is not attached (gambeson under mail or plate). This means no clipping, one draw call fewer, and a simpler inflate. `padded_jacket` is visible only when no outer torso item is worn.
+- **S2-D3 Tint variants are allowed, at build time only.** A module may be the same source geometry as another module with a different base-colour factor, set in `build-equipment-modules.mjs`. Share the accessors where gltf-transform allows it; if they are duplicated, record the bytes. Never tint at runtime or per actor. Use a tint only to separate material tiers (leather vs cloth). It must never make one material look like another (grey cloth is not mail).
+- **S2-D4 Small modules cast no shadow.** Modules whose bounds are smaller than about 0.4 m (bracers, and later the cap and gloves) set `castShadow = false`. The shadow pass otherwise doubles their draw calls for a sub-pixel shadow.
+- **S2-D5 Inflate tiers.** Under-layer modules ≤ 1.5 cm. Leather outer ≈ 2–3 cm. Plate stays at 5 cm. Under S2-D2 an under module never sits beneath an outer module, so the tiers only have to clear the base outfits.
+- **S2-D6 Default verdicts per item.** Sonnet builds the "candidate" rows, takes a contact sheet (S2-4) and keeps a row only if it passes the acceptance check below. If it fails, the row becomes "rejected → render--012" with the reason. Do not ask.
+
+  | Item | Candidate | Default | Reason / acceptance check |
+  |---|---|---|---|
+  | `leather_jerkin` | `Ranger_Body` + `Ranger_Body_Belt_1`, tint ≈ 0.85 (darker leather) | **support** | Most common stage-2 item, but every guard has a Knight base, which provides it. It shows on Peasant / Blacksmith / Herbalist bases and on companions. No visible base cloth may poke through at the collar or hips in Idle or Walk. |
+  | `bracers` | `Ranger_Arms_Bracer`, simplify to ≈ 0.15 | **support** | Both sexes exist. Check that the mesh is forearm-only, with no upper-arm sleeve, over the Peasant arms. |
+  | `leather_trousers` | `Ranger_Legs`, inflate 1.5 cm | **support** if it reads as trousers | Over `Female_Peasant` it must not stick out of the skirt or dress line. If it does, reject it for female bases only: the module stays male-only, and the female key leaves it out. |
+  | `padded_jacket` | `Knight_Body_Cloth`, tint off-white / ochre | **candidate** | Keep it only if it reads as a padded cloth jacket and not as a knight's tabard. Otherwise → render--012. |
+  | `studded_leather` | none | **rejected → render--012** | A darker jerkin would look identical to `leather_jerkin` (tiers must be told apart by silhouette). |
+  | `chainmail` | none | **rejected → render--012** | Grey cloth reads as a tabard, not mail. Plate geometry would show the wrong tier. |
+  | `leather_cap` | none | **rejected → render--012 (first priority)** | A hood is not a cap; the armet is metal; the horns and crown are fantasy. |
+  | `leather_gloves` | none | **rejected → render--012** | No glove part exists. The hands belong to the arm mesh. |
+
+  In the end, every item in `items.ts` with an armour slot is either mapped or listed as rejected in this plan (an exit criterion).
+
+### Steps (in order; model per step)
+
+| # | Step | Where | Model |
+|---|---|---|---|
+| S2-1 | **No per-frame allocation (review 021 #15).** Keep a render-side cache on `Visual`: the 14 armour stack references in a fixed `ARMOR_KEYS` order (a precomputed constant, not template strings built per frame), plus the last outfit. Each frame compares references only. Compute `humanKindKey` again only when a reference changed. No new `Human` field, no sim change. Test: an actor with unchanged armour causes no key build (spy or counter), and swapping a stack triggers exactly one rebuild. | any | sonnet |
+| S2-2 | **Base-provides and outer-hides-under rules** (S2-D1, S2-D2) in `equipmentVisuals.ts`, with the key built from the *effective* modules. Tests: guard + `plate_cuirass` → no module, same key as bare; Ranger player + `leather_jerkin` → no module; Peasant + `leather_jerkin` → module; gambeson + mail → only mail (mail unmapped → none); trader + `iron_helm` → helm, Wizard base kept. | any | sonnet |
+| S2-3 | **Build-script safety (review 021 #17).** Running with a module list writes to `--out <dir>` only; a partial run into `public/` is refused. Add `--audit`: write a JSON list of every source part per sex (name, triangles, material, bounds) to `test-results/eq-audit.json`, and render a contact sheet if Blender MCP is available. Otherwise use `tour-equipment.mjs` frames on WSL. | Windows | sonnet |
+| S2-4 | **Audit + contact sheet.** Build the support / candidate rows from the S2-D6 table into a temporary `--out` pack and view them on both sexes over Peasant, Peasant_Boots, Blacksmith, Herbalist→Peasant and Ranger_NoHood. Write the verdict per row into this plan, and move every rejected row into render--012 "Input". | Windows (build) + WSL (frames) | sonnet; Opus look check before merge |
+| S2-5 | **Final packs.** Add the kept modules to `MODULES` / `RATIO` / `INFLATE` and the tints, then rebuild both packs fully. Budget: **≤ 9 k triangles per sex pack in total** (stage 1 is ≈ 5.4 k; `LeatherBoots` is the biggest at ≈ 2.7 k. If the budget is short, reduce it to ≈ 1 k first), **≤ 1.6 MB per file**, one material per module, textures ≤ 512 px. Row in `docs/assets/README.md` (CC0, Quaternius). | Windows | sonnet |
+| S2-6 | **Asset guard (missing from stage 1).** Add `equipmentAssets.test.ts` (or extend `assetNames.test.ts`): both packs parse; every `EquipmentModule` has an `EQ_<Module>` node (or `_n`) in both sexes, except modules listed as male-only; no animations; every skin joint name, with the `_n` suffix stripped, exists in the `Male_Peasant` / `Female_Peasant` skeletons. That last check matters because `attachEquipment` silently falls back to the pack's own bone, and the piece then freezes in the rest pose. Add the triangle/material budget from S2-5. | any | sonnet |
+| S2-7 | **Runtime.** Attach the new modules (no logic change beyond S2-2). Clone only the wanted wrappers instead of `SkeletonUtils.clone(pack.scene)` for every build, which with ~8 modules clones 8 armatures per human. Use a per-module template cache, or clone the pack once per sex and keep its wrappers. Apply S2-D4. Add the visual flag `sv-visual {"equipment":false}` (skip `attachEquipment`) for the same-build A/B. | any | sonnet |
+| S2-8 | **Look check.** Extend `tour-equipment.mjs` (not the generic tour): player Ranger with bare → jerkin (no change expected) → full kit; farmer male and female with jerkin + trousers + bracers; guard (cap only shows); trader + helm; herbalist + helm → Peasant base. Clips: Idle, Walk, Crouch, one attack, the dodge. Close-ups of collar, hips, knees and forearms. Frames go to `docs/state/frames/render--011/`. | WSL | sonnet; **Opus keep/drop per module** |
+| S2-9 | **Performance.** Add an `armoured-crowd` scene: settlement 2 at noon, with the `__sv` armour helper putting the full stage-2 kit on every adult in model range (the helper already exists in `debug/api.ts` for one NPC; extend it to a radius). Measure `bench:render medium` A/B with `SV_VISUAL='{"equipment":false}'` vs default in the **same build**, alternating pairs (D-PERF-5 / D-REN-16 practice), and `bench:startup` before/after the pack change. The new scene gets its own first baseline. Existing baselines stay untouched. | WSL | sonnet |
+| S2-10 | Result section, PROGRESS, DECISIONS entry (S2-D1…D6), roadmap row update; plan → `done` if every exit criterion holds; render--012 Input lists the rejected items. | any | sonnet (handoff skill) |
+
+S2-1, S2-2, S2-6 and S2-7 can land before the asset half. They keep working with the stage-1 pack, and the guard test then simply covers four modules.
+
+### Acceptance criteria (stage 2)
+
+- Each `armor(...)` item in `data/items.ts` is mapped or listed as rejected with a reason. Mapped modules render on both sexes, or are explicitly marked as sex-limited.
+- Guard + `plate_cuirass` / `pauldrons` and Ranger + `leather_jerkin` / `bracers` / `leather_boots` attach no duplicate module (test S2-2).
+- A Peasant-base NPC wearing `leather_jerkin` changes visibly at gameplay camera distance (tour frame).
+- No base cloth pokes through any kept module in Idle, Walk or Crouch (Opus look check). A module that clips is dropped, not shipped.
+- No per-frame allocation for unchanged armour (S2-1 test). A rebuild happens only when the worn set changes.
+- The asset guard passes, including the joint-name check (S2-6).
+- Performance, `armoured-crowd` medium, equipment on vs off, same build:
+  - draw calls rise by at most the number of attached modules × visible armoured humans (no shadow draws for S2-D4 modules);
+  - `render.prep` p95 is within noise;
+  - if `render.cpu` p95 rises by more than 10 %, cut module triangles or modules first; never move the baseline.
+- Startup: the pack bytes grow by ≤ 0.8 MB in total; `bench:startup` stays in the same result class.
+- `pnpm check` green. `pnpm e2e:run` green on WSL (no new e2e step is required: equipment is covered by the tour and the unit tests).
+
+### Risks
+
+- **Rest-pose mismatch:** stage 1 found that "Modular Parts" exports fly away when rebound. Keep cutting parts from the `Outfits/*.gltf` files only.
+- **Bone fallback hides errors:** a missing joint binds to the pack bone and the piece floats in T-pose. The S2-6 guard catches it.
+- **Inflate on thin parts:** at 2–3 cm, belts and bracers can look puffy. Prefer a lower inflate plus dropping the belt over a large inflate.
+- **Female skirt bases:** trousers may be male-only (S2-D6). Record it rather than forcing a fit.
+- **Player progression:** under S2-D1, leather items do not change the player's Ranger look. Only plate, pauldrons, the helm (and later mail, the cap and gloves) do. Acceptable for stage 2; see ❓ user.
+
+### ❓ User (non-blocking; the defaults above apply until answered)
+
+1. **Guards** look plate-armoured (Knight base) but wear a leather jerkin and cap. Options: (a) keep it (default); (b) give guards a cloth "Guard" base (Knight body cloth + plain legs), built in render--012, so their worn armour shows honestly.
+2. **The player's Ranger base** already shows bracers, a pauldron and boots, so the first leather purchases change nothing visibly. Options: (a) keep it (default); (b) a plainer player base (Ranger without bracers and pauldron, built from existing parts via a `VARIANTS` drop list, no Blender), so every armour piece the player buys shows.

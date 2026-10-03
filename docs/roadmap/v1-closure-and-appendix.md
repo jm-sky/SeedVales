@@ -115,10 +115,23 @@ Order (updated): … → wave 5c → wave 5d → **wave 5e (caves)** → wave 6 
 
 | Plan | Scope |
 |---|---|
-| [render--011](../plans/render--011--equipment-armour-visuals-existing-parts.md) | **stage 1 built (helm, cuirass, pauldrons, boots; see the plan's Result):** worn armour (`Human.eq.armor`) changes player and NPC models using only existing Quaternius modular parts; reuse-only, no Blender; follows `render--005` (variants), independent of caves and quests |
+| [render--011](../plans/render--011--equipment-armour-visuals-existing-parts.md) | **stage 1 built (helm, cuirass, pauldrons, boots; see the plan's Result); stage 2 planned (reuse completion: jerkin, bracers, trousers, gambeson candidate; base-provides rule; review 021 #15–#17):** worn armour (`Human.eq.armor`) changes player and NPC models using only existing Quaternius modular parts; reuse-only, no Blender; follows `render--005` (variants), independent of caves and quests |
 | [render--012](../plans/render--012--missing-equipment-modules-blender.md) | *(later, not crucial)* author missing armour modules in Blender; only after `render--011` shows which pieces are really missing; before or inside wave 6 polish, never blocking gameplay waves |
 
 Order: after the quest wave W1 review and the app-review round, `render--011` goes first among visual work (its asset-pipeline step needs the Quaternius source pack and a WSL look check, so it is scheduled as its own session, not squeezed between quest slices); `render--012` waits for the user's art decision.
+
+Order detail (plan review 2026-10-03, Opus; priorities unchanged):
+
+1. `quests--003` W3 (in progress).
+2. Triage of review 021. Quest findings → `quests--003`; render findings #15–#17 → `render--011` stage 2 steps S2-1…S2-3.
+3. Wave review + app review of W3. The app review must also look at the quest journal with ~20 quests (active, done, expired). If it rates the journal as a major UX problem, `ui--002` step 1 is pulled forward, as that plan already allows.
+4. `render--011` stage 2 in two halves:
+   - code steps on any machine;
+   - the asset build on **Windows**, where the source pack lives (no e2e or bench there);
+   - the look check and bench A/B on **WSL**.
+
+   No `SAVE_VERSION` or `GEN_VERSION` bump.
+5. `render--012` only after the user's art decision, in a Windows + Blender session. The gates and priority are in that plan (the leather cap comes first, because every guard wears one).
 
 ## Stage 5b — authored quests and Stage V — verification loop (planned 2026-10-02, user)
 
