@@ -62,4 +62,22 @@
 
 | # | Decision | Regression test / reason | Fix commit |
 |---|---|---|---|
-| | | | |
+| 1 | fix (major) | Rats quest completes when nest gone + building repaired + the player killed ≥ killsNeeded; remaining nest rats then turn into strays (no denId) instead of blocking; the objective list shows "rats of the nest left: n" while they block | batch 016 |
+| 2 | fix (major) | All authored dialog/journal text uses `{slot}` name placeholders and pronoun tokens (`{slot:he}`/`{slot:him}`/`{slot:his}`) resolved from the cast NPC's sex; a test scans every quest text for design-doc names (Lucy, Miles, Joan, Matthew, Ralph, Mark, Hazel, Martha, Molly, Tom, Luke, Jacob) outside placeholders | batch 016 |
+| 3 | fix (major) | Warehouse Take/Put asks for a quantity (1 / all) and shows the reputation cost before the action (D-ECON-4 cost unchanged); toast states the cost | batch 016 |
+| 12 | fix (major) | Global touch-target floor ≥ 32 px on mobile (close button, row buttons, sliders) — pulled forward from `ui--002` step 0; `review:app` ui-checks small-button hits → 0 | batch 016 |
+| 4 | fix | Q03 thank-you scene: lines by absent optional cast are skipped; the speaking cast matches the scene owner | batch 016 |
+| 5 | fix | Q07 journal text per stage; every accept option has an NPC reply | batch 016 |
+| 6 | ❓ user | Combat balance (wolf 9 club hits, player at 30 HP) — calibration decision for the user / combat wave 5c |  |
+| 7 | fix | Smith order price ≥ trader price was intended for scarce goods only: order price capped at max(trader buy price, inputs + labour) for items the trader stocks — check against D-ECON-5 | batch 016 |
+| 8 | fix | Inn/bed sleep wakes at the next 06:00–07:00 (or when rested and it is day), not in the dark | batch 016 |
+| 9 | defer | Camera collision with roofs/walls/trunks → `combat--001` (camera work) / `render--003`; recorded there |  |
+| 10 | fix | Build placement: ghost shown and placed at the indicated spot; the camera/ghost make the spot visible (not hidden behind the player) | batch 016 |
+| 11 | fix | Target prompt only offers targets in the facing cone and in view (no tree behind) | batch 016 |
+| 13, 14 | fix | Mobile map canvas fits the viewport; labels clamp inside the canvas | batch 016 |
+| 15 | fix | Trader list merges identical stacks (same id/quality/durability) | batch 016 |
+| 16 | fix | Empty storage column shows "Empty." | batch 016 |
+| 17 | fix | Notice board: other settlements' notices grouped under their settlement name; Accept only for this settlement's notices (or labelled clearly) | batch 016 |
+| 18 | ❓ user | Look differences vs the previous-app refs (grass density/tint, red autumn crowns, fog, low sun, labels) → keep/drop by the user, `render--003` |  |
+| rejected | — | "No inn in settlement 0" — SM settlements have no inn by design (❓ user: start in MD or point to the campfire); "guard sleeping at 10:00" — night guard schedule by design |  |
+
