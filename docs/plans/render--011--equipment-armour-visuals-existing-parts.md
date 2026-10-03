@@ -419,3 +419,19 @@ S2-1, S2-2, S2-6 and S2-7 can land before the asset half. They keep working with
 
 1. **Guards:** keep the Knight look while there are no leather or mail modules; guards should show leather, chainmail or plate once those exist → S2-D8.
 2. **Player:** the Peasant outfit when the player wears no armour; armour shows on top → S2-D7.
+
+### Blender exploration (2026-10-03, Sonnet, Windows session)
+
+Research: [2026-10-03--007](../research/2026-10-03--007--quaternius-outfit-blend-modular-variants.md). Script: `scripts/assets/blender-equipment-modules.py`; audit: `scripts/assets/audit-eq-raw.mjs`; candidates: `assets-src/characters/eq/<Module>_<Sex>.raw.glb` (not wired, no decision above is changed). The `.blend` rest pose equals the Outfits rest pose (65/65 joints, 0.0000 m), so these cuts bind correctly.
+
+S2-D6 rows the candidates can replace, if the S2-4 look check on WSL agrees:
+
+| S2-D6 row | Candidate | Tris raw → after simplify (M / F) | Inflate M / F | Note |
+|---|---|---|---|---|
+| `bracers` | `Bracers` (the `Ranger_Arms_Bracer` mesh is already bracers-only) | 600 / 600 | 1.5 / 2.0 cm | Blender-decimated from 3636 (meshopt floors at ≈ 750) |
+| `leather_jerkin` | `LeatherJerkin` (`Ranger_Body` + `Belt_1`, green recoloured to leather brown by UV) | 3802 / 3766 → 1497 / 1498 | 2.5 / 2.0 cm | a tint cannot make the green body leather |
+| `leather_trousers` | `LeatherTrousers` (`Ranger_Legs`, brown) | 1128 / 1204 | 3.5 / 2.0 cm | female Peasant legs are leggings, no skirt line, so both sexes work |
+| `padded_jacket` | `PaddedJacket` (`Knight_Body_Cloth` on a linen swatch) | 2536 → 1500 | 2.0 / 1.5 cm | provisional: reads as a plain sleeveless padded vest |
+| `leather_gloves` | `Gloves` (hand shell of `Peasant_Arms`) | 560 / 559 | – | male bases only; the female Peasant arms already have gloves and cuffs |
+
+Not replaceable: `studded_leather`, `chainmail`, `leather_cap` (a cap cannot be cut from the hood; no source). Also built: `Ranger_Plain` / `Ranger_Plain_Hood` (Ranger without bracers, pauldron, optional hood; ≈ 12.4 k / 14.6 k raw) as a possible hunter base, and `LeatherPauldron` (male needs a recolour, female rejected: 4.25 cm penetration). Pack budget warning: the five kept modules add ≈ 5.4 k triangles per sex on top of stage 1's ≈ 5.4 k, which is over the S2-5 limit of 9 k; reduce `LeatherBoots` first.

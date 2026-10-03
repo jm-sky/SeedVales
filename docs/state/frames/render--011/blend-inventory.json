@@ -1,0 +1,3247 @@
+{
+ "Male": {
+  "objects": [
+   {
+    "name": "Female_Regular.001",
+    "collections": [
+     "Collection.001"
+    ],
+    "tris": 936,
+    "verts": 494,
+    "materials": [
+     "MI_Regular_Female.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 17,
+    "mods": [
+     [
+      "NODES",
+      null
+     ]
+    ],
+    "parent": null,
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.679,
+     -0.024,
+     1.353
+    ],
+    "bbox_max": [
+     0.832,
+     0.099,
+     1.429
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Regular.003",
+    "collections": [
+     "Collection.001"
+    ],
+    "tris": 4872,
+    "verts": 2454,
+    "materials": [
+     "MI_Ranger.001",
+     "MI_Regular_Female.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 34,
+    "mods": [],
+    "parent": null,
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.346
+    ],
+    "bbox_max": [
+     0.832,
+     0.106,
+     1.482
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Acc_Pauldron_Round.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1488,
+    "verts": 789,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.09,
+     -0.064,
+     1.405
+    ],
+    "bbox_max": [
+     0.346,
+     0.194,
+     1.614
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Acc_Pauldron_Spike.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 314,
+    "verts": 179,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.102,
+     -0.036,
+     1.408
+    ],
+    "bbox_max": [
+     0.356,
+     0.176,
+     1.614
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Acc_Scarf.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 471,
+    "verts": 250,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 4,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.146,
+     -0.154,
+     1.422
+    ],
+    "bbox_max": [
+     0.143,
+     0.134,
+     1.631
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Arms.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 4572,
+    "verts": 2295,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 29,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.806,
+     -0.027,
+     1.367
+    ],
+    "bbox_max": [
+     0.899,
+     0.146,
+     1.532
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Body_Armor.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 6042,
+    "verts": 3247,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 12,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.186,
+     -0.19,
+     0.961
+    ],
+    "bbox_max": [
+     0.186,
+     0.168,
+     1.615
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Body_Cloth.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 2536,
+    "verts": 1298,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.175,
+     -0.121,
+     0.999
+    ],
+    "bbox_max": [
+     0.175,
+     0.17,
+     1.573
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Feet_Armor.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1856,
+    "verts": 988,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.171,
+     -0.199,
+     -0.0
+    ],
+    "bbox_max": [
+     0.171,
+     0.173,
+     0.513
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Head_Armet.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1698,
+    "verts": 927,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.101,
+     -0.192,
+     1.546
+    ],
+    "bbox_max": [
+     0.101,
+     0.132,
+     1.84
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Head_Horns.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1830,
+    "verts": 1006,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.146,
+     -0.136,
+     1.542
+    ],
+    "bbox_max": [
+     0.146,
+     0.133,
+     1.883
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Knight_Legs_Armor.001",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 3000,
+    "verts": 1615,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.188,
+     -0.126,
+     0.333
+    ],
+    "bbox_max": [
+     0.188,
+     0.156,
+     1.05
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Acc_Gorget.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 888,
+    "verts": 474,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 5,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.159,
+     -0.115,
+     1.43
+    ],
+    "bbox_max": [
+     0.159,
+     0.173,
+     1.619
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Acc_Pauldron.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 596,
+    "verts": 325,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.106,
+     -0.036,
+     1.444
+    ],
+    "bbox_max": [
+     0.368,
+     0.173,
+     1.597
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Acc_Pauldron_Lion.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 928,
+    "verts": 492,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.142,
+     -0.026,
+     1.49
+    ],
+    "bbox_max": [
+     0.374,
+     0.157,
+     1.643
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Arms.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 5400,
+    "verts": 2750,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 50,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.899,
+     -0.027,
+     1.36
+    ],
+    "bbox_max": [
+     0.899,
+     0.157,
+     1.538
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Arms_Guards.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 676,
+    "verts": 374,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 6,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.791,
+     0.0,
+     1.424
+    ],
+    "bbox_max": [
+     0.791,
+     0.131,
+     1.507
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Body.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 4604,
+    "verts": 2400,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 12,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.293,
+     -0.123,
+     0.915
+    ],
+    "bbox_max": [
+     0.295,
+     0.198,
+     1.583
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Body_Belt.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 1736,
+    "verts": 888,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 5,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.152,
+     -0.121,
+     1.027
+    ],
+    "bbox_max": [
+     0.152,
+     -0.048,
+     1.146
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Feet.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 3773,
+    "verts": 1910,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.175,
+     -0.168,
+     -0.004
+    ],
+    "bbox_max": [
+     0.175,
+     0.177,
+     0.456
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Head_Crown.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 3968,
+    "verts": 1984,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.124,
+     -0.124,
+     1.764
+    ],
+    "bbox_max": [
+     0.124,
+     0.123,
+     1.89
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Noble_Legs.001",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 1528,
+    "verts": 795,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.171,
+     -0.08,
+     0.333
+    ],
+    "bbox_max": [
+     0.171,
+     0.151,
+     1.072
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Peasant_Arms.001",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 5338,
+    "verts": 2724,
+    "materials": [
+     "MI_Peasant.001",
+     "MI_Regular_Male.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 46,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV"
+    ],
+    "bbox_min": [
+     -0.899,
+     -0.029,
+     1.367
+    ],
+    "bbox_max": [
+     0.899,
+     0.14,
+     1.53
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Peasant_Body.001",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 3856,
+    "verts": 1988,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 14,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.373,
+     -0.125,
+     0.921
+    ],
+    "bbox_max": [
+     0.373,
+     0.184,
+     1.559
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Peasant_Feet.001",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 2588,
+    "verts": 1374,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.175,
+     -0.168,
+     -0.004
+    ],
+    "bbox_max": [
+     0.175,
+     0.162,
+     0.448
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Peasant_Legs.001",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 1112,
+    "verts": 581,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.211,
+     -0.077,
+     0.403
+    ],
+    "bbox_max": [
+     0.211,
+     0.152,
+     1.054
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Acc_Pauldron.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 1376,
+    "verts": 692,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.126,
+     -0.036,
+     1.437
+    ],
+    "bbox_max": [
+     0.359,
+     0.174,
+     1.575
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Arms.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 2464,
+    "verts": 1241,
+    "materials": [
+     "MI_Ranger.001",
+     "MI_Regular_Male.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 24,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV"
+    ],
+    "bbox_min": [
+     0.141,
+     -0.029,
+     1.367
+    ],
+    "bbox_max": [
+     0.899,
+     0.131,
+     1.53
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Arms_Bracer.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 1818,
+    "verts": 948,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 4,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.458,
+     -0.006,
+     1.383
+    ],
+    "bbox_max": [
+     0.754,
+     0.141,
+     1.516
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Body.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 2998,
+    "verts": 1540,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "NODES",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.215,
+     -0.131,
+     0.909
+    ],
+    "bbox_max": [
+     0.215,
+     0.206,
+     1.6
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Body_Belt_1.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 804,
+    "verts": 413,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.148,
+     -0.134,
+     1.184
+    ],
+    "bbox_max": [
+     0.145,
+     0.116,
+     1.236
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Body_Belt_2.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 804,
+    "verts": 413,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.155,
+     -0.137,
+     1.183
+    ],
+    "bbox_max": [
+     0.148,
+     0.121,
+     1.237
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Feet_Boots.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 9172,
+    "verts": 4672,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.178,
+     -0.168,
+     -0.004
+    ],
+    "bbox_max": [
+     0.178,
+     0.17,
+     0.556
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Head_Hood.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 2136,
+    "verts": 1070,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 5,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.152,
+     -0.141,
+     1.525
+    ],
+    "bbox_max": [
+     0.152,
+     0.193,
+     1.865
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Ranger_Legs.001",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 1128,
+    "verts": 590,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 6,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.183,
+     -0.073,
+     0.423
+    ],
+    "bbox_max": [
+     0.183,
+     0.154,
+     1.051
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Wizard_Arms.001",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 5184,
+    "verts": 2642,
+    "materials": [
+     "MI_Wizard.001",
+     "MI_Regular_Male.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 50,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV"
+    ],
+    "bbox_min": [
+     -0.899,
+     -0.029,
+     1.367
+    ],
+    "bbox_max": [
+     0.899,
+     0.141,
+     1.53
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Wizard_Body.001",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 3322,
+    "verts": 1780,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 12,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV"
+    ],
+    "bbox_min": [
+     -0.256,
+     -0.167,
+     0.932
+    ],
+    "bbox_max": [
+     0.256,
+     0.182,
+     1.631
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Wizard_Body_Belt.001",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 704,
+    "verts": 352,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 6,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.152,
+     -0.108,
+     1.111
+    ],
+    "bbox_max": [
+     0.152,
+     0.102,
+     1.169
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Wizard_Body_BeltOrnament.001",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 1228,
+    "verts": 633,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 5,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.105,
+     -0.129,
+     1.085
+    ],
+    "bbox_max": [
+     0.105,
+     -0.088,
+     1.179
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Wizard_Feet.001",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 2620,
+    "verts": 1330,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 6,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV"
+    ],
+    "bbox_min": [
+     -0.159,
+     -0.131,
+     -0.009
+    ],
+    "bbox_max": [
+     0.159,
+     0.136,
+     0.442
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Male_Wizard_Legs.001",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 1372,
+    "verts": 715,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV"
+    ],
+    "bbox_min": [
+     -0.231,
+     -0.081,
+     0.337
+    ],
+    "bbox_max": [
+     0.231,
+     0.176,
+     1.073
+    ],
+    "loose_parts": null
+   }
+  ],
+  "armature": {
+   "name": "Armature.001",
+   "bones": 382,
+   "pose_position": "REST",
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rot": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "anim": "Idle_Loop.001",
+  "widget_objects_omitted": "WGT-rig_* custom bone shapes (128 empty meshes)"
+ },
+ "Female": {
+  "objects": [
+   {
+    "name": "Female_Knight_Acc_Pauldrons_Round",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1488,
+    "verts": 789,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.12,
+     -0.059,
+     1.38
+    ],
+    "bbox_max": [
+     0.338,
+     0.164,
+     1.56
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Acc_Pauldrons_Spike",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 314,
+    "verts": 179,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.101,
+     -0.047,
+     1.357
+    ],
+    "bbox_max": [
+     0.348,
+     0.152,
+     1.554
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Acc_Scarf",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 471,
+    "verts": 250,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 4,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.139,
+     -0.159,
+     1.386
+    ],
+    "bbox_max": [
+     0.133,
+     0.124,
+     1.592
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Arms",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 6820,
+    "verts": 3428,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 49,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.334
+    ],
+    "bbox_max": [
+     0.832,
+     0.11,
+     1.486
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Body_Armor",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 3450,
+    "verts": 1835,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.17,
+     -0.186,
+     0.928
+    ],
+    "bbox_max": [
+     0.171,
+     0.168,
+     1.556
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Body_Cloth",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 2536,
+    "verts": 1298,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.165,
+     -0.135,
+     1.007
+    ],
+    "bbox_max": [
+     0.165,
+     0.155,
+     1.512
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Feet_Armor",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1856,
+    "verts": 988,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.198,
+     -0.199,
+     -0.0
+    ],
+    "bbox_max": [
+     0.198,
+     0.174,
+     0.499
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Head_Armet",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1698,
+    "verts": 927,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.098,
+     -0.182,
+     1.506
+    ],
+    "bbox_max": [
+     0.098,
+     0.132,
+     1.791
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Head_Horns",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 1830,
+    "verts": 1006,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.147,
+     -0.138,
+     1.501
+    ],
+    "bbox_max": [
+     0.147,
+     0.133,
+     1.846
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Knight_Legs_Armor",
+    "collections": [
+     "Knight.001"
+    ],
+    "tris": 2392,
+    "verts": 1274,
+    "materials": [
+     "MI_Knight.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.206,
+     -0.125,
+     0.434
+    ],
+    "bbox_max": [
+     0.206,
+     0.159,
+     1.071
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Acc_Gorget",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 888,
+    "verts": 474,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.153,
+     -0.119,
+     1.356
+    ],
+    "bbox_max": [
+     0.153,
+     0.175,
+     1.548
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Acc_Pauldron",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 596,
+    "verts": 325,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.064,
+     -0.038,
+     1.414
+    ],
+    "bbox_max": [
+     0.286,
+     0.152,
+     1.552
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Acc_Pauldron_Lion",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 928,
+    "verts": 492,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.093,
+     -0.029,
+     1.454
+    ],
+    "bbox_max": [
+     0.29,
+     0.137,
+     1.582
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Arms",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 4908,
+    "verts": 2508,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 49,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.353
+    ],
+    "bbox_max": [
+     0.832,
+     0.11,
+     1.483
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Body",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 3720,
+    "verts": 1946,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 12,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.275,
+     -0.154,
+     0.834
+    ],
+    "bbox_max": [
+     0.275,
+     0.229,
+     1.51
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Feet",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 2424,
+    "verts": 1238,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.181,
+     -0.131,
+     -0.003
+    ],
+    "bbox_max": [
+     0.181,
+     0.143,
+     0.61
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Head_Crown",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 3968,
+    "verts": 1984,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.115,
+     -0.127,
+     1.732
+    ],
+    "bbox_max": [
+     0.115,
+     0.129,
+     1.861
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Noble_Legs",
+    "collections": [
+     "Noble.001"
+    ],
+    "tris": 1800,
+    "verts": 933,
+    "materials": [
+     "MI_Noble.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.187,
+     -0.086,
+     0.379
+    ],
+    "bbox_max": [
+     0.187,
+     0.148,
+     1.088
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Peasant_Arms",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 6848,
+    "verts": 3478,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 48,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.352
+    ],
+    "bbox_max": [
+     0.832,
+     0.107,
+     1.475
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Peasant_Body",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 2188,
+    "verts": 1141,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.172,
+     -0.135,
+     0.988
+    ],
+    "bbox_max": [
+     0.172,
+     0.142,
+     1.518
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Peasant_Feet",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 2588,
+    "verts": 1374,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.202,
+     -0.168,
+     -0.007
+    ],
+    "bbox_max": [
+     0.202,
+     0.167,
+     0.459
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Peasant_Legs",
+    "collections": [
+     "Peasant.001"
+    ],
+    "tris": 1944,
+    "verts": 1005,
+    "materials": [
+     "MI_Peasant.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.188,
+     -0.087,
+     0.436
+    ],
+    "bbox_max": [
+     0.188,
+     0.142,
+     1.091
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Acc_Pauldrons",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 1376,
+    "verts": 692,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.116,
+     -0.026,
+     1.399
+    ],
+    "bbox_max": [
+     0.327,
+     0.164,
+     1.523
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Arms",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 4872,
+    "verts": 2454,
+    "materials": [
+     "MI_Ranger.001",
+     "MI_Regular_Female.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 48,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.346
+    ],
+    "bbox_max": [
+     0.832,
+     0.106,
+     1.482
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Arms_Bracer",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 3636,
+    "verts": 1896,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 6,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.689,
+     -0.02,
+     1.354
+    ],
+    "bbox_max": [
+     0.689,
+     0.113,
+     1.474
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Body",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 2962,
+    "verts": 1540,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.19,
+     -0.164,
+     0.919
+    ],
+    "bbox_max": [
+     0.19,
+     0.182,
+     1.541
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Body_Belt_1",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 804,
+    "verts": 413,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 3,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.119,
+     -0.146,
+     1.157
+    ],
+    "bbox_max": [
+     0.128,
+     0.082,
+     1.203
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Body_Belt_2",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 804,
+    "verts": 413,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 3,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.123,
+     -0.131,
+     1.104
+    ],
+    "bbox_max": [
+     0.126,
+     0.087,
+     1.164
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Feet",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 4586,
+    "verts": 2336,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 6,
+    "mods": [
+     [
+      "MIRROR",
+      null
+     ],
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.031,
+     -0.168,
+     -0.004
+    ],
+    "bbox_max": [
+     0.201,
+     0.17,
+     0.556
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Head_Hood",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 2136,
+    "verts": 1070,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.163,
+     -0.132,
+     1.474
+    ],
+    "bbox_max": [
+     0.164,
+     0.21,
+     1.794
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Ranger_Legs",
+    "collections": [
+     "Ranger.001"
+    ],
+    "tris": 1204,
+    "verts": 628,
+    "materials": [
+     "MI_Ranger.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.206,
+     -0.085,
+     0.411
+    ],
+    "bbox_max": [
+     0.206,
+     0.155,
+     1.062
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Regular.001",
+    "collections": [
+     "Collection.001"
+    ],
+    "tris": 936,
+    "verts": 494,
+    "materials": [
+     "MI_Regular_Female.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 17,
+    "mods": [
+     [
+      "NODES",
+      null
+     ]
+    ],
+    "parent": null,
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     0.679,
+     -0.024,
+     1.353
+    ],
+    "bbox_max": [
+     0.832,
+     0.099,
+     1.429
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Regular.003",
+    "collections": [
+     "Collection.001"
+    ],
+    "tris": 4872,
+    "verts": 2454,
+    "materials": [
+     "MI_Ranger.001",
+     "MI_Regular_Female.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 34,
+    "mods": [],
+    "parent": null,
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.346
+    ],
+    "bbox_max": [
+     0.832,
+     0.106,
+     1.482
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Wizard_Arms",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 5152,
+    "verts": 2626,
+    "materials": [
+     "MI_Wizard.001",
+     "MI_Regular_Female.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 47,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap",
+     "UV",
+     "Gradient",
+     "Bake Sclera",
+     "Bake Iris"
+    ],
+    "bbox_min": [
+     -0.832,
+     -0.024,
+     1.325
+    ],
+    "bbox_max": [
+     0.832,
+     0.123,
+     1.482
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Wizard_Body",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 2858,
+    "verts": 1513,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 11,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.235,
+     -0.179,
+     0.915
+    ],
+    "bbox_max": [
+     0.235,
+     0.179,
+     1.565
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Wizard_Body_Belt",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 704,
+    "verts": 352,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 2,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.139,
+     -0.112,
+     1.069
+    ],
+    "bbox_max": [
+     0.139,
+     0.088,
+     1.13
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Wizard_Body_Belt_Ornament",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 1228,
+    "verts": 633,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 1,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.091,
+     -0.131,
+     1.049
+    ],
+    "bbox_max": [
+     0.091,
+     -0.095,
+     1.131
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Wizard_Feet",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 2244,
+    "verts": 1142,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 8,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.185,
+     -0.13,
+     -0.006
+    ],
+    "bbox_max": [
+     0.185,
+     0.144,
+     0.484
+    ],
+    "loose_parts": null
+   },
+   {
+    "name": "Female_Wizard_Legs",
+    "collections": [
+     "Wizard.001"
+    ],
+    "tris": 1372,
+    "verts": 715,
+    "materials": [
+     "MI_Wizard.001"
+    ],
+    "vgroups": 65,
+    "used_groups": 7,
+    "mods": [
+     [
+      "ARMATURE",
+      "Armature.001"
+     ]
+    ],
+    "parent": "Armature.001",
+    "hide_viewport": false,
+    "hide_get": null,
+    "shape_keys": [],
+    "uv_layers": [
+     "UVMap"
+    ],
+    "bbox_min": [
+     -0.233,
+     -0.085,
+     0.448
+    ],
+    "bbox_max": [
+     0.233,
+     0.181,
+     1.072
+    ],
+    "loose_parts": null
+   }
+  ],
+  "armature": {
+   "name": "Armature.001",
+   "bones": 382,
+   "pose_position": "REST",
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rot": [
+    0.0,
+    -0.0,
+    0.0
+   ]
+  },
+  "anim": "Jog_Fwd_Loop",
+  "widget_objects_omitted": "WGT-rig_* custom bone shapes (128 empty meshes)"
+ },
+ "restpose_compare": {
+  "Male": {
+   "gltf_joints": 65,
+   "matched": 65,
+   "max_diff": 0.0,
+   "mean_diff": 0.0,
+   "worst": [
+    [
+     "root",
+     0.0
+    ],
+    [
+     "pelvis",
+     0.0
+    ],
+    [
+     "spine_01",
+     0.0
+    ],
+    [
+     "spine_02",
+     0.0
+    ],
+    [
+     "spine_03",
+     0.0
+    ]
+   ],
+   "sample": {
+    "root": {
+     "blend": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "gltf": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "pelvis": {
+     "blend": [
+      0.0,
+      0.043,
+      0.9491
+     ],
+     "gltf": [
+      0.0,
+      0.9491,
+      -0.043
+     ]
+    },
+    "spine_01": {
+     "blend": [
+      0.0,
+      0.0069,
+      1.072
+     ],
+     "gltf": [
+      0.0,
+      1.072,
+      -0.0069
+     ]
+    },
+    "spine_02": {
+     "blend": [
+      0.0,
+      -0.0039,
+      1.1778
+     ],
+     "gltf": [
+      0.0,
+      1.1778,
+      0.0039
+     ]
+    }
+   },
+   "only_gltf": []
+  },
+  "Female": {
+   "gltf_joints": 65,
+   "matched": 65,
+   "max_diff": 0.0,
+   "mean_diff": 0.0,
+   "worst": [
+    [
+     "root",
+     0.0
+    ],
+    [
+     "pelvis",
+     0.0
+    ],
+    [
+     "spine_01",
+     0.0
+    ],
+    [
+     "spine_02",
+     0.0
+    ],
+    [
+     "spine_03",
+     0.0
+    ]
+   ],
+   "sample": {
+    "root": {
+     "blend": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "gltf": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "pelvis": {
+     "blend": [
+      0.0,
+      0.0457,
+      0.9318
+     ],
+     "gltf": [
+      0.0,
+      0.9318,
+      -0.0457
+     ]
+    },
+    "spine_01": {
+     "blend": [
+      0.0,
+      0.0151,
+      1.0546
+     ],
+     "gltf": [
+      0.0,
+      1.0546,
+      -0.0151
+     ]
+    },
+    "spine_02": {
+     "blend": [
+      0.0,
+      0.0023,
+      1.1642
+     ],
+     "gltf": [
+      0.0,
+      1.1642,
+      -0.0023
+     ]
+    }
+   },
+   "only_gltf": []
+  }
+ }
+}

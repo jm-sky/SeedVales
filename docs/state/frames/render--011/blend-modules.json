@@ -1,0 +1,438 @@
+{
+ "Bracers_Male": {
+  "tris": 600,
+  "inflate_rec": 0.015,
+  "size_kb": 383,
+  "fit": {
+   "n_near": 350,
+   "inside_pct": 11.1,
+   "p50": 0.0063,
+   "p95": 0.0102,
+   "max": 0.0118
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.754,
+    -0.004,
+    1.381
+   ],
+   [
+    0.754,
+    0.141,
+    1.516
+   ]
+  ]
+ },
+ "Bracers_Female": {
+  "tris": 600,
+  "inflate_rec": 0.02,
+  "size_kb": 383,
+  "fit": {
+   "n_near": 350,
+   "inside_pct": 20.3,
+   "p50": 0.0022,
+   "p95": 0.0135,
+   "max": 0.0156
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.69,
+    -0.018,
+    1.354
+   ],
+   [
+    0.69,
+    0.114,
+    1.475
+   ]
+  ]
+ },
+ "Ranger_Plain_Male": {
+  "tris": 12462,
+  "inflate_rec": 0.02,
+  "size_kb": 1176,
+  "fit": {
+   "n_near": 6412,
+   "inside_pct": 33.5,
+   "p50": 0.0039,
+   "p95": 0.0153,
+   "max": 0.0394
+  },
+  "materials": [
+   "SV_MI_Ranger",
+   "SV_MI_Regular_Male"
+  ],
+  "bbox": [
+   [
+    -0.899,
+    -0.168,
+    -0.004
+   ],
+   [
+    0.899,
+    0.206,
+    1.6
+   ]
+  ]
+ },
+ "Ranger_Plain_Hood_Male": {
+  "tris": 14598,
+  "inflate_rec": 0.025,
+  "size_kb": 1253,
+  "fit": {
+   "n_near": 6879,
+   "inside_pct": 32.0,
+   "p50": 0.004,
+   "p95": 0.0166,
+   "max": 0.0982
+  },
+  "materials": [
+   "SV_MI_Ranger",
+   "SV_MI_Regular_Male"
+  ],
+  "bbox": [
+   [
+    -0.899,
+    -0.168,
+    -0.004
+   ],
+   [
+    0.899,
+    0.206,
+    1.865
+   ]
+  ]
+ },
+ "LeatherJerkin_Male": {
+  "tris": 3802,
+  "inflate_rec": 0.025,
+  "size_kb": 543,
+  "fit": {
+   "n_near": 1953,
+   "inside_pct": 32.4,
+   "p50": 0.0057,
+   "p95": 0.0167,
+   "max": 0.0394
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.215,
+    -0.134,
+    0.909
+   ],
+   [
+    0.215,
+    0.206,
+    1.6
+   ]
+  ]
+ },
+ "LeatherTrousers_Male": {
+  "tris": 1128,
+  "inflate_rec": 0.035,
+  "size_kb": 370,
+  "fit": {
+   "n_near": 590,
+   "inside_pct": 46.1,
+   "p50": 0.0062,
+   "p95": 0.0262,
+   "max": 0.0345
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.183,
+    -0.073,
+    0.423
+   ],
+   [
+    0.183,
+    0.154,
+    1.051
+   ]
+  ]
+ },
+ "PaddedJacket_Male": {
+  "tris": 2536,
+  "inflate_rec": 0.02,
+  "size_kb": 372,
+  "fit": {
+   "n_near": 1298,
+   "inside_pct": 52.7,
+   "p50": 0.0043,
+   "p95": 0.015,
+   "max": 0.0244
+  },
+  "materials": [
+   "SV_MI_Peasant"
+  ],
+  "bbox": [
+   [
+    -0.175,
+    -0.121,
+    0.999
+   ],
+   [
+    0.175,
+    0.17,
+    1.573
+   ]
+  ]
+ },
+ "LeatherPauldron_Male": {
+  "tris": 1376,
+  "inflate_rec": 0.015,
+  "size_kb": 397,
+  "fit": {
+   "n_near": 692,
+   "inside_pct": 16.8,
+   "p50": 0.0032,
+   "p95": 0.0096,
+   "max": 0.0121
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    0.126,
+    -0.036,
+    1.437
+   ],
+   [
+    0.359,
+    0.174,
+    1.575
+   ]
+  ]
+ },
+ "Gloves_Male": {
+  "tris": 560,
+  "inflate_rec": 0.01,
+  "size_kb": 354,
+  "fit": {
+   "n_near": 292,
+   "inside_pct": 0.3,
+   "p50": 0.0004,
+   "p95": 0.0004,
+   "max": 0.0004
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.903,
+    -0.019,
+    1.363
+   ],
+   [
+    0.902,
+    0.123,
+    1.482
+   ]
+  ]
+ },
+ "Ranger_Plain_Female": {
+  "tris": 12446,
+  "inflate_rec": 0.015,
+  "size_kb": 1162,
+  "fit": {
+   "n_near": 6422,
+   "inside_pct": 26.1,
+   "p50": 0.0021,
+   "p95": 0.0094,
+   "max": 0.0226
+  },
+  "materials": [
+   "SV_MI_Ranger",
+   "SV_MI_Regular_Female"
+  ],
+  "bbox": [
+   [
+    -0.832,
+    -0.168,
+    -0.004
+   ],
+   [
+    0.832,
+    0.182,
+    1.541
+   ]
+  ]
+ },
+ "Ranger_Plain_Hood_Female": {
+  "tris": 14582,
+  "inflate_rec": 0.015,
+  "size_kb": 1238,
+  "fit": {
+   "n_near": 6878,
+   "inside_pct": 24.5,
+   "p50": 0.0021,
+   "p95": 0.0094,
+   "max": 0.0226
+  },
+  "materials": [
+   "SV_MI_Ranger",
+   "SV_MI_Regular_Female"
+  ],
+  "bbox": [
+   [
+    -0.832,
+    -0.168,
+    -0.004
+   ],
+   [
+    0.832,
+    0.21,
+    1.794
+   ]
+  ]
+ },
+ "LeatherJerkin_Female": {
+  "tris": 3766,
+  "inflate_rec": 0.02,
+  "size_kb": 541,
+  "fit": {
+   "n_near": 1953,
+   "inside_pct": 7.2,
+   "p50": 0.0019,
+   "p95": 0.013,
+   "max": 0.0226
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.19,
+    -0.164,
+    0.919
+   ],
+   [
+    0.19,
+    0.182,
+    1.541
+   ]
+  ]
+ },
+ "LeatherTrousers_Female": {
+  "tris": 1204,
+  "inflate_rec": 0.02,
+  "size_kb": 373,
+  "fit": {
+   "n_near": 628,
+   "inside_pct": 17.2,
+   "p50": 0.0032,
+   "p95": 0.0145,
+   "max": 0.019
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.206,
+    -0.085,
+    0.411
+   ],
+   [
+    0.206,
+    0.155,
+    1.062
+   ]
+  ]
+ },
+ "PaddedJacket_Female": {
+  "tris": 2536,
+  "inflate_rec": 0.015,
+  "size_kb": 372,
+  "fit": {
+   "n_near": 1298,
+   "inside_pct": 8.2,
+   "p50": 0.0015,
+   "p95": 0.0079,
+   "max": 0.0108
+  },
+  "materials": [
+   "SV_MI_Peasant"
+  ],
+  "bbox": [
+   [
+    -0.165,
+    -0.135,
+    1.007
+   ],
+   [
+    0.165,
+    0.155,
+    1.512
+   ]
+  ]
+ },
+ "LeatherPauldron_Female": {
+  "tris": 1376,
+  "inflate_rec": 0.05,
+  "size_kb": 398,
+  "fit": {
+   "n_near": 692,
+   "inside_pct": 2.7,
+   "p50": 0.0038,
+   "p95": 0.0425,
+   "max": 0.0431
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    0.116,
+    -0.026,
+    1.399
+   ],
+   [
+    0.327,
+    0.164,
+    1.523
+   ]
+  ]
+ },
+ "Gloves_Female": {
+  "tris": 559,
+  "inflate_rec": 0.01,
+  "size_kb": 353,
+  "fit": {
+   "n_near": 300,
+   "inside_pct": 0.7,
+   "p50": 0.0003,
+   "p95": 0.0003,
+   "max": 0.0003
+  },
+  "materials": [
+   "SV_MI_Ranger"
+  ],
+  "bbox": [
+   [
+    -0.835,
+    -0.026,
+    1.348
+   ],
+   [
+    0.835,
+    0.102,
+    1.445
+   ]
+  ]
+ }
+}
