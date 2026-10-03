@@ -492,6 +492,8 @@ export interface PlayerExtra {
   lootTaken?: string[]
   /** Landmarks a villager has already told a treasure tale about (P-06). */
   talesTold?: string[]
+  /** Poisonous plants the player has learned to recognise (P-02). */
+  knownToxic?: string[]
 }
 
 export interface MapPin {

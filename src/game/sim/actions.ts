@@ -1,9 +1,3 @@
-/**
- * Shared world-changing actions used by the player and NPCs (same rules for everyone).
- * Each returns an ActionResult; callers decide UI feedback.
- * @domain sim
- * @subdomain actions
- */
 import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
 import type { Building, Corpse, DenState, GroundItem, Human, ItemStack } from './types'
@@ -16,6 +10,13 @@ import { Biome } from '../world/types'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { torchBurnH } from './fire'
 import { addItem, consumeItem, countItem, findTool, fitQty, newStack, removeStack, wearTool } from './inventory'
+/**
+ * Shared world-changing actions used by the player and NPCs (same rules for everyone).
+ * Each returns an ActionResult; callers decide UI feedback.
+ * @domain sim
+ * @subdomain actions
+ */
+import { knownToxic, learnToxic } from './knowledge'
 import { questEvent } from './questHooks'
 import { seasonOf } from './time'
 import { bellyLoot, digTreasure, registerGiveStack } from './treasure'
@@ -368,11 +369,13 @@ export function consume(sim: Sim, h: Human, stack: ItemStack, target: Human = h)
     return ok(`Used: ${d.name}.`)
   }
   if (d.herb) {
+    if (h === sim.player && knownToxic(sim, stack.id)) return fail(`${d.name} is poisonous — you know better than to eat it.`)
     removeStack(h.inv, stack, 1)
     logConsume(stack.id, 1, 'eaten', h)
     if (d.herb.poison) {
       makeIll(target.vitals, 'poison', d.herb.poison)
-      return ok(`${d.name} — poisonous!`)
+      const learned = h === sim.player && learnToxic(sim, stack.id)
+      return ok(`${d.name} — poisonous!${learned ? ' You will remember this plant.' : ''}`)
     }
     heal(target.vitals, d.herb.heal * (0.5 + h.skills.medicine / 100))
     if (d.herb.cures && target.vitals.illness) target.vitals.illness.hoursLeft *= 0.6
