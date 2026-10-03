@@ -115,7 +115,7 @@ Order (updated): … → wave 5c → wave 5d → **wave 5e (caves)** → wave 6 
 
 | Plan | Scope |
 |---|---|
-| [render--011](../plans/render--011--equipment-armour-visuals-existing-parts.md) | **next render slice:** worn armour (`Human.eq.armor`) changes player and NPC models using only existing Quaternius modular parts; reuse-only, no Blender; follows `render--005` (variants), independent of caves and quests |
+| [render--011](../plans/render--011--equipment-armour-visuals-existing-parts.md) | **stage 1 built (helm, cuirass, pauldrons, boots; see the plan's Result):** worn armour (`Human.eq.armor`) changes player and NPC models using only existing Quaternius modular parts; reuse-only, no Blender; follows `render--005` (variants), independent of caves and quests |
 | [render--012](../plans/render--012--missing-equipment-modules-blender.md) | *(later, not crucial)* author missing armour modules in Blender; only after `render--011` shows which pieces are really missing; before or inside wave 6 polish, never blocking gameplay waves |
 
 Order: after the quest wave W1 review and the app-review round, `render--011` goes first among visual work (its asset-pipeline step needs the Quaternius source pack and a WSL look check, so it is scheduled as its own session, not squeezed between quest slices); `render--012` waits for the user's art decision.

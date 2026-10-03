@@ -19,6 +19,7 @@ import { isDown } from '../sim/combat'
 import { guardOf } from '../sim/guard'
 import { loadGltf } from './assets'
 import { applyLook, characterLook, darkenPrime } from './characterLook'
+import { equipmentModules, equipmentVisualKey, outfitWithEquipment } from './equipmentVisuals'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 /** Scratch vector for the per-frame interpolation (no allocation per actor, review 009 F-04). */
@@ -105,6 +106,8 @@ export class Actors {
   private visuals = new Map<number, Visual>()
   private chars = new Map<string, GLTF>()
   private heads = new Map<string, GLTF>()
+  /** Armour module packs per sex (`characters/eq/<Sex>.glb`, render--011); absent → the base outfit only. */
+  private eqPacks = new Map<string, GLTF>()
   private animals = new Map<string, GLTF>()
   private clips: THREE.AnimationClip[] = []
   private loading = new Set<string>()
@@ -131,6 +134,13 @@ export class Actors {
     } catch (e) {
       console.warn('character assets failed', e)
     }
+    await Promise.all((['Male', 'Female'] as const).map(async (sex) => {
+      try {
+        this.eqPacks.set(sex, await loadGltf(`characters/eq/${sex}.glb`))
+      } catch (e) {
+        console.warn('equipment modules failed', sex, e)
+      }
+    }))
     for (const v of this.visuals.values()) this.dropVisual(v)
     this.visuals.clear()
   }
@@ -148,8 +158,37 @@ export class Actors {
   }
 
   private charKey(h: Human): CharKey {
-    const outfit: CharOutfit = h.kind === 'player' ? 'Ranger' : (h.profession && PROFESSIONS[h.profession].outfit) || 'Peasant'
-    return `${h.male ? 'Male' : 'Female'}_${outfit}`
+    const base: CharOutfit = h.kind === 'player' ? 'Ranger' : (h.profession && PROFESSIONS[h.profession].outfit) || 'Peasant'
+    return `${h.male ? 'Male' : 'Female'}_${outfitWithEquipment(base, h.eq)}`
+  }
+
+  /** Visual identity of a human model: outfit, age and the visible worn armour (a change rebuilds the model). */
+  private humanKindKey(h: Human): string {
+    return `h:${this.charKey(h)}:${h.age}:${equipmentVisualKey(h.eq)}`
+  }
+
+  /** Rebinds the armour modules the human wears onto the outfit skeleton (same UBC bone names); after the look tint. */
+  private attachEquipment(root: THREE.Object3D, bones: Map<string, THREE.Bone>, h: Human) {
+    const pack = this.eqPacks.get(h.male ? 'Male' : 'Female')
+    const wanted = equipmentModules(h.eq)
+    if (!pack || !wanted.length) return
+    const clone = SkeletonUtils.clone(pack.scene)
+    const meshes: THREE.SkinnedMesh[] = []
+    clone.traverse((o) => {
+      if ((o as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(o as THREE.SkinnedMesh)
+    })
+    for (const m of meshes) {
+      const mod = wanted.find((w) => m.name === `EQ_${w.def.module}` || m.name.startsWith(`EQ_${w.def.module}_`))
+      if (!mod) continue
+      const sk = m.skeleton
+      // The pack holds one armature per module, so the loader names the later ones `pelvis_1`, `spine_01_1`…
+      const skeleton = new THREE.Skeleton(sk.bones.map((b) => bones.get(b.name) ?? bones.get(b.name.replace(/_\d+$/, '')) ?? b), sk.boneInverses)
+      m.removeFromParent()
+      root.add(m)
+      m.bind(skeleton, m.bindMatrix)
+      m.castShadow = true
+      m.frustumCulled = false
+    }
   }
 
   private buildHuman(h: Human): Visual | null {
@@ -176,6 +215,9 @@ export class Actors {
       root.add(m)
       m.bind(skeleton, m.bindMatrix)
     }
+    const look = characterLook(h.id, h.age)
+    applyLook(root, look) // tint the base only: plate must not inherit the random cloth colour
+    this.attachEquipment(root, bones, h)
     root.traverse((o) => {
       const m = o as THREE.Mesh
       if (m.isMesh) {
@@ -183,15 +225,13 @@ export class Actors {
         m.frustumCulled = false
       }
     })
-    const look = characterLook(h.id, h.age)
-    applyLook(root, look)
     const base = h.age === 'child' ? 0.68 : h.age === 'elder' ? 0.96 : 1
     root.scale.set(base * look.scale[0], base * look.scale[1], base * look.scale[2])
     const mixer = new THREE.AnimationMixer(root)
     const actions = new Map<string, THREE.AnimationAction>()
     for (const c of this.clips) actions.set(c.name, mixer.clipAction(c))
     this.skinnedCount++
-    return { id: h.id, root, mixer, actions, model: true, kindKey: `h:${key}:${h.age}`, pos: new THREE.Vector3(h.x, h.y, h.z), rot: h.rot }
+    return { id: h.id, root, mixer, actions, model: true, kindKey: this.humanKindKey(h), pos: new THREE.Vector3(h.x, h.y, h.z), rot: h.rot }
   }
 
   private buildAnimal(a: Animal): Visual {
@@ -330,6 +370,7 @@ export class Actors {
       seen.add(a.id)
       let v = this.visuals.get(a.id)
       const wantModel = d < (isHuman ? this.q.humanModel : this.q.animalModel) || a.kind === 'player'
+      if (v && isHuman && v.model && wantModel && v.kindKey !== this.humanKindKey(a as Human)) v.kindKey = 'stale' // worn armour (or outfit) changed
       if (v && (v.model !== wantModel || v.kindKey === 'stale')) {
         this.dropVisual(v)
         this.visuals.delete(a.id)
