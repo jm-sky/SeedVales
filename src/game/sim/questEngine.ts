@@ -131,6 +131,22 @@ function tickRules(c: QuestCtx) {
   }
 }
 
+/** Rules of a finished quest (`phase: 'done'`): recurring payouts with a cadence and a cap. */
+function tickAftermath(c: QuestCtx) {
+  const day = gameDay(c.sim)
+  for (const r of c.def.rules) {
+    if (r.phase !== 'done') continue
+    const last = c.st.fired[r.id]
+    if (last !== undefined && day - last < (r.everyDays ?? 1)) continue
+    const n = c.st.counters[`n:${r.id}`] ?? 0
+    if (r.max !== undefined && n >= r.max) continue
+    if (!allOf(c, r.when)) continue
+    c.st.fired[r.id] = day
+    c.st.counters[`n:${r.id}`] = n + 1
+    applyEffects(c, r.effects)
+  }
+}
+
 /** Lapse: a required cast member that is dead (or gone) ends the quest without reward. */
 function requiredDead(c: QuestCtx): boolean {
   for (const [slot, spec] of Object.entries(c.def.cast)) {
@@ -184,6 +200,7 @@ export function authoredQuestSystem(sim: Sim, dt: number) {
       continue
     }
     if (live(st)) tickQuest(sim, def, st, dt)
+    else if (st.status === 'done' && def.rules.some((r) => r.phase === 'done')) tickAftermath(ctxOf(sim, def, st))
   }
 }
 

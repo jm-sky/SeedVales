@@ -303,7 +303,13 @@ export interface Rule {
   /** `always` every tick, `day` once per game day, `ever` once. Default `ever`. */
   once?: 'always' | 'day' | 'ever'
   /** Quest phases the rule runs in. Default `active`. */
-  phase?: 'offered' | 'active' | 'both'
+  phase?: 'offered' | 'active' | 'both' | 'done'
+  /**
+   * `phase: 'done'` rules keep running after the quest has ended (recurring payouts, quests--003 E9): at most once per
+   * `everyDays` game days (default 1) and `max` times in all.
+   */
+  everyDays?: number
+  max?: number
 }
 
 export interface Ending {

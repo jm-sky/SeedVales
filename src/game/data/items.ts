@@ -181,6 +181,10 @@ const LIST: ItemDef[] = [
   { id: 'account_book', name: 'Rotted account book', category: 'misc', weight: 0.4, size: 'XS', price: 0, availability: 'quest-only' },
   { id: 'ash_deed', name: 'Deed of Ash House', category: 'misc', weight: 0.1, size: 'XS', price: 0, availability: 'quest-only' },
   { id: 'wage_packet', name: 'Sealed wage packet', category: 'misc', weight: 0.1, size: 'XS', price: 0, availability: 'quest-only' },
+  { id: 'chapel_bell', name: 'Silver-clad bell', category: 'misc', weight: 60, size: 'XL', price: 380, availability: 'quest-only' },
+  { id: 'toll_chest', name: 'Iron-bound toll chest', category: 'misc', weight: 25, size: 'LG', price: 0, availability: 'quest-only' },
+  { id: 'silver_bar', name: 'Silver trade bar', category: 'misc', weight: 0.8, size: 'XS', price: 75, availability: 'quest-only' },
+  { id: 'ferry_seal', name: 'Ferryman\'s seal', category: 'misc', weight: 0.3, size: 'XS', price: 0, availability: 'quest-only' },
   { id: 'axe_head', name: 'Axe head', category: 'misc', weight: 2.5, size: 'SM', price: 24, availability: 'quest-only' },
   { id: 'iron_wedge', name: 'Iron wedge', category: 'misc', weight: 0.8, size: 'XS', price: 6, availability: 'quest-only' },
   { id: 'miles_mark', name: 'Miles\'s mark', category: 'misc', weight: 0.05, size: 'XXS', price: 0, availability: 'quest-only' },
@@ -297,7 +301,7 @@ export const ITEMS: Record<string, ItemDef> = Object.fromEntries(
 )
 
 /** Heavy goods that go into a cart (TRANS-01). */
-export const HEAVY_GOODS = new Set(['coal', 'copper_ore', 'gold_ore', 'iron_ingot', 'iron_ore', 'log', 'rock_chunk', 'stone'])
+export const HEAVY_GOODS = new Set(['chapel_bell', 'coal', 'copper_ore', 'gold_ore', 'iron_ingot', 'iron_ore', 'log', 'rock_chunk', 'stone', 'toll_chest'])
 
 export function itemDef(id: string): ItemDef {
   const d = ITEMS[id]
