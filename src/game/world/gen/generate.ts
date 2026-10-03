@@ -9,6 +9,7 @@ import { perf } from '../../diag/perf'
 import { sampleGrid } from '../grid'
 import { CELL_M, GEN_VERSION, GRID_N, WORLD_SIZE_M } from '../types'
 import { classifyBiomes } from './biomes'
+import { placeCaves } from './caves'
 import { planCentres } from './centres'
 import { placeDens, placeDeposits } from './features'
 import { generateBaseFields } from './heightfield'
@@ -71,6 +72,7 @@ export function generateWorld(seed: number): WorldData {
   const deposits = t('deposits', () => placeDeposits(seed, { height, biome, mountain }))
   const homeS = settlements[0]!
   const landmarks = t('landmarks', () => placeLandmarks(seed, { height, biome, waterKind: hydro.waterKind, water: hydro.water }, settlements, roads, homeS))
+  const caves = t('caves', () => placeCaves(seed, { height, biome, waterKind: hydro.waterKind }, settlements, roads, landmarks, homeS))
   return {
     version: GEN_VERSION,
     seed,
@@ -90,6 +92,7 @@ export function generateWorld(seed: number): WorldData {
     dens,
     deposits,
     landmarks,
+    caves,
     homeSettlement: 0,
     spawn: { x: homeS.x + 4, z: homeS.z + 12 },
     genMs: performance.now() - t0,

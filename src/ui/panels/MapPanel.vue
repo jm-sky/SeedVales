@@ -56,6 +56,24 @@ function draw() {
     ctx.fillStyle = '#d6e6ee'
     ctx.fillText(l.name, lx + 8, lz + 4)
   }
+  // Caves (WORLD-05): entrance marker, only in explored cells.
+  for (const cv of w.caves) {
+    if (!isExplored(sim, cv.x, cv.z)) continue
+    const cx = cv.x * sc
+    const cz = cv.z * sc
+    ctx.fillStyle = '#3a3128'
+    ctx.beginPath()
+    ctx.arc(cx, cz, 5, Math.PI, 0)
+    ctx.lineTo(cx + 5, cz + 4)
+    ctx.lineTo(cx - 5, cz + 4)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = '#d9c9a8'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+    ctx.fillStyle = '#e6d9bf'
+    ctx.fillText(cv.name, cx + 8, cz + 4)
+  }
   for (const q of view.value.quests) {
     ctx.fillStyle = '#ff5a3c'
     ctx.font = 'bold 16px sans-serif'

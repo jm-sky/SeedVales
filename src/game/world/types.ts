@@ -4,7 +4,7 @@
  * @subdomain world-gen
  */
 
-export const GEN_VERSION = 9
+export const GEN_VERSION = 10
 export const WORLD_SIZE_M = 8192
 export const CELL_M = 8
 export const GRID_N = WORLD_SIZE_M / CELL_M + 1 // vertices per side
@@ -141,6 +141,27 @@ export interface GenLandmark {
   radius: number
 }
 
+export type CaveSize = 'small' | 'medium'
+
+/**
+ * Cave (WORLD-05): a tunnel/chamber chain entered through a cutting in a mountain slope. Only this compact
+ * descriptor is generated and cached; floor/ceiling grids are derived on demand (`world/caveShape.ts`).
+ */
+export interface GenCave {
+  id: string
+  /** English proper name, e.g. "Wolfmaw Cave". */
+  name: string
+  size: CaveSize
+  /** Entrance (start of the spine) and the direction into the mountain (radians, atan2(dx, dz)). */
+  x: number
+  z: number
+  yaw: number
+  /** Floor height at the entrance (m); the floor descends from here along the spine. */
+  y0: number
+  /** Flat [x, z, radius, …] spine points ~6 m apart; a radius above the tunnel radius marks a chamber. */
+  spine: number[]
+}
+
 export interface WorldData {
   version: number
   seed: number
@@ -165,6 +186,7 @@ export interface WorldData {
   dens: GenDen[]
   deposits: GenDeposit[]
   landmarks: GenLandmark[]
+  caves: GenCave[]
   homeSettlement: number
   spawn: { x: number; z: number }
   /** Wall-clock generation time of THIS run (not stored in the cache; 0 on cache hit). */

@@ -13,6 +13,7 @@ import { Actors } from './actors'
 import { atmosphere, type Atmosphere, overcastOf } from './atmosphere'
 import { CameraRig } from './cameraRig'
 import { Carts } from './carts'
+import { Caves } from './caves'
 import { Dynamics } from './dynamics'
 import { GpuTimer } from './gpuTimer'
 import { Grass } from './grass'
@@ -47,6 +48,11 @@ export class Renderer {
   grass: Grass | null
   structures: Structures
   landmarks: Landmarks
+  caves: Caves
+  /** Smoothed 0..1: how much the player is in a cave (daylight fades, torch light fades in). */
+  private caveK = 0
+  /** Warm light that follows the camera target inside caves (intensity 0 outside; always in the scene so shaders do not recompile). */
+  private caveLight = new THREE.PointLight(0xffc88a, 0, 18, 1.4)
   stockpiles: Stockpiles
   actors: Actors
   dynamics: Dynamics
@@ -100,6 +106,7 @@ export class Renderer {
     this.grass = this.visual.grass ? new Grass(sim, quality) : null
     this.structures = new Structures(sim)
     this.landmarks = new Landmarks(sim)
+    this.caves = new Caves(sim)
     this.stockpiles = new Stockpiles(sim, quality === 'high')
     this.stockpiles.enabled = this.visual.stockpiles
     this.structures.pilesOn = this.visual.stockpiles
@@ -112,13 +119,14 @@ export class Renderer {
       this.skyDome = new SkyDome()
       this.scene.add(this.skyDome.mesh)
     }
-    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
+    this.scene.add(this.terrain.group, this.vegetation.group, ...(this.grass ? [this.grass.group] : []), this.structures.group, this.stockpiles.group, this.landmarks.group, this.caves.group, this.caveLight, this.actors.group, this.dynamics.group, this.marker.mesh, this.carts.group)
   }
 
   async loadAssets(onProgress?: (label: string) => void) {
     onProgress?.('Buildings…')
     await this.structures.load()
     await this.landmarks.load()
+    await this.caves.load()
     if (this.visual.stockpiles) await this.stockpiles.load()
     onProgress?.('Vegetation…')
     await this.vegetation.load({ treeAssets: this.visual.treeAssets, impostorNormals: this.visual.impostorNormals })
@@ -166,6 +174,7 @@ export class Renderer {
     this.terrain.dispose()
     this.grass?.dispose()
     this.landmarks.dispose()
+    this.caves.dispose()
     this.scene.clear()
   }
 
@@ -236,6 +245,13 @@ export class Renderer {
     const fogK = Math.max(w.fog, w.kind === 'rain' || w.kind === 'snow' ? 0.35 : 0, w.kind === 'storm' ? 0.55 : 0)
     fog.near = 120 * (1 - fogK * 0.9)
     fog.far = this.fogFar * (1 - fogK * 0.85) + 60
+    // WORLD-05: inside a cave the sun and sky fade out and a warm light follows the player.
+    const inCave = (this.sim.state.px.cave ?? 0) > 0 ? 1 : 0
+    this.caveK += (inCave - this.caveK) * Math.min(1, dt * 4)
+    this.sun.intensity *= 1 - this.caveK * 0.95
+    this.hemi.intensity *= 1 - this.caveK * 0.8
+    this.caveLight.intensity = this.caveK * 3.2
+    if (this.caveK > 0.01) this.caveLight.position.set(p.x, p.y + 2.4, p.z)
     // Shadow camera centre snapped to whole shadow texels in light space (no shimmer while walking).
     const sc = this.sun.shadow.camera
     snapShadowCenter(this.snapIn.set(p.x, p.y, p.z), this.toLight, (sc.right - sc.left) / this.sun.shadow.mapSize.x, this.sun.target.position)
@@ -296,7 +312,7 @@ export class Renderer {
     const t0 = performance.now()
     const p = this.sim.player
     this.handleEvents()
-    this.rig.update(p.x, p.y, p.z, dt)
+    this.rig.update(p.x, p.y, p.z, dt, this.sim.state.px.cave ?? 0)
     this.lighting(dt)
     this.renderS += dt
     updateWind(this.renderS, this.sim.weather, this.sim.state.time.cal)
@@ -310,6 +326,7 @@ export class Renderer {
     this.marker.update(dt, this.markerAt)
     this.carts.update()
     perf.measure('render.landmarks', () => this.landmarks.update(p.x, p.z))
+    this.caves.update(p.x, p.z)
     this.stockpiles.update(dt, p.x, p.z)
     // Render preparation = render.cpu without draw submission (D-PERF-2 headless gate metric).
     perf.record('render.prep', performance.now() - t0)

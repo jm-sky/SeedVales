@@ -115,6 +115,32 @@ export const WAREHOUSE = { coinsPerPoint: 20, minValue: 10, maxPerDeposit: 3 }
 /** Fog of war (MAP-01): map cell size (m) and how far around the player the map gets revealed (m). */
 export const FOG = { cellM: 64, revealM: 180 }
 
+/**
+ * Caves (WORLD-05). All metres. `cell` is the cave grid resolution; `block` the terrain-hole granularity
+ * (= the LOD-0 terrain quad). Tunnel/chamber heights leave room for the third-person camera (target +1.6 m).
+ */
+export const CAVE = {
+  cell: 1,
+  block: 2,
+  tunnelRadius: 2,
+  chamberRadius: [5, 7] as const,
+  tunnelHeight: 3.8,
+  chamberHeight: 5.6,
+  /** Rock that must stay above a roofed cell; shallower cells are open to the sky (the entrance cutting). */
+  minCover: 1.2,
+  /** Floor descent per metre of tunnel while it is still below the first {@link maxDepth} metres. */
+  rampSlope: 0.24,
+  maxDepth: 7,
+  /** Safety margin: the generator assumes the surface is this much lower than the grid says (micro-detail). */
+  surfaceMargin: 0.8,
+  /** Longest cutting (tunnel length that may still be open to the sky). */
+  maxCuttingM: 26,
+  /** Steepest floor step (m) the player may climb between neighbouring cells; also the mouth tolerance. */
+  stepM: 0.8,
+  /** Render streaming distance (m). */
+  showM: 260,
+} as const
+
 /** Carts (TRANS-01): steepest rise per metre a pushed cart can climb, deepest water (m) it can cross. */
 export const CART = { maxRise: 0.32, maxWaterM: 0.25 }
 

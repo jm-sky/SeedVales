@@ -9,6 +9,7 @@ import { ACCEL, COMBAT, RUN_SPEED_MPS, SNEAK_SPEED_MPS, SWIM_DEPTH_M, SWIM_SPEED
 import { itemDef } from '../data/items'
 import { SPECIES } from '../data/species'
 import { cartBlocked, cartDef } from './cart'
+import { playerGroundY } from './caveSpace'
 import { moveWithCollision } from './collision'
 import { fireRanged, isProtected, weaponOf } from './combat'
 import { carriedWeight, carryCapacity } from './inventory'
@@ -201,7 +202,7 @@ export function playerSystem(sim: Sim, dt: number) {
   } else {
     p.moving = swimming ? 'swim' : 'idle'
     if (swimming) ex = 'swim'
-    p.y = sim.terrain.heightAt(p.x, p.z)
+    p.y = playerGroundY(sim)
   }
   if (swimming && p.vitals.stamina <= 0) {
     p.vitals.parts.gut += 4 * dt

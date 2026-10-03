@@ -20,6 +20,8 @@ export interface DebugApi {
   /** Open flat spot ≥ minR m from a settlement centre (layout-independent test setup). */
   openSpot(minR?: number, settlementId?: number): { x: number; z: number }
   teleportToSettlement(id: number, dx?: number, dz?: number): void
+  /** WORLD-05: surface spot `back` m in front of cave `index`'s mouth, facing it (default 4 m). */
+  teleportToCave(index: number, back?: number): void
   setHour(h: number): void
   give(id: string, qty?: number): void
   count(id: string): number
@@ -76,6 +78,11 @@ export function installDebugApi(game: Game) {
     teleportToSettlement: (id, dx = 0, dz = 20) => {
       const s = sim().world.settlements[id]!
       game.debugTeleport(s.x + dx, s.z + dz)
+    },
+    teleportToCave: (index, back = 4) => {
+      const c = sim().world.caves[index]
+      if (!c) return
+      game.debugTeleport(c.x - Math.sin(c.yaw) * back, c.z - Math.cos(c.yaw) * back)
     },
     setHour: (h) => {
       const s = sim().state.time

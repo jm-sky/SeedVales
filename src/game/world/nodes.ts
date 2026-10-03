@@ -149,6 +149,7 @@ export class NodeCache {
           }
         }
         if (!kind) continue
+        if (t.caves.keepsClear(x, z)) continue
         // Keep settlements clear of trees/rocks.
         const flat = t.world.flat[Math.round(z / t.world.cell) * t.world.n + Math.round(x / t.world.cell)]!
         if (flat > 60 && kind !== 'herb' && kind !== 'bush_berry') continue

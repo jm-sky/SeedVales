@@ -4,6 +4,7 @@
  * @subdomain camera
  */
 import * as THREE from 'three'
+import type { CaveGrid } from '../world/caveShape'
 import type { Terrain } from '../world/terrain'
 
 export class CameraRig {
@@ -35,7 +36,14 @@ export class CameraRig {
     return [Math.sin(this.yaw), Math.cos(this.yaw)]
   }
 
-  update(px: number, py: number, pz: number, dt: number) {
+  /** True when the camera point is inside rock: below the terrain, or (in a cave) outside the open volume. */
+  private blocked(grid: CaveGrid | null, p: THREE.Vector3): boolean {
+    if (grid && grid.flagAt(p.x, p.z) !== 0) return p.y < grid.floorAt(p.x, p.z) + 0.25 || p.y > grid.ceilAt(p.x, p.z) - 0.25
+    return p.y < this.terrain.heightAt(p.x, p.z) + 0.3
+  }
+
+  /** `cave` = index + 1 of the cave the player is in (0 = surface): the camera then collides with the cave instead of the terrain. */
+  update(px: number, py: number, pz: number, dt: number, cave = 0) {
     const tgt = new THREE.Vector3(px, py + 1.6, pz)
     this.target.lerp(tgt, Math.min(1, dt * 12))
     if (this.target.distanceTo(tgt) > 8) this.target.copy(tgt)
@@ -44,16 +52,21 @@ export class CameraRig {
     let d = this.distance
     const dir = new THREE.Vector3(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp)
     // Terrain collision: shorten if the ray hits the ground.
+    const grid = cave > 0 ? this.terrain.caves.grid(cave - 1) : null
     for (let s = 0.5; s <= d; s += 0.5) {
       const p = this.target.clone().addScaledVector(dir, s)
-      if (p.y < this.terrain.heightAt(p.x, p.z) + 0.3) {
+      if (this.blocked(grid, p)) {
         d = Math.max(this.minDist * 0.6, s - 0.5)
         break
       }
     }
     const pos = this.target.clone().addScaledVector(dir, d)
-    const ground = this.terrain.heightAt(pos.x, pos.z) + 0.4
-    if (pos.y < ground) pos.y = ground
+    if (grid && grid.flagAt(pos.x, pos.z) !== 0) {
+      pos.y = Math.min(grid.ceilAt(pos.x, pos.z) - 0.3, Math.max(grid.floorAt(pos.x, pos.z) + 0.4, pos.y))
+    } else {
+      const ground = this.terrain.heightAt(pos.x, pos.z) + 0.4
+      if (pos.y < ground) pos.y = ground
+    }
     this.camera.position.copy(pos)
     this.camera.lookAt(this.target)
   }

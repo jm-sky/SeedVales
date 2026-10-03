@@ -734,6 +734,7 @@ export class Game {
     p.x = x
     p.z = z
     p.y = this.sim.terrain.heightAt(x, z)
+    this.sim.state.px.cave = 0
     this.sim.actors.update(p)
   }
 }

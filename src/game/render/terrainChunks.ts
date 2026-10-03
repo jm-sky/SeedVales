@@ -347,8 +347,12 @@ export class TerrainChunks {
       }
     }
     const indices: number[] = []
+    // WORLD-05: LOD-0 quads over a cave cutting are left out (the cave meshes provide the rock face and floor).
+    const caves = this.terrain.caves
+    const cutting = step === 2 && caves.count > 0 && caves.nearBucket(x0 + (CHUNK_M * span) / 2, z0 + (CHUNK_M * span) / 2)
     for (let j = 0; j < n - 1; j++) {
       for (let i = 0; i < n - 1; i++) {
+        if (cutting && caves.skyAt(x0 + i * step + 1, z0 + j * step + 1)) continue
         const a = j * n + i
         const b = a + 1
         const d = a + n

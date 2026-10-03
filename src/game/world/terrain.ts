@@ -6,6 +6,7 @@
  */
 import type { BiomeId, WorldData } from './types'
 import { Noise2D } from '../core/noise'
+import { CaveField } from './caveField'
 import { idx, nearestCell, sampleGrid, sampleGridU8 } from './grid'
 import { CHUNK_M, SEA_LEVEL } from './types'
 
@@ -75,10 +76,13 @@ export class Terrain {
   private detail: Noise2D
   world: WorldData
   edits: TerrainEdits
+  /** WORLD-05: cave grids, measured against the unedited surface so caves never change with digging. */
+  readonly caves: CaveField
   constructor(world: WorldData, edits: TerrainEdits) {
     this.world = world
     this.edits = edits
     this.detail = new Noise2D(world.seed ^ 0xabcdef)
+    this.caves = new CaveField(world.caves ?? [], (x, z) => this.baseHeightAt(x, z))
   }
 
   /** Height without player edits (used by mesh builder for base + edits). */

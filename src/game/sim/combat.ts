@@ -13,6 +13,7 @@ import { SPECIES, VARIANT_MULT } from '../data/species'
 import { perf } from '../diag/perf'
 import { train } from './actions'
 import { alertAround } from './alerts'
+import { projectileGround } from './caveSpace'
 import { logEvent, logging } from './eventLog'
 import { fleeHome } from './fauna/perception'
 import { consumeItem, qualityMult, wearTool } from './inventory'
@@ -327,7 +328,7 @@ export function projectileSystem(sim: Sim, dt: number) {
           break
         }
       }
-      if (!done && p.y < sim.terrain.heightAt(p.x, p.z)) {
+      if (!done && p.y < projectileGround(sim, p.x, p.z, p.y)) {
         done = true
         // Arrows can be recovered sometimes.
         if (p.item && p.item !== 'sling_stone' && sim.rng.chance(0.5)) {

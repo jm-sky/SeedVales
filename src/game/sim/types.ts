@@ -465,6 +465,8 @@ export interface PlayerExtra {
   cart?: Cart
   /** Fog of war (MAP-01): explored map cells as a bitmask in 32-bit words (FOG.cellM grid). */
   explored?: number[]
+  /** Cave the player is in (WORLD-05): cave index + 1; absent/0 = on the surface. */
+  cave?: number
 }
 
 export type WeaponKind = 'melee' | 'ranged'
