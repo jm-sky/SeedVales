@@ -205,7 +205,7 @@ export const Q07: QuestDef = {
     {
       id: 'roundDone',
       when: [flag('roundAccepted'), flagNot('markCovered', true), { k: 'counter', id: 'posts', gte: 'homePosts' }],
-      effects: [set('markCovered'), { k: 'hold', slot: 'mark', at: { k: 'house', slot: 'lucy' }, untilHour: 24 }, message('The posts are lit. {mark} goes to the Hewers\' table.')],
+      effects: [set('markCovered'), { k: 'hold', slot: 'mark', at: { k: 'house', slot: 'lucy' }, untilHour: 24 }, message('The posts are lit. {mark} goes to {lucy}\'s table.')],
     },
     {
       id: 'cooked',

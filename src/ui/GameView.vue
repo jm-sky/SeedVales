@@ -8,6 +8,7 @@ import { loadSettings } from '@/lib/settings'
 import type { StartRequest } from './types'
 import DiagOverlay from './hud/DiagOverlay.vue'
 import Hud from './hud/Hud.vue'
+import ToastLine from './hud/ToastLine.vue'
 import MobileControls from './mobile/MobileControls.vue'
 import PanelHost from './panels/PanelHost.vue'
 
@@ -59,6 +60,9 @@ onBeforeUnmount(() => {
         @quit="emit('quit')"
         @restart="emit('restart', $event)"
       />
+      <div class="pointer-events-none absolute left-1/2 top-3 z-[60] w-[min(92vw,460px)] -translate-x-1/2">
+        <ToastLine overlay />
+      </div>
       <DiagOverlay v-if="game.showDiag" />
     </template>
     <div

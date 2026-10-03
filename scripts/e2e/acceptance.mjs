@@ -927,6 +927,23 @@ try {
     { g1a: g1a?.stage, g1b, g1c: g1c?.ending, g1after, journal: journalFinished.slice(0, 40) })
   await S(() => window.__sv.pause(false))
 
+  // 14. D-USER-1: name label + quest icon above NPCs near the player (the quests finished earlier in this run show the done tick).
+  const doneNpc = await S(() => {
+    const g = window.__sv.game
+    for (const st of Object.values(g.sim.state.authoredQuests)) {
+      for (const npcId of Object.values(st.cast)) {
+        const npc = g.sim.state.npcs.find((n) => n.id === npcId)
+        if (!npc) continue
+        window.__sv.approach(npc.x, npc.z, 5)
+        if (g.npcOverlays().some((o) => o.id === npc.id && o.icon === 'done')) return { name: npc.name }
+      }
+    }
+    return null
+  })
+  await page.waitForTimeout(1200)
+  const lbl = await S(() => [...document.querySelectorAll('[data-testid="npc-labels"] [data-npc-icon]')].map((e) => ({ icon: e.getAttribute('data-npc-icon'), text: e.textContent })))
+  await shot(page, 'acc-14-npc-icon')
+  check(results, '14. ikona zadania i nazwa nad NPC (D-USER-1)', !!doneNpc && lbl.some((l) => l.icon === 'done' && l.text.includes(doneNpc.name)), { doneNpc, lbl })
   // 13. UI-05: settings (quality switch without restart, volume saved), named save, new game from the in-game menu.
   const openMenu = async () => {
     for (let i = 0; i < 3 && !(await page.$('[data-testid="menu-settings"]')); i++) await key('Escape', 600)
@@ -960,21 +977,6 @@ try {
   const listed = !!(await page.$('[data-slot-name="Moja wyprawa"]'))
   await shot(page, 'acc-13-saves')
   check(results, '13. zapis pod nazwą widoczny na liście zapisów', named.name === 'Moja wyprawa' && listed, { named, listed })
-  // 14. D-USER-1: name label + quest icon above an NPC who offers a quest (near the player only).
-  await page.waitForSelector('[data-testid=status-bars]', { timeout: 60000 })
-  const offered = await S(() => {
-    const ok = window.__sv.forceQuest('q03')
-    const g = window.__sv.game
-    const id = g.sim.state.authoredQuests.q03?.cast.miles
-    const npc = g.sim.state.npcs.find((n) => n.id === id)
-    if (!ok || !npc) return null
-    window.__sv.approach(npc.x, npc.z, 5)
-    return { name: npc.name }
-  })
-  await page.waitForTimeout(1200)
-  const lbl = await S(() => [...document.querySelectorAll('[data-testid="npc-labels"] [data-npc-icon]')].map((e) => ({ icon: e.getAttribute('data-npc-icon'), text: e.textContent })))
-  await shot(page, 'acc-14-npc-icon')
-  check(results, '14. ikona zadania i nazwa nad NPC (D-USER-1)', !!offered && lbl.some((l) => l.icon === 'offer' && l.text.includes(offered.name)), { offered, lbl })
 } catch (e) {
   check(results, 'exception', false, String(e).slice(0, 400))
   await shot(page, 'acc-error')

@@ -43,6 +43,14 @@ const owns = (npc: Human, id: string) =>
   npc.eq.main?.id === id || npc.inv.items.some((s) => s.id === id) || Object.values(npc.eq.armor).some((s) => s?.id === id)
 
 /** The item the NPC currently wishes for (revealed in conversation), or undefined when content. */
+/** Uncountable items read "some bread", the rest "a/an apple" (review 018 #15). */
+const MASS_ITEMS = new Set(['berries', 'bread', 'cloth', 'coal', 'cooked_meat', 'dried_meat', 'grain', 'hide', 'milk', 'raw_meat', 'rope', 'salve', 'wool'])
+export function withArticle(itemId: string, name: string): string {
+  const n = name.toLowerCase()
+  if (MASS_ITEMS.has(itemId) || /s$/.test(n)) return `some ${n}`
+  return `${/^[aeiou]/.test(n) ? 'an' : 'a'} ${n}`
+}
+
 export function wantedItem(npc: Human): string | undefined {
   const list = wishList(npc)
   const start = (npc.id * 2654435761) >>> 0

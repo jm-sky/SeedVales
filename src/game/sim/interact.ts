@@ -586,7 +586,9 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
     addItem(b.inv, moved)
     const gain = b.kind === 'warehouse' ? depositGoodwill(itemDef(moved.id).price * moved.qty) : 0
     if (gain > 0) addRep(sim, b.settlementId, { helpfulness: gain })
-    return `Stored: ${itemDef(moved.id).name}${moved.qty > 1 ? ` ×${moved.qty}` : ''}${gain > 0 ? ` (Helpfulness +${fmt1(gain)})` : ''}`
+    const stored = `Stored: ${itemDef(moved.id).name}${moved.qty > 1 ? ` ×${moved.qty}` : ''}${gain > 0 ? ` (Helpfulness +${fmt1(gain)})` : ''}`
+    sim.message(stored, 'info')
+    return stored
   }
   const s = b.inv.items[stackIdx]
   if (!s) return ''
@@ -604,7 +606,9 @@ export function transferToStorage(sim: Sim, b: Building, stackIdx: number, toSto
   const partial = n < Math.min(qty, s.qty)
   const moved = removeStack(b.inv, s, n)!
   addItem(p.inv, moved)
-  return `Taken: ${itemDef(moved.id).name}${moved.qty > 1 ? ` ×${moved.qty}` : ''}${partial ? ' (the rest is too heavy)' : ''}${costTxt}`
+  const taken = `Taken: ${itemDef(moved.id).name}${moved.qty > 1 ? ` ×${moved.qty}` : ''}${partial ? ' (the rest is too heavy)' : ''}${costTxt}`
+  sim.message(taken, 'info')
+  return taken
 }
 
 export { acceptQuest, COMBAT }

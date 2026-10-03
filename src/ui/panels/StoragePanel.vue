@@ -56,7 +56,7 @@ function repHint(s: ItemStack, toStorage: boolean): string {
         <div class="grid gap-1">
           <div
             v-for="(s, i) in d.items"
-            :key="i + s.id"
+            :key="`${i}${s.id}${s.qty}`"
           >
             <ItemRow :stack="s">
               <Button
@@ -100,7 +100,7 @@ function repHint(s: ItemStack, toStorage: boolean): string {
         <div class="grid gap-1">
           <div
             v-for="(s, i) in d.mine"
-            :key="i + s.id"
+            :key="`${i}${s.id}${s.qty}`"
           >
             <ItemRow :stack="s">
               <Button

@@ -140,3 +140,23 @@ describe('review 017 #3-5: warehouse reputation hints and honesty', () => {
     expect(c.honesty).toBeCloseTo(c.helpfulness * 0.5, 5)
   })
 })
+
+describe('review 018 minor fixes', () => {
+  it('SOC-01: wishes read with an article (a/an, some for mass goods)', async () => {
+    const { withArticle } = await import('./gifts')
+    expect(withArticle('apple', 'Apple')).toBe('an apple')
+    expect(withArticle('iron_helm', 'Iron helm')).toBe('an iron helm')
+    expect(withArticle('bread', 'Bread')).toBe('some bread')
+    expect(withArticle('knife', 'Knife')).toBe('a knife')
+  })
+
+  it('ECON-04: storage moves are written to the message log (the toast can hide under a panel)', () => {
+    const sim = testSim()
+    const wh = sim.building(sim.state.settlements[sim.world.homeSettlement]!.warehouseId)!
+    wh.inv!.items = []
+    addItem(wh.inv!, newStack('iron_ore', 3))
+    const n0 = sim.state.messages.length
+    transferToStorage(sim, wh, 0, false, 1)
+    expect(sim.state.messages.length).toBe(n0 + 1)
+  })
+})

@@ -10,7 +10,7 @@ import { castHuman } from './questTestKit'
 import { testSim } from './testWorld'
 
 /** Names the design docs give the cast; the generated world has different people. Piers is a spawned fixed name (allowed). */
-const DESIGN_NAMES = ['Lucy', 'Miles', 'Joan', 'Matthew', 'Ralph', 'Mark', 'Hazel', 'Martha', 'Molly', 'Tom', 'Luke', 'Jacob', 'Edmund', 'Edith', 'Hornblower']
+const DESIGN_NAMES = ['Lucy', 'Miles', 'Joan', 'Matthew', 'Ralph', 'Mark', 'Hazel', 'Martha', 'Molly', 'Tom', 'Luke', 'Jacob', 'Edmund', 'Edith', 'Hornblower', 'Hewers', 'Sawyers']
 
 function strings(v: unknown, out: string[] = []): string[] {
   if (typeof v === 'string') out.push(v)

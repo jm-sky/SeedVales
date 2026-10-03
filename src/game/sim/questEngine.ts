@@ -71,7 +71,7 @@ function tryOffer(sim: Sim, def: QuestDef, m: EngineMemo, force = false): boolea
   sim.state.authoredQuests[def.id] = st
   applyEffects(c, def.onOffer ?? [])
   const giver = actorOf(c, def.giver)
-  sim.message(`${giver && 'name' in giver ? giver.name : 'Someone'} has something on their mind.`, 'quest')
+  sim.message(`${giver && 'name' in giver ? giver.name : 'Someone'} has something on ${giver && 'male' in giver ? (giver.male ? 'his' : 'her') : 'their'} mind.`, 'quest')
   return true
 }
 

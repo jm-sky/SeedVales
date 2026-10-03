@@ -62,12 +62,12 @@
 
 | # | Decision | Regression test / reason | Fix commit |
 |---|---|---|---|
-| 1 | fix (major) | Rats quest completes when nest gone + building repaired + the player killed ≥ killsNeeded; remaining nest rats then turn into strays (no denId) instead of blocking; the objective list shows "rats of the nest left: n" while they block | `1347aee` (batch 016-Q) |
-| 2 | fix (major) | All authored dialog/journal text uses `{slot}` name placeholders and pronoun tokens (`{slot:he}`/`{slot:him}`/`{slot:his}`) resolved from the cast NPC's sex; a test scans every quest text for design-doc names (Lucy, Miles, Joan, Matthew, Ralph, Mark, Hazel, Martha, Molly, Tom, Luke, Jacob) outside placeholders | `1347aee` (batch 016-Q) |
+| 1 | fix (major) | Rats quest completes when nest gone + building repaired + the player killed ≥ killsNeeded; remaining nest rats then turn into strays (no denId) instead of blocking; the objective list shows "rats of the nest left: n" while they block | `b53a4f0` (batch 016-Q) |
+| 2 | fix (major) | All authored dialog/journal text uses `{slot}` name placeholders and pronoun tokens (`{slot:he}`/`{slot:him}`/`{slot:his}`) resolved from the cast NPC's sex; a test scans every quest text for design-doc names (Lucy, Miles, Joan, Matthew, Ralph, Mark, Hazel, Martha, Molly, Tom, Luke, Jacob) outside placeholders | `b53a4f0` (batch 016-Q) |
 | 3 | fix (major) | Warehouse Take/Put asks for a quantity (1 / all) and shows the reputation cost before the action (D-ECON-4 cost unchanged); toast states the cost | batch 016-U (this commit range) |
 | 12 | fix (major) | Global touch-target floor ≥ 32 px on mobile (close button, row buttons, sliders) — pulled forward from `ui--002` step 0; `review:app` ui-checks small-button hits → 0 | batch 016-U (this commit range) |
-| 4 | fix | Q03 thank-you scene: lines by absent optional cast are skipped; the speaking cast matches the scene owner | `1347aee` (batch 016-Q) |
-| 5 | fix | Q07 journal text per stage; every accept option has an NPC reply | `1347aee` (batch 016-Q) |
+| 4 | fix | Q03 thank-you scene: lines by absent optional cast are skipped; the speaking cast matches the scene owner | `b53a4f0` (batch 016-Q) |
+| 5 | fix | Q07 journal text per stage; every accept option has an NPC reply | `b53a4f0` (batch 016-Q) |
 | 6 | ❓ user | Combat balance (wolf 9 club hits, player at 30 HP) — calibration decision for the user / combat wave 5c |  |
 | 7 | fix | Smith order price ≥ trader price was intended for scarce goods only: order price capped at max(trader buy price, inputs + labour) for items the trader stocks — check against D-ECON-5 | none: kept (D-ECON-7) |
 | 8 | fix | Inn/bed sleep wakes at the next 06:00–07:00 (or when rested and it is day), not in the dark | batch 016-U (this commit range) |
@@ -77,7 +77,7 @@
 | 13, 14 | fix | Mobile map canvas fits the viewport; labels clamp inside the canvas | batch 016-U (this commit range) |
 | 15 | fix | Trader list merges identical stacks (same id/quality/durability) | batch 016-U (this commit range) |
 | 16 | fix | Empty storage column shows "Empty." | batch 016-U (this commit range) |
-| 17 | fix | Notice board: other settlements' notices grouped under their settlement name; Accept only for this settlement's notices (or labelled clearly) | `1347aee` (batch 016-Q) |
+| 17 | fix | Notice board: other settlements' notices grouped under their settlement name; Accept only for this settlement's notices (or labelled clearly) | `b53a4f0` (batch 016-Q) |
 | 18 | ❓ user | Look differences vs the previous-app refs (grass density/tint, red autumn crowns, fog, low sun, labels) → keep/drop by the user, `render--003` |  |
 | rejected | — | "No inn in settlement 0" — SM settlements have no inn by design (❓ user: start in MD or point to the campfire); "guard sleeping at 10:00" — night guard schedule by design |  |
 

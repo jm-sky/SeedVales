@@ -3,7 +3,7 @@ import { computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
-import { wantedItem } from '@/game/sim/gifts'
+import { wantedItem, withArticle } from '@/game/sim/gifts'
 import { professionName } from '@/game/sim/newGame'
 import PanelFrame from './PanelFrame.vue'
 import QuestTopics from './QuestTopics.vue'
@@ -21,7 +21,7 @@ const d = computed(() => {
   const quests = g.sim.state.quests.filter((q) => q.giverId === n.id && q.status === 'available')
   const want = wantedItem(n)
   // SOC-01: preferences are revealed in conversation (friendlier people say more).
-  const wish = want && n.opinion > -30 ? `I've been hoping to get ${itemDef(want).name.toLowerCase()}.` : ''
+  const wish = want && n.opinion > -30 ? `I've been hoping to get ${withArticle(want, itemDef(want).name)}.` : ''
   const comp = n.companion ? (n.companion.kind === 'hired' ? 'Travelling with you (hired).' : 'Travelling with you.') : ''
   return { wish, comp, n, title: `${n.name} — ${professionName(n.profession) || (n.age === 'child' ? 'child' : n.age === 'elder' ? 'elder' : 'villager')}`, traits, mood, activity: n.ai.label, quests }
 })

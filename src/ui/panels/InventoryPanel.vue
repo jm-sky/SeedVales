@@ -83,7 +83,7 @@ const useLabel = (id: string) => {
         >
           <ItemRow
             v-for="(s, i) in v.items"
-            :key="i + s.id"
+            :key="`${i}${s.id}${s.qty}`"
             :stack="s"
             :class="v.selected === s ? 'ring-1 ring-primary' : ''"
             :data-testid="`item-${s.id}`"

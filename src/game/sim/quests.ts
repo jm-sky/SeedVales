@@ -33,7 +33,7 @@ export interface QuestObjective {
 export function questObjectives(sim: Sim, q: Quest): QuestObjective[] {
   const kills: QuestObjective = {
     id: 'kills',
-    label: `${q.kind === 'rats' ? 'Rats eliminated' : 'Wolves killed'}: ${Math.min(q.kills, q.killsNeeded)}/${q.killsNeeded}`,
+    label: `${q.kind === 'rats' ? 'Rats you killed' : 'Wolves killed'}: ${Math.min(q.kills, q.killsNeeded)}/${q.killsNeeded}`,
     done: q.kills >= q.killsNeeded,
     current: Math.min(q.kills, q.killsNeeded),
     needed: q.killsNeeded,
