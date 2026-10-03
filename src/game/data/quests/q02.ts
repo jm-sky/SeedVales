@@ -109,8 +109,8 @@ export const Q02: QuestDef = {
   ],
   observations: [
     { id: 'tracks', at: bend, r: 8, dwellS: 4, when: [flag('accepted'), flagNot('tracksRead', true), { k: 'hour', from: 4, to: 9 }], effects: [set('tracksRead'), stage(1), message('Two trails: a fresh one with wet edges and an old one. A sow, and smaller prints around hers.', 'quest')] },
-    { id: 'found', at: den, r: 28, dwellS: 3, when: [flag('tracksRead'), flagNot('hollowFound', true), calm(28)], effects: [set('hollowFound'), stage(2), message('Under the roots of a fallen pine: bedding, dragged in by the armful. The sow is there.', 'quest')] },
-    { id: 'count', at: den, r: 24, dwellS: 8, when: [flag('hollowFound'), flagNot('farrowCounted', true), calm(24)], effects: [set('farrowCounted'), message('Five small ones, moving in the bracken.', 'quest')] },
+    { id: 'found', at: den, r: 28, dwellS: 3, when: [flag('tracksRead'), flagNot('hollowFound', true), { k: 'any', of: [calm(28), { k: 'dead', slot: 'sow' }] }], effects: [set('hollowFound'), stage(2), message('Under the roots of a fallen pine: bedding, dragged in by the armful. The sow is there.', 'quest')] },
+    { id: 'count', at: den, r: 24, dwellS: 8, when: [flag('hollowFound'), flagNot('farrowCounted', true), { k: 'any', of: [calm(24), { k: 'dead', slot: 'sow' }] }], effects: [set('farrowCounted'), message('Five small ones, moving in the bracken.', 'quest')] },
     { id: 'spook', at: den, r: 28, dwellS: 1, when: [flag('accepted'), flagNot('spooked', true), { k: 'near', slot: 'sow', r: 28 }, { k: 'not', of: calm(28) }, { k: 'alive', slot: 'sow' }], effects: [set('spooked'), message('The sow lifts her head and charges — then stops. She is only telling you.', 'bad')] },
     { id: 'shift1', at: bend, r: 10, dwellS: 120, reset: true, when: [flag('choice', 'watch'), { k: 'hour', from: 18, to: 22 }], effects: [set('d1', 'today'), { k: 'pay', from: { treasury: 'V' }, to: 'player', amount: 6 }, opinion('bridget', 3), message('An evening shift at the bend: six coppers from the {V} treasury.', 'good')] },
     { id: 'shift2', at: bend, r: 10, dwellS: 120, reset: true, when: [{ k: 'observed', id: 'shift1' }, { k: 'dayAfter', flag: 'd1' }, { k: 'hour', from: 18, to: 22 }], effects: [set('d2', 'today'), { k: 'pay', from: { treasury: 'V' }, to: 'player', amount: 6 }, opinion('bridget', 3), message('A second evening shift: six coppers.', 'good')] },
@@ -123,9 +123,9 @@ export const Q02: QuestDef = {
   rules: [
     { id: 'drive', when: [{ k: 'counter', id: 'burnt', gte: 1 }, flagNot('driven', true)], effects: [{ k: 'drive', slot: 'sow', m: 260 }, set('driven'), message('The den burns. The sow bolts, the young scrambling after her.', 'quest')] },
     { id: 'clearDone', when: [flag('choice', 'clear'), flag('hollowFound'), { k: 'any', of: [{ k: 'dead', slot: 'sow' }, flag('driven')] }], effects: [{ k: 'end', ending: 'clear' }] },
-    { id: 'rerouteDone', when: [flag('choice', 'reroute'), { k: 'counter', id: 'logs', gte: 4 }, { k: 'since', hours: 48, from: 'stage' }], effects: [{ k: 'end', ending: 'reroute' }] },
-    { id: 'watchDone', when: [flag('choice', 'watch'), { k: 'any', of: [{ k: 'since', hours: 1008, from: 'stage' }, { k: 'far', slot: 'sow', anchor: den, r: 150 }, { k: 'dead', slot: 'sow' }] }], effects: [{ k: 'end', ending: 'watch' }] },
-    { id: 'settled', when: [{ k: 'since', hours: 336, from: 'started' }, flag('reported', false)], effects: [{ k: 'end', ending: 'settled' }] },
+    { id: 'rerouteDone', when: [flag('choice', 'reroute'), { k: 'counter', id: 'logs', gte: 4 }, { k: 'since', hours: 48, from: 'stage' }], effects: [{ k: 'drive', slot: 'sow', m: 400 }, { k: 'end', ending: 'reroute' }] },
+    { id: 'watchDone', when: [flag('choice', 'watch'), { k: 'any', of: [{ k: 'since', hours: 1008, from: 'stage' }, { k: 'far', slot: 'sow', anchor: den, r: 150 }, { k: 'dead', slot: 'sow' }] }], effects: [{ k: 'drive', slot: 'sow', m: 400 }, { k: 'end', ending: 'watch' }] },
+    { id: 'settled', when: [{ k: 'since', hours: 336, from: 'started' }, flag('reported', false)], effects: [{ k: 'drive', slot: 'sow', m: 400 }, { k: 'end', ending: 'settled' }] },
     { id: 'ignored', phase: 'both', when: [{ k: 'since', hours: 96, from: 'offered' }, flag('accepted', false)], effects: [{ k: 'lapse' }] },
   ],
   endings: [
@@ -157,5 +157,5 @@ export const Q02: QuestDef = {
     },
     { id: 'settled', journal: '{V} dealt with the sow itself.', effects: [opinion('bridget', 3)] },
   ],
-  lapse: { journal: 'The sow stayed at the bend and the carts went round by the marsh.', effects: [] },
+  lapse: { journal: 'The sow stayed at the bend and the carts went round by the marsh.', effects: [{ k: 'drive', slot: 'sow', m: 400 }] },
 }

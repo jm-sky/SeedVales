@@ -84,7 +84,7 @@ export const G02: QuestDef = {
       options: [
         opt('settled30', 'Thirty, and he keeps the share as it is.', [{ k: 'end', ending: 'settled30' }], { when: [flag('outcome', 'settled30')], next: 'be_end_settled' }),
         opt('mended', 'Thirty-five, and he says thank you.', [{ k: 'end', ending: 'mended' }], { when: [flag('outcome', 'mended')], next: 'be_end_mended' }),
-        opt('returned', 'Here\'s your share. No pay.', [{ k: 'end', ending: 'returned' }], { when: [flag('outcome', 'returned')], next: 'be_end_returned' }),
+        opt('returned', 'Here\'s your share. No pay.', [{ k: 'end', ending: 'returned' }], { when: [flag('outcome', 'returned')], needs: [share()], reason: 'You no longer have the share.', next: 'be_end_returned' }),
         opt('pressured', 'He paid forty. He\'s not pleased.', [{ k: 'end', ending: 'pressured' }], { when: [flag('outcome', 'pressured')], next: 'be_end_pressured' }),
       ],
     },

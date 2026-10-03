@@ -161,3 +161,44 @@ describe('QUEST-03 Q06 Room for One More', () => {
     expect(matthew.companion).toBeUndefined()
   })
 })
+
+describe('review 021 #1/#6: Q06 recovery paths', () => {
+  it('the pickup stays open when the contract ended but Matthew is at the forge; Miles hands over the mark when he cannot come', () => {
+    const sim = offered()
+    accept(sim, 'plan')
+    sim.player.money = Math.max(sim.player.money, 40)
+    const matthew = castHuman(sim, 'q06', 'matthew')
+    choose(sim, 'q06', 'ma_terms', 'paid')
+    matthew.companion = undefined // ended, expired or starved
+    goSophie(sim)
+    matthew.x = sim.player.x + 1
+    matthew.z = sim.player.z
+    sim.actors.update(matthew)
+    choose(sim, 'q06', 'so_pickup', 'take')
+    expect(flags(sim).itemCollected).toBe(true)
+
+    const s2 = offered()
+    accept(s2, 'plan')
+    s2.player.money = Math.max(s2.player.money, 40)
+    const m2 = castHuman(s2, 'q06', 'matthew')
+    choose(s2, 'q06', 'ma_terms', 'paid')
+    m2.companion = undefined
+    m2.vitals.dead = true
+    expect(topicNode(s2, 'q06', castHuman(s2, 'q06', 'miles').id)).toBe('mi_mark')
+    choose(s2, 'q06', 'mi_mark', 'take')
+    goSophie(s2)
+    choose(s2, 'q06', 'so_pickup', 'take')
+    expect(countItem(s2.player.inv, 'axe_head')).toBe(1)
+  })
+
+  it('a contract the player bought separately is not ended by the quest\'s dismiss', () => {
+    const sim = offered()
+    accept(sim, 'solo')
+    const matthew = castHuman(sim, 'q06', 'matthew')
+    matthew.companion = { kind: 'hired', task: 'escort', risk: 'low', since: sim.state.time.cal, paid: 30, bondAt: sim.state.time.cal }
+    sim.state.time.cal += 510 * 3600
+    tickQuests(sim, 3)
+    expect(stateOf(sim, 'q06')).toMatchObject({ status: 'done', ending: 'dropped' })
+    expect(matthew.companion).toBeTruthy()
+  })
+})

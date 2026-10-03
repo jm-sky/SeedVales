@@ -96,3 +96,32 @@
 - **major:** 4 (#1–#4)
 - **minor:** 14 (#5–#18; #16 and #18 are ❓ user)
 - **nit:** 4 (#19–#22)
+
+## Triage (Sonnet, 2026-10-03)
+
+Regression tests: `src/game/sim/questReview021.test.ts` and `questQ06.test.ts` ("review 021 #1/#6").
+
+| # | Status | Note |
+|---|---|---|
+| 1 | fixed | pickup also opens when the deal is paid/free and Matthew is at the forge; Miles hands over the mark (`mi_mark`) when Matthew can no longer come (dead or contract ended) |
+| 2 | fixed | `quest-only` goods are no longer shop stock; `give` from a short source posts "could hand over only n of m" |
+| 3 | fixed | G02 `returned` needs the share in the pack |
+| 4 | fixed | G07 drive uses `drive` (1500 m); Q02 `settled`/`watch`/`reroute`/lapse drive the sow group away (400 m, leash lifted) |
+| 5 | fixed | G08 grants two small beers to Tom's store at the offer |
+| 6 | fixed | companion contracts made by a quest carry `quest`; `dismiss` ends only those |
+| 7 | fixed | one `felled` counter (no hour gap) |
+| 8 | fixed | Q02 `found`/`count` also fire when the sow is dead |
+| 9 | open | Q01 "ordinary hare" counts any raw meat (needs a species filter on `sell`/`give` events) |
+| 10 | open | G06 `rumour` only after >72 h; move the penalty into the ending when the design is revisited |
+| 11 | open | G02 weld happens in the player's pack (move the share to Bernard's store) |
+| 12 | open | Q08 consent timer from the stage and `fills` of any trough near the pen |
+| 13 | fixed | round-trip test (Q02 den group, leash) |
+| 14 | fixed | felled trees are skipped for the boundary anchor |
+| 15 | open | per-frame armour key allocation (equip revision counter) — render stage 2 |
+| 16–18 | open ❓ | helmet/cuirass clipping on Wizard/Knight, partial module build overwrites the pack, quest markers give answers away — user/Opus decisions |
+| 19 | fixed | den timer finite |
+| 20 | partly | creature RNG seeded by the id hash; debug re-offers still pile up creatures |
+| 21 | fixed | deadline text ("2 days", never "1 day 24 h") |
+| 22 | rejected | the grant is a declared source; no Miles axe store is guaranteed |
+
+Counts: 4 major fixed; of 14 minor: 8 fixed (#5–#8, #13, #14 plus #6), 6 open; nits 3 fixed, 1 rejected.

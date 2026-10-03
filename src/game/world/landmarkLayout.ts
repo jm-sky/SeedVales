@@ -44,6 +44,32 @@ export function layout(l: GenLandmark): Slot[] {
     case 'boat_wreck':
       out.push({ name: N.boat, x: 0, z: 0, ry: 0, sink: 0.3, pitch: 0.06, roll: 0.18 })
       break
+    case 'chapel_ruin': {
+      // A roofless nave: two long side walls, a gabled front with the arch, a back wall, columns inside and a few floor slabs.
+      const L = 4 // wall segments along the nave
+      const W = 6
+      const D = L * 3
+      let k = 0
+      const wall = (x: number, z: number, ry: number) => {
+        if (h(k, 21) < 0.15) out.push({ name: N.bricks, x, z, ry: h(k, 22) * 6, sink: 0.05 })
+        else out.push({ name: pick(N.walls, h(k, 23)), x, z, ry, sink: 0.15 })
+        k++
+      }
+      for (let i = 0; i < L; i++) {
+        const z = -D / 2 + 1.5 + i * 3
+        wall(W / 2, z, Math.PI / 2)
+        wall(-W / 2, z, -Math.PI / 2)
+      }
+      out.push({ name: N.arch, x: 0, z: D / 2, ry: 0, sink: 0.2 })
+      wall(-3, D / 2, 0)
+      wall(3, D / 2, 0)
+      wall(-1.5, -D / 2, Math.PI)
+      wall(1.5, -D / 2, Math.PI)
+      for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) out.push({ name: pick(N.columns, h(k++, 24)), x: cx * (W / 2 - 0.6), z: cz * (D / 4), ry: 0, sink: 0.2 })
+      for (let i = 0; i < L - 1; i++) if (h(i, 25) < 0.6) out.push({ name: N.floor, x: 0, z: -D / 2 + 3 + i * 3, ry: 0, sink: 0.2 })
+      out.push({ name: N.bricks, x: 0, z: -D / 2 + 2, ry: h(26) * 6 })
+      break
+    }
     case 'estate_ruin':
     case 'house_ruin': {
       const estate = l.kind === 'estate_ruin'
@@ -85,44 +111,6 @@ export function layout(l: GenLandmark): Slot[] {
       out.push({ name: N.bricks, x: W / 2 - 1.5, z: D / 2 - 1.5, ry: h(17) * 6 })
       break
     }
-    case 'chapel_ruin': {
-      // A roofless nave: two long side walls, a gabled front with the arch, a back wall, columns inside and a few floor slabs.
-      const L = 4 // wall segments along the nave
-      const W = 6
-      const D = L * 3
-      let k = 0
-      const wall = (x: number, z: number, ry: number) => {
-        if (h(k, 21) < 0.15) out.push({ name: N.bricks, x, z, ry: h(k, 22) * 6, sink: 0.05 })
-        else out.push({ name: pick(N.walls, h(k, 23)), x, z, ry, sink: 0.15 })
-        k++
-      }
-      for (let i = 0; i < L; i++) {
-        const z = -D / 2 + 1.5 + i * 3
-        wall(W / 2, z, Math.PI / 2)
-        wall(-W / 2, z, -Math.PI / 2)
-      }
-      out.push({ name: N.arch, x: 0, z: D / 2, ry: 0, sink: 0.2 })
-      wall(-3, D / 2, 0)
-      wall(3, D / 2, 0)
-      wall(-1.5, -D / 2, Math.PI)
-      wall(1.5, -D / 2, Math.PI)
-      for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) out.push({ name: pick(N.columns, h(k++, 24)), x: cx * (W / 2 - 0.6), z: cz * (D / 4), ry: 0, sink: 0.2 })
-      for (let i = 0; i < L - 1; i++) if (h(i, 25) < 0.6) out.push({ name: N.floor, x: 0, z: -D / 2 + 3 + i * 3, ry: 0, sink: 0.2 })
-      out.push({ name: N.bricks, x: 0, z: -D / 2 + 2, ry: h(26) * 6 })
-      break
-    }
-    case 'watch_tower_ruin': {
-      // A square tower stump: four walls round a floor slab, corner columns, rubble outside.
-      const S = 6
-      let k = 0
-      for (const [x, z, ry] of [[0, S / 2, 0], [0, -S / 2, Math.PI], [S / 2, 0, Math.PI / 2], [-S / 2, 0, -Math.PI / 2]] as const) {
-        out.push({ name: pick(N.walls, h(k++, 31)), x, z, ry, sink: 0.2 })
-      }
-      for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) out.push({ name: pick(N.columns, h(k++, 32)), x: (cx * S) / 2, z: (cz * S) / 2, ry: 0, sink: 0.15 })
-      out.push({ name: N.floor, x: 0, z: 0, ry: h(33) * 6, sink: 0.1 })
-      for (let i = 0; i < 3; i++) out.push({ name: N.bricks, x: (h(i, 34) - 0.5) * 12, z: (h(i, 35) - 0.5) * 12, ry: h(i, 36) * 6 })
-      break
-    }
     case 'shipwreck':
       // Half sunk in the sand, bow up and listing.
       out.push({ name: N.ship, x: 0, z: 0, ry: 0, sink: 1.8, pitch: -0.14, roll: 0.22 })
@@ -137,6 +125,18 @@ export function layout(l: GenLandmark): Slot[] {
         out.push({ name: pick(N.stones, h(i, 4)), x: Math.cos(a) * r, z: Math.sin(a) * r, ry: -a + Math.PI / 2 + (h(i, 5) - 0.5) * 0.4, s: 0.9 + h(i, 6) * 0.35, sink: 0.15, roll: fallen ? 1.1 : (h(i, 7) - 0.5) * 0.16 })
       }
       out.push({ name: N.stones[2], x: 0, z: 0, ry: h(9, 9) * 6, s: 1.1, sink: 0.3 })
+      break
+    }
+    case 'watch_tower_ruin': {
+      // A square tower stump: four walls round a floor slab, corner columns, rubble outside.
+      const S = 6
+      let k = 0
+      for (const [x, z, ry] of [[0, S / 2, 0], [0, -S / 2, Math.PI], [S / 2, 0, Math.PI / 2], [-S / 2, 0, -Math.PI / 2]] as const) {
+        out.push({ name: pick(N.walls, h(k++, 31)), x, z, ry, sink: 0.2 })
+      }
+      for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) out.push({ name: pick(N.columns, h(k++, 32)), x: (cx * S) / 2, z: (cz * S) / 2, ry: 0, sink: 0.15 })
+      out.push({ name: N.floor, x: 0, z: 0, ry: h(33) * 6, sink: 0.1 })
+      for (let i = 0; i < 3; i++) out.push({ name: N.bricks, x: (h(i, 34) - 0.5) * 12, z: (h(i, 35) - 0.5) * 12, ry: h(i, 36) * 6 })
       break
     }
   }

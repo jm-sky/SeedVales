@@ -157,6 +157,8 @@ export type CompanionRisk = 'low' | 'medium' | 'high'
 /** Companion contract with the player (COMP-01/02). Times in calendar seconds. */
 export interface CompanionContract {
   kind: 'hired' | 'free'
+  /** Authored quest that made this contract (only that quest may dismiss it). */
+  quest?: string
   task: CompanionTask
   risk: CompanionRisk
   since: number

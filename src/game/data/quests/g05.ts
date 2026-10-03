@@ -105,12 +105,11 @@ export const G05: QuestDef = {
     { id: 'age', at: oak, r: 8, dwellS: 5, when: [flag('accepted'), flagNot('age', true), { k: 'any', of: [{ k: 'skill', skill: 'survival', gte: 10 }, { k: 'skill', skill: 'woodcutting', gte: 10 }] }], effects: [set('age'), message('By the girth, the oak was a big tree before either village drew a line. It was a landmark first and a boundary second.')] },
   ],
   counters: [
-    { id: 'fellNight', on: 'fell', match: { near: { anchor: oak, r: 3 } }, when: [{ k: 'hour', night: true }] },
-    { id: 'fellDay', on: 'fell', match: { near: { anchor: oak, r: 3 } }, when: [{ k: 'hour', from: 6, to: 20 }] },
+    { id: 'felled', on: 'fell', match: { near: { anchor: oak, r: 3 } } },
   ],
   rules: [
     { id: 'enough', when: [stageIs(1), twoEvidence], effects: [stage(2), message('That is enough to put the case to a reeve.', 'quest')] },
-    { id: 'feltNight', when: [{ k: 'any', of: [{ k: 'counter', id: 'fellNight', gte: 1 }, { k: 'counter', id: 'fellDay', gte: 1 }] }], effects: [{ k: 'choose', flag: 'deal', value: 'felled_at_night' }, { k: 'end', ending: 'felled_at_night' }] },
+    { id: 'feltNight', when: [{ k: 'counter', id: 'felled', gte: 1 }], effects: [{ k: 'choose', flag: 'deal', value: 'felled_at_night' }, { k: 'end', ending: 'felled_at_night' }] },
     { id: 'dropped', when: [{ k: 'since', hours: 504, from: 'started' }], effects: [{ k: 'end', ending: 'dropped' }] },
     { id: 'ignored', phase: 'both', when: [{ k: 'since', hours: 120, from: 'offered' }, flag('accepted', false)], effects: [{ k: 'lapse' }] },
   ],

@@ -25,7 +25,7 @@ export const G08: QuestDef = {
     margaret: { kind: 'npc', required: false, place: 'V', profession: 'farmer', kin: ['head'], fallbackName: 'the reeve of the next village' },
   },
   start: [{ k: 'day', from: 4 }, alive('tom')],
-  onOffer: [{ k: 'ill', slots: sick, severity: 30, hours: 72 }, set('rumourStart', 'today')],
+  onOffer: [{ k: 'ill', slots: sick, severity: 30, hours: 72 }, set('rumourStart', 'today'), { k: 'grant', to: { store: 'tom' }, item: 'small_beer', qty: 2, why: 'small beer from his own cask' }],
   flags: { result: 'none', rumourStart: 0, accepted: false, whoDrank: false, wellClean: false, barrelBad: false, doraSaid: false, accused: false, apologised: false, tomTold: false, tomWarned: false },
   stages: [
     { id: 'rumour', journal: '{wife} and {stephen} fell sick the same night and {H} is saying the well is poisoned. {ralph} wants the truth before the square decides on a culprit.', anchor: { k: 'actor', slot: 'ralph' } },

@@ -151,9 +151,10 @@ export function timeLeftText(def: QuestDef, st: AuthoredQuestState, c: QuestCtx)
   if (def.deadlineHours === undefined || st.startedAt === undefined || st.status !== 'active') return ''
   const hours = def.deadlineHours - (c.sim.state.time.cal - st.startedAt) / 3600
   if (hours <= 0) return 'The time is up.'
-  const d = Math.floor(hours / 24)
-  const h = Math.ceil(hours - d * 24)
-  return `Time left: ${d > 0 ? `${d} ${d === 1 ? 'day' : 'days'} ` : ''}${h} h.`
+  const total = Math.ceil(hours)
+  const d = Math.floor(total / 24)
+  const h = total - d * 24
+  return `Time left: ${[d > 0 ? `${d} ${d === 1 ? 'day' : 'days'}` : '', h > 0 || d === 0 ? `${h} h` : ''].filter(Boolean).join(' ')}.`
 }
 
 /** Map markers of active quests, only in explored cells (MAP-01). */

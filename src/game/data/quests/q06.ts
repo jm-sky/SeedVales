@@ -33,7 +33,7 @@ export const Q06: QuestDef = {
     { k: 'grant', to: { store: 'sophie' }, item: 'iron_wedge', qty: 2, why: 'goods crafted by Sophie before the quest' },
     { k: 'pay', from: { purse: 'miles' }, to: { purse: 'sophie' }, amount: 24 },
   ],
-  flags: { deal: 'none', accepted: false, familyAgreed: false, hatchetGiven: false, campReady: false, campSeen: false, bendSeen: false, itemCollected: false },
+  flags: { markGiven: false, deal: 'none', accepted: false, familyAgreed: false, hatchetGiven: false, campReady: false, campSeen: false, bendSeen: false, itemCollected: false },
   stages: [
     { id: 'table', journal: '{miles}\'s new axe head and two wedges wait at {sophie}\'s forge in {V}, paid in advance. {matthew} wants to go along; settle how, or fetch them yourself.', anchor: { k: 'actor', slot: 'miles' } },
     { id: 'road', journal: 'Take the road to {V} and collect the order from {sophie}. She hands it only to {miles}\'s household or whoever carries his mark.', anchor: { k: 'actor', slot: 'sophie' } },
@@ -102,6 +102,10 @@ export const Q06: QuestDef = {
         opt('notyet', 'I haven\'t been. Someday.', [set('campSeen'), opinion('matthew', 4)]),
       ],
     },
+    mi_mark: {
+      lines: [say('miles', 'He can\'t come? Then take my mark, and fetch it yourself. Without it, or one of us, {sophie} won\'t hand the iron over.')],
+      options: [opt('take', 'I\'ll take the mark.', [{ k: 'grant', to: 'player', item: 'miles_mark', qty: 1, why: 'the woodcutter household token for the order' }, set('markGiven')])],
+    },
     so_pickup: {
       lines: [
         say('sophie', '{miles}\'s order. Head and two wedges. Who\'s taking it?'),
@@ -110,7 +114,7 @@ export const Q06: QuestDef = {
       ],
       options: [
         opt('take', 'I\'ll take it.', [{ k: 'give', from: { store: 'sophie' }, to: 'player', item: 'axe_head', qty: 1 }, { k: 'give', from: { store: 'sophie' }, to: 'player', item: 'iron_wedge', qty: 2 }, set('itemCollected'), stage(2), opinion('sophie', 3)], {
-          needs: [{ k: 'any', of: [{ k: 'hasItem', item: 'miles_mark', qty: 1, from: 'player' }, { k: 'all', of: [{ k: 'companion', slot: 'matthew' }, { k: 'near', of: 'matthew', slot: 'sophie', r: 12 }] }] }],
+          needs: [{ k: 'any', of: [{ k: 'hasItem', item: 'miles_mark', qty: 1, from: 'player' }, { k: 'all', of: [{ k: 'any', of: [flag('deal', 'paid'), flag('deal', 'free')] }, { k: 'near', of: 'matthew', slot: 'sophie', r: 12 }] }] }],
           reason: '{sophie} releases the order only to {miles}\'s household or whoever carries his mark.',
         }),
       ],
@@ -120,6 +124,7 @@ export const Q06: QuestDef = {
     { slot: 'miles', node: 'mi_open', label: 'The axe head in {V}', when: [flagNot('accepted', true)] },
     { slot: 'lucy', node: 'lu_aside', label: 'The turnips', when: [flag('accepted'), flagNot('familyAgreed', true), flag('deal', 'none'), alive('matthew')] },
     { slot: 'miles', node: 'mi_hatchet', label: 'The road for {matthew}', when: [flag('accepted'), flagNot('hatchetGiven', true), alive('matthew'), { k: 'any', of: [flag('deal', 'paid'), flag('deal', 'free')] }] },
+    { slot: 'miles', node: 'mi_mark', label: 'The son cannot come', when: [flag('accepted'), flagNot('markGiven', true), flagNot('itemCollected', true), { k: 'any', of: [flag('deal', 'paid'), flag('deal', 'free')] }, { k: 'any', of: [{ k: 'companion', slot: 'matthew', active: false }, { k: 'not', of: alive('matthew') }] }] },
     { slot: 'matthew', node: 'ma_terms', label: 'Going to {V}', when: [flag('accepted'), flag('deal', 'none'), stageIs(1)] },
     { slot: 'matthew', node: 'ma_camp', label: 'The road so far', when: [flag('campReady'), flagNot('campSeen', true), { k: 'companion', slot: 'matthew' }] },
     { slot: 'sophie', node: 'so_pickup', label: '{miles}\'s order', when: [flag('accepted'), flagNot('itemCollected', true)] },

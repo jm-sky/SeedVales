@@ -96,7 +96,7 @@ export const G07: QuestDef = {
   rules: [
     { id: 'toEnd', when: [stageIs(0), clues2, { k: 'not', of: { k: 'flag', flag: 'toEndPosted', eq: true } }], effects: [set('toEndPosted'), message('You have two signs. Report to {jacob}.', 'info')] },
     { id: 'killed', when: [stageGte(1), { k: 'dead', slot: 'greybeard' }, flag('poisoned', false), flag('driveDay2', false)], effects: [{ k: 'end', ending: 'kill' }] },
-    { id: 'driveDay2', when: [flagNot('driveDay1', 0), { k: 'dayAfter', flag: 'driveDay1' }, wolfNear, { k: 'litTorch' }], effects: [set('driveDay2'), { k: 'scare', slot: 'greybeard', minutes: 30 }, { k: 'end', ending: 'drive' }] },
+    { id: 'driveDay2', when: [flagNot('driveDay1', 0), { k: 'dayAfter', flag: 'driveDay1' }, wolfNear, { k: 'litTorch' }], effects: [set('driveDay2'), { k: 'drive', slot: 'greybeard', m: 1500 }, { k: 'end', ending: 'drive' }] },
     { id: 'poisonWorks', when: [flag('poisoned'), { k: 'dayAfter', flag: 'poisonAt' }], effects: [{ k: 'slay', slot: 'greybeard' }, { k: 'end', ending: 'poison' }] },
     { id: 'jacobKills', phase: 'both', when: [{ k: 'day', from: 22 }, flag('accepted', false)], effects: [{ k: 'slay', slot: 'greybeard' }, { k: 'lapse' }] },
     { id: 'tooLong', when: [{ k: 'since', hours: 360, from: 'started' }], effects: [{ k: 'end', ending: 'gaveUp' }] },

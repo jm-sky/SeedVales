@@ -57,7 +57,7 @@ export function tradeStock(sim: Sim, npc: Human): StockEntry[] {
   for (const inv of store && store !== npc.inv ? [npc.inv, store] : [npc.inv]) {
     for (const s of inv.items) {
       const d = itemDef(s.id)
-      if (d.price <= 0) continue
+      if (d.price <= 0 || d.availability === 'quest-only') continue
       let max = s.qty
       const k = keep.get(s.id) ?? 0
       if (k > 0) {

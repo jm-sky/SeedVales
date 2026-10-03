@@ -10,7 +10,7 @@ import type { ResNode } from '../world/nodes'
 import type { Sim } from './sim'
 import type { Actor, Animal, AuthoredQuestState, Building, DenState, Human, Inventory } from './types'
 import { START_CALENDAR_S } from '../config/calibration'
-import { Rng } from '../core/rng'
+import { hashString, Rng } from '../core/rng'
 import { itemDef } from '../data/items'
 import { AUTHORED_QUESTS } from '../data/quests'
 import { SPECIES } from '../data/species'
@@ -289,7 +289,7 @@ function boundaryTree(sim: Sim): { x: number; z: number; id?: string } | null {
   for (const radius of [90, 200, 400]) {
     found.length = 0
     sim.nodes.query(mx, mz, radius, found)
-    const trees = found.filter((n) => n.kind === 'tree_broad' && sim.terrain.waterDepthAt(n.x, n.z) < 0.3 && sim.terrain.roadAt(n.x, n.z) === 0)
+    const trees = found.filter((n) => n.kind === 'tree_broad' && sim.state.nodes[n.id]?.kind !== 'felled' && sim.terrain.waterDepthAt(n.x, n.z) < 0.3 && sim.terrain.roadAt(n.x, n.z) === 0)
     if (trees.length) {
       // Largest first, nearest to the middle on ties; the id breaks any remaining tie.
       trees.sort((a, b) => b.scale - a.scale || Math.hypot(a.x - mx, a.z - mz) - Math.hypot(b.x - mx, b.z - mz) || (a.id < b.id ? -1 : 1))
@@ -579,6 +579,7 @@ function transferItems(c: QuestCtx, from: Source, to: Source, item: string, qty:
   const b = invOf(c, to)
   if (!a || !b || qty <= 0) return
   const n = Math.min(qty, countItem(a, item))
+  if (n < qty) c.sim.message(`${nameOfSource(c, from)} could hand over only ${n} of ${qty} ${item.replace(/_/g, ' ')}.`, 'bad')
   if (n <= 0) return
   for (const s of removeItem(a, item, n)) {
     if (to === 'player') giveOrDrop(c.sim, c.sim.player, s)
@@ -664,7 +665,7 @@ function spawnCreature(c: QuestCtx, slot: SlotId) {
   const at = resolveAnchor(c, spec.at)
   if (!at) return
   const sim = c.sim
-  const rng = new Rng(sim.state.seed ^ (c.def.id.charCodeAt(0) * 7919) ^ 0xc4ea7)
+  const rng = new Rng(sim.state.seed ^ hashString(c.def.id) ^ 0xc4ea7)
   const a = makeAnimal(sim.nextId(), spec.species, spec.variant ?? 'adult', at.x, at.z, sim.terrain.heightAt(at.x, at.z), rng)
   a.tag = spec.tag
   if (spec.young) {
@@ -672,7 +673,7 @@ function spawnCreature(c: QuestCtx, slot: SlotId) {
     const denId = `qden:${c.def.id}`
     a.denId = denId
     if (spec.leash) a.leash = spec.leash
-    if (!sim.state.dens.some((d) => d.id === denId)) sim.state.dens.push({ id: denId, species: spec.species as DenState['species'], x: at.x, z: at.z, alive: true, maxCount: 0, nextSpawn: Number.POSITIVE_INFINITY })
+    if (!sim.state.dens.some((d) => d.id === denId)) sim.state.dens.push({ id: denId, species: spec.species as DenState['species'], x: at.x, z: at.z, alive: true, maxCount: 0, nextSpawn: Number.MAX_SAFE_INTEGER })
     for (let i = 0; i < spec.young; i++) {
       const x = at.x + rng.range(-2, 2)
       const z = at.z + rng.range(-2, 2)
@@ -784,7 +785,7 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'companion': {
       const h = humanOf(c, e.slot)
       if (!h) break
-      const no = questCompanion(sim, h, e.mode, e.task, e.days)
+      const no = questCompanion(sim, h, e.mode, e.task, e.days, def.id)
       if (no) sim.message(no, 'bad')
       break
     }
@@ -798,7 +799,7 @@ function applyEffect(c: QuestCtx, e: Effect) {
       break
     case 'dismiss': {
       const h = humanOf(c, e.slot)
-      if (h?.companion) dismissCompanion(sim, h)
+      if (h?.companion && h.companion.quest === def.id) dismissCompanion(sim, h)
       break
     }
     case 'drive': {
@@ -866,6 +867,10 @@ function applyEffect(c: QuestCtx, e: Effect) {
       logProduce(e.item, e.qty, `quest:${def.id}:${e.why}`)
       break
     }
+    case 'harm':
+      applyPartDamage(sim.player.vitals, 'torso', e.amount, true)
+      sim.message('Stone and timber shift and fall on you.', 'bad')
+      break
     case 'heal':
       for (const slot of e.slots) {
         const h = humanOf(c, slot)
@@ -874,10 +879,6 @@ function applyEffect(c: QuestCtx, e: Effect) {
       break
     case 'hold':
       setHold(c, e.slot, e)
-      break
-    case 'harm':
-      applyPartDamage(sim.player.vitals, 'torso', e.amount, true)
-      sim.message('Stone and timber shift and fall on you.', 'bad')
       break
     case 'hurt': {
       const a = actorOf(c, e.slot)
