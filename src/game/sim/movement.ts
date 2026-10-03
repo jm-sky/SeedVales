@@ -72,10 +72,11 @@ export function steerTo(
   const moved = Math.hypot(a.x - ox, a.z - oz)
   a.vx = (a.x - ox) / Math.max(dt, 1e-4)
   a.vz = (a.z - oz) / Math.max(dt, 1e-4)
-  // Progress = getting closer to the target (sliding along walls counts while it helps).
-  const nd = Math.hypot(tx - a.x, tz - a.z)
   if (moved < step * 0.3) a.ai.stuckT += dt
-  else if (nd < d - step * 0.2) a.ai.stuckT = Math.max(0, a.ai.stuckT - dt * 0.5)
+  // Moving freely counts down the slide mode even without closing in: the sidestep heading is ~perpendicular to the
+  // target, so a slide that never ends makes the actor ORBIT the target (the obstacle is long gone, it never arrives;
+  // NPC-02 soak: a day-long orbit around the bed / the water point while thirst ran to 0). Direct heading then resumes.
+  else a.ai.stuckT = Math.max(0, a.ai.stuckT - dt * 0.5)
   sim.actors.update(a)
   perf.count('ai.moves')
   if (a.ai.stuckT > 8) {
