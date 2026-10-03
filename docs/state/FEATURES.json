@@ -90,9 +90,6 @@
    "verify": "src/game/world/gen/caves.test.ts, src/game/sim/caveSpace.test.ts, src/game/render/caves.test.ts (vitest); visual/e2e pending on WSL",
    "status": "implemented_unverified",
    "evidence": "Caves v1 (world--003 steps 1-2 + small/medium classes): generator, walkable cave, terrain cutting, map marker; see D-CAVE-1 and the plan Result"
-   "verify": "—",
-   "status": "planned",
-   "evidence": "ROADMAP-PRIORITY-ADJUSTMENTS #3: caves moved substantially earlier — wave 5e after landmarks/treasure (LOOT-01) and the combat/jump grounding (combat--004); plan docs/plans/world--003--caves.md"
   },
   {
    "id": "WORLD-06",
