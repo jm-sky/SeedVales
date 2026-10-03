@@ -1,8 +1,3 @@
-/**
- * Inn meal service (economy--003): availability from the inn's real pantry, the completion transaction
- * (re-check, consume, pay the settlement treasury, restore hunger) and the shared lodging payment.
- * @domain economy
- */
 import type { InnMeal } from '../data/innMeals'
 import type { Sim } from './sim'
 import type { Building } from './types'
@@ -11,6 +6,12 @@ import { INN_BED_PRICE, INN_MEALS } from '../data/innMeals'
 import { itemDef } from '../data/items'
 import { logConsume } from './eventLog'
 import { removeStack } from './inventory'
+/**
+ * Inn meal service (economy--003): availability from the inn's real pantry, the completion transaction
+ * (re-check, consume, pay the settlement treasury, restore hunger) and the shared lodging payment.
+ * @domain economy
+ */
+import { mealPriceNow } from './market'
 import { payToTreasury } from './treasury'
 
 /** Units of an item the inn can serve: spoiled stacks are never served (no illness from the inn, review 019 #7). */
@@ -39,7 +40,7 @@ export const mealNutrition = (ids: readonly string[]) => ids.reduce((n, id) => n
 /** Why a meal cannot be ordered now (null = orderable). */
 export function mealRefusal(sim: Sim, inn: Building, meal: InnMeal): string | null {
   if (!mealIngredients(inn, meal)) return 'The inn is out of the ingredients.'
-  if (sim.player.money < meal.price) return 'Not enough money'
+  if (sim.player.money < mealPriceNow(sim, meal.price)) return 'Not enough money'
   return null
 }
 
@@ -58,11 +59,12 @@ export function completeMeal(sim: Sim, innId: string, mealId: string): { ok: boo
     const taken = removeStack(inn.inv!, batch, 1)!
     logConsume(taken.id, taken.qty, 'inn_meal')
   }
-  payToTreasury(sim, inn.settlementId, sim.player, meal.price)
+  const price = mealPriceNow(sim, meal.price)
+  payToTreasury(sim, inn.settlementId, sim.player, price)
   const v = sim.player.vitals
   const gain = mealNutrition(ids)
   v.hunger = Math.min(100, v.hunger + gain)
-  return { ok: true, msg: `${meal.name}: +${gain} satiety (${meal.price} c).` }
+  return { ok: true, msg: `${meal.name}: +${gain} satiety (${price} c).` }
 }
 
 /** Lodging is paid to the settlement treasury (no arbitrary "innkeeper" NPC). */

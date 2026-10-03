@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
 import { formatCoins } from '@/game/data/items'
 import { groupIdentical } from '@/game/sim/inventory'
+import { isMarketDay } from '@/game/sim/market'
 import { professionName } from '@/game/sim/newGame'
 import { buyPrice, sellPrice, tradeStock } from '@/game/sim/trade'
 import ItemRow from './ItemRow.vue'
@@ -25,6 +26,7 @@ const d = computed(() => {
     mine: groupIdentical(g.sim.player.inv.items.map((s) => ({ s, price: sellPrice(g.sim, npc, s) })), (e) => e.s).map((g2) => ({ ...g2.row, shown: { ...g2.row.s, qty: g2.qty } })),
     money: g.sim.player.money,
     npcMoney: npc.money,
+    market: isMarketDay(g.sim),
   }
 })
 function buy(s: ItemStack) {
@@ -49,6 +51,12 @@ function sell(s: ItemStack) {
       <span>Your money: <b class="text-quest">{{ formatCoins(d.money) }}</b></span>
       <span>{{ d.npc.name }}: {{ formatCoins(d.npcMoney) }}</span>
     </div>
+    <p
+      v-if="d.market"
+      class="mb-2 text-xs text-amber-300"
+    >
+      Market day: goods are a little cheaper and your sales fetch a little more.
+    </p>
     <div class="grid gap-3 sm:grid-cols-2">
       <div>
         <h3 class="mb-1 text-xs font-semibold uppercase text-muted-foreground">

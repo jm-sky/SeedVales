@@ -1,8 +1,3 @@
-/**
- * Interaction targets & options (shared by desktop E-key, mobile button and UI menus).
- * Options needing a capability auto-equip the right tool from inventory (vision §27).
- * @domain interaction
- */
 import type { Capability } from '../data/items'
 import type { Sim } from './sim'
 import type { Animal, Building, Human, ItemStack } from './types'
@@ -21,6 +16,12 @@ import { logMoney, logProduce } from './eventLog'
 import { addFuelFromPack, canLightTorch, dismantleHearth, douseFire, extinguishGroundTorch, lightFire, lightGroundTorch, restoreTorchDur } from './fire'
 import { mealIngredients, mealNutrition, mealRefusal, payLodging } from './inns'
 import { addItem, countItem, equipToMain, findTool, fitQty, removeStack } from './inventory'
+/**
+ * Interaction targets & options (shared by desktop E-key, mobile button and UI menus).
+ * Options needing a capability auto-equip the right tool from inventory (vision §27).
+ * @domain interaction
+ */
+import { mealPriceNow } from './market'
 import { acceptOffice, cycleTaxRate, mayorStatus } from './mayor'
 import { askToJoin, dismissCompanion } from './npc/companions'
 import { sleepComfort, startActivity } from './player'
@@ -192,7 +193,7 @@ export function targetOptions(sim: Sim, t: TargetRef): InteractOption[] {
           for (const m of INN_MEALS) {
             const ids = mealIngredients(b, m)
             const why = mealRefusal(sim, b, m)
-            o.push(opt(m.id, ids ? `${m.name} (${m.price}c, +${mealNutrition(ids)} satiety)` : `${m.name} (${m.price}c) — unavailable`, !why, why ?? undefined))
+            o.push(opt(m.id, ids ? `${m.name} (${mealPriceNow(sim, m.price)}c, +${mealNutrition(ids)} satiety)` : `${m.name} (${mealPriceNow(sim, m.price)}c) — unavailable`, !why, why ?? undefined))
           }
           break
         case 'market': {

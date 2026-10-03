@@ -12,7 +12,7 @@
 
 ## Gameplay loops and survival
 
-- **P-01 Seasonal market days** (M) — once a week the settlement's market square fills (traders, stalls, cheaper meals, a sell/buy bonus). *Fits:* VISION economy, TRADE-03 groundwork (caravans exist). *Needs:* a calendar event hook, NPC schedule override, market stall structure (exists as `market`). *Risk:* NPC pathing in the square (D-SIM-11). *Measure:* trade volume per market day in soak; no stuck NPCs.
+- **P-01 Seasonal market days** (M) — ✅ *first slice 2026-10-03 (`sim/market.ts`): weekly market day 8–18 h, buy −8 %, sell +10 %, inn meals −20 %, HUD cue; NPC square/stalls/traders still open.* — once a week the settlement's market square fills (traders, stalls, cheaper meals, a sell/buy bonus). *Fits:* VISION economy, TRADE-03 groundwork (caravans exist). *Needs:* a calendar event hook, NPC schedule override, market stall structure (exists as `market`). *Risk:* NPC pathing in the square (D-SIM-11). *Measure:* trade volume per market day in soak; no stuck NPCs.
 - **P-02 Foraging knowledge** (S) — herbs/mushrooms are identified by use; wrongly eating a mushroom becomes a learned "known toxic" mark. *Fits:* SKILL/medicine. *Needs:* a per-player knowledge set (saved, optional field). *Risk:* low.
 - **P-03 Campfire cooking quality** (S) — roasting near a lit hearth/with a pan yields better freshness share; ties to D-FOOD-3/4. 🟡 balance.
 - **P-04 Weather-driven needs** (M) — rain/cold increase vigor drain unless sheltered/clothed; uses existing weather + armour layers. *Risk:* retuning the survival loop; needs soak.

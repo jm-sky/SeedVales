@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
+import { isMarketDay } from '@/game/sim/market'
 import { reputationLabel } from '@/game/sim/reputationView'
 import { formatClock, formatDate, SEASON_NAMES, seasonOf } from '@/game/sim/time'
 import { WEATHER_NAMES } from '@/game/sim/weather'
@@ -19,6 +20,7 @@ const s = computed(() => {
     temp: Math.round(w.temp),
     scale: sim.timeScale,
     place: reputationLabel(sim),
+    market: isMarketDay(sim),
   }
 })
 </script>
@@ -34,6 +36,13 @@ const s = computed(() => {
         v-if="s.scale > 1"
         class="ml-1 rounded bg-primary px-1 text-[10px] text-primary-foreground"
       >×{{ s.scale }}</span>
+    </div>
+    <div
+      v-if="s.market"
+      class="text-amber-300"
+      data-testid="market-day"
+    >
+      Market day
     </div>
     <div class="text-white/80">
       {{ s.date }}

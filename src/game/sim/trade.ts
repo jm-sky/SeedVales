@@ -1,9 +1,3 @@
-/**
- * Trade (TRADE-02): any NPC sells its surplus — household store and own pack — minus what the household
- * needs (food reserve per member, work kit, wielded/worn gear). Children trade only from their pack; prices depend on base price, quality, NPC agreeableness,
- * individual sympathy, settlement honesty reputation, trade skill and local stock. Money is conserved.
- * @domain economy
- */
 import type { ActionResult } from './actions'
 import type { Sim } from './sim'
 import type { Human, Inventory, ItemStack } from './types'
@@ -14,6 +8,13 @@ import { train } from './actions'
 import { logMoney, logTrade } from './eventLog'
 import { countGoodwill, goodwillToday } from './gifts'
 import { addItem, countItem, fitQty, qualityMult, removeStack } from './inventory'
+/**
+ * Trade (TRADE-02): any NPC sells its surplus — household store and own pack — minus what the household
+ * needs (food reserve per member, work kit, wielded/worn gear). Children trade only from their pack; prices depend on base price, quality, NPC agreeableness,
+ * individual sympathy, settlement honesty reputation, trade skill and local stock. Money is conserved.
+ * @domain economy
+ */
+import { isMarketDay, MARKET } from './market'
 import { doorOf, household, houseOf } from './npc/queries'
 
 /**
@@ -95,11 +96,15 @@ export function buyPrice(sim: Sim, npc: Human, s: ItemStack): number {
   const stock = countItem(inv, s.id) + (inv === npc.inv ? 0 : countItem(npc.inv, s.id))
   const scarcity = stock > 10 ? TRADE.plentyScarcity : stock <= 1 ? 1.15 : 1
   const m = 1.3 - sim.player.skills.trade * 0.002 - mood(sim, npc)
-  return Math.max(1, Math.round(d.price * qualityMult(s) * scarcity * Math.min(1.8, Math.max(TRADE.minBuyMul, m))))
+  return Math.max(1, Math.round(d.price * qualityMult(s) * scarcity * Math.min(1.8, Math.max(TRADE.minBuyMul, m)) * marketBuyMul(sim)))
 }
 
 /** The cheapest this stack could ever be bought for (plenty of stock, best mood and skill). */
-const lowestBuyPrice = (s: ItemStack) => Math.max(1, Math.round(itemDef(s.id).price * qualityMult(s) * TRADE.plentyScarcity * TRADE.minBuyMul))
+const lowestBuyPrice = (sim: Sim, s: ItemStack) => Math.max(1, Math.round(itemDef(s.id).price * qualityMult(s) * TRADE.plentyScarcity * TRADE.minBuyMul * marketBuyMul(sim)))
+
+/** Market-day factors (P-01): buying is cheaper; the sell bonus stays under the cheapest buy price (no arbitrage). */
+const marketBuyMul = (sim: Sim) => (isMarketDay(sim) ? MARKET.buyMul : 1)
+const marketSellMul = (sim: Sim) => (isMarketDay(sim) ? MARKET.sellMul : 1)
 
 /** Price the NPC pays the player for one unit. */
 export function sellPrice(sim: Sim, npc: Human, s: ItemStack): number {
@@ -107,9 +112,9 @@ export function sellPrice(sim: Sim, npc: Human, s: ItemStack): number {
   const m = 0.5 + sim.player.skills.trade * 0.002 + mood(sim, npc)
   const spoiled = s.fresh !== undefined && d.food && s.fresh < d.food.spoilH * 0.3 ? 0.4 : 1
   const worn = s.dur !== undefined && d.durability ? 0.4 + 0.6 * (s.dur / d.durability) : 1
-  const v = d.price * qualityMult(s) * spoiled * worn * Math.min(0.9, Math.max(0.3, m))
+  const v = d.price * qualityMult(s) * spoiled * worn * Math.min(0.9, Math.max(0.3, m)) * marketSellMul(sim)
   // Always below the lowest buy price of the same item, so buying and reselling never pays (review 006 #4).
-  return d.price > 0 ? Math.max(1, Math.min(Math.round(v), lowestBuyPrice(s) - 1)) : 0
+  return d.price > 0 ? Math.max(1, Math.min(Math.round(v), lowestBuyPrice(sim, s) - 1)) : 0
 }
 
 export function buyFromNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): ActionResult {
