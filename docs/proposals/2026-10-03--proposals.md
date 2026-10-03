@@ -16,7 +16,7 @@
 - **P-02 Foraging knowledge** (S) — herbs/mushrooms are identified by use; wrongly eating a mushroom becomes a learned "known toxic" mark. *Fits:* SKILL/medicine. *Needs:* a per-player knowledge set (saved, optional field). *Risk:* low.
 - **P-03 Campfire cooking quality** (S) — roasting near a lit hearth/with a pan yields better freshness share; ties to D-FOOD-3/4. 🟡 balance.
 - **P-04 Weather-driven needs** (M) — rain/cold increase vigor drain unless sheltered/clothed; uses existing weather + armour layers. *Risk:* retuning the survival loop; needs soak.
-- **P-05 Journey provisions UI** (S) — map/journal line: "~3 h to Hollowgate; you carry 2 meals, 1 waterskin" computed from walking speed and needs rates. No new sim.
+- **P-05 Journey provisions UI** (S) — ✅ *implemented 2026-10-03 (S/low-risk shortlist rule): the map's Target box shows distance, hours on foot, hunger/thirst cost and what the pack covers (`journeyEstimate`, `review019.test.ts`).* — map/journal line: "~3 h to Hollowgate; you carry 2 meals, 1 waterskin" computed from walking speed and needs rates. No new sim.
 
 ## World and exploration
 

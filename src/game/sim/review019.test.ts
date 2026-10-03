@@ -140,3 +140,28 @@ describe('review 019', () => {
     expect(requestDodge(sim, 1, 0)).toBe('You are in the air.')
   })
 })
+
+describe('proposal P-05 journey estimate', () => {
+  it('UI-04: distance, walking hours and needs cost scale with the goal; the pack decides whether the way is covered', async () => {
+    const { journeyEstimate } = await import('./navigation')
+    const sim = ready()
+    const p = sim.player
+    const near = journeyEstimate(sim, { x: p.x + 100, z: p.z })
+    const far = journeyEstimate(sim, { x: p.x + 3600, z: p.z })
+    expect(far.hours).toBeGreaterThan(near.hours * 30)
+    expect(far.hours).toBeGreaterThan(14) // ~a day's march (D: 3.6 km ≈ 16 h) plus the detour factor
+    expect(far.hungerCost).toBeGreaterThan(near.hungerCost)
+    p.inv.items = []
+    p.vitals.hunger = 30
+    p.vitals.thirst = 30
+    expect(journeyEstimate(sim, { x: p.x + 3600, z: p.z }).covered).toBe(false)
+    p.vitals.hunger = 100
+    p.vitals.thirst = 100
+    addItem(p.inv, newStack('bread', 6))
+    addItem(p.inv, newStack('waterskin_m', 1, { water: 4 }))
+    const e = journeyEstimate(sim, { x: p.x + 1500, z: p.z })
+    expect(e.foodPoints).toBe(6 * 25)
+    expect(e.drinks).toBe(4)
+    expect(e.covered).toBe(true)
+  })
+})

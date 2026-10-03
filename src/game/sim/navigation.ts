@@ -6,8 +6,9 @@
  */
 import type { Sim } from './sim'
 import type { Quest } from './types'
-import { FOG } from '../config/calibration'
+import { CALENDAR_SPEED, FOG, NEEDS, WALK_SPEED_MPS } from '../config/calibration'
 import { angleDiff } from '../core/math'
+import { itemDef } from '../data/items'
 
 export interface NavGoal {
   x: number
@@ -54,6 +55,42 @@ export function bearing(from: { x: number; z: number }, to: { x: number; z: numb
   const dx = to.x - from.x
   const dz = to.z - from.z
   return { dist: Math.hypot(dx, dz), rel: angleDiff(yaw, Math.atan2(dx, dz)) }
+}
+
+/** Walking detour over the straight line 🟡 (roads and relief); the estimate is a guide, not a promise. */
+const JOURNEY_DETOUR = 1.25
+
+export interface JourneyEstimate {
+  km: number
+  /** Calendar hours on foot at walking speed. */
+  hours: number
+  /** Hunger and thirst the walk costs (points). */
+  hungerCost: number
+  thirstCost: number
+  /** Hunger points the pack's ready food restores, and drinks in the waterskins. */
+  foodPoints: number
+  drinks: number
+  /** True when the pack covers the walk's hunger and thirst. */
+  covered: boolean
+}
+
+/** What a trip to `to` costs on foot and what the player carries against it (journey provisions, proposal P-05). */
+export function journeyEstimate(sim: Sim, to: { x: number; z: number }): JourneyEstimate {
+  const p = sim.player
+  const dist = Math.hypot(to.x - p.x, to.z - p.z) * JOURNEY_DETOUR
+  const hours = ((dist / WALK_SPEED_MPS) * CALENDAR_SPEED) / 3600
+  let foodPoints = 0
+  let drinks = 0
+  for (const s of p.inv.items) {
+    const d = itemDef(s.id)
+    if (d.food && d.category === 'food' && !d.food.raw) foodPoints += s.qty * d.food.nutrition
+    if (d.waterCapacity) drinks += s.water ?? 0
+  }
+  const hungerCost = hours * NEEDS.hungerDrainPerH
+  const thirstCost = hours * NEEDS.thirstDrainPerH
+  // Drinks restore ~30 thirst each (Game.useItem); the player starts with what they have now.
+  const covered = p.vitals.hunger + foodPoints > hungerCost + 10 && p.vitals.thirst + drinks * 30 > thirstCost + 10
+  return { km: dist / 1000, hours, hungerCost, thirstCost, foodPoints, drinks, covered }
 }
 
 /** Cells per side of the fog-of-war grid. */

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useGameStrict } from '@/composables/useGame'
-import { isExplored, isVisited, knownSettlements, navGoal, questGoal } from '@/game/sim/navigation'
+import { isExplored, isVisited, journeyEstimate, knownSettlements, navGoal, questGoal } from '@/game/sim/navigation'
 import { placeLabel } from '@/ui/map/labelPlacement'
 import { drawArrow, fogMask, worldMapImage } from '@/ui/map/worldMapImage'
 import PanelFrame from './PanelFrame.vue'
@@ -17,6 +17,10 @@ const view = computed(() => {
   const p = sim.player
   return {
     goal: navGoal(sim),
+    journey: (() => {
+      const g = navGoal(sim)
+      return g ? journeyEstimate(sim, g) : null
+    })(),
     settlements: knownSettlements(sim).map((s) => ({ ...s, visited: isVisited(sim, s.id), km: (Math.hypot(s.x - p.x, s.z - p.z) / 1000).toFixed(1) })),
     quests: sim.state.quests.filter((q) => q.status === 'active').map((q) => questGoal(sim, q)).filter((g) => !!g),
     authored: game.value.questMarkers(),
@@ -142,7 +146,17 @@ function auto(id: number) {
           class="flex items-center justify-between rounded border border-sky-400/60 p-2 text-xs"
           data-testid="map-goal"
         >
-          <span>Target: {{ view.goal.label }}</span>
+          <span>
+            Target: {{ view.goal.label }}
+            <span
+              v-if="view.journey"
+              class="block text-muted-foreground"
+              :class="view.journey.covered ? '' : 'text-bad'"
+              data-testid="map-journey"
+            >
+              ~{{ view.journey.km.toFixed(1) }} km · {{ Math.round(view.journey.hours) }} h on foot · costs ≈ −{{ Math.round(view.journey.hungerCost) }} hunger, −{{ Math.round(view.journey.thirstCost) }} thirst · you carry food for +{{ view.journey.foodPoints }} and {{ view.journey.drinks }} drinks{{ view.journey.covered ? '' : ' — not enough for the way' }}
+            </span>
+          </span>
           <Button
             v-if="view.goal.kind === 'waypoint'"
             size="xs"
