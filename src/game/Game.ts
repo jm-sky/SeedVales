@@ -33,7 +33,7 @@ import { findTargets, nextTarget, runOption, startSleep, targetKey, targetOption
 import { addItem, findTool, removeStack } from './sim/inventory'
 import { setPrimary, switchWeapon } from './sim/loadout'
 import { repairPlacement, requestJump } from './sim/motion'
-import { autopilotToSettlement, clearWaypoint, isExplored, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
+import { addPin, autopilotToSettlement, clearWaypoint, isExplored, removePin, revealAround, setWaypoint, waypointToSettlement } from './sim/navigation'
 import { createNewGame } from './sim/newGame'
 import { hireCompanion } from './sim/npc/companions'
 import { cancelOrder, collectOrder, placeOrder } from './sim/orders'
@@ -835,6 +835,16 @@ export class Game {
   /** Map waypoint (UI-04): shown on the map and by the minimap arrow until reached or cleared. */
   setWaypoint(x: number, z: number, label?: string) {
     this.showToast(setWaypoint(this.sim, x, z, label))
+    this.notify()
+  }
+
+  /** Drops a map note (P-08) at the player's position. */
+  addMapPin(label: string) {
+    this.act(addPin(this.sim, label))
+  }
+
+  removeMapPin(id: number) {
+    removePin(this.sim, id)
     this.notify()
   }
 

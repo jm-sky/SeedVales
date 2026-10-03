@@ -22,7 +22,7 @@
 
 - **P-06 Treasure clues** (M) — LOOT-01 spots get hints (a faded map piece from an NPC/quest, a landmark inscription) so digging is not blind. *Needs:* clue items + journal entries. 🟡 quest text per landmark.
 - **P-07 Treasure chests** (M) — render + interaction for chests at landmarks (planned remainder of world--001). *Needs:* a chest model (Blender, D-REN-8).
-- **P-08 Player map annotations** (S) — pins/notes on the fog-of-war map (MAP-01 safe: only in explored cells).
+- **P-08 Player map annotations** (S) — ✅ *implemented 2026-10-03: "Mark here" notes on the map (max 20, `px.pins`).* — pins/notes on the fog-of-war map (MAP-01 safe: only in explored cells).
 
 ## NPC life and social
 

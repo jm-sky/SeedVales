@@ -476,6 +476,8 @@ export interface PlayerExtra {
   primary?: Partial<Record<WeaponKind, string>>
   /** Map waypoint set by the player (UI-04). */
   waypoint?: { x: number; z: number; label: string }
+  /** Player map notes (P-08): dropped at the player's own position, so always in explored cells. */
+  pins?: MapPin[]
   /** Settlement ids the player has reached (map, UI-04). */
   visited?: number[]
   /** Cart being pushed (TRANS-01). */
@@ -486,6 +488,13 @@ export interface PlayerExtra {
   cave?: number
   /** Treasure spots already dug up (LOOT-01); the contents are derived from the world seed + spot id, so nothing else is stored. */
   lootTaken?: string[]
+}
+
+export interface MapPin {
+  id: number
+  x: number
+  z: number
+  label: string
 }
 
 export type WeaponKind = 'melee' | 'ranged'

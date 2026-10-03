@@ -24,6 +24,7 @@ const view = computed(() => {
     settlements: knownSettlements(sim).map((s) => ({ ...s, visited: isVisited(sim, s.id), km: (Math.hypot(s.x - p.x, s.z - p.z) / 1000).toFixed(1) })),
     quests: sim.state.quests.filter((q) => q.status === 'active').map((q) => questGoal(sim, q)).filter((g) => !!g),
     authored: game.value.questMarkers(),
+    pins: sim.state.px.pins ?? [],
   }
 })
 
@@ -93,6 +94,16 @@ function draw() {
     ctx.font = 'bold 16px sans-serif'
     ctx.fillText('?', q.x * sc - 4, q.z * sc + 6)
   }
+  // Player notes (P-08): drawn only in explored cells (always true for where they were dropped; kept as the fog rule).
+  ctx.font = '11px sans-serif'
+  for (const n of view.value.pins) {
+    if (!isExplored(sim, n.x, n.z)) continue
+    ctx.fillStyle = '#7fe08a'
+    ctx.fillRect(n.x * sc - 3, n.z * sc - 3, 6, 6)
+    ctx.fillStyle = '#d6f5da'
+    const at = placeLabel(n.x * sc, n.z * sc, ctx.measureText(n.label).width, S, 8, 4)
+    ctx.fillText(n.label, at.x, at.y)
+  }
   const g = view.value.goal
   if (g) {
     ctx.strokeStyle = '#4fc3ff'
@@ -117,6 +128,13 @@ function pick(e: MouseEvent) {
   const r = c.getBoundingClientRect()
   const size = game.value.sim.world.size
   game.value.setWaypoint(((e.clientX - r.left) / r.width) * size, ((e.clientY - r.top) / r.height) * size)
+}
+
+const pinLabel = ref('')
+
+function addPin() {
+  game.value.addMapPin(pinLabel.value)
+  pinLabel.value = ''
 }
 
 function auto(id: number) {
@@ -166,6 +184,50 @@ function auto(id: number) {
           >
             Clear
           </Button>
+        </div>
+        <div class="space-y-1 rounded border p-2 text-xs">
+          <div class="flex gap-1">
+            <input
+              v-model="pinLabel"
+              class="min-w-0 flex-1 rounded border bg-background px-1"
+              maxlength="24"
+              placeholder="Note for this spot"
+              data-testid="map-pin-label"
+              @keydown.stop
+            />
+            <Button
+              size="xs"
+              variant="outline"
+              data-testid="map-pin-add"
+              @click="addPin()"
+            >
+              Mark here
+            </Button>
+          </div>
+          <div
+            v-for="n in view.pins"
+            :key="n.id"
+            class="flex items-center justify-between gap-1"
+          >
+            <span>{{ n.label }} · {{ (Math.hypot(n.x - game.sim.player.x, n.z - game.sim.player.z) / 1000).toFixed(1) }} km</span>
+            <span class="flex gap-1">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="game.setWaypoint(n.x, n.z, n.label)"
+              >
+                Target
+              </Button>
+              <Button
+                size="xs"
+                variant="outline"
+                :data-testid="`map-pin-remove-${n.id}`"
+                @click="game.removeMapPin(n.id)"
+              >
+                ×
+              </Button>
+            </span>
+          </div>
         </div>
         <div
           v-for="s in view.settlements"

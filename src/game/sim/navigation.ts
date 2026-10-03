@@ -27,6 +27,25 @@ export function setWaypoint(sim: Sim, x: number, z: number, label = 'Marker'): s
   return `Waypoint set: ${label}`
 }
 
+export const MAX_PINS = 20
+
+/** Drops a note at the player's position (P-08); the label is trimmed, empty → "Note N". */
+export function addPin(sim: Sim, label: string): string {
+  const px = sim.state.px
+  const pins = (px.pins ??= [])
+  if (pins.length >= MAX_PINS) return `You can keep at most ${MAX_PINS} map notes.`
+  const p = sim.player
+  const id = pins.reduce((m, q) => Math.max(m, q.id), 0) + 1
+  const text = label.trim().slice(0, 24) || `Note ${id}`
+  pins.push({ id, x: p.x, z: p.z, label: text })
+  return `Map note added: ${text}`
+}
+
+export function removePin(sim: Sim, id: number) {
+  const px = sim.state.px
+  if (px.pins) px.pins = px.pins.filter((q) => q.id !== id)
+}
+
 export function clearWaypoint(sim: Sim) {
   sim.state.px.waypoint = undefined
 }
