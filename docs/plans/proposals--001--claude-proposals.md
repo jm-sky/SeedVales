@@ -1,6 +1,6 @@
 # Final stage: proposals from Claude — new and interesting additions across areas
 
-**Status:** planned  
+**Status:** in_progress  
 **Model:** opus — research, proposals, scoping; sonnet — implementation of the chosen items  
 **Domain:** proposals  
 **Sub domains:** gameplay, world, npc, economy, ui, audio, render, tools  
@@ -20,3 +20,7 @@ Goal (user, 2026-10-02): at the very end Claude proposes new, interesting things
 5. If the user does not answer, Claude does not block: it continues with the recommended shortlist only for items marked S/M and low risk, and reports.
 
 Seed ideas (not commitments, to be re-evaluated at that time): seasonal festivals and calendar events; companion/NPC memory of the player's deeds in dialogue; weather-driven NPC schedules (market days, harvest rush); fishing and boats; animal husbandry breeding; map annotation by the player; a journal with sketches of discovered landmarks; simple music/ambience layers by region and time; photo mode; calibration lab (`tools--001`).
+
+## Result so far (2026-10-03)
+
+Proposal document written: [docs/proposals/2026-10-03--proposals.md](../proposals/2026-10-03--proposals.md) (21 items, shortlist of 5). Waiting for the user's pick (step 3); per step 5 only S/M low-risk shortlist items may start without an answer — none started yet because the round-3 review is still being triaged. Wave 6 stays conditional on device data.
