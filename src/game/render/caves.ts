@@ -108,6 +108,15 @@ export function buildCaveGeometry(g: CaveGrid, surfaceAt: (x: number, z: number)
           ta = surfaceAt(ax, az) + LIP_M
           tb = surfaceAt(bx, bz) + LIP_M
         }
+        // A cutting floor that stands above the ground outside leaves a void under its lip (the terrain hole shows the sky): a rock skirt closes it.
+        if (nf === CELL_CLOSED && f === CELL_SKY) {
+          const sa = surfaceAt(ax, az)
+          const sb = surfaceAt(bx, bz)
+          if (sa < ya || sb < yb) {
+            const alongSkirt = (p: THREE.Vector3): [number, number] => [(di === 0 ? p.x : p.z) * k, p.y * k]
+            shell.quad(V(ax, Math.min(sa, ya) - 1.5, az), V(bx, Math.min(sb, yb) - 1.5, bz), V(bx, yb, bz), V(ax, ya, az), alongSkirt, shade * 0.8)
+          }
+        }
         if (ta <= ya && tb <= yb) continue
         const along = (p: THREE.Vector3): [number, number] => [(di === 0 ? p.x : p.z) * k, p.y * k]
         shell.quad(V(ax, ya, az), V(bx, yb, bz), V(bx, Math.max(tb, yb), bz), V(ax, Math.max(ta, ya), az), along, shade * 0.85)
