@@ -15,7 +15,7 @@ import { itemDef } from './data/items'
 import { blueprintById, recipeById } from './data/recipes'
 import { SPECIES } from './data/species'
 import { perf } from './diag/perf'
-import { attachControls, input, type KeyAction, moveAxes, wantsRun } from './input/controls'
+import { attachControls, controlPrefs, input, type KeyAction, moveAxes, wantsRun } from './input/controls'
 import { Renderer } from './render/Renderer'
 import { checkWorldCompat, loadWorldCache, newSlotId, readSave, readSaveMeta, storeWorldCache, writeSave } from './save/db'
 import { snapshot } from './save/snapshot'
@@ -176,7 +176,9 @@ export class Game {
   }
 
   /** Player preferences (UI-05): quality switches at runtime, volumes go to the audio mixer. */
-  applySettings(s: { quality: QualityProfile; volume: { master: number; ambient: number; effects: number; voices: number } }) {
+  applySettings(s: { quality: QualityProfile; volume: { master: number; ambient: number; effects: number; voices: number }; guardToggle?: boolean }) {
+    controlPrefs.guardToggle = s.guardToggle ?? false
+    if (!controlPrefs.guardToggle) input.secondary = false
     this.renderer.setQuality(s.quality)
     this.audio.setVolumes(s.volume)
     this.notify()

@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount } from 'vue'
 import { useGameStrict } from '@/composables/useGame'
 import { itemDef } from '@/game/data/items'
-import { input } from '@/game/input/controls'
+import { guardPress, guardRelease, input } from '@/game/input/controls'
 import Joystick from './Joystick.vue'
 
 const { game, version } = useGameStrict()
@@ -45,10 +45,10 @@ function attackUp() {
   input.primary = false
 }
 function blockDown() {
-  input.secondary = true
+  guardPress()
 }
 function blockUp() {
-  input.secondary = false
+  guardRelease()
 }
 onBeforeUnmount(() => {
   input.secondary = false

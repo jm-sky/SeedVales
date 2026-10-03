@@ -77,6 +77,19 @@ watch(s, (v) => {
           </Button>
         </div>
       </section>
+      <section>
+        <h3 class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Controls
+        </h3>
+        <label class="flex items-center gap-2 text-xs">
+          <input
+            v-model="s.guardToggle"
+            type="checkbox"
+            data-testid="guard-toggle"
+          />
+          Block toggles on press (instead of holding)
+        </label>
+      </section>
       <section class="grid gap-2">
         <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Sound

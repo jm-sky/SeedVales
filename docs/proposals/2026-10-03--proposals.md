@@ -44,7 +44,7 @@
 ## UI/UX, audio, graphics, tools
 
 - **P-16 Photo mode** (S) — F-key: pause, free camera orbit, hide HUD, time-of-day slider, screenshot export (`canvas.toBlob`). *Risk:* none to sim.
-- **P-17 Accessibility pass** (S–M) — ✅ *text-size setting (normal/large/extra large) implemented 2026-10-03; colour-blind icons, reduce-motion and hold-vs-toggle still open.* colour-blind-safe quest icons, text scale, reduce-motion (camera assist/bob), hold-vs-toggle for block/sprint. *Fits:* mobile + keyboard parity in review 018.
+- **P-17 Accessibility pass** (S–M) — ✅ *text size setting + Block hold/toggle option implemented 2026-10-03; colour-blind icons and reduce-motion still open.* colour-blind-safe quest icons, text scale, reduce-motion (camera assist/bob), hold-vs-toggle for block/sprint. *Fits:* mobile + keyboard parity in review 018.
 - **P-18 Region music/ambience layers** (M) — a sparse music bed by region/time over the recorded ambience, strictly ducked under voices. *Gate:* licences (release gate) — only user-owned or CC0 tracks.
 - **P-19 Calibration lab** (M) — `tools--001`: sliders for needs/combat/prices with live soak readouts (already drafted; now more valuable because many systems have first-pass numbers).
 - **P-20 Code map from `@domain` tags** (S) — ✅ *`pnpm code-map` → `docs/state/CODE-MAP.md` (2026-10-03).* — DEV-01; a generated overview for faster onboarding of agents; low risk.

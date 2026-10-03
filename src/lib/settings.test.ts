@@ -12,8 +12,8 @@ function memStore(init: Record<string, string> = {}) {
 describe('UI-05 settings', () => {
   it('round-trips quality and volumes', () => {
     const st = memStore()
-    saveSettings({ quality: 'high', volume: { master: 0.3, ambient: 0.5, effects: 0, voices: 0.4 }, textScale: 'large' }, st)
-    expect(loadSettings(false, st)).toEqual({ quality: 'high', volume: { master: 0.3, ambient: 0.5, effects: 0, voices: 0.4 }, textScale: 'large' })
+    saveSettings({ quality: 'high', volume: { master: 0.3, ambient: 0.5, effects: 0, voices: 0.4 }, textScale: 'large', guardToggle: true }, st)
+    expect(loadSettings(false, st)).toEqual({ quality: 'high', volume: { master: 0.3, ambient: 0.5, effects: 0, voices: 0.4 }, textScale: 'large', guardToggle: true })
     expect(st.m.get('sv-quality')).toBe('high') // main menu stays in sync
   })
 

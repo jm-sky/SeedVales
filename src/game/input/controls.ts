@@ -18,6 +18,17 @@ export interface InputState {
   zoom: number
 }
 
+/** Accessibility (P-17): Block as a toggle instead of hold. */
+export const controlPrefs = { guardToggle: false }
+
+/** Block press/release honouring the toggle preference (mouse RMB and the mobile button). */
+export function guardPress() {
+  input.secondary = controlPrefs.guardToggle ? !input.secondary : true
+}
+export function guardRelease() {
+  if (!controlPrefs.guardToggle) input.secondary = false
+}
+
 export const input: InputState = { keys: new Set(), stickX: 0, stickY: 0, run: false, primary: false, secondary: false, lookDX: 0, lookDY: 0, zoom: 0 }
 
 export type KeyAction = 'interact' | 'inventory' | 'character' | 'craft' | 'journal' | 'quests' | 'map' | 'combat' | 'sneak' | 'escape' | 'diag' | 'quick' | 'save' | 'build' | 'torch' | 'useBandage' | 'switchWeapon' | 'cycleTarget' | 'jump' | 'photo'
@@ -85,12 +96,12 @@ export function attachControls(canvas: HTMLCanvasElement, h: ControlHandlers): (
     if (e.button === 2) {
       // RMB: grab the mouse if needed, and guard right away (the press must not be swallowed by the pointer-lock request).
       if (document.pointerLockElement !== canvas) canvas.requestPointerLock?.()
-      input.secondary = true
+      guardPress()
     }
   }
   const mu = (e: MouseEvent) => {
     if (e.button === 0) input.primary = false
-    if (e.button === 2) input.secondary = false
+    if (e.button === 2) guardRelease()
   }
   const mm = (e: MouseEvent) => {
     if (document.pointerLockElement === canvas) {
