@@ -74,6 +74,21 @@ export function hireRefusal(sim: Sim, npc: Human, task: CompanionTask, risk: Com
   return null
 }
 
+/** Authored-quest contract (Q06): no money changes hands here — the quest owns the pay. Returns a refusal text or null. */
+export function questCompanion(sim: Sim, npc: Human, mode: 'hire' | 'free', task: CompanionTask, days: number): string | null {
+  const no = unavailable(sim, npc)
+  if (no) return no
+  const cal = sim.state.time.cal
+  npc.companion = { kind: mode === 'hire' ? 'hired' : 'free', task, risk: 'low', since: cal, ...(mode === 'hire' ? { until: cal + days * DAY_S } : {}), paid: 0, bondAt: cal }
+  packProvisions(sim, npc, mode === 'hire' ? days : COMPANION.freeProvisionDays)
+  startFollowing(sim, npc)
+  sim.message(`${npc.name} joins you${mode === 'hire' ? ` for ${days} ${days === 1 ? 'day' : 'days'}` : ''}.`, 'good')
+  return null
+}
+
+/** True when the NPC could join the player now (the quest checks it before offering the option). */
+export const canTravelWithPlayer = (sim: Sim, npc: Human) => !unavailable(sim, npc)
+
 export function hireCompanion(sim: Sim, npc: Human, task: CompanionTask, risk: CompanionRisk, days: number): ActionResult {
   const no = hireRefusal(sim, npc, task, risk)
   if (no) return { ok: false, msg: no }

@@ -89,6 +89,10 @@ export type Cond =
   | { k: 'quest'; id: QuestId; in: QuestStatusId[]; started?: boolean }
   /** The cast animal is dead (or gone). */
   | { k: 'dead'; slot: SlotId }
+  /** The cast NPC travels with the player under a contract (`active` false: does not). */
+  | { k: 'companion'; slot: SlotId; active?: boolean }
+  /** The cast NPC could agree to travel with the player now (alive, up, free, no other business). */
+  | { k: 'canTravel'; slot: SlotId }
   /** The cast actor is dead (or gone) or farther than `r` m from the anchor. */
   | { k: 'far'; slot: SlotId; anchor: Anchor; r: number }
   /** The cast animal is within `r` m of the player and neither fleeing nor aggressive ("watch it without spooking it"). */
@@ -157,6 +161,13 @@ export type Effect =
    * their leash is lifted (the den is abandoned).
    */
   | { k: 'drive'; slot: SlotId; m: number }
+  /**
+   * The NPC joins the player: `hire` = a contract of `days` days (the quest owns the money flow, so no wage is paid here),
+   * `free` = no end date. Refused (a message, no contract) when the NPC cannot travel.
+   */
+  | { k: 'companion'; slot: SlotId; mode: 'hire' | 'free'; days: number; task: 'escort' | 'guard' }
+  /** Ends the NPC's contract with the player. */
+  | { k: 'dismiss'; slot: SlotId }
   /** A tree anchor is felled by an NPC (no player action): the node is gone; `logs` come from the tree's yield into a cast store. */
   | { k: 'fell'; anchor: Anchor; logs?: { to: SlotId; qty: number } }
   | { k: 'owner'; anchor: Anchor; to: SlotId }

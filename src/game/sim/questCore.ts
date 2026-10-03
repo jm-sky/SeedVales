@@ -20,6 +20,7 @@ import { killAnimal } from './combat'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { addItem, consumeItem, countItem, findFood, newStack, removeItem } from './inventory'
 import { makeAnimal, makeHuman } from './newGame'
+import { canTravelWithPlayer, dismissCompanion, questCompanion } from './npc/companions'
 import { addPriceMod } from './priceMods'
 import { holdUntil } from './questHold'
 import { addRep } from './reputation'
@@ -382,6 +383,14 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
       const now = sim.state.time.play
       return !((an.fleeFrom?.until ?? 0) > now) && !((an.aggroUntil ?? 0) > now)
     }
+    case 'canTravel': {
+      const h = humanOf(c, k.slot)
+      return !!h && canTravelWithPlayer(sim, h)
+    }
+    case 'companion': {
+      const h = humanOf(c, k.slot)
+      return (!!h && !!h.companion && !h.vitals.dead) === (k.active ?? true)
+    }
     case 'counter':
       return (st.counters[k.id] ?? 0) >= (k.gte === 'homePosts' ? homePosts(sim) : k.gte)
     case 'day': {
@@ -732,6 +741,13 @@ function applyEffect(c: QuestCtx, e: Effect) {
       st.flags[e.flag] = e.value
       st.choice = e.value
       break
+    case 'companion': {
+      const h = humanOf(c, e.slot)
+      if (!h) break
+      const no = questCompanion(sim, h, e.mode, e.task, e.days)
+      if (no) sim.message(no, 'bad')
+      break
+    }
     case 'consume': {
       const inv = invOf(c, e.from)
       if (inv) consumeItem(inv, e.item, e.qty, `quest:${c.def.id}`)
@@ -740,6 +756,11 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'despawn':
       despawn(c, e.slot)
       break
+    case 'dismiss': {
+      const h = humanOf(c, e.slot)
+      if (h?.companion) dismissCompanion(sim, h)
+      break
+    }
     case 'drive': {
       const a = actorOf(c, e.slot) as Animal | undefined
       if (a?.kind === 'animal' && !a.vitals.dead) {
