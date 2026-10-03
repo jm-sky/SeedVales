@@ -90,7 +90,7 @@ export function itemParams(s: ItemStack): ItemParam[] {
     if (s.sp) out.push({ label: 'Species', value: (SPECIES as Record<string, { name: string }>)[s.sp]?.name ?? s.sp })
     if (d.food.raw) out.push({ label: 'Note', value: 'raw — better cooked' })
   }
-  if (maxEdge(s) > 0) out.push({ label: 'Sharpness', value: `${Math.round(edgeOf(s) * 100)}% / ${Math.round(maxEdge(s) * 100)}% max` })
+  if (maxEdge(s) > 0) out.push({ label: 'Sharpness', value: `${Math.round((edgeOf(s) / maxEdge(s)) * 100)}% of its best edge (${Math.round(maxEdge(s) * 100)}% for this blade)` })
   if (d.durability && s.dur !== undefined) out.push({ label: 'Durability', value: `${Math.round((s.dur / d.durability) * 100)}%` })
   if (d.waterCapacity) out.push({ label: 'Water', value: `${s.water ?? 0} / ${d.waterCapacity}` })
   return out
