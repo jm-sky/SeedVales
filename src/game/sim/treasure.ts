@@ -7,9 +7,11 @@
 import type { WorldData } from '../world/types'
 import type { Sim } from './sim'
 import type { Corpse, Human, ItemStack } from './types'
+import { CAVE } from '../config/calibration'
 import { hashString, Rng } from '../core/rng'
 import { itemDef } from '../data/items'
 import { BELLY_LOOT_CHANCE, BELLY_SPECIES, LANDMARK_RICHNESS, TREASURE_COINS, TREASURE_SPOTS_PER_LANDMARK, TREASURE_TABLE } from '../data/loot'
+import { spinePoints } from '../world/caveShape'
 import { logMint } from './eventLog'
 import { newStack } from './inventory'
 
@@ -21,6 +23,8 @@ export interface TreasureSpot {
   x: number
   z: number
   richness: number
+  /** In this cave's chamber (index + 1); absent = on the surface at a landmark. */
+  cave?: number
 }
 
 /** Deepest water (m) a buried treasure may lie in (dig refuses deeper water). */
@@ -53,6 +57,18 @@ export function treasureSpots(sim: Sim): TreasureSpot[] {
       out.push({ id, x, z, richness: LANDMARK_RICHNESS[l.kind] ?? 0 })
     }
   }
+  // Caves hide something in their deepest chambers (world--003 step 7): derived from the spine, so no generator change.
+  world.caves.forEach((c, ci) => {
+    const chambers = spinePoints(c).filter((q) => q.r > CAVE.tunnelRadius)
+    const n = c.size === 'small' ? 1 : 2
+    chambers.slice(-n).forEach((q, i) => {
+      const id = `cave:${c.id}#${i}`
+      const rng = new Rng(hashString(`${world.seed}:loot:${id}`))
+      const a = rng.range(0, Math.PI * 2)
+      const r = q.r * rng.range(0.1, 0.4)
+      out.push({ id, x: q.x + Math.cos(a) * r, z: q.z + Math.sin(a) * r, richness: c.size === 'small' ? 1 : 2, cave: ci + 1 })
+    })
+  })
   cache.set(world, out)
   return out
 }
@@ -99,7 +115,7 @@ export function digTreasure(sim: Sim, h: Human, x: number, z: number): string | 
   if (h.kind !== 'player') return null
   const taken = (sim.state.px.lootTaken ??= [])
   for (const s of treasureSpots(sim)) {
-    if (taken.includes(s.id) || Math.hypot(s.x - x, s.z - z) > TREASURE_DIG_R) continue
+    if ((s.cave ?? 0) !== (sim.state.px.cave ?? 0) || taken.includes(s.id) || Math.hypot(s.x - x, s.z - z) > TREASURE_DIG_R) continue
     taken.push(s.id)
     const what = award(sim, h, rollTreasure(new Rng(hashString(`${sim.world.seed}:content:${s.id}`)), s.richness), 'treasure')
     return `Your shovel strikes something buried: ${what}!`

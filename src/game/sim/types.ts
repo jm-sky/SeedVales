@@ -317,6 +317,8 @@ export interface GroundItem {
   /** Calendar s. */
   droppedAt: number
   lit?: boolean
+  /** Lies on the floor of this cave (index + 1); absent = on the surface (world--003 step 3). */
+  cave?: number
   /** Torch standing upright in the ground (FIRE-03). */
   planted?: boolean
   /** Remaining burn time in calendar hours of a torch lying/standing in the world; decreases only while lit. */

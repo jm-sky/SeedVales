@@ -111,13 +111,15 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
     if (d - extra > TARGET_TOUCH_M && Math.abs(angleDiff(facing, Math.atan2(x - p.x, z - p.z))) > TARGET_CONE_RAD) return
     if (d - extra <= maxDist) cands.push({ ref, label, x, z, dist: score(x, z) - extra })
   }
+  for (const g of sim.groundNear(p.x, p.z, 5.7)) if ((g.cave ?? 0) === (sim.state.px.cave ?? 0) && Math.abs(g.x - p.x) < 4 && Math.abs(g.z - p.z) < 4) push({ type: 'ground', id: g.id }, itemDef(g.stack.id).name, g.x, g.z, 0.3)
+  // Inside a cave only things on its own floor are within reach: the surface above shares x/z but is rock away (world--003 step 3).
+  if ((sim.state.px.cave ?? 0) > 0) return cands.sort((a, b) => a.dist - b.dist)
   for (const a of sim.actors.query(p.x, p.z, maxDist + 1)) {
     if (a === p) continue
     if (a.kind === 'npc') push({ type: 'npc', id: a.id }, `${(a as Human).name}${sim.state.settlements[(a as Human).settlementId]?.headmanId === a.id ? ' (headman)' : ''}`, a.x, a.z)
     else if (a.kind === 'animal' && SPECIES[(a as Animal).species].temperament === 'domestic') push({ type: 'animal', id: a.id }, SPECIES[(a as Animal).species].name, a.x, a.z)
   }
   for (const c of sim.corpsesNear(p.x, p.z, 7.1)) if (Math.abs(c.x - p.x) < 5 && Math.abs(c.z - p.z) < 5) push({ type: 'corpse', id: c.id }, `Carcass: ${SPECIES[c.species].name}`, c.x, c.z, 0.5)
-  for (const g of sim.groundNear(p.x, p.z, 5.7)) if (Math.abs(g.x - p.x) < 4 && Math.abs(g.z - p.z) < 4) push({ type: 'ground', id: g.id }, itemDef(g.stack.id).name, g.x, g.z, 0.3)
   for (const c of sim.state.carts) push({ type: 'cart', id: c.id }, itemDef(c.item).name, c.x, c.z, 0.6)
   for (const s of sim.state.sites) push({ type: 'site', id: s.id }, 'Building site', s.x, s.z, 1)
   for (const d of sim.state.dens) if (d.alive) push({ type: 'den', id: d.id }, `Den (${SPECIES[d.species === 'deer' ? 'deer' : d.species].name})`, d.x, d.z, 1.5)
@@ -138,6 +140,7 @@ export function findTargets(sim: Sim, facing: number, maxDist = 3.2): Target[] {
 
 export function waterTarget(sim: Sim, facing: number): Target | null {
   const p = sim.player
+  if ((sim.state.px.cave ?? 0) > 0) return null
   const fx = p.x + Math.sin(facing) * 1.5
   const fz = p.z + Math.cos(facing) * 1.5
   if (sim.terrain.waterDepthAt(fx, fz) > 0.05 || sim.terrain.waterDepthAt(p.x, p.z) > 0.05) {

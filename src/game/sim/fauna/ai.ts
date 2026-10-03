@@ -145,7 +145,7 @@ function chaseValid(sim: Sim, a: Animal): boolean {
 
 /** Arrived at food: start eating — it takes time (FAUNA-08) and can be interrupted (fear/attack clear steps). */
 function scavenge(sim: Sim, a: Animal) {
-  const g = sim.groundNear(a.x, a.z, 2).find((gi) => itemDef(gi.stack.id).food)
+  const g = sim.groundNear(a.x, a.z, 2).find((gi) => !gi.cave && itemDef(gi.stack.id).food)
   if (g) {
     a.ai.steps.unshift({ op: 'work', act: 'eat', dur: CARRION.lureEatS, label: 'Eating', ref: `g${g.id}` })
     return
@@ -228,7 +228,7 @@ function planAnimal(sim: Sim, a: Animal) {
   }
   // Carnivores: scavenge attractive food, then hunt.
   if (sp.diet !== 'grass' && a.hungerH > 10) {
-    const lure = sim.groundNear(a.x, a.z, sp.perception * 2.5).find((g) => itemDef(g.stack.id).food)
+    const lure = sim.groundNear(a.x, a.z, sp.perception * 2.5).find((g) => !g.cave && itemDef(g.stack.id).food)
     const carrion = sim.corpsesNear(a.x, a.z, sp.perception * 3).find((c) => c.meat > 0)
     const t = lure ?? carrion
     if (t) {

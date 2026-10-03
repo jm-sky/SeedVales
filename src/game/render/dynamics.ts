@@ -190,13 +190,13 @@ export class Dynamics {
     for (const g of sim.groundNear(p.x, p.z, 150)) {
       if (g.planted) {
         if (nt >= 64) continue
-        m.compose(POS.set(g.x, sim.terrain.heightAt(g.x, g.z), g.z), Q0, ONE)
+        m.compose(POS.set(g.x, g.cave ? sim.terrain.caves.grid(g.cave - 1).floorAt(g.x, g.z) : sim.terrain.heightAt(g.x, g.z), g.z), Q0, ONE)
         this.torches.setMatrixAt(nt++, m)
         continue
       }
       if (n >= 400) continue
       const s = itemDef(g.stack.id).weight > 5 ? 2.5 : 1
-      m.compose(POS.set(g.x, groundHeight(sim, g.x, g.z), g.z), Q0, SCL.set(s, s, s))
+      m.compose(POS.set(g.x, g.cave ? sim.terrain.caves.grid(g.cave - 1).floorAt(g.x, g.z) : groundHeight(sim, g.x, g.z), g.z), Q0, SCL.set(s, s, s))
       this.items.setColorAt(n, g.stack.id === 'stone' || g.stack.id === 'rock_chunk' ? STONE_COL : ITEM_COL)
       this.items.setMatrixAt(n++, m)
     }

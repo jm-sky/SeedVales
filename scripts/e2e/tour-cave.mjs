@@ -16,7 +16,7 @@ const info = await sv(page, (i) => {
 }, idx)
 console.log(JSON.stringify(info))
 await page.waitForTimeout(1500)
-await shot(page, `cave-0-mouth`)
+await shot(page, 'cave-0-mouth')
 // walk in: hold forward
 await page.keyboard.down('KeyW')
 for (let k = 1; k <= 4; k++) {

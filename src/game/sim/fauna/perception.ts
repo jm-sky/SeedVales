@@ -25,7 +25,7 @@ export function decisionInterval(a: Actor): number {
 /** Nearest fire within r: lit campfires/torch posts, lit torches on the ground, people holding a torch. */
 export function fireNear(sim: Sim, x: number, z: number, r: number): P | null {
   for (const b of sim.buildingsNear(x, z, r)) if (b.lit && (b.kind === 'campfire' || b.kind === 'torchpost') && Math.hypot(b.x - x, b.z - z) <= r) return b
-  for (const g of sim.groundNear(x, z, r)) if (g.lit) return g
+  for (const g of sim.groundNear(x, z, r)) if (g.lit && !g.cave) return g
   for (const o of sim.actors.query(x, z, r)) if (o.kind !== 'animal' && (o as Human).eq.off?.id === 'torch' && !o.vitals.dead) return o
   return null
 }

@@ -623,7 +623,7 @@ export class Game {
   dropTorchLit() {
     const p = this.sim.player
     if (p.eq.off?.id !== 'torch') return this.showToast('You aren\'t holding a torch.')
-    dropItem(this.sim, p.x + Math.sin(p.rot), p.z + Math.cos(p.rot), p.eq.off, true)
+    dropItem(this.sim, p.x + Math.sin(p.rot), p.z + Math.cos(p.rot), p.eq.off, true, this.sim.state.px.cave ?? 0)
     p.eq.off = undefined
     this.showToast('You throw the burning torch.')
   }
@@ -700,7 +700,7 @@ export class Game {
     this.audio.ui('inventory-drop')
     const p = this.sim.player
     const moved = removeStack(p.inv, s)
-    if (moved) dropItem(this.sim, p.x + Math.sin(p.rot) * 0.8, p.z + Math.cos(p.rot) * 0.8, moved)
+    if (moved) dropItem(this.sim, p.x + Math.sin(p.rot) * 0.8, p.z + Math.cos(p.rot) * 0.8, moved, false, this.sim.state.px.cave ?? 0)
     this.notify()
   }
 

@@ -41,7 +41,7 @@ export function giveOrDrop(sim: Sim, h: Human, stack: ItemStack, source?: string
   if (source) logProduce(stack.id, stack.qty, source, h)
   const fit = fitQty(h, stack)
   if (fit > 0) addItem(h.inv, { ...stack, qty: fit })
-  if (fit < stack.qty) dropItem(sim, h.x + Math.cos(h.rot) * 0.8, h.z + Math.sin(h.rot) * 0.8, { ...stack, qty: stack.qty - fit })
+  if (fit < stack.qty) dropItem(sim, h.x + Math.cos(h.rot) * 0.8, h.z + Math.sin(h.rot) * 0.8, { ...stack, qty: stack.qty - fit }, false, h === sim.player ? (sim.state.px.cave ?? 0) : 0)
   return fit
 }
 
@@ -68,8 +68,9 @@ export function fillTrough(sim: Sim, h: Human, trough: Building): ActionResult {
 
 export const TROUGH_CAPACITY = 12
 
-export function dropItem(sim: Sim, x: number, z: number, stack: ItemStack, lit = false) {
-  sim.addGround({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit, burnH: stack.id === 'torch' ? torchBurnH(stack) : undefined })
+/** Drops a stack; `cave` (index + 1) puts it on that cave's floor instead of the surface. */
+export function dropItem(sim: Sim, x: number, z: number, stack: ItemStack, lit = false, cave = 0) {
+  sim.addGround({ id: sim.nextId(), x, z, stack, droppedAt: sim.state.time.cal, lit, burnH: stack.id === 'torch' ? torchBurnH(stack) : undefined, ...(cave > 0 ? { cave } : {}) })
 }
 
 export function nodeAvailable(sim: Sim, n: ResNode): boolean {
@@ -244,11 +245,15 @@ export interface DigLoot {
 export function dig(sim: Sim, h: Human, x: number, z: number): ActionResult {
   const tool = findTool(h, 'dig')
   if (!tool) return fail('You need a shovel.')
+  const underground = h === sim.player && (sim.state.px.cave ?? 0) > 0
   const b = sim.terrain.biomeAt(x, z)
-  if (b === Biome.Mountain || b === Biome.Snow) return fail('Solid rock — you need a pickaxe.')
+  if (!underground && (b === Biome.Mountain || b === Biome.Snow)) return fail('Solid rock — you need a pickaxe.')
   if (sim.terrain.waterDepthAt(x, z) > 0.3) return fail('There is water here.')
-  sim.terrain.applyEdit(x, z, 1.4, { kind: 'add', amount: -0.35 })
-  sim.markTerrain(x, z, 2)
+  // Digging in a cave must not lower the surface above it (only loot under the floor counts).
+  if (!underground) {
+    sim.terrain.applyEdit(x, z, 1.4, { kind: 'add', amount: -0.35 })
+    sim.markTerrain(x, z, 2)
+  }
   wearTool(tool, 1)
   train(h, 'construction', 0.2)
   if (h === sim.player) questEvent(sim, { k: 'dig', x, z })

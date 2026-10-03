@@ -5,8 +5,10 @@
 import { describe, expect, it } from 'vitest'
 import { CAVE } from '../config/calibration'
 import { spinePoints } from '../world/caveShape'
+import { dropItem } from './actions'
 import { layersApart, pointInCave } from './caveSpace'
 import { moveWithCollision } from './collision'
+import { findTargets } from './interact'
 import { Sim } from './sim'
 import { testSim } from './testWorld'
 
@@ -118,4 +120,35 @@ describe('WORLD-05 layer isolation', () => {
       expect(pointInCave(sim, last.x, sim.terrain.heightAt(last.x, last.z) + 1, last.z), 'above the roof').toBe(false)
     }, 60_000)
   }
+})
+
+describe('WORLD-05 items on the cave floor (world--003 step 3)', () => {
+  it('a dropped item stays on its layer: not a target from the other layer, rendered/queried with its cave', () => {
+    const sim = testSim(1337)
+    const cave = sim.world.caves[0]
+    if (!cave) return
+    const pts = spinePoints(cave)
+    const dx = Math.sin(cave.yaw)
+    const dz = Math.cos(cave.yaw)
+    const p = sim.player
+    p.x = cave.x - dx * 4
+    p.z = cave.z - dz * 4
+    p.y = sim.terrain.heightAt(p.x, p.z)
+    const log = { maxDy: 0 }
+    for (const q of pts) walk(sim, q.x, q.z, log)
+    expect(sim.state.px.cave).toBe(1)
+    // Drop inside the cave, as Game.drop does.
+    dropItem(sim, p.x, p.z, { id: 'stone', qty: 1 }, false, sim.state.px.cave ?? 0)
+    const inside = sim.groundNear(p.x, p.z, 3).find((g) => g.cave === 1)
+    expect(inside).toBeTruthy()
+    expect(findTargets(sim, p.rot, 3.2).some((t) => t.ref.type === 'ground' && t.ref.id === inside!.id)).toBe(true)
+    // The same item seen from the surface (context 0) is not a target.
+    sim.state.px.cave = 0
+    expect(findTargets(sim, p.rot, 3.2).some((t) => t.ref.type === 'ground' && t.ref.id === inside!.id)).toBe(false)
+    // A surface drop at the same x/z is invisible from inside.
+    sim.state.px.cave = 1
+    dropItem(sim, p.x, p.z, { id: 'stone', qty: 1 })
+    const surface = sim.groundNear(p.x, p.z, 3).find((g) => !g.cave)!
+    expect(findTargets(sim, p.rot, 3.2).some((t) => t.ref.type === 'ground' && t.ref.id === surface.id)).toBe(false)
+  })
 })

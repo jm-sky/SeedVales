@@ -5,7 +5,7 @@ import { dig } from './actions'
 import { addItem, countItem, newStack } from './inventory'
 import { testSim } from './testWorld'
 import { sellToNpc } from './trade'
-import { bellyLoot, rollTreasure, treasureSpots } from './treasure'
+import { bellyLoot, digTreasure, rollTreasure, treasureSpots } from './treasure'
 import { totalMoney } from './treasury'
 
 const VALUABLES = ['gold_ring', 'ruby', 'emerald', 'diamond', 'obsidian_dagger', 'damascus_dagger']
@@ -24,8 +24,9 @@ describe('LOOT-01 treasure', () => {
     const a = treasureSpots(testSim(1337))
     const b = treasureSpots(testSim(1337))
     expect(a).toEqual(b)
-    expect(a.length).toBeGreaterThanOrEqual(testSim().world.landmarks.length - 2) // spots under water are dropped
-    for (const s of a) {
+    const surface = a.filter((s) => !s.cave)
+    expect(surface.length).toBeGreaterThanOrEqual(testSim().world.landmarks.length - 2) // spots under water are dropped
+    for (const s of surface) {
       const l = testSim().world.landmarks.find((x) => s.id.startsWith(`${x.id}#`))!
       expect(Math.hypot(s.x - l.x, s.z - l.z)).toBeLessThanOrEqual(l.radius)
     }
@@ -142,5 +143,18 @@ describe('QUAL-02a rare Damascus / obsidian items', () => {
     }
     expect(smiths).toBeGreaterThan(0)
     expect(holders).toBeLessThan(smiths) // only some merchants
+  })
+
+  it('world--003: caves hold loot in their deepest chambers, found only by digging inside that cave', () => {
+    const sim = testSim(1337)
+    const spots = treasureSpots(sim).filter((s) => s.cave)
+    expect(spots.length).toBeGreaterThanOrEqual(sim.world.caves.length)
+    const s = spots[0]!
+    sim.state.px.cave = 0 // on the surface above the chamber: nothing
+    expect(digTreasure(sim, sim.player, s.x, s.z)).toBeNull()
+    sim.state.px.cave = s.cave!
+    expect(digTreasure(sim, sim.player, s.x, s.z)).toMatch(/strikes something buried/)
+    expect(sim.state.px.lootTaken).toContain(s.id)
+    expect(digTreasure(sim, sim.player, s.x, s.z)).toBeNull()
   })
 })
