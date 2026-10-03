@@ -852,10 +852,12 @@ export class Game {
   }
 
   buyFrom(npc: Human, stack: ItemStack) {
+    this.audio.ui('inventory-pick-up')
     this.act(buyFromNpc(this.sim, npc, stack).msg)
   }
 
   sellTo(npc: Human, stack: ItemStack) {
+    this.audio.ui('inventory-drop')
     this.act(sellToNpc(this.sim, npc, stack).msg)
   }
 
@@ -885,6 +887,7 @@ export class Game {
 
   /** Moves `qty` pieces (default the whole stack) between backpack and storage. */
   moveStorage(b: Building, stackIdx: number, toStorage: boolean, qty?: number) {
+    this.audio.ui(toStorage ? 'inventory-drop' : 'inventory-pick-up')
     this.act(transferToStorage(this.sim, b, stackIdx, toStorage, qty))
   }
 
