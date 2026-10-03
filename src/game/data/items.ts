@@ -177,6 +177,7 @@ const LIST: ItemDef[] = [
   food('berries', 'Berries', 0.2, 2, { nutrition: 6, water: 2, spoilH: 48 }),
   food('apple', 'Apple', 0.2, 2, { nutrition: 8, water: 3, spoilH: 24 * 10 }),
   food('mushroom', 'Mushroom', 0.1, 2, { nutrition: 5, spoilH: 48, illnessChance: 0.05 }),
+  res('white_pelt', 'White hare pelt', 0.3, 'SM', 30),
   { ...tool('saw', 'Saw', 1.4, 'MD', 35, ['cut']), availability: 'quest-only' },
   { ...tool('shears', 'Shears', 0.6, 'SM', 22, ['cut']), availability: 'quest-only' },
   { ...tool('sickle', 'Sickle', 0.7, 'SM', 20, ['cut']), availability: 'quest-only' },

@@ -16,7 +16,7 @@ export type QuestRepDim = 'honesty' | 'helpfulness' | 'renown' | 'courage'
 export type QuestStatusId = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
 /** Settlement a cast NPC or an effect refers to: the home settlement or the nearest other one (quests--003 E1). */
 export type QuestPlace = 'H' | 'V'
-export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill'
+export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill' | 'sell'
 
 /** A place named without coordinates; resolved once and cached in the quest state (`anchors`). */
 export type Anchor =
@@ -32,6 +32,11 @@ export type Anchor =
   | { k: 'actor'; slot: SlotId }
   /** A point beside the road leaving the home settlement, `m` metres beyond its edge (the ford camp). */
   | { k: 'road'; m: number }
+  /**
+   * Wild land `m` metres from the home settlement centre: in a compass direction, or (`forestEdge`) the nearest dry forest
+   * cell at that distance in any direction. Resolved once (quests--003 E4).
+   */
+  | { k: 'wild'; bearing: 'north' | 'south' | 'east' | 'west' | 'forestEdge'; m: number }
   /** An anchor stored earlier by a counter (`match.save`), e.g. a building the player built. */
   | { k: 'saved'; id: string }
 
@@ -68,6 +73,14 @@ export type Cond =
   | { k: 'sneaking' }
   /** Another authored quest has one of these statuses (`started`: and the player had accepted it). */
   | { k: 'quest'; id: QuestId; in: QuestStatusId[]; started?: boolean }
+  /** The cast animal is dead (or gone). */
+  | { k: 'dead'; slot: SlotId }
+  /** The cast animal is within `r` m of the player and neither fleeing nor aggressive ("watch it without spooking it"). */
+  | { k: 'calm'; slot: SlotId; r: number }
+  /** No predator or aggressive animal within `r` m of the home settlement centre. */
+  | { k: 'noThreat'; r: number }
+  /** The game day is later than the day stored in a flag (set with `value: 'today'`). */
+  | { k: 'dayAfter'; flag: string }
   /** The player has visited this settlement. */
   | { k: 'visited'; place: QuestPlace }
   /** Calendar hours since the quest was offered / accepted. */
@@ -127,7 +140,7 @@ export interface SpawnSpec {
 }
 
 export interface CastSpec {
-  kind: 'npc' | 'animal' | 'spawn'
+  kind: 'npc' | 'animal' | 'spawn' | 'creature'
   required: boolean
   /** npc: settlement the household lives in (default the home settlement). */
   place?: QuestPlace
@@ -140,6 +153,8 @@ export interface CastSpec {
   species?: SpeciesId
   preferVariant?: AnimalVariant
   spawn?: SpawnSpec
+  /** creature: a unique wild animal created by the `spawn` effect; it has no den, so the world never respawns it. */
+  creature?: { species: SpeciesId; variant?: AnimalVariant; at: Anchor; tag?: string }
   /** Name used in dialog when the slot is empty but optional. */
   fallbackName?: string
   /** Sex used for pronoun tokens (`{slot:he}`) while the slot is empty (default: female, also for animals). */

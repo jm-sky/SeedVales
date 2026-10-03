@@ -201,7 +201,7 @@ function bumpCounters(c: QuestCtx, ev: QuestEvent) {
       if (m.kind && (ev.k === 'built' ? ev.kind : b?.kind) !== m.kind) continue
       if (m.home && b?.settlementId !== homeId(sim)) continue
       if (m.item && 'item' in ev && ev.item !== m.item) continue
-      if (m.slot && ev.k === 'give' && st.cast[m.slot] !== ev.npcId) continue
+      if (m.slot && (ev.k === 'give' || ev.k === 'sell') && st.cast[m.slot] !== ev.npcId) continue
       if (m.species && ev.k === 'kill' && ev.species !== m.species) continue
       if (m.byPlayer !== undefined && ev.k === 'repair' && ev.byPlayer !== m.byPlayer) continue
       if (m.near) {
@@ -216,7 +216,7 @@ function bumpCounters(c: QuestCtx, ev: QuestEvent) {
     }
     if (!allOf(c, ct.when)) continue
     if (m?.save && b) st.anchors[`saved:${m.save}`] = { x: b.x, z: b.z, id: b.id }
-    st.counters[ct.id] = (st.counters[ct.id] ?? 0) + (ct.weight === 'n' ? (ev.k === 'roast' ? ev.n : ev.k === 'give' ? ev.qty : 1) : 1)
+    st.counters[ct.id] = (st.counters[ct.id] ?? 0) + (ct.weight === 'n' ? (ev.k === 'roast' ? ev.n : ev.k === 'give' || ev.k === 'sell' ? ev.qty : 1) : 1)
   }
 }
 

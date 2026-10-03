@@ -183,3 +183,13 @@ Effect: the white hare stays in the world as a rare sight (it may die later of s
 ## Mechanics
 
 I: hare, bow, sneaking, skinning, freshness, trade, NPC opinion. P: coat variant (`FAUNA-09`). N: unique animal with persistent ID, "watch animal" action (time without spooking it), NPC equipment changed by purchase, conditional dialog. Watching needs no new skill. **Author decisions:** price of the white hide (proposed 30–40 c), observation difficulty.
+
+## Implementation notes
+
+Implemented by `quests--003` W1 as `src/game/data/quests/q01.ts` (test `questQ01.test.ts`). Engine pieces added with it (E4): cast kind `creature` (a unique animal created on offer, no den so it is never respawned, `Animal.tag`), anchor `wild` (forest edge 450 m out), conditions `dead`, `calm`, `noThreat`, `dayAfter`, the `sell` event (counters weighted by quantity), and the item `white_pelt` (an albino hare gives it instead of a hide).
+
+- **Cast:** Jacob (hunter head), Stephen (trader head) and **Luke = the grown son of the village** (kin `son`; in generated villages that son lives in a different household than the shepherd's, so no profession is required).
+- **Start:** game day ≥ 2 and no predator or aggressive animal within 400 m of the settlement centre.
+- **Watching:** `feedingSeen` (20 s within 25 m of the hare, sneaking, hare calm, not closer than 8 m), `coverSeen` (6 s more), `lukeSaw` only when the player asked Luke along (`invited`) and he is within 30 m at that moment — **Luke does not walk with the player yet** (E8 not built); `watch` needs all three plus one more look on another game day.
+- **Endings:** pelt = white pelt sold to Stephen (+20 c from Stephen on top of the trade price, 15 c to Luke); ordinary = raw meat sold to Stephen (+6 c); watch = 10 arrows and 2 dried meat from Jacob's store (the design's snares do not exist as items). A quest left for ten days fades (opinion −3); an unaccepted offer lapses after four days.
+- **Not implemented:** Luke buying the bag, skinning practice, B3 "come back tomorrow" dialog, the "you could've waited for me" line when the player sells the pelt alone.

@@ -17,6 +17,7 @@ import { addItem, countItem, fitQty, qualityMult, removeStack } from './inventor
 import { isMarketDay, MARKET } from './market'
 import { doorOf, household, houseOf } from './npc/queries'
 import { priceMult } from './priceMods'
+import { questEvent } from './questHooks'
 
 /**
  * The household store the NPC trades from, or undefined: children trade from their pack, and so does an NPC
@@ -151,5 +152,6 @@ export function sellToNpc(sim: Sim, npc: Human, stack: ItemStack, qty = 1): Acti
   logMoney(`npc:${npc.id}`, 'player', price, 'player_sells', npc.id, npc.settlementId)
   logTrade(npc, { dir: 'buy_from_player', item: given.id, qty: q, price })
   train(sim.player, 'trade', 0.3)
+  questEvent(sim, { k: 'sell', npcId: npc.id, item: given.id, qty: q })
   return { ok: true, msg: `Sold: ${itemDef(given.id).name} ×${q} for ${price} c` }
 }

@@ -222,6 +222,8 @@ export interface Animal extends ActorBase {
   /** Authored quest keeps this animal at a spot / makes it follow an actor (id). */
   questHold?: QuestHold
   questFollow?: number
+  /** A unique quest creature's tag, e.g. `white_hare` (quests--003 E4). */
+  tag?: string
 }
 
 export type Actor = Human | Animal

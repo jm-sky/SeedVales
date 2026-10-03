@@ -220,7 +220,8 @@ export function butcher(sim: Sim, h: Human, c: Corpse): ActionResult {
   const meat = Math.min(c.meat, Math.round(sp.corpse.meat * vm))
   const skill = h.skills.survival / 100
   if (meat > 0 && !rotten) giveOrDrop(sim, h, newStack('raw_meat', Math.max(1, Math.round(meat * (0.7 + skill * 0.3))), { sp: c.species }), 'butcher')
-  if (sp.corpse.hide) giveOrDrop(sim, h, newStack('hide', sp.corpse.hide, { q: c.variant === 'albino' ? 3 : undefined }), 'butcher')
+  if (sp.corpse.hide && c.variant === 'albino' && c.species === 'hare') giveOrDrop(sim, h, newStack('white_pelt', 1), 'butcher')
+  else if (sp.corpse.hide) giveOrDrop(sim, h, newStack('hide', sp.corpse.hide, { q: c.variant === 'albino' ? 3 : undefined }), 'butcher')
   if (sp.corpse.bone) giveOrDrop(sim, h, newStack('bone', sp.corpse.bone), 'butcher')
   if (sp.corpse.antler) giveOrDrop(sim, h, newStack('antler', sp.corpse.antler), 'butcher')
   c.butchered = true

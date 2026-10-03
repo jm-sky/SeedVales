@@ -12,10 +12,12 @@ import { START_CALENDAR_S } from '../config/calibration'
 import { Rng } from '../core/rng'
 import { itemDef } from '../data/items'
 import { AUTHORED_QUESTS } from '../data/quests'
+import { SPECIES } from '../data/species'
+import { Biome } from '../world/types'
 import { giveOrDrop } from './actions'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { addItem, consumeItem, countItem, findFood, newStack, removeItem } from './inventory'
-import { makeHuman } from './newGame'
+import { makeAnimal, makeHuman } from './newGame'
 import { addPriceMod } from './priceMods'
 import { holdUntil } from './questHold'
 import { addRep } from './reputation'
@@ -188,6 +190,31 @@ function roadPoint(sim: Sim, m: number): { x: number; z: number } | null {
   return null
 }
 
+const isForest = (b: number) => b >= Biome.ForestDeciduous && b <= Biome.ForestConifer
+const BEARING_ANGLE = { north: -Math.PI / 2, south: Math.PI / 2, east: 0, west: Math.PI } as const
+
+/**
+ * Wild point `m` metres from the home centre (E4): in a compass direction (nearest dry, gentle spot, scanning ±180° in 15° steps)
+ * or, for `forestEdge`, the nearest forest cell at that distance (distance varied up to +150 m). Deterministic, resolved once.
+ */
+function wildPoint(sim: Sim, bearing: keyof typeof BEARING_ANGLE | 'forestEdge', m: number): { x: number; z: number } | null {
+  const hs = sim.world.settlements[homeId(sim)]!
+  const t = sim.terrain
+  const base = bearing === 'forestEdge' ? 0 : BEARING_ANGLE[bearing]
+  const ok = (x: number, z: number) => t.inBounds(x, z) && t.waterDepthAt(x, z) < 0.3 && t.slopeAt(x, z) < 0.45 && (bearing !== 'forestEdge' || isForest(t.biomeAt(x, z)))
+  for (const extra of [0, 50, 100, 150]) {
+    for (let k = 0; k <= 12; k++) {
+      for (const sign of k === 0 ? [1] : [1, -1]) {
+        const a = base + sign * k * (Math.PI / 12)
+        const x = hs.x + Math.cos(a) * (m + extra)
+        const z = hs.z + Math.sin(a) * (m + extra)
+        if (ok(x, z)) return { x, z }
+      }
+    }
+  }
+  return null
+}
+
 type Resolved = { x: number; z: number; id?: string }
 const anchorKeys = new WeakMap<Anchor, string>()
 const anchorKey = (a: Anchor): string => {
@@ -234,7 +261,8 @@ export function resolveAnchor(c: QuestCtx, a: Anchor): Resolved | null {
     const hs = sim.world.settlements[homeId(sim)]!
     const b = nearest(sim.settlementBuildings(homeId(sim), a.kind), hs.x, hs.z)
     if (b) r = { x: b.x, z: b.z, id: b.id }
-  } else r = roadPoint(sim, a.m)
+  } else if (a.k === 'wild') r = wildPoint(sim, a.bearing, a.m)
+  else r = roadPoint(sim, a.m)
   if (r) {
     if (c.readOnly) {
       let t = transientAnchors.get(c.st)
@@ -269,11 +297,28 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
       return k.of.every((x) => evalCond(c, x))
     case 'any':
       return k.of.some((x) => evalCond(c, x))
+    case 'calm': {
+      const a = actorOf(c, k.slot)
+      if (!a || a.vitals.dead || Math.hypot(a.x - p.x, a.z - p.z) > k.r) return false
+      const an = a as Animal
+      const now = sim.state.time.play
+      return !((an.fleeFrom?.until ?? 0) > now) && !((an.aggroUntil ?? 0) > now)
+    }
     case 'counter':
       return (st.counters[k.id] ?? 0) >= (k.gte === 'homePosts' ? homePosts(sim) : k.gte)
     case 'day': {
       const d = gameDay(sim)
       return (k.from === undefined || d >= k.from) && (k.to === undefined || d <= k.to)
+    }
+    case 'dayAfter': {
+      const v = st.flags[k.flag]
+      return typeof v === 'number' && gameDay(sim) > v
+    }
+    case 'dead': {
+      const id = st.cast[k.slot]
+      if (id === undefined) return false
+      const a = id < 0 ? undefined : sim.actor(id)
+      return !a || !!a.vitals.dead
     }
     case 'durability': {
       const b = houseOfSlot(c, k.slot)
@@ -310,6 +355,10 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
     }
     case 'not':
       return !evalCond(c, k.of)
+    case 'noThreat': {
+      const hs = sim.world.settlements[homeId(sim)]!
+      return !sim.actors.query(hs.x, hs.z, k.r).some((a) => a.kind === 'animal' && !a.vitals.dead && ['aggressive', 'predator'].includes(SPECIES[(a as Animal).species].temperament))
+    }
     case 'observed':
       return st.obs[k.id] === -1
     case 'opinion': {
@@ -471,6 +520,20 @@ function spawnVisitor(c: QuestCtx, slot: SlotId) {
   c.st.cast[slot] = h.id
   // A visitor stays until the quest ends (at the latest its own timeout); `provisionVisitors` feeds it meanwhile.
   h.questHold = { q: c.def.id, x, z, until: holdUntil(sim.state.time.cal, VISITOR_STAY_H) }
+}
+
+/** Creates a unique wild animal (E4): no den, so the world never respawns it; its tag shows in the cast and journal. */
+function spawnCreature(c: QuestCtx, slot: SlotId) {
+  const spec = c.def.cast[slot]?.creature
+  if (!spec || c.st.cast[slot] !== undefined) return
+  const at = resolveAnchor(c, spec.at)
+  if (!at) return
+  const sim = c.sim
+  const rng = new Rng(sim.state.seed ^ (c.def.id.charCodeAt(0) * 7919) ^ 0xc4ea7)
+  const a = makeAnimal(sim.nextId(), spec.species, spec.variant ?? 'adult', at.x, at.z, sim.terrain.heightAt(at.x, at.z), rng)
+  a.tag = spec.tag
+  sim.addAnimal(a)
+  c.st.cast[slot] = a.id
 }
 
 /** How long a visitor's hold is valid: longer than any quest timeout using one (G01 48 h). */
@@ -668,7 +731,8 @@ function applyEffect(c: QuestCtx, e: Effect) {
       st.flags[e.flag] = flagVal(c, e.value)
       break
     case 'spawn':
-      spawnVisitor(c, e.slot)
+      if (def.cast[e.slot]?.kind === 'creature') spawnCreature(c, e.slot)
+      else spawnVisitor(c, e.slot)
       break
     case 'stage':
       if (e.to > st.stage) {

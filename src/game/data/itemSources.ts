@@ -95,6 +95,7 @@ function baseSources(): Origins {
     if (sp.corpse.bone > 0) add('bone', 'butchering')
     if (sp.corpse.antler) add('antler', 'butchering')
   }
+  add('white_pelt', 'butchering') // an albino hare (FAUNA-09)
   return o
 }
 
