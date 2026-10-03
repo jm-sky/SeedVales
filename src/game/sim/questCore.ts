@@ -591,6 +591,13 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'give':
       transferItems(c, e.from, e.to, e.item, e.qty)
       break
+    case 'grant': {
+      const inv = e.to === 'player' ? sim.player.inv : invOf(c, e.to)
+      if (!inv) break
+      addItem(inv, newStack(e.item, e.qty))
+      logProduce(e.item, e.qty, `quest:${def.id}:${e.why}`)
+      break
+    }
     case 'heal':
       for (const slot of e.slots) {
         const h = humanOf(c, slot)

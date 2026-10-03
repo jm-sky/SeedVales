@@ -97,3 +97,13 @@ Refusing one offer doesn't end the quest. Theft/loss of goods: ordinary reputati
 ## Mechanics
 
 I: trade, stores, carrying limits, wheelbarrow (`TRANS-01`), prices. P: trade with every NPC, handing over. N: commission, list of needs shaping stock, work speed depending on tools. **Author decision:** should a trader's stock respond to a settlement's needs.
+
+## Implementation notes
+
+Implemented by `quests--003` W1 as `src/game/data/quests/q09.ts` (test `questQ09.test.ts`). New engine pieces: effect `grant` (ledger-logged goods from outside the world), `give` counters with `weight: 'n'` (items given, not events); new quest-only items `saw`, `shears`, `sickle`, `oak_plank`.
+
+- **Cast:** Stephen (trader head), Miles (woodcutter head), Ralph (farmer head), Molly (shepherd head/spouse) — all required. `{V}` stands in for the design's {T}.
+- **On offer** (once): Stephen's pack gets saw, shears and sickle ("back from the trip") and Miles's store two seasoned oak planks — both ledger-logged grants. Wool and grain come from the households' own stores.
+- **Needs:** each house's dialog sets a flag; the deal needs two of three. The houses' topics hand over the goods (`mi_planks`, `ra_grain`, `mo_wool`) so the player carries real stacks.
+- **barter:** goods given to Stephen ("Give a gift") are counted; wool ×1 → shears to Molly, grain ×2 → sickle to Ralph, planks ×2 → saw to Miles; all three → 10 c from Stephen. **consign:** tools go out at once; once wool and planks are with Stephen, 72 h later he pays Molly 12 c and Miles 18 c from his purse (partial when short) and the player gets 10 c from Stephen and 5 c from each house. **order:** after five days Stephen's pack gets two iron ingots (logged grant), opinions +5.
+- **Not implemented (stubs):** the planks failing to sell, tools raising NPC work speed, the wheelbarrow lend/return, the one-off discount, Stephen dying freezing the commission (the quest stalls after ten days and ends with opinion −5).

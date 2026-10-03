@@ -216,7 +216,7 @@ function bumpCounters(c: QuestCtx, ev: QuestEvent) {
     }
     if (!allOf(c, ct.when)) continue
     if (m?.save && b) st.anchors[`saved:${m.save}`] = { x: b.x, z: b.z, id: b.id }
-    st.counters[ct.id] = (st.counters[ct.id] ?? 0) + (ct.weight === 'n' && ev.k === 'roast' ? ev.n : 1)
+    st.counters[ct.id] = (st.counters[ct.id] ?? 0) + (ct.weight === 'n' ? (ev.k === 'roast' ? ev.n : ev.k === 'give' ? ev.qty : 1) : 1)
   }
 }
 

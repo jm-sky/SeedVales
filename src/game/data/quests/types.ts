@@ -90,6 +90,8 @@ export type Effect =
   | { k: 'pay'; from: Source; to: Source; amount: number }
   | { k: 'give'; from: Source; to: Source; item: string; qty: number }
   | { k: 'consume'; from: Source; item: string; qty: number }
+  /** Goods that enter the world from outside (a trader's trip, a find) — an explicit, ledger-logged source (D-ECON-1). */
+  | { k: 'grant'; to: Source; item: string; qty: number; why: string }
   | { k: 'opinion'; slot: SlotId; delta: number }
   /** `places` defaults to the home settlement. */
   | { k: 'rep'; delta: Partial<Record<QuestRepDim, number>>; reason: string; places?: QuestPlace[] }
@@ -197,7 +199,7 @@ export interface Counter {
   on: QuestEventKind | 'visit'
   /** `on: 'visit'`: counts each home building of `kind` once when the player is within `r` m (and, with `lit`, it is lit). */
   visit?: { kind: StructureKind; r: number; lit?: boolean }
-  /** `n` adds the event amount (roast pieces) instead of 1. */
+  /** `n` adds the event amount (roast pieces, items given) instead of 1. */
   weight?: 'n'
   match?: {
     kind?: StructureKind
