@@ -1167,9 +1167,9 @@
    "vision": "§26.2, design/quests",
    "scope": "later",
    "behavior": "Remaining authored quests on the QUEST-03 engine (22 designs: H/V batch, treasure quests after LOOT-01, Q10 gold mine)",
-   "verify": "—",
-   "status": "deferred",
-   "evidence": "docs/roadmap/later-vision-backlog.md"
+   "verify": "vitest questG08/G04/Q09/Q01/G07 (+ engine tests); acceptance e2e 47/47; soak 10 d × seeds 7, 42 and 6 d × 1337: 0 violations",
+   "status": "implemented_unverified",
+   "evidence": "quests--003 wave W1 done 2026-10-03 (G08, G04, Q09, Q01, G07 + E1 partial, E4, E6, E7 and effects grant/ill/heal/priceMod/hurt/slay/scare); W2 (H-V quests), W3 (treasure) and W4 (Q10) still open; docs/plans/quests--003-*.md"
   },
   {
    "id": "TRANS-02",
