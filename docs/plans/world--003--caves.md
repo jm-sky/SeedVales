@@ -670,6 +670,79 @@ All mutable contents use the same cave spatial context and save rules.
 
 Keep cave render/streaming local and cheap. No large hidden second world mesh.
 
+### 9. Cave visual polish — **Model: sonnet** (implementation), **opus** (keep/drop and look review)
+
+Source: [review 022](../reviews/2026-10-03--022--cave-visual-review.md) (Opus, 2026-10-03; findings A1–E with screenshots in `docs/reviews/assets/022/`). Scope is the look of the mouth and the interior plus the cost of rendering the surface while underground. **No change** to the layer model, spine navigation, cave fauna, generator placement or `GEN_VERSION`; the only sim-side change is 9.4c (grounding on the mouth collar), which the patch needs so that what you see is what you walk on. New mutable state: none (everything is derived per cave at build time) → no `SAVE_VERSION` bump.
+
+**Tools for every sub-step:**
+
+- Screenshots: `node scripts/e2e/review-caves.mjs 1337 before` once before 9.1 (or reuse `assets/022`), `… after` at the end of each sub-step that changes visuals; compare the same file names. `tour-cave.mjs` lights the cave with a debug emissive glow — do not use it for look decisions (drop that hack in 9.5).
+- A/B: new `VisualFlags` `caveCull` (9.2) and `caveLook` (9.4–9.8: patch, shape, material, light, rocks; `false` = the current look) so `SV_VISUAL='{"caveCull":false,"caveLook":false}'` reproduces the before state for screenshots and benches.
+- PERF: `pnpm bench:render medium` scenes `cave-mouth`, `cave-inside` plus two new scenes added in 9.2: `cave-chamber` (deepest chamber of cave 0, outside not visible) and `cave-mouth-steep` (the steepest mouth, camera 12 m in front). Run with the flags off (before) and on (after) in the same environment; summary in `PERF.md`.
+
+Order (each sub-step is its own commit with tests; MUST before SHOULD):
+
+#### MUST — geometry, seams, culling
+
+**9.1 Terrain cut for every cave (A1).**
+- `TerrainChunks.build` decides per chunk with `caves.nearBucket(chunk centre)`, which misses caves registered only in another 64 m bucket of the 128 m chunk (seed 1337: caves 2, 4, 5 have no hole). Replace with a rectangle test (`CaveField.overlaps(x0, z0, x1, z1)` over all buckets the chunk touches, or a per-cave AABB list) and keep the per-quad `skyAt` (later `cutAt`, 9.4) test.
+- Acceptance: vitest over seeds 1337 + 2 others and every cave — every sky cell lies in a quad the chunk builder omits (test the predicate the builder uses, not a copy); review shots `c2-…-02-front/05-above` show the opening. Acceptance e2e step 20 additionally walks into a cave that straddles a bucket border (pick it by index in the script, e.g. the first cave whose grid spans two buckets).
+
+**9.2 Underground culling of the surface (D1, D2, D4, D3).**
+- Per cave, at grid build (pure, in `world/caveShape.ts` or `caveField.ts`): `seesOut[k]` for every spine point = a 2D ray-march (0.5 m steps) from the spine point to the mouth (centroid and the two outermost sky cells of the first sky row) that stays in open cells and below `ceil − 0.3` at eye height. Cheap: ≤ 25 spine points × 3 rays per cave, once.
+- `Renderer`: `outsideVisible` = camera cell is not roofed (`flagAt` ≠ `CELL_UNDER`) **or** the nearest spine segment to the camera has `seesOut` at either end, with a 0.3 s hold before hiding (no flicker at the bend). While **not** visible: `visible = false` on terrain, vegetation, grass, structures, landmarks, stockpiles, carts, sky dome, water and surface-layer actors (actors on the player's layer stay); precipitation off whenever the camera cell is roofed; sun shadow map frozen with `renderer.shadowMap.autoUpdate = false` (`needsUpdate = true` on the way out) — do **not** toggle `castShadow`, that recompiles every program. Streaming updates (`terrain.update`, vegetation rebuilds) keep running; skip them only if the bench shows they matter.
+- `drawAttribution` gets a `caves` tag (today the cave shows as "other").
+- Acceptance: `cave-chamber` bench scene ≤ 40 draw calls and ≤ 0.15 M triangles (today 138–209 / 0.50–0.91 M in chambers), `render.prep` p95 not worse on any cave scene; no visible pop when walking back to the mouth (screenshot pair at the last hidden / first visible spine point); rain never inside a roofed cell (`review-caves` with rain); e2e step 20 still green.
+
+**9.3 Grass and decals out of cuttings (A7).**
+- Grass placement treats the cut region (sky cells + the 9.4 collar) as a footprint (`grassDensity(…, onFootprint)` already zeroes it); same for ground decals / ground patches if they use their own placement.
+- Acceptance: no grass blades in `07-threshold-out` / `08-threshold-in-lookout` shots for all reviewed caves; grass vitest for a cave cell.
+
+**9.4 Watertight entrance patch replaces banks, skirt and icosahedron rims (A2–A5, A8).** This is the "dedicated entrance/rim mesh + conservative hole" the research section preferred and v1 skipped.
+- a) **Region.** `R` = the sky blocks plus a one-block (2 m) collar of terrain quads around them, in whole 2 m blocks aligned with LOD-0 quads (the grid origin already is). `CaveField.cutAt(x, z)` replaces `skyAt` for the terrain cut; `skyAt` keeps its sim meaning (walkable cutting).
+- b) **Patch heightfield on a 1 m grid over `R`** (pure function `mouthPatchHeight(grid, surfaceAt, x, z)` in `world/caveShape.ts`, used by render and 9.4c): outer border vertices = exactly the LOD-0 terrain mesh (2 m vertices = `heightAt`, 1 m mid-edge vertices = the average of their two 2 m neighbours, so there is no T-junction crack); sky-cell vertices = the cutting floor (identical to the floor mesh at the shared edge); collar vertices = `lerp(floor of the nearest sky vertex, terrain, smoothstep(0, 2 m, distance to the sky region))` plus a bounded noise bump (≤ 0.25 m, zero on the outer border and on sky vertices), clamped to `≤ terrain` and, next to a roofed cell, `≥ ceil + 0.3`. The patch replaces the sky-cell floor quads, the leaning bank quads, the rock skirt and `addRock`.
+- c) **Grounding on the collar.** `groundHeight` (surface layer) uses `mouthPatchHeight` inside collar cells, so a walker at the rim stands on the visible bank instead of the old terrain height (today the player floats above leaned banks). Slope rules stay as they are (the steep bank stays unwalkable); NPC/animal behaviour is unchanged because collar cells are surface cells with a real height. Record as **D-CAVE-3** when implemented.
+- d) **Lintel / jambs**: every edge between a roofed cell and a cell in `R` gets a face from `ceil` up to `mouthPatchHeight` at its two vertices (shared corners → no slit).
+- e) **LOD:** the hole is cut at LOD 0 only, so `Caves.update` shows the patch and the cave group only while the chunk(s) holding `R` are at LOD 0 (expose the chunk LOD from `TerrainChunks`); build distance stays `CAVE.showM`. Beyond LOD 0 the mouth is closed (far hint → LATER).
+- Acceptance: vitest **watertightness** over all caves of 3 seeds — weld patch + floor + shell by position (1e-4 m) and require every edge to have exactly two triangles, except the patch's outer border, whose vertices must equal the LOD-0 terrain vertex heights (2 m) or their averages (1 m); no patch vertex above the terrain in the collar; no lintel with negative height. Screenshots: no sawtooth outline, no slivers/beams in `02–06` for the steepest and the flattest mouth; a magenta-background probe at the mouth shows no magenta pixels. Grounding vitest: a surface walker on a collar cell stands on `mouthPatchHeight` ± 0.05 m. Bench: `render.caveBuild` p95 ≤ 8 ms, `cave-mouth` `render.prep` p95 ≤ today + 0.3 ms.
+
+#### SHOULD — interior shape, material, light transition, mouth framing
+
+**9.5 Interior shape (C1, C2).** Render-only; collision keeps the 1 m grid (the visible open space is never *smaller* than the walkable one).
+- Indexed, welded shell and floor (shared vertices, `computeVertexNormals` on the welded mesh) → smooth normals; keep a crease between floor and walls only. Per-cell hash shade (`shadeAt`) removed (that is the stripe pattern).
+- Staircase chamfer: a boundary vertex with 3 open cells of 4 moves 0.5 m diagonally into the rock; vertices with 1 open cell stay.
+- Wall profile with three rows: foot at the cell edge (no inward push), belly at 40 % height pushed 0.35 m (± noise) into the rock, top at `ceil − 0.2` pulled 0.4 m toward the tunnel axis (vault). Ceiling dome: up to +0.6 m toward the spine (cos profile), clamped to `surface − 0.6` (cover).
+- Wall displacement along the outward normal: two-octave world-space noise (0.25 m + 0.08 m), zero on vertices shared with the patch/lintel.
+- Drop the emissive debug lighting from `tour-cave.mjs`.
+- Acceptance: tunnel shots show a rounded profile, no vertical stripes, no 1 m staircase on diagonal tunnels; camera never shows the outside of the shell in `09–13` (rotate around in the chamber); `caveBuild` p95 ≤ 8 ms; triangles per cave ≤ 2.5× today.
+
+**9.6 Cave material (B2, C3, C4, C6).** One material for floor + shell (1 draw per cave); medium/high: `MeshStandardMaterial` (roughness 0.92, metalness 0) with `onBeforeCompile`; low: Lambert with the same albedo logic and no specular. No new runtime textures except a converted normal map.
+- Baked per vertex at build (one `vec3` attribute, nothing per frame): **AO** (closed neighbours in the 3 × 3 around the vertex, floor–wall corner, wall foot → 0.45–1), **skylight** (1 on sky cells, `exp(−s / 6 m)` by spine arc length past the last sky cell), **mouth blend** (1 → 0 over the first 8 m: albedo → the terrain's rock colour so the mouth has no material jump).
+- Shader: floor vs wall vs ceiling by world normal (floor texture where `n.y > 0.7`, wall texture otherwise, smooth blend; ceiling ×0.8 and slightly cooler); anti-tiling with a second sample of the same map at ×0.37 scale and rotated, blended by a macro mask; macro colour variation and faint strata bands (`sin(worldY · 1.3 + mask)`) at ±10–15 % from the existing terrain detail texture used as a noise source (no new noise texture); **static wet mask** (macro mask × "low" factor: floor depressions and wall feet strong, walls medium, ceiling weak) → albedo ×0.7, roughness 0.92 → 0.35, normal strength ×1.3; detail normal from the Poly Haven cave wall/floor normal maps (convert the EXRs to 1k PNG in the asset pipeline; CC0 already credited) on medium/high.
+- Acceptance: in the torch shots wet patches show a visible warm highlight that moves with the torch, dry rock stays matte; no obvious 4 m tiling in `13-chamber-torch-high`; floor/wall junction darkened; the mouth bank colour continues from the terrain. GPU: `cave-inside` `render.draw` (SwiftShader, relative only) not more than +15 %; program count +≤ 2; low profile uses Lambert.
+
+**9.7 Light transition (B1, C5).**
+- The cave material scales directional + hemisphere light by the baked skylight (patch the light loop in `onBeforeCompile`), so the cave darkens with depth by itself and the global sun/hemi no longer have to be dimmed for it.
+- The global dim (for actors and props underground) is driven by camera depth, not by the layer flag: 0 while the camera cell is open to the sky, ramping to 1 over the first 8 m of roofed spine arc length, and 1 whenever `outsideVisible` (9.2) is false. Result: near the mouth the outside stays in full daylight (bright opening seen from inside), deeper the outside is culled anyway.
+- Cave ambient term in the material (`uCaveAmbient`, warm grey, × AO) so walls read as silhouettes without a torch; the fill point light is lowered or removed once this lands (frees a light).
+- Acceptance: walking in (`acc` step 20 path) shows no frame-to-frame light jump at the threshold (luminance of consecutive frames changes smoothly — compare 5 shots 1 m apart); `08-threshold-in-lookout` shows the outside slope at daylight brightness; without a torch the walls are distinguishable within ~6 m, with a torch walls and ceiling within ~8 m read (Opus look review on the shot set; add a mean-luminance log of the frame centre to `review-caves` for comparison).
+
+**9.8 Mouth framing (A5, A6).**
+- Rim and frame rocks from the existing Quaternius `Rock_Medium_1/2` (same models and colour as the surface boulders), one shared `InstancedMesh` per model for all built caves (+≤ 2 draws): rim rocks along the outer border of `R` every 2.5–4 m (60 % chance), height 0.6–1.4 m scaled with the local bank depth, 35–50 % buried, tilted to the slope; two jamb rocks at the lintel ends (1.5–2.2 m); one brow rock above the lintel centre (2–3 m), pushed into the hillside. Deterministic from the cave id.
+- Lintel overhang: the lintel top edge leans out over the cutting by 0.4–0.8 m (noise); its bottom stays at `ceil`.
+- Constraint (tested): no rock or overhang inside the walkable volume — over any open cell the rock bottom is ≥ floor + 2.4 m, and nothing below `ceil` over sky cells (the camera treats sky cells as unroofed, B4).
+- Acceptance: front/side shots show a framed opening with a brow, rocks seated in the slope (no floating plates); the surface rock colour continues around the mouth; constraint vitest over all caves of 3 seeds.
+
+**9.9 Close-out — opus.** Look review on the full `review-caves` before/after set (all reviewed caves, steep and flat mouth, small and large), keep/drop per sub-step (flags stay for A/B until the user signs off), PERF A/B table in `PERF.md` (flags off vs on: draw calls, triangles, `render.prep` p95, `render.caveBuild` p95, programs), `pnpm check`, `pnpm e2e:run`, handoff. Device check (real GPU, low profile) is a user step (D-PERF-2).
+
+#### LATER — costlier polish (only after 9.9, each needs its own PERF line)
+
+- Far-LOD mouth hint: a dark vertex-colour blotch (or a small impostor quad) in LOD 1+ chunks so a mouth is visible from afar.
+- Floor rubble and pebbles (instanced small `Rock_Medium`) along chamber walls; stalagmites/columns in large chambers (natural, no fantasy).
+- Puddle decals in floor depressions; slow drip sparkle on the wettest patches.
+- Ferns/moss on the mouth collar (existing nature assets).
+- A faint additive light shaft at the mouth at low sun; exposure adaptation once tone mapping is enabled.
+
 ## Verification
 
 ### Unit / integration
@@ -773,3 +846,7 @@ Decisions are recorded in `DECISIONS.md` as **D-CAVE-2** (Sonnet default, user-a
 - **Step 8 (light/perf):** fire emitters are layer-aware (a torch on a cave floor lights only the cave, at floor height; surface fires never light the cave), torches shine at full strength underground, the fill light dims while the player's torch is lit. `bench:render` scenes `cave-mouth` / `cave-inside`: `render.prep` p95 1.5 / 2.7 ms, 0 console errors (PERF.md). Open optimisation: terrain/vegetation keep rendering while underground.
 - **E2E:** acceptance step 20 walks into a cave with the real W key and back out with S; `__sv.teleportToCave` now faces the mouth.
 - **Still open:** drop/chest models underground, quest anchors in caves, NPCs other than companions underground (decision: not in v1), the Opus look review of the mouth and the tunnel dimming (the tunnel shots are very dark without a torch — fill light 3.2 is the knob).
+
+### Update (2026-10-03, Opus visual review 022)
+
+Visual/design review of the mouth and interior with real lighting on 4 caves (`scripts/e2e/review-caves.mjs`, shots in `docs/reviews/assets/022/`): [review 022](../reviews/2026-10-03--022--cave-visual-review.md). Main findings: 3 of 7 caves on seed 1337 have no terrain hole (chunk-centre bucket test), banks are sliver panels with black faces and floating icosahedron rims, no mouth framing, grass in the cutting, global daylight switch at the threshold, boxy striped interior with a flat unlit material, and 98 % of the draw calls underground are hidden surface content. Work order and acceptance: **step 9 "Cave visual polish"** above (MUST 9.1–9.4, SHOULD 9.5–9.8, close-out 9.9, LATER list).
