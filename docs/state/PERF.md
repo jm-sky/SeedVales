@@ -326,3 +326,7 @@ The goal is NOT a synthetic stress loop. The monitored runs are the GPU benchmar
 
 ### Result log
 _(empty — fill in per run: date, config, run #, outcome, host free MB min, vmmem max)_
+
+## bench:sim 2026-10-03 (session 14, quiet machine, commit 762bfb3, no baseline update)
+
+All scenes ok: p95 small-settlement 0.158 ms, crowded-settlement 0.424, dense-forest 0.056, combat 0.102, chunk-traverse 0.063, accelerated-sleep 0.783, long-run-5-days 0.993 ms (budget 4 ms). Soak 10 d × seeds 1337, 7, 42, 3, 11, 99: 0 violations.
