@@ -143,3 +143,18 @@ Budgets: torso ≤ 1.5 k and small pieces ≤ 600 are met by every module after 
 1. `build-equipment-modules.mjs`: add a `raw` source per module (`assets-src/characters/eq/<Module>_<Sex>.raw.glb`), `INFLATE` from §4, `RATIO` only where the audit shows the budget is not yet met (jerkin 0.39, padded jacket 0.59, pauldron 0.43).
 2. S2-4 contact sheet on WSL: look at the candidates in the game camera; Opus keeps or drops `PaddedJacket` and decides on `Ranger_Plain` for hunters.
 3. render--012 keeps: cap, chainmail, studded leather. The recolour and cut methods of the script (`brown_uv`, `remap_faces`, `hand_shell`) are reusable there.
+
+## 10. Follow-up: modest women's dress modules (Noble)
+
+The female outfits had no skirts and showed strong bust/waist shaping. [`scripts/assets/blender-dress-modules.py`](../../scripts/assets/blender-dress-modules.py) (female only, re-uses the helpers of `blender-equipment-modules.py`) builds three candidates from `Female_Noble_Body` into `assets-src/characters/eq/`:
+
+| Module | Content | Tris | Notes |
+|---|---|---|---|
+| `NobleBodice_Female` | Noble bodice (puffed shoulders, corset), short split skirt cut away | 2824 | arms stay with the base outfit |
+| `LongSkirt_Female` | generated ankle-length flared skirt, gold hem band | 392 | wear with any top |
+| `Dress_Female` | bodice + long skirt | 3216 | complete dress |
+
+- **Modesty:** the bust relief is flattened (`BUST_FLATTEN` 0.65) and the corset waist loosened (`WAIST_LOOSEN` 1.10); tunable constants at the top of the script.
+- **Rig:** same 65-bone UBC skeleton and vertex-group names as the other modules. Skirt weights: pelvis plus thighs (left/right split by x), calves below the knee (`THIGH_MAX` 0.9). Checked posed with `anims.glb` (rest, Idle, Walk, Crouch_Idle, Sword_Attack): [`blend-fit-Dress-female.png`](../state/frames/render--011/blend-fit-Dress-female.png). Known limitation: at the far back swing of Walk the rear foot can poke out below the hem; the skirt is one rigid tube, no cloth sim.
+- **Integration:** the Noble bodice is a complete torso, so `Dress` / `NobleBodice` should **replace** the base Body (and Legs for `Dress`) instead of layering over them (the Peasant bodice pokes through by up to 7 cm otherwise). The sheet shows the base Arms and Feet kept. The Noble arms are not used (bare skin, second material).
+- **Not done:** no glTF post-processing (`build-equipment-modules.mjs` `raw` source), no game wiring, no male variant, no recolour variants (the red/gold atlas swatches are fixed; a tint at runtime is the cheap option).

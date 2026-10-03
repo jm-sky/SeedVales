@@ -469,7 +469,7 @@ def pose_setup(arm, action, frame):
     return setup
 
 
-def fit_check(sex, key, inflate_m=0.0, tag='', base_glb=None, with_base=True):
+def fit_check(sex, key, inflate_m=0.0, tag='', base_glb=None, with_base=True, base_keep=None):
     """Candidate `key` (assets-src/characters/eq/<key>_<sex>.raw.glb) over the game's <Sex>_Peasant base, posed with anims.glb
     clips; writes docs/state/frames/render--011/blend-fit-<key>-<sex>.png (rest front, four clips, two close-ups)."""
     chars = os.path.join(ROOT, 'public', 'assets', 'characters')
@@ -478,6 +478,8 @@ def fit_check(sex, key, inflate_m=0.0, tag='', base_glb=None, with_base=True):
     base_arm = next(o for o in base if o.type == 'ARMATURE')
     skinned = lambda objs: [o for o in objs if o.type == 'MESH' and o.vertex_groups]  # the importer also adds a bone-shape icosphere
     base_meshes = skinned(base) if with_base else []
+    if base_keep:  # e.g. ('Arms', 'Feet'): the candidate replaces the other base parts (torso / legs)
+        base_meshes = [m for m in base_meshes if any(k in m.name for k in base_keep)]
     cand = import_glb(os.path.join(OUT, f'{key}_{sex}.raw.glb'))
     cand_arm = next(o for o in cand if o.type == 'ARMATURE')
     cand_meshes = skinned(cand)
