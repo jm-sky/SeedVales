@@ -66,6 +66,25 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 
 **Side-track triggers for wave 5:** landmark models (stone circle, shipwreck, boat wreck, ruins beyond partial village modules) come from `render--004` step 3 — or procedural geometry if that step is skipped.
 
+## Wave 5a — recorded audio (added 2026-10-03, user assets)
+
+| Plan | Scope |
+|---|---|
+| [audio--001--recorded-sounds-and-voices](../plans/audio--001--recorded-sounds-and-voices.md) | sounds/voices from the previous app (`public/sounds/`, 136 files): catalogue, event → sound map, footsteps by surface, ambience layers, NPC voice lines with limiter, volume channels; **licence gate before release** (❓ user: sources). Independent of other waves — may run alongside wave 5. |
+
+## Wave 5c — combat feel and movement (user plans, added 2026-10-03)
+
+Order: target lock → block/parry → jump (Opus step 1 fixes the movement contract that caves reuse) → dodge (low priority). Each plan has "Decisions for Opus" to settle before Sonnet implements; user decisions in each plan are binding.
+
+| Plan | Scope |
+|---|---|
+| [combat--001--combat-target-lock](../plans/combat--001--combat-target-lock.md) | Tab in combat = target lock (soft facing/camera assist, no hard snap); outside combat Tab keeps interaction-target cycling |
+| [combat--002--block-and-parry](../plans/combat--002--block-and-parry.md) | RMB block, parry window at block start; shields clearly better, weapons can parry |
+| [combat--004--jump-and-airborne-movement](../plans/combat--004--jump-and-airborne-movement.md) | minimal grounded jump, explicit too-steep slopes, jump may clear a short lip but never a too-steep slope; grounding model shared with caves |
+| [combat--003--directional-dodge](../plans/combat--003--directional-dodge.md) | *(low priority)* physical displacement, no i-frames by default; depends on melee timing (resolution is synchronous today) |
+
+Caves: [world--003--caves](../plans/world--003--caves.md) *(draft)* — later backlog **L6** (D-PLAN-9: caves only), after `combat--004`; visual references `docs/research/refs/2026-10-02--seedvale-v1-ref-screenshot-as-baseline-3/4-*`.
+
 ## Stage 5b — authored quests and Stage V — verification loop (planned 2026-10-02, user)
 
 | Plan | Scope |
@@ -75,10 +94,12 @@ CHAR-01 and FAUNA-09 (render--001 steps 4–5) do not depend on 4a and may go in
 | [review--001--review-fix-loop](../plans/review--001--review-fix-loop.md) | Sonnet/Opus code review + application review (gameplay, graphics, UX) → fix → re-review, ≤ 3 rounds per wave; first input = session 11 ultrareview |
 
 | [render--008--roads-banks-and-ground-textures](../plans/render--008--roads-banks-and-ground-textures.md) | *(draft, user notes 2026-10-02, wave 4c)* road relief/cobbles + town-square paving, ground/rock textures, river banks (beach / 0.3–0.5 m cut bank) with a channel, reeds and lilies; step 4 = `GEN_VERSION` bump |
-| [render--009--stockpile-visuals](../plans/render--009--stockpile-visuals.md) | *(draft, user note 2026-10-02, wave 4c after render--008)* stockpiles show stored amounts (firewood tiers 1/5/7/14/20+, stone, grain, food, hides/wool); Blender models; render-only, 2 s cadence, nearby buildings only |
+| [render--009--stockpile-visuals](../plans/render--009--stockpile-visuals.md) | *(models done by the Windows session; WSL verification = step 3 pending — CLAUDE.md handoff note)* stockpiles show stored amounts (firewood tiers 1/5/7/14/20+, stone, grain, food, hides/wool); Blender models; render-only, 2 s cadence, nearby buildings only |
 | [proposals--001--claude-proposals](../plans/proposals--001--claude-proposals.md) | **last stage:** Claude prepares 15–25 proposals from evidence (soak, reviews, vision gaps) autonomously; user picks a few; they are built and reviewed |
 
-After this roadmap: [later-vision-backlog.md](later-vision-backlog.md) (stages L1–L7, proposal, ❓ user).
+After this roadmap: [later-vision-backlog.md](later-vision-backlog.md) (stages L1–L7, accepted D-PLAN-9).
+
+Order update (2026-10-03): … → review loop round 1 → `render--009` step 3 (WSL verification) → wave 5 (`world--001`, `settlement--001`) with wave 5a audio alongside → wave 5c combat → wave 6 → `proposals--001` → later backlog.
 
 Order: finish `render--001` (4b) → `render--008` (4c, user additions — only when it fits; it must not delay the main order) → `verify--001` steps 1–3 (cheap, protects everything after) → `quests--001` → first full `review--001` round → wave 5 continues. The loop repeats after every wave and before each release candidate.
 
