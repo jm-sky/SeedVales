@@ -129,3 +129,13 @@ Tom's last barrel was filled into a cask that hadn't been scalded. It went sour 
 | Required | Authored barrel state; sick NPCs tied to it; fact set; `tradeFriction` scalar |
 | Stub | Square announcement as a journal entry + reputation change |
 | Out of scope | Crowd simulation |
+
+## Implementation notes
+
+Implemented by `quests--003` W1 as `src/game/data/quests/g08.ts` (test `questG08.test.ts`). New engine primitives: `CastSpec.place` (`'V'` = nearest other settlement), condition `visited`, effects `ill` / `heal` / `priceMod` (E6, `sim/priceMods.ts`), `rep.places`, item `small_beer` (quest-only).
+
+- **Start:** game day ≥ 4 and Tom's household alive; on offer `{wife}` and `{stephen}` fall ill (stomach, 30 severity, 72 h).
+- **Facts:** `whoDrank` (Stephen's dialog), `doraSaid` (Dora's dialog), `wellClean` (4 s at the well), `barrelBad` (5 s at Tom's house). `truth` and `quiet` need `barrelBad` plus one more fact; `quiet` also needs Tom to come along (`tomTold`, set from Tom's barrel dialog — no distance check, a stub).
+- **Accusation:** a topic on the {V} farmer head (Margaret is a plain farmer, no `reeve` flag) after visiting {V}, only with fewer than two facts; `accusation` ending costs honesty −15 in {H} and {V}, Margaret −25, Ralph −10 and a 30-day ×1.2 price modifier on every item in {V}. The apology topic works while the accusation is under 24 h old and `barrelBad` is known: honesty −5 in both places, no friction. An accusation never confirmed with Ralph ends by itself after 72 h.
+- **Refusal / neglect:** Dora traces it after 48 h unanswered (or 96 h after accepting without progress) → silent `traced`, no reward; everyone is healed at every ending.
+- **Not implemented (stubs):** the public pouring-out/crowd scene, Tom's "scalds his casks" effect, the friction applying only to {H} residents (it applies to the player — always true here).

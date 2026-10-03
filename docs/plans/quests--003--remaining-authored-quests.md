@@ -655,3 +655,8 @@ Cast-id conflicts across quests are fine (cast is per quest); the `used` set onl
 ## Result
 
 —
+
+### Progress (session 15, 2026-10-03)
+
+- **E6 price modifiers done** (`sim/priceMods.ts`, `state.priceMods`, applied in `trade.ts` including the no-resell clamp). **E1 partial:** `CastSpec.place: 'V'`, condition `visited`, `rep.places`; new effects `ill` / `heal` / `priceMod`.
+- **W1 G08 Well and Rumor done** (`data/quests/g08.ts`, `questG08.test.ts` — truth, quiet, accusation, apology, refusal; implementation notes in the design doc). Acceptance e2e 47/47 with G08 in the offer list. Next in W1: G04 (needs E5 `gather` event + E7 deadline).

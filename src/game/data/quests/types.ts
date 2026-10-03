@@ -14,6 +14,8 @@ export type QuestKin = 'head' | 'spouse' | 'child' | 'elder' | 'son'
 export type QuestAge = 'child' | 'adult' | 'elder'
 export type QuestRepDim = 'honesty' | 'helpfulness' | 'renown' | 'courage'
 export type QuestStatusId = 'offered' | 'active' | 'done' | 'lapsed' | 'refused'
+/** Settlement a cast NPC or an effect refers to: the home settlement or the nearest other one (quests--003 E1). */
+export type QuestPlace = 'H' | 'V'
 export type QuestEventKind = 'roast' | 'repair' | 'light' | 'douse' | 'built' | 'give' | 'kill'
 
 /** A place named without coordinates; resolved once and cached in the quest state (`anchors`). */
@@ -66,6 +68,8 @@ export type Cond =
   | { k: 'sneaking' }
   /** Another authored quest has one of these statuses (`started`: and the player had accepted it). */
   | { k: 'quest'; id: QuestId; in: QuestStatusId[]; started?: boolean }
+  /** The player has visited this settlement. */
+  | { k: 'visited'; place: QuestPlace }
   /** Calendar hours since the quest was offered / accepted. */
   | { k: 'since'; hours: number; from: 'offered' | 'started' | 'stage' }
   | { k: 'all'; of: Cond[] }
@@ -87,7 +91,13 @@ export type Effect =
   | { k: 'give'; from: Source; to: Source; item: string; qty: number }
   | { k: 'consume'; from: Source; item: string; qty: number }
   | { k: 'opinion'; slot: SlotId; delta: number }
-  | { k: 'rep'; delta: Partial<Record<QuestRepDim, number>>; reason: string }
+  /** `places` defaults to the home settlement. */
+  | { k: 'rep'; delta: Partial<Record<QuestRepDim, number>>; reason: string; places?: QuestPlace[] }
+  /** Cast NPCs fall ill (food poisoning style); they recover by themselves after `hours`. */
+  | { k: 'ill'; slots: SlotId[]; severity: number; hours: number }
+  | { k: 'heal'; slots: SlotId[] }
+  /** Temporary price modifier in a settlement (replaces one with the same `why`). */
+  | { k: 'priceMod'; place: QuestPlace; item: string; mult: number; days: number; why: string }
   | { k: 'need'; slots: SlotId[]; social: number }
   | { k: 'message'; text: string; kind?: 'info' | 'good' | 'bad' | 'quest' }
   | { k: 'torch'; anchor: Anchor; lit: boolean }
@@ -115,6 +125,8 @@ export interface SpawnSpec {
 export interface CastSpec {
   kind: 'npc' | 'animal' | 'spawn'
   required: boolean
+  /** npc: settlement the household lives in (default the home settlement). */
+  place?: QuestPlace
   /** npc: household profession + kin (first match in the order given, ids unique across slots) + optional age. */
   profession?: ProfessionId
   kin?: QuestKin[]

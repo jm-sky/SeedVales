@@ -5,7 +5,7 @@
  * the only sink (D-ECON-1, D-ECON-3).
  * @domain quests
  */
-import type { Anchor, CastSpec, Cond, Effect, FlagValue, QuestDef, SlotId, Source } from '../data/quests/types'
+import type { Anchor, CastSpec, Cond, Effect, FlagValue, QuestDef, QuestPlace, SlotId, Source } from '../data/quests/types'
 import type { Sim } from './sim'
 import type { Actor, Animal, AuthoredQuestState, Building, Human, Inventory } from './types'
 import { START_CALENDAR_S } from '../config/calibration'
@@ -15,6 +15,7 @@ import { giveOrDrop } from './actions'
 import { logConsume, logMint, logProduce } from './eventLog'
 import { addItem, consumeItem, countItem, findFood, newStack, removeItem } from './inventory'
 import { makeHuman } from './newGame'
+import { addPriceMod } from './priceMods'
 import { holdUntil } from './questHold'
 import { addRep } from './reputation'
 import { dayIndex, hourOf, isNight } from './time'
@@ -32,6 +33,24 @@ export const ctxOf = (sim: Sim, def: QuestDef, st: AuthoredQuestState): QuestCtx
 export const readCtxOf = (sim: Sim, def: QuestDef, st: AuthoredQuestState): QuestCtx => ({ sim, def, st, readOnly: true })
 
 export const homeId = (sim: Sim) => sim.world.homeSettlement
+
+/** The nearest settlement other than home (the quests' {V}); -1 when the world has only one. */
+export function neighbourId(sim: Sim): number {
+  const home = sim.world.settlements[homeId(sim)]!
+  let best = -1
+  let bd = Infinity
+  for (const s of sim.world.settlements) {
+    if (s.id === home.id) continue
+    const d = Math.hypot(s.x - home.x, s.z - home.z)
+    if (d < bd) {
+      bd = d
+      best = s.id
+    }
+  }
+  return best
+}
+
+export const placeId = (sim: Sim, place: QuestPlace | undefined): number => (place === 'V' ? neighbourId(sim) : homeId(sim))
 /** Game day since the start (1 = the first day). */
 export const gameDay = (sim: Sim) => dayIndex(sim.state.time.cal) - dayIndex(START_CALENDAR_S) + 1
 export const firstName = (h: { name: string }) => h.name.split(' ')[0] ?? h.name
@@ -100,7 +119,7 @@ export function resolveNpcSlots(sim: Sim, def: QuestDef, st: AuthoredQuestState)
   let ok = true
   for (const [slot, spec] of Object.entries(def.cast)) {
     if (spec.kind !== 'npc' || st.cast[slot] !== undefined) continue
-    const list = sim.npcsOf(homeId(sim)).filter((n) => {
+    const list = sim.npcsOf(placeId(sim, spec.place)).filter((n) => {
       if (n.vitals.dead || n.questOwner || n.companion || used.has(n.id) || n.householdId < 0) return false
       if (spec.profession && sim.state.households[n.householdId]?.profession !== spec.profession) return false
       return !spec.age || n.age === spec.age
@@ -313,6 +332,10 @@ export function evalCond(c: QuestCtx, k: Cond): boolean {
       return sim.state.px.sneaking
     case 'stage':
       return (k.gte === undefined || st.stage >= k.gte) && (k.eq === undefined || st.stage === k.eq) && (k.lt === undefined || st.stage < k.lt)
+    case 'visited': {
+      const id = placeId(sim, k.place)
+      return id >= 0 && !!sim.state.px.visited?.includes(id)
+    }
   }
 }
 
@@ -567,11 +590,23 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'give':
       transferItems(c, e.from, e.to, e.item, e.qty)
       break
+    case 'heal':
+      for (const slot of e.slots) {
+        const h = humanOf(c, slot)
+        if (h?.vitals.illness && h.vitals.illness.kind !== 'rabies') h.vitals.illness = undefined
+      }
+      break
     case 'hold':
       setHold(c, e.slot, e)
       break
     case 'if':
       applyEffects(c, allOf(c, e.when) ? e.then : (e.else ?? []))
+      break
+    case 'ill':
+      for (const slot of e.slots) {
+        const h = humanOf(c, slot)
+        if (h && !h.vitals.dead) h.vitals.illness = { kind: 'stomach', severity: e.severity, hoursLeft: e.hours }
+      }
       break
     case 'lapse':
       lapseQuest(c)
@@ -604,6 +639,11 @@ function applyEffect(c: QuestCtx, e: Effect) {
     case 'pay':
       transferMoney(c, e.from, e.to, e.amount)
       break
+    case 'priceMod': {
+      const id = placeId(sim, e.place)
+      if (id >= 0) addPriceMod(sim, { place: id, item: e.item, mult: e.mult, days: e.days, why: `${def.id}:${e.why}` })
+      break
+    }
     case 'refuse':
       if (st.status === 'offered') st.status = 'refused'
       break
@@ -611,7 +651,10 @@ function applyEffect(c: QuestCtx, e: Effect) {
       clearHold(c, e.slot)
       break
     case 'rep':
-      addRep(sim, homeId(sim), e.delta, e.reason)
+      for (const pl of e.places ?? ['H']) {
+        const id = placeId(sim, pl)
+        if (id >= 0) addRep(sim, id, e.delta, pl === (e.places ?? ['H'])[0] ? e.reason : undefined)
+      }
       break
     case 'set':
       st.flags[e.flag] = flagVal(c, e.value)
